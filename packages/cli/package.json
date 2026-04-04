@@ -1,0 +1,11 @@
+{
+  "name": "yash-ui",
+  "version": "0.1.0",
+  "bin": {
+    "yash-ui": "./bin/index.js"
+  },
+  "scripts": {
+    "build": "echo 'cli ready'"
+  },
+  "dependencies": {}
+}

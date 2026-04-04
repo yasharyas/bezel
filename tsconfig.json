@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "paths": {
+      "@repo/ui": ["./packages/ui/src"],
+      "@repo/ui/*": ["./packages/ui/src/*"],
+      "@repo/registry": ["./packages/registry/src"],
+      "@repo/registry/*": ["./packages/registry/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", ".next"]
+}
