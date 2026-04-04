@@ -12,7 +12,9 @@
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "@repo/ui": "*",
-    "@repo/registry": "*"
+    "@repo/registry": "*",
+    "@radix-ui/react-select": "^2.0.0",
+    "lucide-react": "^0.400.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",

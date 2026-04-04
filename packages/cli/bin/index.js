@@ -13,6 +13,16 @@ const COMPONENT_MAP = {
   "glass-button": "GlassButton.tsx",
   card: "Card.tsx",
   input: "Input.tsx",
+  "text-input": "forms/TextInput.tsx",
+  "radio-group": "forms/RadioGroup.tsx",
+  checkbox: "forms/Checkbox.tsx",
+  "dob-picker": "forms/DOBPicker.tsx",
+  "select-input": "forms/SelectInput.tsx",
+  "file-upload": "forms/FileUpload.tsx",
+  stepper: "navigation/Stepper.tsx",
+  "stepper-navigation": "navigation/StepperNavigation.tsx",
+  "submission-loader": "feedback/SubmissionLoader.tsx",
+  "screen-layout": "layout/ScreenLayout.tsx",
 };
 
 function showHelp() {
@@ -23,9 +33,19 @@ function showHelp() {
     yash-ui add <component>
 
   Components:
-    glass-button    Glassmorphism button
-    card            Translucent card
-    input           Styled input field
+    glass-button         Glassmorphism button
+    card                 Translucent card
+    input                Styled input field
+    text-input           Pill-shaped text input with validation
+    radio-group          Pill chip radio selector
+    checkbox             Circular custom checkbox
+    dob-picker           DD/MM/YYYY date input
+    select-input         Radix UI select dropdown
+    file-upload          File upload with preview
+    stepper              Multi-step progress indicator
+    stepper-navigation   Previous/Next/Submit buttons
+    submission-loader    Full-screen loading overlay
+    screen-layout        Form layout shell with header
 
   Example:
     npx yash-ui add glass-button
@@ -46,12 +66,13 @@ function addComponent(slug) {
     process.exit(1);
   }
 
+  const baseName = path.basename(fileName);
   const destDir = path.join(process.cwd(), "components", "ui");
   fs.mkdirSync(destDir, { recursive: true });
 
-  const destFile = path.join(destDir, fileName);
+  const destFile = path.join(destDir, baseName);
   fs.copyFileSync(srcFile, destFile);
-  console.log(`✓ Added ${fileName} → components/ui/${fileName}`);
+  console.log(`✓ Added ${baseName} → components/ui/${baseName}`);
 }
 
 if (!command || command === "help" || command === "--help") {
