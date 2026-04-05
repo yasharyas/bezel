@@ -73,6 +73,14 @@ function SubmissionLoaderPreview() {
         <button onClick={() => setPhase(null)} className="px-2 py-0.5 text-[10px] rounded bg-neutral-600 text-white">Hide</button>
       </div>
       <SubmissionLoader phase={phase} />
+      {phase && (
+        <button
+          onClick={() => setPhase(null)}
+          className="fixed top-4 right-4 z-[60] px-4 py-2 rounded-lg bg-white text-neutral-900 text-sm font-medium shadow-lg hover:bg-neutral-100 transition-colors"
+        >
+          ✕ Close
+        </button>
+      )}
     </div>
   );
 }
