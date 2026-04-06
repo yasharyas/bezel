@@ -7,6 +7,8 @@ type Props = {
   heading?: string;
   subheading?: string;
   ctaHref?: string;
+  /** Optional image URL to mask through the heading text via background-clip */
+  headingImageSrc?: string;
 };
 
 export function ContactSection({
@@ -14,6 +16,7 @@ export function ContactSection({
   heading = "LET'S",
   subheading = "TALK.",
   ctaHref = "mailto:hello@example.com",
+  headingImageSrc,
 }: Props) {
   const spotlightRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
@@ -105,7 +108,18 @@ export function ContactSection({
         <div ref={spotlightRef} className="yui-contact-spotlight" />
         <div className="yui-contact-content">
           <p className="yui-contact-eyebrow">{eyebrow}</p>
-          <h2 className="yui-contact-heading">
+          <h2
+            className="yui-contact-heading"
+            style={headingImageSrc ? {
+              backgroundImage: `url(${headingImageSrc})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              color: "transparent",
+            } : undefined}
+          >
             <span style={{ display: "block" }}>{heading}</span>
             <span style={{ display: "block" }}>{subheading}</span>
           </h2>
