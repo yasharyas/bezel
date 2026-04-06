@@ -722,9 +722,9 @@ export default function GalleryPage() {
                   )}
                 </div>
 
-                {/* Live component preview */}
-                <div className="px-6 py-10 flex items-center justify-center min-h-[180px] bg-gradient-to-b from-transparent to-white/[0.01]">
-                  <div onClick={(e) => e.stopPropagation()} className="pointer-events-auto">
+                {/* Live component preview — fixed height so all cards are uniform */}
+                <div className="h-[220px] overflow-hidden flex items-center justify-center bg-gradient-to-b from-transparent to-white/[0.01]">
+                  <div onClick={(e) => e.stopPropagation()} className="pointer-events-auto w-full h-full flex items-center justify-center px-6">
                     {previews[entry.slug] ?? (
                       <span className="text-neutral-600 text-sm">Preview</span>
                     )}
@@ -733,7 +733,7 @@ export default function GalleryPage() {
               </div>
 
               {/* Card footer */}
-              <div className="px-4 py-3 border-t border-white/10 bg-white/[0.02] flex items-center justify-between">
+              <div className="mt-auto px-4 py-3 border-t border-white/10 bg-white/[0.02] flex items-center justify-between">
                 <div className="min-w-0">
                   <h3 className="text-sm font-medium text-white truncate group-hover:text-indigo-300 transition-colors">
                     {entry.name}
