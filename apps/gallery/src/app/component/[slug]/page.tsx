@@ -15,6 +15,7 @@ import {
   Stepper,
   StepperNavigation,
   SubmissionLoader,
+  TypewriterLoader,
 } from "@repo/ui";
 
 /* ── interactive preview wrappers ── */
@@ -150,6 +151,7 @@ const previews: Record<string, React.ReactNode> = {
       ScreenLayout is a full-page wrapper — see code below for usage.
     </div>
   ),
+  "typewriter-loader": <TypewriterLoader />,
 };
 
 export default function ComponentDetailPage({

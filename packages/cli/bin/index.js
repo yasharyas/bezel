@@ -23,6 +23,7 @@ const COMPONENT_MAP = {
   "stepper-navigation": "navigation/StepperNavigation.tsx",
   "submission-loader": "feedback/SubmissionLoader.tsx",
   "screen-layout": "layout/ScreenLayout.tsx",
+  "typewriter-loader": "feedback/TypewriterLoader.tsx",
 };
 
 function showHelp() {
@@ -46,6 +47,7 @@ function showHelp() {
     stepper-navigation   Previous/Next/Submit buttons
     submission-loader    Full-screen loading overlay
     screen-layout        Form layout shell with header
+    typewriter-loader    Pure CSS typewriter animation
 
   Example:
     npx yash-ui add glass-button

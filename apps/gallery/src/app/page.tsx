@@ -14,6 +14,7 @@ import {
   Stepper,
   StepperNavigation,
   SubmissionLoader,
+  TypewriterLoader,
 } from "@repo/ui";
 import { registry } from "@repo/registry";
 
@@ -111,6 +112,7 @@ const previews: Record<string, React.ReactNode> = {
       ScreenLayout — Full-page form wrapper
     </div>
   ),
+  "typewriter-loader": <TypewriterLoader />,
 };
 
 /* ── Category helpers ── */

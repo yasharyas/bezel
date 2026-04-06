@@ -17,6 +17,7 @@ export { StepperNavigation } from "./navigation/StepperNavigation";
 
 // Feedback
 export { SubmissionLoader } from "./feedback/SubmissionLoader";
+export { TypewriterLoader } from "./feedback/TypewriterLoader";
 
 // Layout
 export { ScreenLayout } from "./layout/ScreenLayout";

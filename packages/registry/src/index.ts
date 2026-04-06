@@ -556,6 +556,33 @@ export function ScreenLayout({ brandInitials = 'YB', brandName = 'Your Brand', t
     prompt: "Multi-step form layout shell with brand header, optional stepper slot, content card with title/subtitle, and navigation slot.",
     tags: ["layout", "shell", "header", "card", "wizard", "container"],
   },
+  {
+    name: "TypewriterLoader",
+    slug: "typewriter-loader",
+    path: "feedback/TypewriterLoader.tsx",
+    category: "feedback",
+    code: `import React from 'react';
+import './TypewriterLoader.css';
+
+type Props = {
+  size?: number;
+};
+
+export function TypewriterLoader({ size = 1 }: Props) {
+  return (
+    <div
+      className="typewriter"
+      style={size !== 1 ? { transform: \`scale(\${size})\`, transformOrigin: 'center bottom' } : undefined}
+    >
+      <div className="slide"><i /></div>
+      <div className="paper" />
+      <div className="keyboard" />
+    </div>
+  );
+}`,
+    prompt: "Pure CSS animated typewriter loader with sliding carriage, scrolling paper, and keyboard key-press animations.",
+    tags: ["loader", "spinner", "animation", "typewriter", "css", "pure-css", "decorative"],
+  },
 ];
 
 export function getComponent(slug: string): ComponentEntry | undefined {
