@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { Maximize2, ExternalLink } from "lucide-react";
 import {
   GlassButton,
   Card,
@@ -441,7 +442,13 @@ function MarqueePreview() {
 function ContactSectionPreview() {
   return (
     <div className="w-full scale-75 origin-top">
-      <ContactSection eyebrow="GOT A PROJECT?" heading="LET'S" subheading="TALK." ctaHref="#" />
+      <ContactSection
+        eyebrow="GOT A PROJECT?"
+        heading="LET'S"
+        subheading="TALK."
+        ctaHref="#"
+        headingImageSrc="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&auto=format&fit=crop"
+      />
     </div>
   );
 }
