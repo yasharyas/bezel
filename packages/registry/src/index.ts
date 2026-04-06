@@ -583,6 +583,280 @@ export function TypewriterLoader({ size = 1 }: Props) {
     prompt: "Pure CSS animated typewriter loader with sliding carriage, scrolling paper, and keyboard key-press animations.",
     tags: ["loader", "spinner", "animation", "typewriter", "css", "pure-css", "decorative"],
   },
+  {
+    name: "ToastContainer",
+    slug: "toast-container",
+    path: "feedback/ToastContainer.tsx",
+    category: "feedback",
+    code: `import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+
+interface Toast {
+  id: number;
+  message: string;
+}
+
+let _toastId = 0;
+
+export function useToast() {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const show = useCallback((message: string, duration = 2500) => {
+    const id = ++_toastId;
+    setToasts((prev) => [...prev, { id, message }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, duration);
+  }, []);
+
+  return { toasts, show };
+}
+
+export function ToastContainer({ toasts }: { toasts: Toast[] }) {
+  if (toasts.length === 0) return null;
+  return createPortal(
+    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2">
+      {toasts.map((t) => (
+        <div
+          key={t.id}
+          className="bg-neutral-800 text-white text-sm px-4 py-2.5 rounded-xl shadow-lg animate-[slideUp_0.2s_ease-out]"
+        >
+          {t.message}
+        </div>
+      ))}
+    </div>,
+    document.body
+  );
+}`,
+    prompt: "React toast notification system with useToast hook. Toasts auto-dismiss, stack in bottom-right via a portal, and animate in with slide-up.",
+    tags: ["toast", "notification", "portal", "hook", "auto-dismiss", "animated"],
+  },
+  {
+    name: "ToolbarButton",
+    slug: "toolbar-button",
+    path: "buttons/ToolbarButton.tsx",
+    category: "buttons",
+    code: `import type { ReactNode } from 'react';
+
+type ToolbarButtonProps = {
+  icon: ReactNode;
+  onClick: () => void;
+  disabled?: boolean;
+  title?: string;
+};
+
+export function ToolbarButton({ icon, onClick, disabled, title }: ToolbarButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      className="p-2 rounded-xl text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+    >
+      {icon}
+    </button>
+  );
+}`,
+    prompt: "Compact icon-only toolbar button with hover/disabled states, optional tooltip, neutral colour scheme.",
+    tags: ["icon-button", "toolbar", "disabled-state", "tooltip", "neutral"],
+  },
+  {
+    name: "CollapsibleSidebar",
+    slug: "collapsible-sidebar",
+    path: "navigation/CollapsibleSidebar.tsx",
+    category: "navigation",
+    code: `import { useState, type DragEvent, type ReactNode } from 'react';
+import { Search, PanelLeftClose, PanelLeft } from 'lucide-react';
+
+export type SidebarItem = {
+  id: string;
+  label: string;
+  description?: string;
+  color: string;
+  icon: ReactNode;
+  dragData?: string;
+  dragKey?: string;
+};
+
+export type SidebarCategory = {
+  label: string;
+  items: SidebarItem[];
+};
+
+type CollapsibleSidebarProps = {
+  title?: string;
+  categories: SidebarCategory[];
+  searchPlaceholder?: string;
+  dragTransferKey?: string;
+};
+
+export function CollapsibleSidebar({ title = 'Items', categories, searchPlaceholder = 'Search...', dragTransferKey = 'application/sidebar-item' }: CollapsibleSidebarProps) {
+  const [search, setSearch] = useState('');
+  const [collapsed, setCollapsed] = useState(false);
+
+  const onDragStart = (e: DragEvent, item: SidebarItem) => {
+    e.dataTransfer.setData(item.dragKey ?? dragTransferKey, item.dragData ?? item.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const filterItem = (item: SidebarItem) => item.label.toLowerCase().includes(search.toLowerCase());
+
+  if (collapsed) {
+    return (
+      <div className="w-12 bg-white border-r border-neutral-200 flex flex-col items-center pt-3">
+        <button onClick={() => setCollapsed(false)} className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 transition-colors cursor-pointer">
+          <PanelLeft size={18} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-60 bg-white border-r border-neutral-200 flex flex-col h-full">
+      <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">{title}</h2>
+        <button onClick={() => setCollapsed(true)} className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer">
+          <PanelLeftClose size={16} />
+        </button>
+      </div>
+      <div className="px-3 pb-3">
+        <div className="relative">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <input type="text" placeholder={searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-300 placeholder-neutral-400 transition" />
+        </div>
+      </div>
+      <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-4">
+        {categories.map((cat) => {
+          const filtered = cat.items.filter(filterItem);
+          if (filtered.length === 0) return null;
+          return (
+            <div key={cat.label}>
+              <h3 className="text-[10px] font-semibold text-neutral-300 uppercase tracking-widest mb-2 px-1">{cat.label}</h3>
+              <div className="space-y-1.5">
+                {filtered.map((item) => (
+                  <div key={item.id} draggable onDragStart={(e) => onDragStart(e, item)} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-neutral-50 border border-neutral-100 hover:border-neutral-300 hover:shadow-sm cursor-grab active:cursor-grabbing transition-all group">
+                    <div className="flex items-center justify-center w-7 h-7 rounded-lg transition-transform group-hover:scale-110" style={{ backgroundColor: \`\${item.color}18\` }}>
+                      <span style={{ color: item.color, display: 'flex' }}>{item.icon}</span>
+                    </div>
+                    <div>
+                      <div className="text-xs font-medium text-neutral-700">{item.label}</div>
+                      {item.description && <div className="text-[10px] text-neutral-400">{item.description}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}`,
+    prompt: "Collapsible left sidebar with search, categorised draggable items, coloured icon badges, and toggle to icon-only mode.",
+    tags: ["sidebar", "collapsible", "draggable", "searchable", "categorised", "panel"],
+  },
+  {
+    name: "SidePanel",
+    slug: "side-panel",
+    path: "panels/SidePanel.tsx",
+    category: "panels",
+    code: `import type { ReactNode } from 'react';
+import { X } from 'lucide-react';
+
+type SidePanelProps = {
+  title: string;
+  headerLeft?: ReactNode;
+  onClose: () => void;
+  footer?: ReactNode;
+  children: ReactNode;
+};
+
+export function SidePanel({ title, headerLeft, onClose, footer, children }: SidePanelProps) {
+  return (
+    <div className="w-72 bg-white border-l border-neutral-200 flex flex-col h-full animate-[slideIn_0.15s_ease-out]">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-neutral-100">
+        <div className="flex items-center gap-2">
+          {headerLeft}
+          <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">{title}</span>
+        </div>
+        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer">
+          <X size={16} />
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">{children}</div>
+      {footer && <div className="p-4 border-t border-neutral-100">{footer}</div>}
+    </div>
+  );
+}
+
+export function PanelField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">{label}</label>
+      <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+export function PanelInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
+  return <input {...props} className={'w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-300 placeholder-neutral-300 transition ' + (props.className ?? '')} />;
+}
+
+export function PanelTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return <textarea {...props} className={'w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-300 resize-none transition ' + (props.className ?? '')} />;
+}
+
+export function PanelDeleteButton({ onClick, label = 'Delete' }: { onClick: () => void; label?: string }) {
+  return (
+    <button onClick={onClick} className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer">
+      {label}
+    </button>
+  );
+}`,
+    prompt: "Right-side sliding panel with header, scrollable body, optional footer, and convenience sub-components: PanelField, PanelInput, PanelTextarea, PanelDeleteButton.",
+    tags: ["side-panel", "drawer", "form", "editor", "slide-in", "animated"],
+  },
+  {
+    name: "NodeCard",
+    slug: "node-card",
+    path: "cards/NodeCard.tsx",
+    category: "cards",
+    code: `import type { ReactNode, CSSProperties } from 'react';
+
+type NodeCardProps = {
+  label: string;
+  description?: string;
+  icon: ReactNode;
+  accentColor: string;
+  selected?: boolean;
+  onClick?: () => void;
+  topHandle?: ReactNode;
+  bottomHandle?: ReactNode;
+};
+
+export function NodeCard({ label, description, icon, accentColor, selected = false, onClick, topHandle, bottomHandle }: NodeCardProps) {
+  return (
+    <div
+      className={['relative min-w-[180px] max-w-[240px] rounded-2xl bg-white', 'border-2 transition-all duration-150 cursor-pointer', selected ? 'ring-2 ring-offset-2 shadow-md' : 'shadow-sm hover:shadow-md'].join(' ')}
+      style={{ borderColor: selected ? accentColor : '#e2e8f0', ...(selected ? ({ '--tw-ring-color': accentColor } as CSSProperties) : {}) }}
+      onClick={onClick}
+    >
+      <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full" style={{ backgroundColor: accentColor }} />
+      <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+        <div className="flex items-center justify-center w-7 h-7 rounded-lg" style={{ backgroundColor: \`\${accentColor}18\` }}>
+          <span style={{ color: accentColor, display: 'flex' }}>{icon}</span>
+        </div>
+        <span className="text-sm font-semibold text-neutral-800 truncate">{label}</span>
+      </div>
+      {description && <div className="px-4 pb-3"><p className="text-xs text-neutral-400 truncate">{description}</p></div>}
+      {topHandle}
+      {bottomHandle}
+    </div>
+  );
+}`,
+    prompt: "Node card for visual workflow builders. Coloured accent bar, tinted icon badge, label, optional description, selected ring state, React Flow handle slots.",
+    tags: ["node", "card", "workflow", "react-flow", "accent-color", "selectable", "draggable"],
+  },
 ];
 
 export function getComponent(slug: string): ComponentEntry | undefined {

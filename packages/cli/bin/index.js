@@ -24,6 +24,11 @@ const COMPONENT_MAP = {
   "submission-loader": "feedback/SubmissionLoader.tsx",
   "screen-layout": "layout/ScreenLayout.tsx",
   "typewriter-loader": "feedback/TypewriterLoader.tsx",
+  "toast-container": "feedback/ToastContainer.tsx",
+  "toolbar-button": "buttons/ToolbarButton.tsx",
+  "collapsible-sidebar": "navigation/CollapsibleSidebar.tsx",
+  "side-panel": "panels/SidePanel.tsx",
+  "node-card": "cards/NodeCard.tsx",
 };
 
 function showHelp() {
@@ -48,6 +53,11 @@ function showHelp() {
     submission-loader    Full-screen loading overlay
     screen-layout        Form layout shell with header
     typewriter-loader    Pure CSS typewriter animation
+    toast-container      Toast notifications with useToast hook
+    toolbar-button       Icon-only toolbar button
+    collapsible-sidebar  Draggable categorised sidebar
+    side-panel           Right-side sliding form panel
+    node-card            Workflow node card with accent colour
 
   Example:
     npx yash-ui add glass-button
