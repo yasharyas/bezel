@@ -1114,8 +1114,6 @@ export const PaginationEllipsis = ({ className, ...props }: React.ComponentProps
     prompt: "Create an accessible, composable pagination component. Include Pagination, PaginationContent, PaginationItem, PaginationLink (with isActive), PaginationPrevious, PaginationNext, and PaginationEllipsis. Use lucide-react for chevron and ellipsis icons. Keep it fully keyboard and screen-reader accessible.",
     tags: ["pagination", "composable", "accessible", "aria"],
   },
-];
-
   {
     name: "CustomCursor",
     slug: "custom-cursor",
