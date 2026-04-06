@@ -42,6 +42,18 @@ import {
   PaginationNext,
   PaginationPrevious,
   PaginationEllipsis,
+  CustomCursor,
+  Preloader,
+  SiteHeader,
+  MobileMenu,
+  ElasticLineDivider,
+  CircleCTA,
+  ImageReveal,
+  FeaturedProjectCard,
+  ProjectCard,
+  Marquee,
+  ContactSection,
+  TextDisperseLink,
 } from "@repo/ui";
 
 /* ── interactive preview wrappers ── */
@@ -345,6 +357,142 @@ function PaginationPreview() {
   );
 }
 
+function CustomCursorPreview() {
+  return (
+    <div className="flex flex-col items-center gap-2 text-xs text-neutral-400 text-center px-4">
+      <div className="flex gap-2 items-center">
+        <div className="w-5 h-5 relative">
+          <span className="absolute top-1/2 left-0 w-2 h-0.5 bg-current -translate-y-1/2" />
+          <span className="absolute top-1/2 right-0 w-2 h-0.5 bg-current -translate-y-1/2" />
+          <span className="absolute left-1/2 top-0 h-2 w-0.5 bg-current -translate-x-1/2" />
+          <span className="absolute left-1/2 bottom-0 h-2 w-0.5 bg-current -translate-x-1/2" />
+        </div>
+        <span>Crosshair cursor</span>
+      </div>
+      <span className="opacity-50">mix-blend-mode: difference</span>
+    </div>
+  );
+}
+
+function PreloaderPreview() {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <button onClick={() => setShow(true)} className="px-3 py-1.5 text-xs rounded-lg bg-neutral-800 text-white">Show Preloader</button>
+      {show && <Preloader name="YASH UI." onComplete={() => setShow(false)} />}
+    </div>
+  );
+}
+
+function SiteHeaderPreview() {
+  return (
+    <div className="w-full overflow-hidden rounded-xl border border-white/10 bg-black relative" style={{ height: "60px" }}>
+      <div className="flex items-center justify-between px-4 py-2">
+        <span className="text-sm font-semibold text-white">BRAND.</span>
+        <div className="flex gap-3 text-xs text-neutral-400">
+          <span>Work</span><span>Studio</span><span>Contact</span>
+        </div>
+        <span className="text-xs border border-white/30 rounded-full px-3 py-1 text-white">GET IN TOUCH</span>
+      </div>
+    </div>
+  );
+}
+
+function MobileMenuPreview() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="w-full flex items-center justify-between px-4 py-2 rounded-xl bg-black border border-white/10">
+        <span className="text-sm font-semibold text-white">MK.</span>
+        <button onClick={() => setOpen((o) => !o)} className="flex flex-col gap-1 w-6" aria-label="menu">
+          <span className={`block h-0.5 bg-white rounded transition-transform ${open ? "translate-y-1.5 rotate-45" : ""}`} />
+          <span className={`block h-0.5 bg-white rounded transition-opacity ${open ? "opacity-0" : ""}`} />
+          <span className={`block h-0.5 bg-white rounded transition-transform ${open ? "-translate-y-1.5 -rotate-45" : ""}`} />
+        </button>
+      </div>
+      {open && (
+        <div className="flex flex-col gap-2 w-full items-center">
+          {["Work", "About", "Contact"].map((l) => (
+            <span key={l} className="text-sm font-medium uppercase border border-white/20 rounded-full px-4 py-1 text-white">{l}</span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ElasticLineDividerPreview() {
+  return (
+    <div className="w-full" style={{ color: "white" }}>
+      <ElasticLineDivider index="01/" label="works" total="/04" />
+    </div>
+  );
+}
+
+function CircleCTAPreview() {
+  return (
+    <div style={{ color: "white" }}>
+      <CircleCTA href="#" label={"view\nall"} size={8} strokeColor="#fff" />
+    </div>
+  );
+}
+
+function ImageRevealPreview() {
+  return (
+    <div className="text-neutral-500 text-xs italic text-center px-4">
+      ImageReveal — scroll-triggered GSAP clip-path reveal
+    </div>
+  );
+}
+
+function FeaturedProjectCardPreview() {
+  return (
+    <div className="w-full opacity-80" style={{ color: "white" }}>
+      <div className="rounded-xl overflow-hidden aspect-video bg-neutral-800 flex items-center justify-center text-xs text-neutral-500">Image</div>
+      <div className="mt-2">
+        <div className="text-[10px] uppercase tracking-widest opacity-50">Photography — 2024</div>
+        <div className="text-xl font-bold uppercase tracking-tight">Golden Hour</div>
+      </div>
+    </div>
+  );
+}
+
+function ProjectCardPreview() {
+  return (
+    <div className="w-full opacity-80" style={{ color: "white" }}>
+      <div className="rounded-xl overflow-hidden aspect-video bg-neutral-800 flex items-center justify-center text-xs text-neutral-500">Image</div>
+      <div className="mt-2">
+        <div className="text-lg font-bold uppercase tracking-tight">Project Name</div>
+        <div className="text-[10px] uppercase tracking-wider opacity-50">Branding</div>
+      </div>
+    </div>
+  );
+}
+
+function MarqueePreview() {
+  return (
+    <div className="w-full overflow-hidden" style={{ color: "white" }}>
+      <Marquee text="yash ui" fontSize="4rem" speed={15} opacity={0.6} />
+    </div>
+  );
+}
+
+function ContactSectionPreview() {
+  return (
+    <div className="w-full scale-75 origin-top">
+      <ContactSection eyebrow="GOT A PROJECT?" heading="LET'S" subheading="TALK." ctaHref="#" />
+    </div>
+  );
+}
+
+function TextDisperseLinkPreview() {
+  return (
+    <div style={{ color: "white", fontSize: "1.2rem" }}>
+      <TextDisperseLink label="PORTFOLIO" href="#" />
+    </div>
+  );
+}
+
 const previews: Record<string, React.ReactNode> = {
   "glass-button": <GlassButton>Click Me</GlassButton>,
   card: (
@@ -386,6 +534,18 @@ const previews: Record<string, React.ReactNode> = {
   "loading-spinner": <LoadingSpinnerPreview />,
   "price-breakdown": <PriceBreakdownPreview />,
   pagination: <PaginationPreview />,
+  "custom-cursor": <CustomCursorPreview />,
+  preloader: <PreloaderPreview />,
+  "site-header": <SiteHeaderPreview />,
+  "mobile-menu": <MobileMenuPreview />,
+  "elastic-line-divider": <ElasticLineDividerPreview />,
+  "circle-cta": <CircleCTAPreview />,
+  "image-reveal": <ImageRevealPreview />,
+  "featured-project-card": <FeaturedProjectCardPreview />,
+  "project-card": <ProjectCardPreview />,
+  marquee: <MarqueePreview />,
+  "contact-section": <ContactSectionPreview />,
+  "text-disperse-link": <TextDisperseLinkPreview />,
 };
 
 export default function ComponentDetailPage({

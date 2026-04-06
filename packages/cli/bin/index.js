@@ -38,6 +38,18 @@ const COMPONENT_MAP = {
   "loading-spinner": "feedback/LoadingSpinner.tsx",
   "price-breakdown": "cards/PriceBreakdown.tsx",
   pagination: "navigation/Pagination.tsx",
+  "custom-cursor": "interaction/CustomCursor.tsx",
+  preloader: "loaders/Preloader.tsx",
+  "site-header": "navigation/SiteHeader.tsx",
+  "mobile-menu": "navigation/MobileMenu.tsx",
+  "elastic-line-divider": "dividers/ElasticLineDivider.tsx",
+  "circle-cta": "buttons/CircleCTA.tsx",
+  "image-reveal": "media/ImageReveal.tsx",
+  "featured-project-card": "cards/FeaturedProjectCard.tsx",
+  "project-card": "cards/ProjectCard.tsx",
+  marquee: "animation/Marquee.tsx",
+  "contact-section": "sections/ContactSection.tsx",
+  "text-disperse-link": "buttons/TextDisperseLink.tsx",
 };
 
 function showHelp() {
@@ -76,6 +88,18 @@ function showHelp() {
     loading-spinner      3-size border-spin loading spinner
     price-breakdown      Tax/GST price breakdown card
     pagination           Accessible composable pagination
+    custom-cursor        GSAP crosshair cursor with mix-blend-mode
+    preloader            Fullscreen letter-reveal preloader with counter
+    site-header          Fixed portfolio nav with hover-fill CTA
+    mobile-menu          Hamburger overlay fullscreen menu
+    elastic-line-divider Interactive SVG spring-physics divider
+    circle-cta           GSAP SVG stroke-draw circle button
+    image-reveal         Scroll-triggered GSAP clip-path image reveal
+    featured-project-card Full-width portfolio project card
+    project-card         Masonry-style project card with hover-zoom
+    marquee              Infinite GSAP scrolling text marquee
+    contact-section      Dark contact card with animated border & spotlight
+    text-disperse-link   GSAP per-character scatter hover link
 
   Example:
     npx yash-ui add glass-button
