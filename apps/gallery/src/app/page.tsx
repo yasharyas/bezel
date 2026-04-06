@@ -461,6 +461,92 @@ function TextDisperseLinkPreview() {
   );
 }
 
+/* ── Popup-eligible slugs & their larger preview renderers ── */
+const popupPreviews: Record<string, () => React.ReactNode> = {
+  marquee: () => (
+    <div className="w-full overflow-hidden" style={{ color: "white" }}>
+      <Marquee text="yash ui" fontSize="7rem" speed={12} opacity={0.9} />
+      <Marquee text="components" fontSize="4rem" speed={8} opacity={0.5} separator=" ★ " />
+    </div>
+  ),
+  "contact-section": () => (
+    <div className="w-full">
+      <ContactSection
+        eyebrow="GOT A PROJECT IN MIND?"
+        heading="LET'S"
+        subheading="TALK."
+        ctaHref="#"
+        headingImageSrc="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200&auto=format&fit=crop"
+      />
+    </div>
+  ),
+  "project-card": () => (
+    <div style={{ color: "white", maxWidth: "280px" }}>
+      <ProjectCard
+        title="Golden Hour"
+        subtitle="Photography · 2024"
+        imageSrc="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&auto=format&fit=crop"
+      />
+    </div>
+  ),
+  "featured-project-card": () => (
+    <div style={{ color: "white", width: "100%" }}>
+      <FeaturedProjectCard
+        title="Golden Hour"
+        eyebrow="Photography"
+        imageSrc="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop"
+        tags={["Photography", "2024"]}
+      />
+    </div>
+  ),
+  "elastic-line-divider": () => (
+    <div className="w-full" style={{ color: "white" }}>
+      <ElasticLineDivider index="01/" label="works" total="/04" />
+      <ElasticLineDivider index="02/" label="about" total="/04" />
+      <ElasticLineDivider index="03/" label="contact" total="/04" />
+    </div>
+  ),
+  "empty-state": () => (
+    <EmptyState title="No events yet" description="Create your first event to get started." onAction={() => {}} />
+  ),
+  "mobile-menu": () => <MobileMenuPreview />,
+  preloader: () => <PreloaderPreview />,
+  "site-header": () => <SiteHeaderPreview />,
+  "blender-upload": () => (
+    <div style={{ width: "320px" }}>
+      <BlenderUpload onFileSelect={() => {}} maxSizeMB={10} />
+    </div>
+  ),
+  "circle-cta": () => (
+    <div style={{ color: "white" }}>
+      <CircleCTA href="#" label={"view\nall"} size={14} strokeColor="#fff" />
+    </div>
+  ),
+  "text-disperse-link": () => (
+    <div style={{ color: "white", fontSize: "2.5rem" }}>
+      <TextDisperseLink label="PORTFOLIO" href="#" />
+    </div>
+  ),
+  "custom-cursor": () => (
+    <div className="text-center" style={{ color: "white" }}>
+      <div style={{ display: "inline-flex", flexDirection: "column", gap: "0.5rem", fontSize: "0.875rem", opacity: 0.7 }}>
+        <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem" }}>
+          {["default", "grow"].map((mode) => (
+            <div key={mode} style={{ position: "relative", width: "2rem", height: "2rem", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ position: "absolute", top: "50%", left: 0, width: "40%", height: "2px", background: "#fff", transform: "translateY(-50%)" }} />
+              <span style={{ position: "absolute", top: "50%", right: 0, width: "40%", height: "2px", background: "#fff", transform: "translateY(-50%)" }} />
+              <span style={{ position: "absolute", left: "50%", top: 0, height: "40%", width: "2px", background: "#fff", transform: "translateX(-50%)" }} />
+              <span style={{ position: "absolute", left: "50%", bottom: 0, height: "40%", width: "2px", background: "#fff", transform: "translateX(-50%)" }} />
+            </div>
+          ))}
+        </div>
+        <p>Crosshair cursor replaces the system cursor</p>
+        <p style={{ opacity: 0.5 }}>Uses mix-blend-mode: difference · Grows on [data-cursor-grow]</p>
+      </div>
+    </div>
+  ),
+};
+
 const previews: Record<string, React.ReactNode> = {
   "glass-button": <GlassButton>Click Me</GlassButton>,
   card: (
