@@ -29,6 +29,15 @@ const COMPONENT_MAP = {
   "collapsible-sidebar": "navigation/CollapsibleSidebar.tsx",
   "side-panel": "panels/SidePanel.tsx",
   "node-card": "cards/NodeCard.tsx",
+  "tubelight-navbar": "navigation/TubelightNavBar.tsx",
+  "md3-switch": "forms/MD3Switch.tsx",
+  "dual-confirm-dialog": "dialogs/DualConfirmDialog.tsx",
+  "blender-upload": "forms/BlenderUpload.tsx",
+  "empty-state": "feedback/EmptyState.tsx",
+  "checkbox-variants": "forms/CheckboxVariants.tsx",
+  "loading-spinner": "feedback/LoadingSpinner.tsx",
+  "price-breakdown": "cards/PriceBreakdown.tsx",
+  pagination: "navigation/Pagination.tsx",
 };
 
 function showHelp() {
@@ -58,6 +67,15 @@ function showHelp() {
     collapsible-sidebar  Draggable categorised sidebar
     side-panel           Right-side sliding form panel
     node-card            Workflow node card with accent colour
+    tubelight-navbar     Floating nav bar with lamp glow (framer-motion)
+    md3-switch           Material Design 3 toggle switch with haptics
+    dual-confirm-dialog  Two-step destructive confirmation dialog
+    blender-upload       Drag-and-drop upload with blender animation
+    empty-state          Centered empty state with icon slot and CTA
+    checkbox-variants    4 animated checkbox variants (ripple/glow/morph/pulse)
+    loading-spinner      3-size border-spin loading spinner
+    price-breakdown      Tax/GST price breakdown card
+    pagination           Accessible composable pagination
 
   Example:
     npx yash-ui add glass-button

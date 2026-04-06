@@ -857,6 +857,263 @@ export function NodeCard({ label, description, icon, accentColor, selected = fal
     prompt: "Node card for visual workflow builders. Coloured accent bar, tinted icon badge, label, optional description, selected ring state, React Flow handle slots.",
     tags: ["node", "card", "workflow", "react-flow", "accent-color", "selectable", "draggable"],
   },
+  {
+    name: "TubelightNavBar",
+    slug: "tubelight-navbar",
+    path: "navigation/TubelightNavBar.tsx",
+    category: "navigation",
+    code: `"use client"
+import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
+import type { LucideIcon } from "lucide-react"
+
+export interface NavItem { name: string; url: string; icon: LucideIcon; onClick?: () => void }
+interface NavBarProps { items: NavItem[]; activeItem?: string; className?: string; onNavigate?: (url: string) => void }
+
+export function TubelightNavBar({ items, activeItem, className, onNavigate }: NavBarProps) {
+  const [isMobile, setIsMobile] = useState(false)
+  const currentActive = activeItem ?? items[0]?.name ?? ""
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768)
+    handleResize(); window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+  return (
+    <div className={\`fixed bottom-0 sm:top-0 left-1/2 -translate-x-1/2 z-50 mb-3 sm:mb-0 sm:pt-3 pointer-events-none\${className ? \` \${className}\` : ""}\`}>
+      <div className="flex items-center gap-1 bg-background/5 border border-border backdrop-blur-lg py-0.5 px-0.5 rounded-full shadow-lg pointer-events-auto">
+        {items.map((item) => {
+          const Icon = item.icon; const isActive = currentActive === item.name
+          const baseClasses = "relative cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-full transition-colors text-center text-foreground/80 hover:text-primary" + (isActive ? " bg-muted text-primary" : "")
+          const content = (<>
+            <span className={isMobile ? "hidden" : "hidden md:inline"}>{item.name}</span>
+            <span className={isMobile ? "inline" : "md:hidden"}><Icon size={14} strokeWidth={2.5} /></span>
+            {isActive && (<motion.div layoutId="lamp" className="absolute inset-0 w-full bg-primary/5 rounded-full -z-10" initial={false} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-t-full">
+                <div className="absolute w-8 h-4 bg-primary/20 rounded-full blur-md -top-1.5 -left-1" />
+                <div className="absolute w-6 h-4 bg-primary/20 rounded-full blur-md -top-0.5" />
+                <div className="absolute w-3 h-3 bg-primary/20 rounded-full blur-sm top-0 left-1.5" />
+              </div>
+            </motion.div>)}
+          </>)
+          if (item.onClick) return <button key={item.name} onClick={item.onClick} className={baseClasses}>{content}</button>
+          return <a key={item.name} href={item.url} onClick={(e) => { if (onNavigate) { e.preventDefault(); onNavigate(item.url) } }} className={baseClasses}>{content}</a>
+        })}
+      </div>
+    </div>
+  )
+}`,
+    prompt: "Create a floating pill-shaped navigation bar fixed to the bottom on mobile and top on desktop. Each nav item shows the icon on mobile and text label on desktop. The active item has a glowing tubelight/lamp effect above it, animated with framer-motion spring.",
+    tags: ["navbar", "floating", "animated", "tubelight", "pill", "framer-motion", "responsive"],
+  },
+  {
+    name: "MD3Switch",
+    slug: "md3-switch",
+    path: "forms/MD3Switch.tsx",
+    category: "forms",
+    code: `import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
+import { Check, X } from "lucide-react"
+
+const SWITCH_THEME = { "--ease-spring": "cubic-bezier(0.175, 0.885, 0.32, 1.275)" } as React.CSSProperties
+const switchVariants = cva(
+  "peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
+  { variants: { variant: { primary: "peer-checked:bg-primary peer-checked:border-primary", destructive: "peer-checked:bg-destructive peer-checked:border-destructive" }, size: { default: "h-8 w-[52px]", sm: "h-6 w-10" } }, defaultVariants: { variant: "primary", size: "default" } }
+)
+export interface MD3SwitchProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">, VariantProps<typeof switchVariants> {
+  onCheckedChange?: (checked: boolean) => void; showIcons?: boolean; checkedIcon?: React.ReactNode; uncheckedIcon?: React.ReactNode; haptic?: "heavy" | "light" | "none"
+}
+export const MD3Switch = React.forwardRef<HTMLInputElement, MD3SwitchProps>(({ className, size, variant, checked, defaultChecked, onCheckedChange, showIcons = false, checkedIcon, uncheckedIcon, haptic = "none", style, disabled, ...props }, ref) => {
+  const [isChecked, setIsChecked] = React.useState(defaultChecked ?? false)
+  React.useEffect(() => { if (checked !== undefined) setIsChecked(checked) }, [checked])
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { if (!disabled) { const v = e.target.checked; if (checked === undefined) setIsChecked(v); onCheckedChange?.(v) } }
+  const isSmall = size === "sm"
+  // ... (see full source for handle/halo logic)
+  return <label className="group relative inline-flex items-center justify-center min-w-[48px] min-h-[48px]" style={{ ...SWITCH_THEME, ...style }}><input type="checkbox" className="peer sr-only" ref={ref} checked={isChecked} onChange={handleChange} disabled={disabled} {...props} /></label>
+})
+MD3Switch.displayName = "MD3Switch"`,
+    prompt: "Build a Material Design 3 toggle switch in React with spring-easing physics for the handle, a hover/press halo effect, optional check/X icons that rotate in/out, two sizes (default and sm), primary and destructive color variants, and an optional Web Audio API haptic feedback click sound.",
+    tags: ["switch", "toggle", "material-design", "md3", "animated", "haptic", "physics"],
+  },
+  {
+    name: "DualConfirmDialog",
+    slug: "dual-confirm-dialog",
+    path: "dialogs/DualConfirmDialog.tsx",
+    category: "dialogs",
+    code: `import { useState } from "react"
+import { AlertTriangle, Loader2 } from "lucide-react"
+
+export interface DeleteProgress { current: number; total: number; strategy?: "frontend" | "backend" }
+export interface DualConfirmDialogProps {
+  open: boolean; onOpenChange: (open: boolean) => void; onConfirm: () => void
+  title: string; description: string; itemCount: number; itemType: string
+  confirmationPhrase?: string; isLoading?: boolean; progress?: DeleteProgress | null
+}
+
+export function DualConfirmDialog({ open, onOpenChange, onConfirm, title, description, itemCount, itemType, confirmationPhrase = "DELETE", isLoading = false, progress = null }: DualConfirmDialogProps) {
+  const [step, setStep] = useState<1 | 2>(1)
+  const [inputValue, setInputValue] = useState("")
+  const handleClose = () => { if (isLoading) return; setStep(1); setInputValue(""); onOpenChange(false) }
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
+      <div className="relative z-10 w-full max-w-md mx-4 bg-background border border-border rounded-lg shadow-xl p-6">
+        <h2 className="flex items-center gap-2 text-lg font-semibold text-destructive mb-4"><AlertTriangle className="h-5 w-5" />{title}</h2>
+        {/* step 1: warning, step 2: type to confirm */}
+      </div>
+    </div>
+  )
+}`,
+    prompt: "Create a two-step destructive confirmation dialog. Step 1 shows a warning with item count. Step 2 requires the user to type a specific phrase (e.g. DELETE) to enable the final button. Include a loading state with an animated progress bar. Clicking outside is blocked while loading.",
+    tags: ["confirmation", "destructive", "two-step", "modal", "bulk-delete", "loading", "progress"],
+  },
+  {
+    name: "BlenderUpload",
+    slug: "blender-upload",
+    path: "forms/BlenderUpload.tsx",
+    category: "forms",
+    code: `import { useCallback, useState, useRef } from "react"
+
+interface BlenderUploadProps {
+  onFileSelect: (file: File, dataUrl: string) => void
+  onError?: (message: string) => void
+  accept?: string; maxSizeMB?: number; disabled?: boolean
+}
+
+export function BlenderUpload({ onFileSelect, onError, accept = ".jpg,.jpeg,.png", maxSizeMB = 1, disabled = false }: BlenderUploadProps) {
+  const [isDragging, setIsDragging] = useState(false)
+  const [isBlending, setIsBlending] = useState(false)
+  const [blendComplete, setBlendComplete] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState("")
+  // ... drag/drop handlers, blender SVG, smoothie glass SVG, inline @keyframes
+  return <div className="rounded-xl overflow-hidden">...</div>
+}`,
+    prompt: "Create a drag-and-drop file upload component with a playful blender animation. Show fruits falling in on drag. When uploading, animate liquid blending inside the jar. On completion transform to a smoothie glass with a cherry on top. Show a preview of the uploaded image below with a 'Change image' button. Use inline SVG — no external images.",
+    tags: ["upload", "drag-drop", "animated", "file-input", "svg", "playful", "image-preview"],
+  },
+  {
+    name: "EmptyState",
+    slug: "empty-state",
+    path: "feedback/EmptyState.tsx",
+    category: "feedback",
+    code: `import { Plus } from "lucide-react"
+
+interface EmptyStateProps {
+  title: string; description: string; icon?: React.ReactNode
+  actionLabel?: string; onAction?: () => void; showAction?: boolean
+}
+
+export function EmptyState({ title, description, icon, actionLabel = "Create", onAction, showAction = true }: EmptyStateProps) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
+      {icon && <div className="mb-4 text-muted-foreground/40">{icon}</div>}
+      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground max-w-md mb-6">{description}</p>
+      {showAction && onAction && (
+        <button onClick={onAction} className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+          <Plus className="h-4 w-4" />{actionLabel}
+        </button>
+      )}
+    </div>
+  )
+}`,
+    prompt: "Create a centered empty state component with an optional icon slot, a heading, description text, and an optional primary CTA button with a plus icon. Use Tailwind CSS with theme tokens.",
+    tags: ["empty", "placeholder", "no-data", "cta", "illustration-slot"],
+  },
+  {
+    name: "CheckboxVariants",
+    slug: "checkbox-variants",
+    path: "forms/CheckboxVariants.tsx",
+    category: "forms",
+    code: `"use client"
+import * as React from "react"
+
+export const CustomCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => (
+  <input type="checkbox" ref={ref} className={"relative box-border block h-[1.5rem] w-[1.5rem] cursor-pointer appearance-none rounded-md bg-slate-200 transition-all duration-300 checked:bg-[#1677ff] hover:border-[#1677ff] " + (className ?? "")} {...props} />
+))
+CustomCheckbox.displayName = "CustomCheckbox"
+
+export const GradientCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ ...props }, ref) => (
+  <label className="relative block cursor-pointer select-none rounded-md text-3xl">
+    <input ref={ref} type="checkbox" className="peer absolute opacity-0" {...props} />
+    <div className="relative h-[1.6rem] w-[1.6rem] rounded-[0.3em] bg-white peer-checked:bg-black peer-checked:shadow-[0_0_40px_rgba(17,0,248,0.7)]" />
+  </label>
+))
+GradientCheckbox.displayName = "GradientCheckbox"
+
+export { TransformerCheckbox, AnimatedCheckbox } from "./CheckboxVariants"`,
+    prompt: "Create four stylized checkbox variants using only Tailwind CSS and pseudo-elements — no SVGs. Include: (1) Ant Design style with blue ripple, (2) rainbow gradient glow, (3) border morphs into a checkmark, (4) circular checkbox that pulses green when checked.",
+    tags: ["checkbox", "animated", "variants", "gradient", "morphing", "tailwind", "custom"],
+  },
+  {
+    name: "LoadingSpinner",
+    slug: "loading-spinner",
+    path: "feedback/LoadingSpinner.tsx",
+    category: "feedback",
+    code: `const sizes = { sm: "h-4 w-4 border-2", md: "h-8 w-8 border-3", lg: "h-12 w-12 border-4" }
+
+export const LoadingSpinner = ({ size = "md", className }: { size?: "sm" | "md" | "lg"; className?: string }) => (
+  <div className={"flex items-center justify-center" + (className ? \` \${className}\` : "")}>
+    <div className={"animate-spin rounded-full border-primary border-t-transparent " + sizes[size]} />
+  </div>
+)`,
+    prompt: "Create a minimal centered loading spinner with three sizes (sm/md/lg) using Tailwind's animate-spin and a colored border with a transparent top to create the spinning arc effect.",
+    tags: ["loading", "spinner", "animation", "minimal"],
+  },
+  {
+    name: "PriceBreakdown",
+    slug: "price-breakdown",
+    path: "cards/PriceBreakdown.tsx",
+    category: "cards",
+    code: `import { IndianRupee, Receipt, Percent } from "lucide-react"
+
+export function PriceBreakdown({ price, gstPercent, priceLabel = "Base Price" }: { price: number; gstPercent: number; priceLabel?: string }) {
+  const validPrice = Number.isFinite(price) && price > 0 ? price : 0
+  if (validPrice === 0) return null
+  const gstAmount = validPrice * (gstPercent / 100)
+  const totalPrice = validPrice + gstAmount
+  return (
+    <div className="rounded-lg border bg-muted/40 p-4 space-y-3">
+      <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide"><Receipt className="h-4 w-4" />Price Breakdown</div>
+      <div className="space-y-2">
+        <div className="flex justify-between text-sm"><span className="flex items-center gap-2 text-muted-foreground"><IndianRupee className="h-3.5 w-3.5" />{priceLabel}</span><span>₹{validPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span></div>
+        <div className="flex justify-between text-sm"><span className="flex items-center gap-2 text-muted-foreground"><Percent className="h-3.5 w-3.5" />GST ({gstPercent}%)</span><span>{gstAmount > 0 ? \`₹\${gstAmount.toLocaleString("en-IN")}\` : "—"}</span></div>
+        <div className="border-t" />
+        <div className="flex justify-between"><span className="text-sm font-semibold">Total Price</span><span className="text-lg font-bold text-primary">₹{totalPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span></div>
+      </div>
+    </div>
+  )
+}`,
+    prompt: "Create a read-only price breakdown card showing base price, tax amount, a divider, and total. Accept base price, tax percentage, and custom labels as props. Render nothing when price is zero or invalid. Use lucide-react icons and Tailwind CSS.",
+    tags: ["pricing", "tax", "breakdown", "receipt", "finance", "display"],
+  },
+  {
+    name: "Pagination",
+    slug: "pagination",
+    path: "navigation/Pagination.tsx",
+    category: "navigation",
+    code: `import * as React from "react"
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
+
+export const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
+  <nav role="navigation" aria-label="pagination" className={"mx-auto flex w-full justify-center" + (className ? \` \${className}\` : "")} {...props} />
+)
+export const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(({ className, ...props }, ref) => (
+  <ul ref={ref} className={"flex flex-row items-center gap-1" + (className ? \` \${className}\` : "")} {...props} />
+))
+export const PaginationItem = React.forwardRef<HTMLLIElement, React.ComponentProps<"li">>(({ ...props }, ref) => <li ref={ref} {...props} />)
+type PaginationLinkProps = { isActive?: boolean } & React.ComponentProps<"a">
+export const PaginationLink = ({ className, isActive, ...props }: PaginationLinkProps) => (
+  <a aria-current={isActive ? "page" : undefined} className={"inline-flex items-center justify-center h-10 w-10 rounded-md text-sm hover:bg-accent" + (isActive ? " border border-input" : "") + (className ? \` \${className}\` : "")} {...props} />
+)
+export const PaginationPrevious = ({ ...props }) => <PaginationLink aria-label="Go to previous page" className="w-auto px-4 gap-1" {...props}><ChevronLeft className="h-4 w-4" /><span>Previous</span></PaginationLink>
+export const PaginationNext = ({ ...props }) => <PaginationLink aria-label="Go to next page" className="w-auto px-4 gap-1" {...props}><span>Next</span><ChevronRight className="h-4 w-4" /></PaginationLink>
+export const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => (
+  <span aria-hidden className={"flex h-10 w-10 items-center justify-center" + (className ? \` \${className}\` : "")} {...props}><MoreHorizontal className="h-4 w-4" /><span className="sr-only">More pages</span></span>
+)`,
+    prompt: "Create an accessible, composable pagination component. Include Pagination, PaginationContent, PaginationItem, PaginationLink (with isActive), PaginationPrevious, PaginationNext, and PaginationEllipsis. Use lucide-react for chevron and ellipsis icons. Keep it fully keyboard and screen-reader accessible.",
+    tags: ["pagination", "composable", "accessible", "aria"],
+  },
 ];
 
 export function getComponent(slug: string): ComponentEntry | undefined {

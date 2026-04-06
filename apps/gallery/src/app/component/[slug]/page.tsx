@@ -24,6 +24,24 @@ import {
   PanelField,
   PanelInput,
   NodeCard,
+  TubelightNavBar,
+  MD3Switch,
+  DualConfirmDialog,
+  BlenderUpload,
+  EmptyState,
+  CustomCheckbox,
+  GradientCheckbox,
+  TransformerCheckbox,
+  AnimatedCheckbox,
+  LoadingSpinner,
+  PriceBreakdown,
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
 } from "@repo/ui";
 
 /* ── interactive preview wrappers ── */
@@ -193,6 +211,140 @@ function SubmissionLoaderPreview() {
   );
 }
 
+function TubelightNavBarPreview() {
+  const [active, setActive] = useState("Events");
+  const items = ["Home", "Events", "Settings"];
+  return (
+    <div className="flex items-center gap-1 bg-white/5 border border-white/10 py-0.5 px-0.5 rounded-full shadow-lg">
+      {items.map((name) => {
+        const isActive = active === name;
+        return (
+          <button
+            key={name}
+            onClick={() => setActive(name)}
+            className={`relative cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-full transition-colors ${isActive ? "bg-white/10 text-indigo-400" : "text-neutral-400 hover:text-white"}`}
+          >
+            {name}
+            {isActive && (
+              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-indigo-400 rounded-t-full">
+                <div className="absolute w-8 h-4 bg-indigo-400/20 rounded-full blur-md -top-1.5 -left-1" />
+                <div className="absolute w-6 h-4 bg-indigo-400/20 rounded-full blur-md -top-0.5" />
+              </div>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MD3SwitchPreview() {
+  const [on1, setOn1] = useState(false);
+  const [on2, setOn2] = useState(true);
+  return (
+    <div className="flex flex-col gap-3 items-center">
+      <MD3Switch onCheckedChange={setOn1} checked={on1} showIcons />
+      <MD3Switch variant="destructive" size="sm" checked={on2} onCheckedChange={setOn2} showIcons />
+    </div>
+  );
+}
+
+function DualConfirmDialogPreview() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <button
+        onClick={() => setOpen(true)}
+        className="px-3 py-1.5 text-xs rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+      >
+        Delete 3 items
+      </button>
+      <DualConfirmDialog
+        open={open}
+        onOpenChange={setOpen}
+        onConfirm={() => setOpen(false)}
+        title="Delete Events"
+        description="You are about to delete the selected events."
+        itemCount={3}
+        itemType="event"
+      />
+    </div>
+  );
+}
+
+function BlenderUploadPreview() {
+  return (
+    <div className="w-full max-w-xs">
+      <BlenderUpload onFileSelect={() => {}} maxSizeMB={5} />
+    </div>
+  );
+}
+
+function EmptyStatePreview() {
+  return (
+    <div className="scale-75 origin-top">
+      <EmptyState
+        title="No events yet"
+        description="Create your first event to get started."
+        onAction={() => {}}
+      />
+    </div>
+  );
+}
+
+function CheckboxVariantsPreview() {
+  return (
+    <div className="flex gap-5 items-center">
+      <CustomCheckbox defaultChecked />
+      <GradientCheckbox defaultChecked />
+      <TransformerCheckbox defaultChecked />
+      <AnimatedCheckbox defaultChecked />
+    </div>
+  );
+}
+
+function LoadingSpinnerPreview() {
+  return (
+    <div className="flex gap-6 items-center">
+      <LoadingSpinner size="sm" />
+      <LoadingSpinner size="md" />
+      <LoadingSpinner size="lg" />
+    </div>
+  );
+}
+
+function PriceBreakdownPreview() {
+  return (
+    <div className="w-full max-w-xs">
+      <PriceBreakdown price={999} gstPercent={18} priceLabel="Ticket Price" />
+    </div>
+  );
+}
+
+function PaginationPreview() {
+  const [page, setPage] = useState(2);
+  return (
+    <Pagination>
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setPage((p) => Math.max(1, p - 1)); }} />
+        </PaginationItem>
+        {[1, 2, 3].map((p) => (
+          <PaginationItem key={p}>
+            <PaginationLink href="#" isActive={page === p} onClick={(e) => { e.preventDefault(); setPage(p); }}>
+              {p}
+            </PaginationLink>
+          </PaginationItem>
+        ))}
+        <PaginationItem><PaginationEllipsis /></PaginationItem>
+        <PaginationItem>
+          <PaginationNext href="#" onClick={(e) => { e.preventDefault(); setPage((p) => p + 1); }} />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  );
+}
+
 const previews: Record<string, React.ReactNode> = {
   "glass-button": <GlassButton>Click Me</GlassButton>,
   card: (
@@ -225,6 +377,15 @@ const previews: Record<string, React.ReactNode> = {
   "collapsible-sidebar": <CollapsibleSidebarPreview />,
   "side-panel": <SidePanelPreview />,
   "node-card": <NodeCardPreview />,
+  "tubelight-navbar": <TubelightNavBarPreview />,
+  "md3-switch": <MD3SwitchPreview />,
+  "dual-confirm-dialog": <DualConfirmDialogPreview />,
+  "blender-upload": <BlenderUploadPreview />,
+  "empty-state": <EmptyStatePreview />,
+  "checkbox-variants": <CheckboxVariantsPreview />,
+  "loading-spinner": <LoadingSpinnerPreview />,
+  "price-breakdown": <PriceBreakdownPreview />,
+  pagination: <PaginationPreview />,
 };
 
 export default function ComponentDetailPage({
