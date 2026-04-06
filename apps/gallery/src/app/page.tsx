@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Maximize2, ExternalLink } from "lucide-react";
 import {
   GlassButton,
@@ -614,8 +615,15 @@ function getCategories() {
 }
 
 export default function GalleryPage() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState(ALL);
+  const [popupSlug, setPopupSlug] = useState<string | null>(null);
+
+  const navigateTo = useCallback(
+    (slug: string) => router.push(`/component/${slug}`),
+    [router]
+  );
   const categories = useMemo(getCategories, []);
 
   const filtered = useMemo(() => {
@@ -687,10 +695,14 @@ export default function GalleryPage() {
         {/* ── Component grid — iframe gallery style ── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((entry) => (
-            <Link
+            // div avoids nested <button>/<a> — root cause of hydration mismatch
+            <div
               key={entry.slug}
-              href={`/component/${entry.slug}`}
-              className="group rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden hover:border-indigo-500/40 hover:bg-white/[0.05] transition-all duration-200"
+              role="button"
+              tabIndex={0}
+              onClick={() => navigateTo(entry.slug)}
+              onKeyDown={(e) => e.key === "Enter" && navigateTo(entry.slug)}
+              className="group cursor-pointer rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden hover:border-indigo-500/40 hover:bg-white/[0.05] transition-all duration-200 flex flex-col"
             >
               {/* Preview window */}
               <div className="relative">
@@ -699,11 +711,20 @@ export default function GalleryPage() {
                   <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
                   <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
                   <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+                  {popupPreviews[entry.slug] && (
+                    <button
+                      className="ml-auto p-1 rounded hover:bg-white/10 text-neutral-600 hover:text-white transition-colors"
+                      onClick={(e) => { e.stopPropagation(); setPopupSlug(entry.slug); }}
+                      title="Expand preview"
+                    >
+                      <Maximize2 size={11} />
+                    </button>
+                  )}
                 </div>
 
                 {/* Live component preview */}
                 <div className="px-6 py-10 flex items-center justify-center min-h-[180px] bg-gradient-to-b from-transparent to-white/[0.01]">
-                  <div onClick={(e) => e.preventDefault()} className="pointer-events-auto">
+                  <div onClick={(e) => e.stopPropagation()} className="pointer-events-auto">
                     {previews[entry.slug] ?? (
                       <span className="text-neutral-600 text-sm">Preview</span>
                     )}
@@ -719,7 +740,7 @@ export default function GalleryPage() {
                   </h3>
                   <p className="text-[11px] text-neutral-500 truncate mt-0.5">{entry.prompt}</p>
                 </div>
-                <div className="flex gap-1 shrink-0 ml-2">
+                <div className="flex items-center gap-1 shrink-0 ml-2">
                   {entry.tags.slice(0, 2).map((tag) => (
                     <span
                       key={tag}
@@ -728,9 +749,16 @@ export default function GalleryPage() {
                       {tag}
                     </span>
                   ))}
+                  <button
+                    className="p-1 rounded hover:bg-white/10 text-neutral-600 hover:text-white transition-colors"
+                    onClick={(e) => { e.stopPropagation(); window.open(`/component/${entry.slug}`, "_blank"); }}
+                    title="Open in new tab"
+                  >
+                    <ExternalLink size={11} />
+                  </button>
                 </div>
               </div>
-            </Link>
+            </div>
           ))}
         </div>
 
@@ -740,6 +768,38 @@ export default function GalleryPage() {
           </div>
         )}
       </div>
+      {/* Popup preview modal */}
+      {popupSlug && (
+        <div
+          className="fixed inset-0 z-[500] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
+          onClick={() => setPopupSlug(null)}
+        >
+          <div
+            className="relative w-full max-w-3xl bg-[#0d0d0d] border border-white/10 rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
+                <span className="ml-3 text-sm font-medium text-white">
+                  {registry.find((e) => e.slug === popupSlug)?.name}
+                </span>
+              </div>
+              <button
+                className="text-neutral-500 hover:text-white transition-colors text-lg leading-none"
+                onClick={() => setPopupSlug(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-8 flex items-center justify-center min-h-[350px] overflow-auto">
+              {popupPreviews[popupSlug]?.()}
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
