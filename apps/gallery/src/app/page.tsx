@@ -3,7 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Maximize2, ExternalLink } from "lucide-react";
+import { Maximize2, ExternalLink, Apple, Milk, Coffee, Home as HomeIcon, ShoppingBag, Grid3X3, ShoppingCart, Search } from "lucide-react";
 import {
   GlassButton,
   Card,
@@ -55,6 +55,18 @@ import {
   Marquee,
   ContactSection,
   TextDisperseLink,
+  ImageWithFallback,
+  SkeletonCard,
+  SkeletonRow,
+  EcomEmptyState,
+  Breadcrumb,
+  CategoryChips,
+  CategoryGrid,
+  SearchOverlay,
+  MobileBottomNav,
+  ProductCard,
+  StickyCartBar,
+  AppHeader,
 } from "@repo/ui";
 import { registry } from "@repo/registry";
 
@@ -462,6 +474,70 @@ function TextDisperseLinkPreview() {
   );
 }
 
+function CategoryChipsPreview() {
+  const [active, setActive] = useState("all");
+  return (
+    <CategoryChips
+      categories={[
+        { id: "all", name: "All", icon: ShoppingBag, color: "text-white" },
+        { id: "fruits", name: "Fruits", icon: Apple, color: "text-green-700" },
+        { id: "dairy", name: "Dairy", icon: Milk, color: "text-blue-700" },
+        { id: "snacks", name: "Snacks", icon: Coffee, color: "text-orange-700" },
+      ]}
+      activeCategory={active}
+      onCategoryChange={setActive}
+    />
+  );
+}
+
+function MobileBottomNavPreview() {
+  const [tab, setTab] = useState("home");
+  return (
+    <div className="relative w-full" style={{ height: 72 }}>
+      <MobileBottomNav
+        tabs={[
+          { id: "home", icon: HomeIcon, label: "Home" },
+          { id: "cats", icon: Grid3X3, label: "Categories" },
+          { id: "search", icon: Search, label: "Search" },
+          { id: "cart", icon: ShoppingCart, label: "Cart", badge: 3 },
+        ]}
+        activeTab={tab}
+        onTabChange={setTab}
+      />
+    </div>
+  );
+}
+
+function ProductCardPreview() {
+  const [qty, setQty] = useState(0);
+  return (
+    <div style={{ width: 180 }}>
+      <ProductCard
+        product={{ id: "1", name: "Basmati Rice 5kg", price: 499, unit: "5kg bag", image: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400", inStock: true, discount: 10 }}
+        quantity={qty}
+        onAdd={() => setQty(q => q + 1)}
+        onDecrease={() => setQty(q => Math.max(0, q - 1))}
+      />
+    </div>
+  );
+}
+
+function AppHeaderPreview() {
+  return (
+    <div style={{ width: "100%", transform: "scale(0.85)", transformOrigin: "top" }}>
+      <AppHeader
+        storeName="FreshMart"
+        tagline="Delivery in 30 mins"
+        cartItemCount={3}
+        isOpen={true}
+        infoBanner="Free delivery above ₹299"
+        onCartClick={() => {}}
+        onSearchClick={() => {}}
+      />
+    </div>
+  );
+}
+
 /* ── Popup-eligible slugs & their larger preview renderers ── */
 const popupPreviews: Record<string, () => React.ReactNode> = {
   marquee: () => (
@@ -526,6 +602,33 @@ const popupPreviews: Record<string, () => React.ReactNode> = {
   "text-disperse-link": () => (
     <div style={{ color: "white", fontSize: "2.5rem" }}>
       <TextDisperseLink label="PORTFOLIO" href="#" />
+    </div>
+  ),
+  "category-chips": () => <CategoryChipsPreview />,
+  "category-grid": () => (
+    <div className="w-full" style={{ background: "white", padding: 16, borderRadius: 12 }}>
+      <CategoryGrid
+        categories={[
+          { id: "fruits", name: "Fruits & Veg", icon: Apple, color: "bg-green-100 text-green-700" },
+          { id: "dairy", name: "Dairy & Eggs", icon: Milk, color: "bg-blue-100 text-blue-700" },
+          { id: "snacks", name: "Snacks", icon: Coffee, color: "bg-orange-100 text-orange-700" },
+          { id: "home", name: "Household", icon: HomeIcon, color: "bg-purple-100 text-purple-700" },
+        ]}
+        onCategoryClick={() => {}}
+      />
+    </div>
+  ),
+  "mobile-bottom-nav": () => <MobileBottomNavPreview />,
+  "product-card": () => <ProductCardPreview />,
+  "app-header": () => <AppHeaderPreview />,
+  "sticky-cart-bar": () => (
+    <div className="relative w-full" style={{ height: 100, paddingBottom: 20 }}>
+      <StickyCartBar
+        itemCount={2}
+        totalPrice={598}
+        onViewCart={() => {}}
+        primaryAction={{ label: "Order via WhatsApp", onClick: () => {} }}
+      />
     </div>
   ),
   "custom-cursor": () => (
@@ -601,6 +704,49 @@ const previews: Record<string, React.ReactNode> = {
   marquee: <MarqueePreview />,
   "contact-section": <ContactSectionPreview />,
   "text-disperse-link": <TextDisperseLinkPreview />,
+  "image-with-fallback": (
+    <div className="flex gap-3">
+      <ImageWithFallback src="https://broken.invalid/img.jpg" alt="broken" style={{ width: 60, height: 60, borderRadius: 8 }} />
+      <ImageWithFallback src="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=100" alt="working" style={{ width: 60, height: 60, borderRadius: 8, objectFit: "cover" }} />
+    </div>
+  ),
+  "skeleton-card": <SkeletonCard />,
+  "ecom-empty-state": <EcomEmptyState type="cart" />,
+  "breadcrumb": (
+    <Breadcrumb items={[
+      { label: "Home", href: "#" },
+      { label: "Snacks", href: "#" },
+      { label: "Kurkure Masala 90g" },
+    ]} />
+  ),
+  "category-chips": <CategoryChipsPreview />,
+  "category-grid": (
+    <div style={{ background: "white", padding: 12, borderRadius: 12 }}>
+      <CategoryGrid
+        categories={[
+          { id: "fruits", name: "Fruits", icon: Apple, color: "bg-green-100 text-green-700" },
+          { id: "dairy", name: "Dairy", icon: Milk, color: "bg-blue-100 text-blue-700" },
+          { id: "snacks", name: "Snacks", icon: Coffee, color: "bg-orange-100 text-orange-700" },
+          { id: "home", name: "Home", icon: HomeIcon, color: "bg-purple-100 text-purple-700" },
+        ]}
+        onCategoryClick={() => {}}
+      />
+    </div>
+  ),
+  "search-overlay": (
+    <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-xl shadow" style={{ color: "black" }}>
+      <Search className="w-4 h-4 text-gray-400" />
+      <span className="text-sm text-gray-400">Search groceries…</span>
+    </div>
+  ),
+  "mobile-bottom-nav": <MobileBottomNavPreview />,
+  "product-card": <ProductCardPreview />,
+  "sticky-cart-bar": (
+    <div className="relative" style={{ height: 80 }}>
+      <StickyCartBar itemCount={2} totalPrice={598} onViewCart={() => {}} />
+    </div>
+  ),
+  "app-header": <AppHeaderPreview />,
 };
 
 /* ── Category helpers ── */

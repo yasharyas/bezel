@@ -1484,6 +1484,385 @@ export function TextDisperseLink({ label, href, target, rel, className="" }: Pro
     prompt: "Create a text link where each character scatters to a pre-defined offset (translates + rotates) on hover, then snaps back to their resting positions on mouse leave. Offsets are proportional to the current font-size in em. Animation is handled by GSAP with power3 easing.",
     tags: ["text", "hover", "scatter", "gsap", "character-animation", "social", "link"],
   },
+  // ── Grocery / ecommerce components ──
+  {
+    name: "ImageWithFallback",
+    slug: "image-with-fallback",
+    path: "media/ImageWithFallback.tsx",
+    category: "media",
+    code: `"use client";
+import { useState } from "react";
+const ERROR_IMG_SRC = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIzLjciPjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiByeD0iNiIvPjxwYXRoIGQ9Im0xNiA1OCAxNi0xOCAzMiAzMiIvPjxjaXJjbGUgY3g9IjUzIiBjeT0iMzUiIHI9IjciLz48L3N2Zz4KCg==";
+export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElement>) {
+  const [didError, setDidError] = useState(false);
+  const { src, alt, style, className, ...rest } = props;
+  return didError ? (
+    <div className={\`inline-block bg-gray-100 text-center align-middle \${className ?? ""}\`} style={style}>
+      <div className="flex items-center justify-center w-full h-full">
+        <img src={ERROR_IMG_SRC} alt="Error loading image" {...rest} data-original-url={src} />
+      </div>
+    </div>
+  ) : (
+    <img src={src} alt={alt} className={className} style={style} {...rest} onError={() => setDidError(true)} />
+  );
+}`,
+    prompt: "Create a React image component that renders a standard <img> tag but gracefully falls back to a built-in SVG placeholder when the image fails to load. Accept all standard HTML img attributes as props. Show a gray container with a centered broken-image SVG icon as the fallback.",
+    tags: ["image", "fallback", "graceful-degradation", "utility", "media"],
+  },
+  {
+    name: "SkeletonCard",
+    slug: "skeleton-card",
+    path: "loaders/SkeletonCard.tsx",
+    category: "loading",
+    code: `export function SkeletonCard() {
+  return (
+    <div className="bg-card rounded-xl border border-border overflow-hidden animate-pulse">
+      <div className="aspect-square bg-muted" />
+      <div className="p-3 space-y-2">
+        <div className="h-4 bg-muted rounded w-3/4" />
+        <div className="h-3 bg-muted rounded w-1/2" />
+        <div className="flex items-center justify-between mt-3">
+          <div className="h-5 bg-muted rounded w-12" />
+          <div className="h-8 w-8 bg-muted rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
+export function SkeletonRow() {
+  return (
+    <div className="flex gap-3 p-3 bg-muted rounded-lg animate-pulse">
+      <div className="w-16 h-16 rounded-lg bg-muted-foreground/10 shrink-0" />
+      <div className="flex-1 space-y-2 py-1">
+        <div className="h-4 bg-muted-foreground/10 rounded w-2/3" />
+        <div className="h-3 bg-muted-foreground/10 rounded w-1/3" />
+        <div className="h-4 bg-muted-foreground/10 rounded w-1/4" />
+      </div>
+    </div>
+  );
+}`,
+    prompt: "Create two React skeleton loading components using Tailwind CSS animate-pulse. SkeletonCard should mimic a product card with a square image placeholder, two text lines and a price+button row. SkeletonRow should mimic a horizontal list item with a square thumbnail and three text lines. Use shadcn/ui Tailwind tokens.",
+    tags: ["skeleton", "loading", "placeholder", "pulse", "shimmer"],
+  },
+  {
+    name: "EcomEmptyState",
+    slug: "ecom-empty-state",
+    path: "feedback/EcomEmptyState.tsx",
+    category: "feedback",
+    code: `"use client";
+import { ShoppingBag, Search, Wifi, LucideIcon } from "lucide-react";
+import { motion } from "framer-motion";
+type EmptyType = "cart" | "search" | "category" | "network";
+type Props = { type: EmptyType; query?: string; onCTA?: () => void; };
+const config: Record<EmptyType, { icon: LucideIcon; title: string; desc: string; cta: string; color: string }> = {
+  cart: { icon: ShoppingBag, title: "Your cart is empty", desc: "Add items from the store to get started", cta: "Start Shopping", color: "text-primary" },
+  search: { icon: Search, title: "No results found", desc: "Try different keywords or browse categories", cta: "Clear Search", color: "text-muted-foreground" },
+  category: { icon: ShoppingBag, title: "Nothing here yet", desc: "Try a different category", cta: "View All", color: "text-muted-foreground" },
+  network: { icon: Wifi, title: "Couldn't load items", desc: "Check your connection and try again", cta: "Retry", color: "text-destructive" },
+};
+export function EcomEmptyState({ type, query, onCTA }: Props) {
+  const c = config[type]; const Icon = c.icon;
+  return (
+    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center py-16 px-6 text-center">
+      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4"><Icon className={\`w-9 h-9 \${c.color}\`} /></div>
+      <h3 className="m-0 mb-2 text-lg font-semibold">{c.title}</h3>
+      <p className="text-muted-foreground m-0 mb-1 max-w-xs">{type === "search" && query ? \`No items matching "\${query}"\` : c.desc}</p>
+      {type === "search" && <p className="text-muted-foreground m-0 mb-5 text-sm">Try: atta, rice, milk, vegetables…</p>}
+      {onCTA && <button onClick={onCTA} className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 active:scale-95 transition-all">{c.cta}</button>}
+    </motion.div>
+  );
+}`,
+    prompt: "Build a reusable React EmptyState component with Framer Motion fade-in animation. Support four preset types: cart, search, category, and network — each with a different lucide-react icon, title, description, and CTA label. Accept an optional query string and an optional onCTA callback. Use shadcn/ui Tailwind design tokens.",
+    tags: ["empty", "placeholder", "no-results", "animated", "preset", "ecommerce"],
+  },
+  {
+    name: "Breadcrumb",
+    slug: "breadcrumb",
+    path: "navigation/Breadcrumb.tsx",
+    category: "navigation",
+    code: `"use client";
+import { ChevronRight, Home } from "lucide-react";
+export interface BreadcrumbItem { label: string; href?: string; onClick?: () => void; }
+type Props = { items: BreadcrumbItem[]; className?: string; };
+export function Breadcrumb({ items, className = "" }: Props) {
+  return (
+    <nav aria-label="Breadcrumb" className={className}>
+      <ol className="flex items-center gap-0.5 flex-wrap text-xs text-muted-foreground">
+        {items.map((item, i) => {
+          const isLast = i === items.length - 1; const isFirst = i === 0;
+          return (
+            <li key={i} className="flex items-center gap-0.5 min-w-0">
+              {i > 0 && <ChevronRight className="w-3 h-3 mx-0.5 shrink-0 opacity-40" />}
+              {isLast ? (
+                <span className="font-medium text-foreground truncate max-w-[160px]" aria-current="page" title={item.label}>{item.label}</span>
+              ) : item.href ? (
+                <a href={item.href} className="flex items-center gap-1 hover:text-primary transition-colors whitespace-nowrap underline-offset-2 hover:underline">
+                  {isFirst && <Home className="w-3 h-3 shrink-0" />}{item.label}
+                </a>
+              ) : item.onClick ? (
+                <button type="button" onClick={item.onClick} className="hover:text-primary transition-colors whitespace-nowrap cursor-pointer bg-transparent border-0 p-0 text-xs text-muted-foreground">
+                  {isFirst && <Home className="w-3 h-3 shrink-0 inline mr-1" />}{item.label}
+                </button>
+              ) : <span className="whitespace-nowrap">{item.label}</span>}
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}`,
+    prompt: "Create a generic React breadcrumb navigation component. Each item in the items array should have a label, optional href (renders as link), and optional onClick (renders as button). The first item should display a Home icon from lucide-react. Separate items with a ChevronRight icon. The last item is non-interactive and shown in foreground color. Use Tailwind CSS with shadcn/ui tokens.",
+    tags: ["breadcrumb", "navigation", "accessible", "semantic"],
+  },
+  {
+    name: "CategoryChips",
+    slug: "category-chips",
+    path: "navigation/CategoryChips.tsx",
+    category: "navigation",
+    code: `"use client";
+import { useRef } from "react";
+import { motion } from "framer-motion";
+import type { ElementType } from "react";
+export interface ChipCategory { id: string; name: string; icon: ElementType; color: string; bg?: string; }
+type Props = { categories: ChipCategory[]; activeCategory: string; onCategoryChange: (id: string) => void; };
+export function CategoryChips({ categories, activeCategory, onCategoryChange }: Props) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  return (
+    <div ref={scrollRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
+      {categories.map((cat) => {
+        const Icon = cat.icon; const isActive = activeCategory === cat.id;
+        return (
+          <motion.button key={cat.id} whileTap={{ scale: 0.94 }} onClick={() => onCategoryChange(cat.id)}
+            className={\`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all shrink-0 border \${isActive ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20" : "bg-white text-foreground border-border hover:border-primary/40 hover:bg-primary/5"}\`}>
+            <Icon className={\`w-3.5 h-3.5 \${isActive ? "text-primary-foreground" : cat.color}\`} />
+            {cat.name}
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}`,
+    prompt: "Build a horizontally scrollable category filter chip bar in React using Framer Motion. Accept a categories array (each with id, name, icon component, and color), activeCategory string, and onCategoryChange callback. Active chip uses filled primary color; inactive uses white with border. Hide the scrollbar. Add tap scale animation.",
+    tags: ["filter", "chips", "pills", "horizontal-scroll", "tabs", "categories"],
+  },
+  {
+    name: "CategoryGrid",
+    slug: "category-grid",
+    path: "navigation/CategoryGrid.tsx",
+    category: "navigation",
+    code: `"use client";
+import { motion } from "framer-motion";
+import type { ElementType } from "react";
+export interface GridCategory { id: string; name: string; icon: ElementType; color: string; }
+type Props = { categories: GridCategory[]; onCategoryClick?: (categoryId: string) => void; };
+export function CategoryGrid({ categories, onCategoryClick }: Props) {
+  return (
+    <div className="grid grid-cols-4 md:grid-cols-8 gap-3 md:gap-4">
+      {categories.map((category, index) => {
+        const Icon = category.icon;
+        return (
+          <motion.button key={category.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
+            onClick={() => onCategoryClick?.(category.id)} className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted transition-colors">
+            <div className={\`w-14 h-14 md:w-16 md:h-16 rounded-full \${category.color} flex items-center justify-center\`}>
+              <Icon className="w-7 h-7 md:w-8 md:h-8" />
+            </div>
+            <span className="text-center leading-tight text-xs">{category.name}</span>
+          </motion.button>
+        );
+      })}
+    </div>
+  );
+}`,
+    prompt: "Create a responsive React category grid component using Framer Motion. Display 4 columns on mobile and 8 on desktop. Each item shows a circular colored icon and a label below. Add staggered fade+slide-up entrance animation. Accept a categories array (id, name, icon, color) and optional onCategoryClick callback.",
+    tags: ["grid", "categories", "icon-grid", "animated", "responsive"],
+  },
+  {
+    name: "SearchOverlay",
+    slug: "search-overlay",
+    path: "overlays/SearchOverlay.tsx",
+    category: "overlays",
+    code: `"use client";
+import { useState, useEffect, useRef } from "react";
+import { Search, X, Clock, TrendingUp, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+type Props = { isOpen: boolean; onClose: () => void; onSearch: (query: string) => void; currentQuery?: string; popularSearches?: string[]; storageKey?: string; };
+export function SearchOverlay({ isOpen, onClose, onSearch, currentQuery = "", popularSearches = [], storageKey = "app_recent_searches" }: Props) {
+  const [value, setValue] = useState(currentQuery);
+  const [recent, setRecent] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+  function getRecent(): string[] { try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; } }
+  function saveRecent(term: string) { try { const prev = getRecent().filter(s => s !== term); localStorage.setItem(storageKey, JSON.stringify([term, ...prev].slice(0, 8))); } catch {} }
+  function clearRecent() { try { localStorage.removeItem(storageKey); } catch {} }
+  useEffect(() => { if (isOpen) { setValue(currentQuery); setRecent(getRecent()); setTimeout(() => inputRef.current?.focus(), 100); } }, [isOpen, currentQuery]);
+  const commit = (term: string) => { if (!term.trim()) return; saveRecent(term.trim()); onSearch(term.trim()); onClose(); };
+  const handleKey = (e: React.KeyboardEvent) => { if (e.key === "Enter") commit(value); if (e.key === "Escape") onClose(); };
+  return (
+    <AnimatePresence>
+      {isOpen && (<>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm" />
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ type: "spring", damping: 30, stiffness: 400 }} className="fixed top-0 left-0 right-0 z-[61] bg-white shadow-2xl rounded-b-2xl max-h-[80vh] flex flex-col">
+          <div className="flex items-center gap-3 p-4 border-b border-border">
+            <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+            <input ref={inputRef} type="text" value={value} onChange={e => setValue(e.target.value)} onKeyDown={handleKey} placeholder="Search…" className="flex-1 text-base outline-none bg-transparent placeholder:text-muted-foreground" />
+            {value && <button onClick={() => setValue("")} className="p-1 hover:bg-muted rounded-full transition-colors"><X className="w-4 h-4 text-muted-foreground" /></button>}
+            <button onClick={onClose} className="text-primary font-medium text-sm shrink-0 hover:opacity-70 transition-opacity">Cancel</button>
+          </div>
+          <div className="overflow-y-auto flex-1 p-4 space-y-5">
+            {recent.length > 0 && <div><div className="flex items-center justify-between mb-2"><span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Recent</span><button onClick={() => { clearRecent(); setRecent([]); }} className="text-xs text-primary hover:underline">Clear</button></div><div className="flex flex-wrap gap-2">{recent.map(r => <button key={r} onClick={() => commit(r)} className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full text-sm hover:bg-primary/10 hover:text-primary transition-colors"><Clock className="w-3.5 h-3.5 text-muted-foreground" />{r}</button>)}</div></div>}
+            {popularSearches.length > 0 && <div><div className="flex items-center gap-1 mb-2"><TrendingUp className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Popular</span></div><div className="flex flex-wrap gap-2">{popularSearches.map(s => <button key={s} onClick={() => commit(s)} className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium hover:bg-primary/20 transition-colors">{s}<ChevronRight className="w-3 h-3" /></button>)}</div></div>}
+          </div>
+          {value.trim() && <div className="p-4 border-t border-border"><button onClick={() => commit(value)} className="w-full bg-primary text-primary-foreground py-3 rounded-xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity active:scale-[0.98]"><Search className="w-4 h-4" />Search for &ldquo;{value}&rdquo;</button></div>}
+        </motion.div>
+      </>)}
+    </AnimatePresence>
+  );
+}`,
+    prompt: "Build a full-screen search overlay in React with Framer Motion. It slides down from the top with a spring animation and a blurred backdrop. Include an input with clear button and cancel action; a Recent searches section (persisted in localStorage); a Popular searches section with pill buttons. Show a search CTA when there is text.",
+    tags: ["search", "overlay", "modal", "animated", "recent-searches", "popular"],
+  },
+  {
+    name: "MobileBottomNav",
+    slug: "mobile-bottom-nav",
+    path: "navigation/MobileBottomNav.tsx",
+    category: "navigation",
+    code: `"use client";
+import { motion, AnimatePresence } from "framer-motion";
+import type { ElementType } from "react";
+export interface NavTab { id: string; icon: ElementType; label: string; badge?: number; action?: () => void; accentColor?: string; }
+type Props = { tabs: NavTab[]; activeTab: string; onTabChange: (tab: string) => void; };
+export function MobileBottomNav({ tabs, activeTab, onTabChange }: Props) {
+  return (
+    <motion.nav initial={{ y: 100 }} animate={{ y: 0 }} className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      <div className="grid px-1" style={{ gridTemplateColumns: \`repeat(\${tabs.length}, minmax(0, 1fr))\` }}>
+        {tabs.map((tab) => {
+          const Icon = tab.icon; const isActive = activeTab === tab.id; const hasAccent = !!tab.accentColor;
+          return (
+            <button key={tab.id} onClick={() => tab.action ? tab.action() : onTabChange(tab.id)} style={hasAccent ? { color: tab.accentColor } : undefined}
+              className={\`flex flex-col items-center gap-0.5 py-2.5 px-1 relative transition-colors \${hasAccent ? "" : isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"}\`}>
+              {isActive && !hasAccent && <motion.div layoutId="nav-indicator" className="absolute top-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-full" transition={{ type: "spring", damping: 20, stiffness: 400 }} />}
+              <div className="relative"><Icon className="w-5 h-5" />
+                <AnimatePresence>{tab.badge !== undefined && tab.badge > 0 && <motion.span key={tab.badge} initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full min-w-[16px] h-4 flex items-center justify-center text-[9px] font-bold px-0.5 leading-none">{tab.badge > 99 ? "99+" : tab.badge}</motion.span>}</AnimatePresence>
+              </div>
+              <span className="text-[10px]">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </motion.nav>
+  );
+}`,
+    prompt: "Build a mobile bottom navigation bar in React with Framer Motion that slides up on mount. Support N tabs from a tabs prop array (id, icon, label, optional badge count, optional custom action, optional accent color). Show an animated active indicator bar using Framer Motion layoutId. Show a red badge count when badge > 0. Hide on md+ screens.",
+    tags: ["mobile", "bottom-nav", "tabs", "badge", "animated", "ios-safe-area"],
+  },
+  {
+    name: "ProductCard",
+    slug: "product-card",
+    path: "cards/ProductCard.tsx",
+    category: "cards",
+    code: `"use client";
+import { Plus, Minus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+export interface EcomProduct { id: string; name: string; price: number; unit: string; image: string; inStock: boolean; discount?: number; }
+type Props = { product: EcomProduct; quantity: number; onAdd: () => void; onDecrease: () => void; onNotify?: () => void; onCardClick?: () => void; };
+export function ProductCard({ product, quantity, onAdd, onDecrease, onNotify, onCardClick }: Props) {
+  const [justAdded, setJustAdded] = useState(false);
+  const handleAdd = () => { onAdd(); if (quantity === 0) { setJustAdded(true); setTimeout(() => setJustAdded(false), 600); } };
+  const discountedFromPrice = product.discount ? Math.round(product.price / (1 - product.discount / 100)) : null;
+  return (
+    <motion.div layout whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }} className="bg-card rounded-xl border border-border overflow-hidden transition-shadow relative">
+      <button onClick={onCardClick} className="block w-full relative aspect-square bg-muted overflow-hidden focus:outline-none" aria-label={\`View details for \${product.name}\`} tabIndex={onCardClick ? 0 : -1}>
+        <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" loading="lazy" />
+        {product.discount && product.inStock && <div className="absolute top-2 left-2 bg-destructive text-destructive-foreground px-2 py-0.5 rounded-md text-xs font-bold">{product.discount}% OFF</div>}
+        {!product.inStock && <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-2 p-2"><span className="bg-white text-foreground px-3 py-1 rounded-md text-sm font-semibold">Out of Stock</span>{onNotify && <button onClick={e => { e.stopPropagation(); onNotify(); }} className="flex items-center gap-1 bg-[#25D366] text-white px-2.5 py-1 rounded-md text-xs font-medium hover:bg-[#22c35e] active:scale-95 transition-all">Notify me</button>}</div>}
+        <AnimatePresence>{justAdded && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-primary/15 flex items-center justify-center pointer-events-none"><motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} exit={{ scale: 1.2, opacity: 0 }} className="w-10 h-10 bg-primary rounded-full flex items-center justify-center"><Plus className="w-5 h-5 text-primary-foreground" /></motion.div></motion.div>}</AnimatePresence>
+        <AnimatePresence>{quantity > 0 && <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0 }} className="absolute top-2 right-2 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-[10px] font-bold shadow">{quantity}</motion.div>}</AnimatePresence>
+      </button>
+      <div className="p-3">
+        <button onClick={onCardClick} className="text-left w-full hover:text-primary transition-colors focus:outline-none"><h3 className="line-clamp-2 m-0 mb-0.5 text-sm font-semibold leading-tight">{product.name}</h3></button>
+        <p className="text-muted-foreground text-xs m-0 mb-2">{product.unit}</p>
+        <div className="flex items-center justify-between gap-2 min-h-[36px]">
+          <div className="flex items-baseline gap-1.5 flex-wrap"><span className="font-bold text-sm">₹{product.price}</span>{discountedFromPrice && <span className="line-through text-muted-foreground text-xs">₹{discountedFromPrice}</span>}</div>
+          {product.inStock && <AnimatePresence mode="wait" initial={false}>{quantity === 0 ? <motion.button key="add" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} onClick={handleAdd} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 active:scale-95 transition-all">ADD</motion.button> : <motion.div key="stepper" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="flex items-center gap-1 bg-primary text-primary-foreground rounded-lg px-1.5 py-1"><button onClick={onDecrease} className="w-6 h-6 flex items-center justify-center hover:opacity-75"><Minus className="w-3.5 h-3.5" /></button><span className="w-5 text-center text-sm font-semibold">{quantity}</span><button onClick={handleAdd} className="w-6 h-6 flex items-center justify-center hover:opacity-75"><Plus className="w-3.5 h-3.5" /></button></motion.div>}</AnimatePresence>}
+        </div>
+      </div>
+    </motion.div>
+  );
+}`,
+    prompt: "Design a React product card for an e-commerce grocery app using Framer Motion. Show a square product image with discount badge (top-left) and quantity counter bubble (top-right). Show an out-of-stock overlay with Notify me button. Display product name, unit weight, current price, and strikethrough original price when discounted. Toggle between an ADD button and inline stepper with animated transitions. Flash a success overlay when first added.",
+    tags: ["product", "ecommerce", "add-to-cart", "stepper", "animated", "discount", "out-of-stock"],
+  },
+  {
+    name: "StickyCartBar",
+    slug: "sticky-cart-bar",
+    path: "panels/StickyCartBar.tsx",
+    category: "ecommerce",
+    code: `"use client";
+import { ShoppingCart, MessageCircle, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+type Props = { itemCount: number; totalPrice: number; onViewCart: () => void; primaryAction?: { label: string; onClick: () => void; colorClass?: string; }; };
+export function StickyCartBar({ itemCount, totalPrice, onViewCart, primaryAction }: Props) {
+  return (
+    <AnimatePresence>
+      {itemCount > 0 && (
+        <motion.div initial={{ y: 120 }} animate={{ y: 0 }} exit={{ y: 120 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-3 pb-1">
+          <div className="bg-foreground text-background rounded-2xl shadow-2xl overflow-hidden">
+            <button onClick={onViewCart} className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/5 transition-colors">
+              <div className="flex items-center gap-2"><div className="relative"><ShoppingCart className="w-4 h-4" /><span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">{itemCount}</span></div><span className="text-sm font-medium">{itemCount} item{itemCount !== 1 ? "s" : ""}</span></div>
+              <div className="flex items-center gap-1 text-sm font-semibold">₹{totalPrice}<ChevronUp className="w-4 h-4 opacity-60" /></div>
+            </button>
+            <div className="flex border-t border-white/10">
+              <button onClick={onViewCart} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium hover:bg-white/5 transition-colors border-r border-white/10"><ShoppingCart className="w-4 h-4" />View Cart</button>
+              {primaryAction && <button onClick={primaryAction.onClick} className={\`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-colors \${primaryAction.colorClass ?? "bg-[#25D366] hover:bg-[#22c35e]"}\`}><MessageCircle className="w-4 h-4" />{primaryAction.label}</button>}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}`,
+    prompt: "Build a sticky cart summary bar for mobile in React with Framer Motion. It should spring-animate up from the bottom when cart has items and disappear when empty. Show item count and total price in a dark rounded card. Include a View Cart button and a customizable primary action button. Position it above a bottom navigation bar (bottom-16).",
+    tags: ["cart", "sticky", "mobile", "animated", "summary-bar", "cta", "ecommerce"],
+  },
+  {
+    name: "AppHeader",
+    slug: "app-header",
+    path: "layout/AppHeader.tsx",
+    category: "layout",
+    code: `"use client";
+import { Search, ShoppingCart } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { ReactNode } from "react";
+type Props = { storeName: string; tagline?: string; cartItemCount: number; isOpen?: boolean; infoBanner?: string; onCartClick: () => void; onSearchClick: () => void; ctaButton?: { label: string; icon: ReactNode; onClick: () => void; colorClass?: string; }; };
+export function AppHeader({ storeName, tagline, cartItemCount, isOpen, infoBanner, onCartClick, onSearchClick, ctaButton }: Props) {
+  return (
+    <motion.header initial={{ y: -100 }} animate={{ y: 0 }} className="sticky top-0 z-50 bg-white border-b border-border shadow-sm">
+      {(infoBanner || isOpen !== undefined) && (
+        <div className="bg-primary text-primary-foreground px-4 py-1.5">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3">{isOpen !== undefined && <span className="flex items-center gap-1.5 font-medium"><span className={\`w-1.5 h-1.5 rounded-full \${isOpen ? "bg-green-300 animate-pulse" : "bg-red-300"}\`} />{isOpen ? "Open Now" : "Closed"}</span>}{infoBanner && <span className="hidden sm:inline opacity-80">{infoBanner}</span>}</div>
+            {ctaButton && <button onClick={ctaButton.onClick} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity shrink-0 font-medium">{ctaButton.icon}<span>{ctaButton.label}</span></button>}
+          </div>
+        </div>
+      )}
+      <div className="px-4 py-3"><div className="max-w-7xl mx-auto flex items-center gap-3">
+        <div className="shrink-0"><h1 className="text-primary m-0 leading-none text-xl font-extrabold tracking-tight">{storeName}</h1>{tagline && <p className="text-[10px] text-muted-foreground m-0 hidden sm:block">{tagline}</p>}</div>
+        <div className="flex-1 max-w-2xl hidden md:block"><button onClick={onSearchClick} className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-muted rounded-xl text-muted-foreground text-sm hover:bg-muted/80 hover:ring-2 hover:ring-primary/20 transition-all text-left"><Search className="w-4 h-4 shrink-0" /><span>Search…</span></button></div>
+        <div className="flex items-center gap-2 ml-auto md:ml-0">
+          <button onClick={onSearchClick} className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors" aria-label="Search"><Search className="w-5 h-5 text-muted-foreground" /></button>
+          {ctaButton && <button onClick={ctaButton.onClick} className={\`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all text-sm font-medium text-white \${ctaButton.colorClass ?? "bg-primary"}\`}>{ctaButton.icon}<span className="hidden lg:inline">{ctaButton.label}</span></button>}
+          <button onClick={onCartClick} className="relative flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 active:scale-95 transition-all text-sm font-medium" aria-label={\`Cart, \${cartItemCount} items\`}>
+            <ShoppingCart className="w-4 h-4" /><span className="hidden md:inline">Cart</span>
+            <AnimatePresence>{cartItemCount > 0 && <motion.span key={cartItemCount} initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center leading-none">{cartItemCount > 99 ? "99+" : cartItemCount}</motion.span>}</AnimatePresence>
+          </button>
+        </div>
+      </div></div>
+    </motion.header>
+  );
+}`,
+    prompt: "Build a sticky responsive app header in React with Framer Motion. Include: a top info banner with a live open/closed indicator dot, optional info text, and optional CTA button. A main row with a logo/wordmark, a desktop inline search bar, a mobile search icon, an optional secondary CTA button, and a cart button with an animated badge count. Slide down from top on mount. Use shadcn/ui Tailwind tokens.",
+    tags: ["header", "navbar", "sticky", "responsive", "cart-badge", "animated", "ecommerce"],
+  },
 ];
 
 export function getComponent(slug: string): ComponentEntry | undefined {

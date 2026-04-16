@@ -73,3 +73,16 @@ export { ProjectCard } from "./cards/ProjectCard";
 
 // Sections
 export { ContactSection } from "./sections/ContactSection";
+
+// Grocery / ecommerce components
+export { ImageWithFallback } from "./media/ImageWithFallback";
+export { SkeletonCard, SkeletonRow } from "./loaders/SkeletonCard";
+export { EcomEmptyState } from "./feedback/EcomEmptyState";
+export { Breadcrumb } from "./navigation/Breadcrumb";
+export { CategoryChips } from "./navigation/CategoryChips";
+export { CategoryGrid } from "./navigation/CategoryGrid";
+export { SearchOverlay } from "./overlays/SearchOverlay";
+export { MobileBottomNav } from "./navigation/MobileBottomNav";
+export { ProductCard } from "./cards/ProductCard";
+export { StickyCartBar } from "./panels/StickyCartBar";
+export { AppHeader } from "./layout/AppHeader";
