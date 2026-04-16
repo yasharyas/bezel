@@ -1863,6 +1863,235 @@ export function AppHeader({ storeName, tagline, cartItemCount, isOpen, infoBanne
     prompt: "Build a sticky responsive app header in React with Framer Motion. Include: a top info banner with a live open/closed indicator dot, optional info text, and optional CTA button. A main row with a logo/wordmark, a desktop inline search bar, a mobile search icon, an optional secondary CTA button, and a cart button with an animated badge count. Slide down from top on mount. Use shadcn/ui Tailwind tokens.",
     tags: ["header", "navbar", "sticky", "responsive", "cart-badge", "animated", "ecommerce"],
   },
+  // ── Blissful Bites components ──
+  {
+    name: "BakeryProductCard",
+    slug: "bakery-product-card",
+    path: "cards/BakeryProductCard.tsx",
+    category: "cards",
+    code: `"use client";
+import type { ReactNode } from "react";
+interface PlaceholderProps { aspectRatio?: string; label?: string; rounded?: string; className?: string; }
+function ImagePlaceholder({ aspectRatio="1/1", label="", rounded="rounded-xl", className="" }: PlaceholderProps) {
+  return (
+    <div className={\`relative overflow-hidden bg-neutral-100 \${rounded} \${className}\`} style={{ aspectRatio }} role="img" aria-label={label||"Image placeholder"}>
+      <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-neutral-200 via-neutral-100 to-neutral-200" />
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-400">
+        <svg className="w-10 h-10 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        {label && <span className="text-xs font-medium opacity-60">{label}</span>}
+      </div>
+    </div>
+  );
+}
+export interface BakeryProduct { name: string; image?: string; price: number|string; originalPrice?: number|string; badge?: string; tag?: string; description?: string; }
+type Props = { product: BakeryProduct; href: string; currencySymbol?: string; unitLabel?: string; ctaLabel?: ReactNode|string; };
+export function BakeryProductCard({ product, href, currencySymbol="₹", unitLabel="/kg", ctaLabel="View & Customize" }: Props) {
+  return (
+    <a href={href} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-neutral-100 block">
+      <div className="relative overflow-hidden">
+        {product.image ? <img src={product.image} alt={product.name} loading="lazy" className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500" />
+          : <ImagePlaceholder aspectRatio="1/1" label={product.name} rounded="rounded-none" className="group-hover:scale-105 transition-transform duration-500" />}
+        {product.badge && <span className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">{product.badge}</span>}
+        {product.tag && <span className="absolute top-3 right-3 bg-green-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">{product.tag}</span>}
+      </div>
+      <div className="p-3 sm:p-4">
+        <h3 className="font-semibold text-sm sm:text-base text-neutral-900 mb-1 line-clamp-1 group-hover:text-neutral-700 transition-colors">{product.name}</h3>
+        {product.description && <p className="text-neutral-500 text-xs mb-2 line-clamp-2 hidden sm:block">{product.description}</p>}
+        <div className="flex items-baseline gap-1 sm:gap-2 mb-2 sm:mb-3">
+          <span className="text-neutral-900 font-bold text-base sm:text-lg">{currencySymbol}{product.price}</span>
+          {product.originalPrice && <span className="text-neutral-400 text-xs line-through">{currencySymbol}{product.originalPrice}</span>}
+          <span className="text-neutral-400 text-[10px] sm:text-xs">{unitLabel}</span>
+        </div>
+        <span className="w-full bg-neutral-900 text-white text-[10px] sm:text-xs font-medium py-2 sm:py-2.5 rounded-full group-hover:bg-neutral-700 transition-colors flex items-center justify-center gap-1.5 min-h-[40px]">{ctaLabel}</span>
+      </div>
+    </a>
+  );
+}`,
+    prompt: "Create a React product card component with Tailwind CSS. It should show a product image (with a shimmer skeleton placeholder fallback using animate-pulse), an optional top-left badge and top-right tag as pill labels, product name with line-clamp, optional strikethrough original price, a price display with unit label, and a full-width CTA button at the bottom. On hover the card should lift (shadow increase) and the image should zoom slightly. Make it fully responsive and accept all values as props.",
+    tags: ["ecommerce", "product", "hover-zoom", "skeleton", "badge", "responsive", "bakery"],
+  },
+  {
+    name: "TestimonialCard",
+    slug: "testimonial-card",
+    path: "cards/TestimonialCard.tsx",
+    category: "cards",
+    code: `import { Star } from "lucide-react";
+export interface Testimonial { rating: number; text: string; name: string; role?: string; }
+type Props = { testimonial: Testimonial; };
+export function TestimonialCard({ testimonial }: Props) {
+  return (
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-100 hover:shadow-md transition-shadow duration-300">
+      <div className="flex items-center gap-0.5 mb-4">
+        {Array.from({ length: testimonial.rating }).map((_, i) => <Star key={i} size={14} className="fill-yellow-400 text-yellow-400" />)}
+      </div>
+      <p className="text-neutral-600 text-sm leading-relaxed mb-5 italic">&ldquo;{testimonial.text}&rdquo;</p>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-neutral-200 flex items-center justify-center"><span className="text-neutral-600 font-bold text-sm">{testimonial.name.charAt(0)}</span></div>
+        <div>
+          <p className="text-neutral-900 font-semibold text-sm">{testimonial.name}</p>
+          {testimonial.role && <p className="text-neutral-400 text-xs">{testimonial.role}</p>}
+        </div>
+      </div>
+    </div>
+  );
+}`,
+    prompt: "Build a React testimonial card with Tailwind CSS. Show filled star icons driven by a numeric rating prop, an italic quoted review text, and an author row with an auto-generated avatar (first letter of name on a neutral circle), author name, and role. Subtle box shadow that deepens on hover.",
+    tags: ["testimonial", "review", "stars", "avatar", "social-proof"],
+  },
+  {
+    name: "FAQAccordion",
+    slug: "faq-accordion",
+    path: "sections/FAQAccordion.tsx",
+    category: "sections",
+    code: `"use client";
+import { useState } from "react";
+import { ChevronDown } from "lucide-react";
+export interface FAQItem { q: string; a: string; }
+interface FAQItemProps { faq: FAQItem; isOpen: boolean; onToggle: () => void; }
+function FAQItemRow({ faq, isOpen, onToggle }: FAQItemProps) {
+  return (
+    <div className="border-b border-neutral-100 last:border-b-0">
+      <button onClick={onToggle} aria-expanded={isOpen} className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer group">
+        <span className="text-neutral-900 text-sm sm:text-base font-medium group-hover:text-neutral-600 transition-colors">{faq.q}</span>
+        <ChevronDown size={18} className={\`shrink-0 text-neutral-400 transition-transform duration-300 \${isOpen?"rotate-180":""}\`} />
+      </button>
+      <div className="overflow-hidden transition-all duration-300" style={{ maxHeight: isOpen?"200px":"0", opacity: isOpen?1:0 }}>
+        <p className="text-neutral-500 text-sm leading-relaxed pb-5">{faq.a}</p>
+      </div>
+    </div>
+  );
+}
+type Props = { items: FAQItem[]; title?: string; subtitle?: string; };
+export function FAQAccordion({ items, title="Frequently Asked Questions", subtitle="" }: Props) {
+  const [openIndex, setOpenIndex] = useState(0);
+  return (
+    <section className="py-16 lg:py-20 bg-white">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl lg:text-4xl font-bold text-neutral-900 mb-3">{title}</h2>
+          {subtitle && <p className="text-neutral-500 text-sm">{subtitle}</p>}
+        </div>
+        <div className="bg-neutral-50 rounded-2xl px-6 sm:px-8">
+          {items.map((faq, i) => <FAQItemRow key={i} faq={faq} isOpen={openIndex===i} onToggle={() => setOpenIndex(openIndex===i?-1:i)} />)}
+        </div>
+      </div>
+    </section>
+  );
+}`,
+    prompt: "Create a React FAQ accordion section component with Tailwind CSS. It should accept an array of {q, a} items and render them as an accordion — one item open at a time (click to toggle, click again to close all). Animate open/close with a CSS max-height transition. Include a section heading and optional subtitle. Use a ChevronDown icon that rotates 180° when open. Keep it accessible with aria-expanded.",
+    tags: ["faq", "accordion", "animated", "accessible", "chevron", "sections"],
+  },
+  {
+    name: "WhatsAppFAB",
+    slug: "whatsapp-fab",
+    path: "buttons/WhatsAppFAB.tsx",
+    category: "buttons",
+    code: `import { MessageCircle } from "lucide-react";
+type Props = { phoneNumber: string; message?: string; tooltipText?: string; };
+export function WhatsAppFAB({ phoneNumber, message="Hello! I have a question.", tooltipText="Chat with us!" }: Props) {
+  const encodedMsg = encodeURIComponent(message);
+  const href = \`https://wa.me/\${phoneNumber}?text=\${encodedMsg}\`;
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer"
+      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
+      aria-label="Chat on WhatsApp" title="Chat on WhatsApp">
+      <MessageCircle size={26} fill="white" />
+      {tooltipText && <span className="absolute right-full mr-3 bg-white text-gray-800 text-xs font-medium px-3 py-1.5 rounded-full shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">{tooltipText}</span>}
+    </a>
+  );
+}`,
+    prompt: "Create a floating WhatsApp chat button (FAB) component in React with Tailwind CSS. It should be fixed to the bottom-right corner of the screen, show a filled MessageCircle icon, and open a wa.me deep link with a pre-encoded message in a new tab. On hover, show a small tooltip to the left and scale up the button. Accept phone number, message, and tooltip text as props.",
+    tags: ["whatsapp", "fab", "floating", "chat", "fixed", "tooltip"],
+  },
+  {
+    name: "ImagePlaceholder",
+    slug: "image-placeholder",
+    path: "feedback/ImagePlaceholder.tsx",
+    category: "feedback",
+    code: `type Props = { aspectRatio?: string; label?: string; rounded?: string; className?: string; };
+export function ImagePlaceholder({ aspectRatio="4/3", label="", rounded="rounded-xl", className="" }: Props) {
+  return (
+    <div className={\`relative overflow-hidden bg-neutral-100 \${rounded} \${className}\`} style={{ aspectRatio }} role="img" aria-label={label||"Image placeholder"}>
+      <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-neutral-200 via-neutral-100 to-neutral-200" />
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-400">
+        <svg className="w-10 h-10 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        {label && <span className="text-xs font-medium opacity-60">{label}</span>}
+      </div>
+    </div>
+  );
+}`,
+    prompt: "Build a React image skeleton/placeholder component with Tailwind. It should accept an aspect-ratio prop (CSS string), a label for accessibility, a Tailwind rounded class, and extra className. Show an animate-pulse shimmer overlay and a centered image SVG icon with optional text label inside.",
+    tags: ["skeleton", "shimmer", "placeholder", "loading", "image", "accessible"],
+  },
+  {
+    name: "StickyNavbar",
+    slug: "sticky-navbar",
+    path: "navigation/StickyNavbar.tsx",
+    category: "navigation",
+    code: `"use client";
+import { useState, useEffect } from "react";
+import { Menu, X, Search, ShoppingBag, User } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import type { ReactNode } from "react";
+export interface NavLink { label: string; href: string; }
+type Props = { brand: string|ReactNode; links?: NavLink[]; cartCount?: number; announcementText?: string; onSearchClick?: () => void; onAccountClick?: () => void; onCartClick?: () => void; };
+export function StickyNavbar({ brand, links=[], cartCount=0, announcementText="", onSearchClick, onAccountClick, onCartClick }: Props) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activePath, setActivePath] = useState("/");
+  useEffect(() => { if (typeof window !== "undefined") setActivePath(window.location.pathname); }, []);
+  useEffect(() => { const fn = () => setScrolled(window.scrollY > 20); window.addEventListener("scroll", fn); return () => window.removeEventListener("scroll", fn); }, []);
+  useEffect(() => { document.body.style.overflow = isOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [isOpen]);
+  return (<>
+    {announcementText && <div className="bg-neutral-900 text-white text-center py-2 text-xs tracking-wide"><p>{announcementText}</p></div>}
+    <nav className={\`sticky top-0 z-50 transition-all duration-300 \${scrolled?"bg-white/95 backdrop-blur-md shadow-md":"bg-white"}\`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-16">
+        <div className="flex items-center justify-between h-16 lg:h-20">
+          <a href="/" className="flex items-center">{typeof brand==="string"?<span className="text-xl font-bold text-neutral-900">{brand}</span>:brand}</a>
+          <div className="hidden lg:flex items-center gap-8">{links.map(link=><a key={link.href} href={link.href} className={\`text-sm font-medium transition-colors duration-200 hover:text-neutral-900 \${activePath===link.href?"text-neutral-900 border-b-2 border-neutral-900 pb-0.5":"text-neutral-500"}\`}>{link.label}</a>)}</div>
+          <div className="hidden lg:flex items-center gap-4">
+            {onSearchClick && <button onClick={onSearchClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Search"><Search size={20} /></button>}
+            {onAccountClick && <button onClick={onAccountClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Account"><User size={20} /></button>}
+            {onCartClick && <button onClick={onCartClick} className="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label={\`Cart, \${cartCount} items\`}><ShoppingBag size={20} />{cartCount>0&&<span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">{cartCount}</span>}</button>}
+          </div>
+          <button className="lg:hidden p-2 text-neutral-900 cursor-pointer" onClick={()=>setIsOpen(!isOpen)} aria-label={isOpen?"Close menu":"Open menu"} aria-expanded={isOpen}>{isOpen?<X size={24}/>:<Menu size={24}/>}</button>
+        </div>
+      </div>
+      <AnimatePresence>{isOpen&&<motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}} transition={{duration:0.25,ease:"easeOut"}} className="lg:hidden bg-white border-t border-neutral-100 overflow-hidden"><div className="px-4 sm:px-6 py-4 space-y-1">{links.map(link=><a key={link.href} href={link.href} onClick={()=>setIsOpen(false)} className={\`block py-3 px-4 rounded-lg text-sm font-medium transition-colors \${activePath===link.href?"bg-neutral-900 text-white":"text-neutral-700 hover:bg-neutral-50"}\`}>{link.label}</a>)}</div></motion.div>}</AnimatePresence>
+    </nav>
+  </>);
+}`,
+    prompt: "Build a sticky responsive navbar in React with Tailwind CSS and Framer Motion. Include an optional announcement bar above it. On scroll, apply a frosted-glass effect (backdrop-blur + shadow). Desktop: logo left, nav links center, icon actions right (search, account, cart with badge). Mobile: hamburger that toggles an animated slide-down drawer with full-width links. Lock body scroll when drawer is open. Accept all nav links, brand, cart count, and action handlers as props. No router dependency.",
+    tags: ["navbar", "sticky", "responsive", "mobile-drawer", "blur", "announcement-bar", "cart-badge"],
+  },
+  {
+    name: "ErrorBoundary",
+    slug: "error-boundary",
+    path: "feedback/ErrorBoundary.tsx",
+    category: "feedback",
+    code: `import { Component, type ReactNode } from "react";
+interface Props { children: ReactNode; icon?: string; title?: string; description?: string; buttonLabel?: string; }
+interface State { hasError: boolean; }
+export class ErrorBoundary extends Component<Props, State> {
+  constructor(props: Props) { super(props); this.state = { hasError: false }; }
+  static getDerivedStateFromError(): State { return { hasError: true }; }
+  render() {
+    if (this.state.hasError) return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-6">
+        <div className="text-center max-w-md">
+          <span className="text-6xl block mb-4">{this.props.icon??"⚠️"}</span>
+          <h1 className="text-2xl font-bold text-neutral-900 mb-3">{this.props.title??"Something went wrong"}</h1>
+          <p className="text-neutral-500 text-sm mb-6 leading-relaxed">{this.props.description??"An unexpected error occurred. Please try refreshing the page."}</p>
+          <button onClick={()=>window.location.reload()} className="bg-neutral-900 text-white px-8 py-3 rounded-full font-medium text-sm hover:bg-neutral-700 transition-colors cursor-pointer">{this.props.buttonLabel??"Refresh Page"}</button>
+        </div>
+      </div>
+    );
+    return this.props.children;
+  }
+}`,
+    prompt: "Create a React class-based ErrorBoundary component with Tailwind CSS fallback UI. Show a full-screen centered error state with a large emoji icon, heading, description, and a reload button. Accept icon, title, description, and button label as props with sensible defaults. Wrap children normally when no error.",
+    tags: ["error-boundary", "fallback", "crash", "full-screen", "class-component"],
+  },
 ];
 
 export function getComponent(slug: string): ComponentEntry | undefined {
