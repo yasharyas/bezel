@@ -38,7 +38,7 @@ export function CategoryChips({ categories, activeCategory, onCategoryChange }: 
             className={`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all shrink-0 border ${
               isActive
                 ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
-                : "bg-white text-foreground border-border hover:border-primary/40 hover:bg-primary/5"
+                : "bg-white text-neutral-900 border-gray-200 hover:border-gray-300 hover:bg-gray-50"`}>
             }`}
           >
             <Icon className={`w-3.5 h-3.5 ${isActive ? "text-primary-foreground" : cat.color}`} />

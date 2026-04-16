@@ -78,11 +78,11 @@ export function AppHeader({
         <div className="max-w-7xl mx-auto flex items-center gap-3">
           {/* Logo / wordmark */}
           <div className="shrink-0">
-            <h1 className="text-primary m-0 leading-none text-xl font-extrabold tracking-tight">
+            <h1 className="text-neutral-900 m-0 leading-none text-xl font-extrabold tracking-tight">
               {storeName}
             </h1>
             {tagline && (
-              <p className="text-[10px] text-muted-foreground m-0 hidden sm:block">{tagline}</p>
+              <p className="text-[10px] text-neutral-500 m-0 hidden sm:block">{tagline}</p>
             )}
           </div>
 
@@ -90,7 +90,7 @@ export function AppHeader({
           <div className="flex-1 max-w-2xl hidden md:block">
             <button
               onClick={onSearchClick}
-              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-muted rounded-xl text-muted-foreground text-sm hover:bg-muted/80 hover:ring-2 hover:ring-primary/20 transition-all text-left"
+              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-gray-100 rounded-xl text-gray-400 text-sm hover:bg-gray-200 transition-all text-left"
             >
               <Search className="w-4 h-4 shrink-0" />
               <span>Search…</span>
@@ -102,10 +102,10 @@ export function AppHeader({
             {/* Mobile search icon */}
             <button
               onClick={onSearchClick}
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
               aria-label="Search"
             >
-              <Search className="w-5 h-5 text-muted-foreground" />
+              <Search className="w-5 h-5 text-gray-500" />
             </button>
 
             {/* CTA button (desktop) */}

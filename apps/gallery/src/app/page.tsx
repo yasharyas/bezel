@@ -644,7 +644,11 @@ const popupPreviews: Record<string, () => React.ReactNode> = {
       <TextDisperseLink label="PORTFOLIO" href="#" />
     </div>
   ),
-  "category-chips": () => <CategoryChipsPreview />,
+  "category-chips": () => (
+    <div style={{ background: "white", padding: "12px 16px", borderRadius: 12 }}>
+      <CategoryChipsPreview />
+    </div>
+  ),
   "category-grid": () => (
     <div className="w-full" style={{ background: "white", padding: 16, borderRadius: 12 }}>
       <CategoryGrid
@@ -662,7 +666,7 @@ const popupPreviews: Record<string, () => React.ReactNode> = {
   "product-card": () => <ProductCardPreview />,
   "app-header": () => <AppHeaderPreview />,
   "bakery-product-card": () => (
-    <div style={{ maxWidth: 240, background: "white", borderRadius: 16, overflow: "hidden" }}>
+    <div style={{ width: 280 }}>
       <BakeryProductCard
         product={{ name: "Chocolate Truffle Cake", price: 699, originalPrice: 899, badge: "🔥 Bestseller", tag: "🌱 Vegan", description: "Rich dark chocolate layers with ganache frosting." }}
         href="#"
@@ -691,7 +695,7 @@ const popupPreviews: Record<string, () => React.ReactNode> = {
   ),
   "sticky-navbar": () => <StickyNavbarPreview />,
   "sticky-cart-bar": () => (
-    <div className="relative w-full" style={{ height: 100, paddingBottom: 20 }}>
+    <div style={{ position: "relative", transform: "translateZ(0)", height: 140, overflow: "hidden", width: "100%" }}>
       <StickyCartBar
         itemCount={2}
         totalPrice={598}
@@ -788,7 +792,11 @@ const previews: Record<string, React.ReactNode> = {
       { label: "Kurkure Masala 90g" },
     ]} />
   ),
-  "category-chips": <CategoryChipsPreview />,
+  "category-chips": (
+    <div style={{ background: "white", padding: "8px 12px", borderRadius: 12 }}>
+      <CategoryChipsPreview />
+    </div>
+  ),
   "category-grid": (
     <div style={{ background: "white", padding: 12, borderRadius: 12 }}>
       <CategoryGrid
@@ -811,13 +819,13 @@ const previews: Record<string, React.ReactNode> = {
   "mobile-bottom-nav": <MobileBottomNavPreview />,
   "product-card": <ProductCardPreview />,
   "sticky-cart-bar": (
-    <div className="relative" style={{ height: 80 }}>
+    <div style={{ position: "relative", transform: "translateZ(0)", height: 120, overflow: "hidden", width: "100%" }}>
       <StickyCartBar itemCount={2} totalPrice={598} onViewCart={() => {}} />
     </div>
   ),
   "app-header": <AppHeaderPreview />,
   "bakery-product-card": (
-    <div style={{ maxWidth: 180, background: "white", borderRadius: 16, overflow: "hidden" }}>
+    <div style={{ width: 200 }}>
       <BakeryProductCard
         product={{ name: "Choco Truffle", price: 699, originalPrice: 899, badge: "🔥 Hot", tag: "🌱 Vegan" }}
         href="#"
