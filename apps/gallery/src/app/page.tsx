@@ -737,6 +737,165 @@ const popupPreviews: Record<string, () => React.ReactNode> = {
       </div>
     </div>
   ),
+
+  // ── LanceMart AI – Project A popup previews ─────────────────────────────
+  "sticky-nav": () => (
+    <div style={{ width: "100%", background: "#f5f5f7", borderRadius: 12, overflow: "hidden" }}>
+      <StickyNav
+        brandName="LANCEMRT"
+        isDark={false}
+        links={[
+          { label: "Features", href: "#" },
+          { label: "Pricing", href: "#" },
+          { label: "About", href: "#" },
+        ]}
+      />
+      <div style={{ padding: "24px 24px 16px", color: "#4a4a4c", fontSize: 13 }}>
+        Sticky glassmorphism navbar with brand dot, nav links, and theme toggle.
+      </div>
+    </div>
+  ),
+  "shiny-badge": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, padding: "48px 32px", display: "flex", flexDirection: "column", gap: 16, alignItems: "center" }}>
+      <ShinyBadge spark="✦" text="AI-Powered Business Transformation" />
+      <ShinyBadge spark="⚡" text="Signal-Driven Automation Platform" />
+      <ShinyBadge spark="◈" text="Enterprise-Grade Infrastructure" />
+    </div>
+  ),
+  "border-beam-button": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, padding: "48px 32px", display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center", alignItems: "center" }}>
+      <BorderBeamButton label="Get Started" variant="primary" />
+      <BorderBeamButton label="Learn More" variant="ghost" />
+      <BorderBeamButton label="View Docs" variant="ghost" href="#" />
+    </div>
+  ),
+  "typing-hero": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, overflow: "hidden", width: "100%" }}>
+      <TypingHero
+        title="Build Faster with"
+        titleHighlight="AI"
+        subtitle="A platform that delivers agentic automation and strategic AI expertise."
+        typingDelay={300}
+        typingSpeed={30}
+      >
+        <BorderBeamButton label="Get Started" variant="primary" />
+        <BorderBeamButton label="Learn More" variant="ghost" />
+      </TypingHero>
+    </div>
+  ),
+  "feature-card-grid": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, padding: "24px 24px 32px", width: "100%" }}>
+      <FeatureCardGrid cards={[
+        { label: "Platform", title: "Build and manage your AI-powered business" },
+        { label: "Agent",    title: "Signal-driven automation, out of the box" },
+        { label: "API",      title: "Integrate with your existing tools in minutes" },
+      ]} />
+    </div>
+  ),
+  "numbered-steps-list": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, padding: "0 32px", width: "100%" }}>
+      <NumberedStepsList steps={[
+        { number: "01", title: "Discovery",  description: "Map goals and constraints before writing a line of code." },
+        { number: "02", title: "Design",     description: "Define the system architecture and component boundaries." },
+        { number: "03", title: "Build",      description: "Iterative development with weekly demos and reviews." },
+        { number: "04", title: "Ship",       description: "Deploy, monitor, and iterate based on real usage." },
+      ]} />
+    </div>
+  ),
+  "formula-block": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, padding: "32px", width: "100%" }}>
+      <FormulaBlock formula="ROI = (Clarity × Automation) / Noise" caption="The Business Transformation Equation" />
+      <FormulaBlock formula="S = (M, G, T, F, W)" caption="Signal Framework" />
+    </div>
+  ),
+  "signal-card-grid": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, padding: "24px", width: "100%" }}>
+      <SignalCardGrid cards={[
+        { letter: "M", title: "Mode",      subtitle: "How is it perceived?",   description: "Linguistic, Visual, Auditory" },
+        { letter: "G", title: "Genre",     subtitle: "What form does it take?", description: "Spec, Brief, Report" },
+        { letter: "T", title: "Type",      subtitle: "What does it DO?",        description: "Direct, Inform, Commit" },
+        { letter: "F", title: "Format",    subtitle: "What's the container?",   description: "Document, Message, Video" },
+        { letter: "W", title: "Structure", subtitle: "How is it organized?",    description: "Sequential, Hierarchical" },
+      ]} />
+    </div>
+  ),
+  "principle-card-grid": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, padding: "24px", width: "100%" }}>
+      <PrincipleCardGrid principles={[
+        { number: "1", title: "Strategy",   subtitle: "Clarity of Intent",    description: "Define the outcomes before a single line is deployed." },
+        { number: "2", title: "Data",       subtitle: "Fuel for Intelligence", description: "Clean, connected, contextual data." },
+        { number: "3", title: "Automation", subtitle: "Agentic Execution",     description: "Agents take the repetitive. People focus on judgment." },
+        { number: "4", title: "Governance", subtitle: "Trust & Feedback",      description: "Closed feedback loops and guardrails." },
+      ]} />
+    </div>
+  ),
+  "diagnostic-grid": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, padding: "24px", width: "100%" }}>
+      <DiagnosticGrid items={[
+        { tag: "Error Pattern", title: "Channel Overload",   description: "Information rate exceeds channel capacity — messages lost or ignored." },
+        { tag: "Warning",       title: "Variety Deficit",    description: "System lacks signal types to handle all encountered situations." },
+        { tag: "Missing Layer", title: "Missing Subsystem",  description: "A governance layer is absent — coordination breaks down." },
+        { tag: "Feedback Gap",  title: "Open Loop",          description: "No feedback path exists — errors compound uncorrected." },
+      ]} />
+    </div>
+  ),
+  "callout-box": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, padding: "24px", width: "100%" }}>
+      <CalloutBox
+        title="The Classic Failure Pattern"
+        intro="Teams optimise for speed and cost, silently dropping judgment and trust."
+        label="DIAGNOSIS"
+        items={[
+          { symbol: "—", content: <><b>Channel</b> — Bandwidth is fine. Not the issue.</> },
+          { symbol: "!", content: <><b>Variety</b> — No repertoire for human judgment.</> },
+          { symbol: "!", content: <><b>Structure</b> — Missing coordination layers.</> },
+          { symbol: "!", content: <><b>Feedback</b> — No loop from outcomes to behavior.</> },
+        ]}
+        footer="Better tooling isn't the fix. Better architecture is."
+      />
+    </div>
+  ),
+  "checklist": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, padding: "24px", width: "100%" }}>
+      <Checklist items={[
+        { symbol: "✓", text: <>Channels operate below capacity <em>(Shannon)</em></> },
+        { symbol: "✓", text: <>Signal repertoire matches environmental variety <em>(Ashby)</em></> },
+        { symbol: "✓", text: <>Every signal path has a closed feedback loop <em>(Wiener)</em></> },
+        { symbol: "✓", text: <>Governance layer monitors and adjusts behavior</> },
+      ]} />
+    </div>
+  ),
+  "scroll-reveal": () => (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "32px 24px", width: "100%", alignItems: "center" }}>
+      <ScrollReveal variant="up">
+        <div style={{ padding: "12px 20px", background: "rgba(5,150,105,0.1)", border: "1px solid #059669", borderRadius: 10, color: "#059669", fontSize: 14 }}>↑ Fade up on scroll</div>
+      </ScrollReveal>
+      <ScrollReveal variant="left" delay={100}>
+        <div style={{ padding: "12px 20px", background: "rgba(5,150,105,0.1)", border: "1px solid #059669", borderRadius: 10, color: "#059669", fontSize: 14 }}>← Slide from left</div>
+      </ScrollReveal>
+      <ScrollReveal variant="right" delay={200}>
+        <div style={{ padding: "12px 20px", background: "rgba(5,150,105,0.1)", border: "1px solid #059669", borderRadius: 10, color: "#059669", fontSize: 14 }}>→ Slide from right</div>
+      </ScrollReveal>
+      <ScrollReveal variant="scale" delay={300}>
+        <div style={{ padding: "12px 20px", background: "rgba(5,150,105,0.1)", border: "1px solid #059669", borderRadius: 10, color: "#059669", fontSize: 14 }}>⊕ Scale up</div>
+      </ScrollReveal>
+    </div>
+  ),
+  "site-footer": () => (
+    <div style={{ background: "#f5f5f7", borderRadius: 16, width: "100%", overflow: "hidden" }}>
+      <SiteFooter
+        brandName="MYAPP"
+        tagline="Modern tooling for modern teams."
+        columns={[
+          { heading: "Product",  links: [{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }, { label: "Changelog", href: "#" }] },
+          { heading: "Company",  links: [{ label: "About", href: "#" }, { label: "Blog", href: "#" }, { label: "Careers", href: "#" }] },
+          { heading: "Contact",  links: [{ label: "hello@myapp.com", href: "mailto:hello@myapp.com" }, { label: "Twitter", href: "#" }] },
+        ]}
+        copyright="© 2026 MyApp. All rights reserved."
+        publishedBy={{ label: "MyApp Team", href: "#" }}
+      />
+    </div>
+  ),
 };
 
 const previews: Record<string, React.ReactNode> = {
