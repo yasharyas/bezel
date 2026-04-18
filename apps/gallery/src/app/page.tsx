@@ -74,6 +74,21 @@ import {
   ProductCard,
   StickyCartBar,
   AppHeader,
+  // LanceMart AI – Project A
+  StickyNav,
+  ShinyBadge,
+  BorderBeamButton,
+  TypingHero,
+  FeatureCardGrid,
+  NumberedStepsList,
+  FormulaBlock,
+  SignalCardGrid,
+  PrincipleCardGrid,
+  DiagnosticGrid,
+  CalloutBox,
+  Checklist,
+  ScrollReveal,
+  SiteFooter,
 } from "@repo/ui";
 import { registry } from "@repo/registry";
 
@@ -860,6 +875,130 @@ const previews: Record<string, React.ReactNode> = {
         <p className="font-bold text-sm text-neutral-900">Something went wrong</p>
         <p className="text-xs text-neutral-500">Unexpected error occurred.</p>
       </div>
+    </div>
+  ),
+
+  // ── LanceMart AI – Project A ────────────────────────────────────────────
+  "sticky-nav": (
+    <div style={{ width: "100%", transform: "scale(0.85)", transformOrigin: "top center" }}>
+      <StickyNav
+        brandName="LANCEMRT"
+        isDark={false}
+        links={[{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }]}
+      />
+    </div>
+  ),
+  "shiny-badge": (
+    <div className="flex items-center justify-center p-4">
+      <ShinyBadge spark="✦" text="AI-Powered Business Transformation" />
+    </div>
+  ),
+  "border-beam-button": (
+    <div className="flex gap-3 items-center justify-center p-4" style={{ background: "#f5f5f7", borderRadius: 12 }}>
+      <BorderBeamButton label="Get Started" variant="primary" />
+      <BorderBeamButton label="Learn More" variant="ghost" />
+    </div>
+  ),
+  "typing-hero": (
+    <div style={{ transform: "scale(0.55)", transformOrigin: "top center", height: 160, pointerEvents: "none", background: "#f5f5f7", borderRadius: 12, overflow: "hidden" }}>
+      <TypingHero title="Build Faster" titleHighlight="with AI" subtitle="A platform that delivers agentic automation." typingDelay={200} />
+    </div>
+  ),
+  "feature-card-grid": (
+    <div style={{ background: "#f5f5f7", borderRadius: 12, padding: 16, transform: "scale(0.75)", transformOrigin: "top center", height: 160, overflow: "hidden" }}>
+      <FeatureCardGrid cards={[
+        { label: "Platform", title: "Build AI-powered workflows" },
+        { label: "Agent", title: "Signal-driven automation" },
+        { label: "API", title: "Integrate in minutes" },
+      ]} />
+    </div>
+  ),
+  "numbered-steps-list": (
+    <div style={{ background: "#f5f5f7", borderRadius: 12, padding: "0 16px", transform: "scale(0.65)", transformOrigin: "top center", height: 200, overflow: "hidden" }}>
+      <NumberedStepsList steps={[
+        { number: "01", title: "Discovery", description: "Map goals and constraints." },
+        { number: "02", title: "Design", description: "Define system architecture." },
+      ]} />
+    </div>
+  ),
+  "formula-block": (
+    <div style={{ background: "#f5f5f7", borderRadius: 12, padding: "8px 16px" }}>
+      <FormulaBlock formula="ROI = (Clarity × Automation) / Noise" caption="The Business Transformation Equation" />
+    </div>
+  ),
+  "signal-card-grid": (
+    <div style={{ background: "#f5f5f7", borderRadius: 12, padding: 12, transform: "scale(0.6)", transformOrigin: "top center", height: 190, overflow: "hidden" }}>
+      <SignalCardGrid cards={[
+        { letter: "M", title: "Mode", subtitle: "How perceived?", description: "Linguistic, Visual" },
+        { letter: "G", title: "Genre", subtitle: "What form?", description: "Spec, Brief" },
+        { letter: "T", title: "Type", subtitle: "What does it do?", description: "Direct, Inform" },
+      ]} />
+    </div>
+  ),
+  "principle-card-grid": (
+    <div style={{ background: "#f5f5f7", borderRadius: 12, padding: 12, transform: "scale(0.65)", transformOrigin: "top center", height: 190, overflow: "hidden" }}>
+      <PrincipleCardGrid principles={[
+        { number: "1", title: "Strategy", subtitle: "Clarity of Intent", description: "Define outcomes first." },
+        { number: "2", title: "Data", subtitle: "Fuel for AI", description: "Clean, contextual data." },
+        { number: "3", title: "Automation", subtitle: "Agentic Execution", description: "Agents handle repetition." },
+        { number: "4", title: "Governance", subtitle: "Trust & Feedback", description: "Guardrails for autonomy." },
+      ]} />
+    </div>
+  ),
+  "diagnostic-grid": (
+    <div style={{ background: "#f5f5f7", borderRadius: 12, padding: 12, transform: "scale(0.65)", transformOrigin: "top center", height: 190, overflow: "hidden" }}>
+      <DiagnosticGrid items={[
+        { tag: "Error Pattern", title: "Channel Overload", description: "Information rate exceeds capacity." },
+        { tag: "Warning", title: "Variety Deficit", description: "No repertoire for judgment." },
+      ]} />
+    </div>
+  ),
+  "callout-box": (
+    <div style={{ background: "#f5f5f7", borderRadius: 12, padding: "0 12px", transform: "scale(0.65)", transformOrigin: "top center", height: 190, overflow: "hidden" }}>
+      <CalloutBox
+        title="Classic Failure Pattern"
+        label="DIAGNOSIS"
+        items={[
+          { symbol: "!", content: "Channel — bandwidth is fine." },
+          { symbol: "!", content: "Variety — missing repertoire." },
+        ]}
+        footer="Better architecture is the fix."
+      />
+    </div>
+  ),
+  "checklist": (
+    <div style={{ background: "#f5f5f7", borderRadius: 12, padding: "0 12px" }}>
+      <Checklist items={[
+        { symbol: "✓", text: "Channels operate below capacity" },
+        { symbol: "✓", text: "Signal repertoire matches variety" },
+        { symbol: "✓", text: "Every path has a feedback loop" },
+      ]} />
+    </div>
+  ),
+  "scroll-reveal": (
+    <div className="flex flex-col items-center gap-2 p-4 text-xs text-neutral-400 text-center">
+      <ScrollReveal variant="up">
+        <div className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-xs">↑ fade up</div>
+      </ScrollReveal>
+      <ScrollReveal variant="left" delay={100}>
+        <div className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-xs">← slide left</div>
+      </ScrollReveal>
+      <ScrollReveal variant="scale" delay={200}>
+        <div className="px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white text-xs">⊕ scale up</div>
+      </ScrollReveal>
+    </div>
+  ),
+  "site-footer": (
+    <div style={{ background: "#f5f5f7", borderRadius: 12, transform: "scale(0.55)", transformOrigin: "top center", height: 200, overflow: "hidden" }}>
+      <SiteFooter
+        brandName="MYAPP"
+        tagline="Modern tooling for modern teams."
+        columns={[
+          { heading: "Product", links: [{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }] },
+          { heading: "Company", links: [{ label: "About", href: "#" }, { label: "Blog", href: "#" }] },
+        ]}
+        copyright="© 2026 MyApp. All rights reserved."
+      />
     </div>
   ),
 };

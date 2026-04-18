@@ -93,3 +93,20 @@ export { WhatsAppFAB } from "./buttons/WhatsAppFAB";
 export { ImagePlaceholder } from "./feedback/ImagePlaceholder";
 export { StickyNavbar } from "./navigation/StickyNavbar";
 export { ErrorBoundary } from "./feedback/ErrorBoundary";
+
+// LanceMart AI — Project A components
+export { StickyNav } from "./navigation/StickyNav";
+export { useThemeRipple } from "./hooks/useThemeRipple";
+export { ShinyBadge } from "./badges/ShinyBadge";
+export { BorderBeamButton } from "./buttons/BorderBeamButton";
+export { TypingHero } from "./sections/TypingHero";
+export { FeatureCardGrid } from "./cards/FeatureCardGrid";
+export { NumberedStepsList } from "./lists/NumberedStepsList";
+export { FormulaBlock } from "./display/FormulaBlock";
+export { SignalCardGrid } from "./cards/SignalCardGrid";
+export { PrincipleCardGrid } from "./cards/PrincipleCardGrid";
+export { DiagnosticGrid } from "./cards/DiagnosticGrid";
+export { CalloutBox } from "./callouts/CalloutBox";
+export { Checklist } from "./lists/Checklist";
+export { ScrollReveal } from "./animation/ScrollReveal";
+export { SiteFooter } from "./layout/SiteFooter";

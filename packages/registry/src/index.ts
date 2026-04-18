@@ -2092,6 +2092,426 @@ export class ErrorBoundary extends Component<Props, State> {
     prompt: "Create a React class-based ErrorBoundary component with Tailwind CSS fallback UI. Show a full-screen centered error state with a large emoji icon, heading, description, and a reload button. Accept icon, title, description, and button label as props with sensible defaults. Wrap children normally when no error.",
     tags: ["error-boundary", "fallback", "crash", "full-screen", "class-component"],
   },
+
+  // ── LanceMart AI – Project A ─────────────────────────────────────────────
+  {
+    name: "StickyNav",
+    slug: "sticky-nav",
+    path: "navigation/StickyNav.tsx",
+    category: "navigation",
+    code: `type NavLink = { label: string; href: string };
+type Props = {
+  brandName?: string;
+  links?: NavLink[];
+  onThemeToggle?: () => void;
+  isDark?: boolean;
+};
+export function StickyNav({ brandName = "BRAND", links = [], onThemeToggle, isDark = false }: Props) {
+  return (
+    <header className="sticky top-0 z-50 bg-[rgba(245,245,247,0.8)] backdrop-saturate-[180%] backdrop-blur-[12px] border-b border-black/[0.06]">
+      <div className="max-w-[1200px] mx-auto px-6 py-[14px] flex items-center gap-6">
+        <a className="flex items-center gap-2.5 font-semibold tracking-[0.08em] text-[#0a0a0a] no-underline" href="#">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#059669] shadow-[0_0_12px_#059669] shrink-0" />
+          <span className="text-[13px]">{brandName}</span>
+        </a>
+        <nav className="ml-auto flex gap-[22px]">
+          {links.map((l) => (
+            <a key={l.href} href={l.href} className="text-[13px] text-[#4a4a4c] hover:text-[#0a0a0a] transition-colors no-underline">{l.label}</a>
+          ))}
+        </nav>
+        <button className="flex items-center justify-center w-9 h-9 rounded-full border border-black/[0.13] cursor-pointer bg-black/[0.02] text-[#4a4a4c] hover:text-[#0a0a0a] hover:bg-black/[0.04] transition-all shrink-0 p-0" aria-label="Toggle theme" onClick={onThemeToggle}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" style={{ display: isDark ? "none" : "block" }}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" style={{ display: isDark ? "block" : "none" }}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        </button>
+      </div>
+    </header>
+  );
+}`,
+    prompt: "Create a sticky glassmorphism navigation bar in React with a brand logo dot + name on the left, nav links in the center-right, and a circular moon/sun theme-toggle icon button on the far right. Use backdrop blur and a subtle bottom border. Hide nav links on mobile. Support dark mode via a prop.",
+    tags: ["navbar", "glassmorphism", "sticky", "dark-mode", "responsive"],
+  },
+  {
+    name: "useThemeRipple",
+    slug: "use-theme-ripple",
+    path: "hooks/useThemeRipple.tsx",
+    category: "hooks",
+    code: `"use client";
+import { useEffect } from "react";
+type Props = { isDark: boolean; onToggle: (nextDark: boolean) => void; storageKey?: string; };
+export function useThemeRipple({ isDark, onToggle, storageKey = "theme" }: Props) {
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem(storageKey);
+    if (stored === "dark") onToggle(true);
+    else if (stored === "light") onToggle(false);
+  }, []);
+  function toggle(e: React.MouseEvent<HTMLButtonElement>) {
+    const nextDark = !isDark;
+    const x = e.clientX; const y = e.clientY;
+    const endRadius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+    const oldBg = nextDark ? "#f5f5f7" : "#0a0a0a";
+    if (typeof window !== "undefined") localStorage.setItem(storageKey, nextDark ? "dark" : "light");
+    onToggle(nextDark);
+    const overlay = document.createElement("div");
+    overlay.style.cssText = \`position:fixed;inset:0;z-index:2147483647;background:\${oldBg};pointer-events:none;will-change:clip-path;\`;
+    document.body.appendChild(overlay);
+    const anim = overlay.animate([{ clipPath: \`circle(\${endRadius}px at \${x}px \${y}px)\` }, { clipPath: \`circle(0px at \${x}px \${y}px)\` }], { duration: 650, easing: "cubic-bezier(.2,.7,.2,1)" });
+    anim.onfinish = () => overlay.remove();
+  }
+  return { toggle };
+}`,
+    prompt: "Write a React hook that toggles dark/light mode with a circular ripple/clip-path animation that expands outward from the click point, revealing the new theme. Persist choice to localStorage. Use the Web Animations API with clip-path circle transition.",
+    tags: ["dark-mode", "theme", "ripple", "animation", "clip-path", "hook"],
+  },
+  {
+    name: "ShinyBadge",
+    slug: "shiny-badge",
+    path: "badges/ShinyBadge.tsx",
+    category: "badges",
+    code: `type Props = { spark?: string; text: string; };
+export function ShinyBadge({ spark = "✦", text }: Props) {
+  return (
+    <>
+      <style>{\`
+        @keyframes shiny-sweep { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+        .shiny-badge-text { background: linear-gradient(110deg, #4a4a4c 40%, #0a0a0a 50%, #4a4a4c 60%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; animation: shiny-sweep 3s linear infinite; }
+      \`}</style>
+      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/[0.02] border border-black/[0.13] text-[13px] text-[#0a0a0a]">
+        <span className="text-[#b45309]">{spark}</span>
+        <span className="shiny-badge-text">{text}</span>
+      </div>
+    </>
+  );
+}`,
+    prompt: "Create a pill-shaped badge component in React with a left icon/spark character and a shiny shimmer text animation using CSS background-clip and an infinite linear gradient sweep animation.",
+    tags: ["badge", "pill", "shiny", "animated", "gradient", "text-effect"],
+  },
+  {
+    name: "BorderBeamButton",
+    slug: "border-beam-button",
+    path: "buttons/BorderBeamButton.tsx",
+    category: "buttons",
+    code: `import { useEffect, useRef } from "react";
+type Props = { label: string; variant?: "primary" | "ghost"; onClick?: () => void; href?: string; };
+const beamStyle = \`
+  @keyframes border-beam-travel { to { offset-distance: 100%; } }
+  .beam-btn { position: relative; isolation: isolate; overflow: hidden; }
+  .beam-border { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1; padding: 1px; background: rgba(255,255,255,0.09); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .beam-dot { position: absolute; width: 80px; aspect-ratio: 1; background: linear-gradient(to left, #ffaa40, #9c40ff, transparent); offset-path: rect(0 100% 100% 0 round 10px); offset-distance: 0%; animation: border-beam-travel 4s linear infinite; }
+  @media (prefers-reduced-motion: reduce) { .beam-dot { animation: none; } }
+\`;
+export function BorderBeamButton({ label, variant = "primary", onClick, href }: Props) {
+  const ref = useRef<HTMLButtonElement & HTMLAnchorElement>(null);
+  useEffect(() => {
+    const btn = ref.current; if (!btn) return;
+    const border = document.createElement("span"); border.className = "beam-border"; border.setAttribute("aria-hidden", "true");
+    const dot = document.createElement("span"); dot.className = "beam-dot"; border.appendChild(dot); btn.appendChild(border);
+    return () => border.remove();
+  }, []);
+  const base = "beam-btn inline-flex items-center justify-center px-5 py-[11px] rounded-[10px] text-sm font-medium tracking-[0.01em] border cursor-pointer transition-all duration-200 relative overflow-hidden no-underline";
+  const primary = "bg-[#0a0a0a] text-[#fafafa] border-[#0a0a0a] hover:-translate-y-px hover:brightness-105";
+  const ghost = "bg-transparent text-[#1a1a1a] border-black/[0.13]";
+  const cls = \`\${base} \${variant === "primary" ? primary : ghost}\`;
+  return (<><style>{beamStyle}</style>{href ? <a href={href} className={cls} ref={ref as React.Ref<HTMLAnchorElement>}>{label}</a> : <button className={cls} onClick={onClick} ref={ref as React.Ref<HTMLButtonElement>}>{label}</button>}</>);
+}`,
+    prompt: "Create a React button component with an animated border-beam effect using CSS offset-path and offset-distance. A gradient dot should travel continuously around the button border. Support primary and ghost variants, and render as either a button or anchor based on an href prop.",
+    tags: ["button", "border-beam", "animated", "gradient", "offset-path"],
+  },
+  {
+    name: "TypingHero",
+    slug: "typing-hero",
+    path: "sections/TypingHero.tsx",
+    category: "sections",
+    code: `"use client";
+import { useEffect, useRef, useState, ReactNode } from "react";
+type Props = { title: string; titleHighlight?: string; subtitle: string; typingDelay?: number; typingSpeed?: number; children?: ReactNode; };
+const typingStyle = \`
+  @keyframes typing-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  .typing-sub::after { content: '|'; display: inline-block; margin-left: 1px; color: #059669; font-weight: 300; animation: typing-cursor .85s step-end infinite; opacity: 0; }
+  .typing-sub.is-typing::after { opacity: 1; } .typing-sub.is-done::after { opacity: 1; }
+\`;
+export function TypingHero({ title, titleHighlight, subtitle, typingDelay = 480, typingSpeed = 28, children }: Props) {
+  const subRef = useRef<HTMLParagraphElement>(null);
+  const [ctaVisible, setCtaVisible] = useState(false);
+  useEffect(() => {
+    const el = subRef.current; if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = subtitle; el.classList.add("is-done"); setCtaVisible(true); return; }
+    let i = 0;
+    const timer = setTimeout(() => {
+      el.classList.add("is-typing");
+      const tick = setInterval(() => { el.textContent = subtitle.slice(0, ++i); if (i >= subtitle.length) { clearInterval(tick); el.classList.remove("is-typing"); el.classList.add("is-done"); setCtaVisible(true); } }, typingSpeed);
+    }, typingDelay);
+    return () => clearTimeout(timer);
+  }, [subtitle, typingDelay, typingSpeed]);
+  return (
+    <><style>{typingStyle}</style>
+    <section className="max-w-[1200px] mx-auto px-6 pt-[72px] pb-12 text-center flex flex-col items-center">
+      <h1 className="font-serif font-medium leading-none mb-[18px] text-[#0a0a0a] tracking-[-0.02em]" style={{ fontSize: "clamp(48px, 9vw, 112px)" }}>
+        {title}{" "}{titleHighlight && <span className="font-serif italic font-medium text-[#0a0a0a]">{titleHighlight}</span>}
+      </h1>
+      <p ref={subRef} className="typing-sub max-w-[640px] text-lg text-[#4a4a4c] mb-7 min-h-[1.6em]" />
+      <div className="flex flex-wrap gap-3 justify-center" style={{ opacity: ctaVisible ? 1 : 0, transform: ctaVisible ? "translateY(0)" : "translateY(10px)", transition: "opacity .5s ease, transform .5s ease", pointerEvents: ctaVisible ? "auto" : "none" }}>{children}</div>
+    </section></>
+  );
+}`,
+    prompt: "Create a React hero section with a large serif/sans-serif headline, a typewriter animated subtitle that types character by character with a blinking cursor, and a CTA slot that fades in only after typing completes. Respect prefers-reduced-motion.",
+    tags: ["hero", "typewriter", "animation", "typing", "serif", "headline"],
+  },
+  {
+    name: "FeatureCardGrid",
+    slug: "feature-card-grid",
+    path: "cards/FeatureCardGrid.tsx",
+    category: "cards",
+    code: `type FeatureCard = { label: string; title: string; };
+type Props = { cards: FeatureCard[]; };
+export function FeatureCardGrid({ cards }: Props) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
+      {cards.map((card, i) => (
+        <div key={i} className="flex flex-col gap-2 p-[22px] rounded-xl bg-black/[0.02] border border-black/[0.06] transition-all duration-[250ms] hover:bg-black/[0.04] hover:border-[#059669] hover:-translate-y-0.5">
+          <div className="font-mono text-[11px] tracking-[0.2em] text-[#059669] uppercase">{card.label}</div>
+          <div className="text-[17px] text-[#0a0a0a] font-medium">{card.title}</div>
+        </div>
+      ))}
+    </div>
+  );
+}`,
+    prompt: "Create a responsive 3-column card grid in React where each card has a small monospace category label and a larger title. Cards should have a hover effect with accent border and slight lift. Collapse to single column on mobile.",
+    tags: ["cards", "grid", "feature", "hover", "responsive", "3-col"],
+  },
+  {
+    name: "NumberedStepsList",
+    slug: "numbered-steps-list",
+    path: "lists/NumberedStepsList.tsx",
+    category: "lists",
+    code: `type Step = { number: string; title: string; description: string; };
+type Props = { steps: Step[]; };
+export function NumberedStepsList({ steps }: Props) {
+  return (
+    <ol className="mt-12 flex flex-col gap-2 list-none p-0">
+      {steps.map((step) => (
+        <li key={step.number} className="grid gap-8 py-8 border-t border-black/[0.06]" style={{ gridTemplateColumns: "90px 1fr" }}>
+          <div className="font-mono text-sm text-[#059669] tracking-[0.2em]">{step.number}</div>
+          <div>
+            <h3 className="font-serif font-medium text-[28px] text-[#0a0a0a] mt-0 mb-2.5">{step.title}</h3>
+            <p className="text-[#4a4a4c] m-0 text-base">{step.description}</p>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}`,
+    prompt: "Create a React ordered list component where each step has a left-aligned monospace step number and a right-hand side with a serif title and body text. Items are separated by a top border. Collapse the two-column layout to a single column on mobile.",
+    tags: ["steps", "process", "numbered", "serif", "mono", "timeline"],
+  },
+  {
+    name: "FormulaBlock",
+    slug: "formula-block",
+    path: "display/FormulaBlock.tsx",
+    category: "display",
+    code: `type Props = { formula: string; caption?: string; };
+export function FormulaBlock({ formula, caption }: Props) {
+  return (
+    <div className="my-8 p-6 text-center bg-[rgba(5,150,105,0.1)] border border-[#059669] rounded-xl font-mono text-[#0a0a0a] overflow-x-auto break-words" style={{ fontSize: "clamp(14px, 4vw, 20px)" }}>
+      <code className="font-[inherit] bg-transparent p-0">{formula}</code>
+      {caption && <div className="mt-2.5 text-xs text-[#4a4a4c] tracking-[0.1em]">{caption}</div>}
+    </div>
+  );
+}`,
+    prompt: "Create a React formula display component that renders a monospace code string centered in an accent-colored bordered box with optional caption text below. Should overflow-scroll horizontally on small screens.",
+    tags: ["formula", "code", "equation", "monospace", "accent", "callout"],
+  },
+  {
+    name: "SignalCardGrid",
+    slug: "signal-card-grid",
+    path: "cards/SignalCardGrid.tsx",
+    category: "cards",
+    code: `type SignalCard = { letter: string; title: string; subtitle: string; description: string; };
+type Props = { cards: SignalCard[]; };
+export function SignalCardGrid({ cards }: Props) {
+  return (
+    <div className="grid gap-3 mt-6" style={{ gridTemplateColumns: \`repeat(\${Math.min(cards.length, 5)}, minmax(0, 1fr))\` }}>
+      {cards.map((card) => (
+        <div key={card.letter} className="p-[22px] border border-black/[0.06] rounded-xl bg-black/[0.02]">
+          <div className="font-serif italic text-[44px] text-[#059669] leading-none">{card.letter}</div>
+          <h4 className="mt-2 mb-1 text-base text-[#0a0a0a] font-medium">{card.title}</h4>
+          <p className="m-0 mb-1 text-sm text-[#8a8a8e]">{card.subtitle}</p>
+          <p className="m-0 text-sm text-[#4a4a4c]">{card.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+}`,
+    prompt: "Create a React 5-column card grid component where each card features a large italic serif display letter in accent color, a card title, a muted subtitle, and a description. Should responsively collapse to 2 columns then 1 column on smaller screens.",
+    tags: ["cards", "grid", "letter", "serif", "5-col", "responsive", "acronym"],
+  },
+  {
+    name: "PrincipleCardGrid",
+    slug: "principle-card-grid",
+    path: "cards/PrincipleCardGrid.tsx",
+    category: "cards",
+    code: `type Principle = { number: string; title: string; subtitle: string; description: string; };
+type Props = { principles: Principle[]; };
+export function PrincipleCardGrid({ principles }: Props) {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+      {principles.map((p) => (
+        <article key={p.number} className="p-[22px] border border-black/[0.06] rounded-xl bg-black/[0.02]">
+          <div className="font-mono text-[#059669] text-xs tracking-[0.2em]">{p.number}</div>
+          <h3 className="font-serif font-medium mt-2.5 mb-1 text-[22px] text-[#0a0a0a]">{p.title}</h3>
+          <div className="text-[13px] text-[#059669] mb-2">{p.subtitle}</div>
+          <p className="text-[#4a4a4c] text-sm m-0">{p.description}</p>
+        </article>
+      ))}
+    </div>
+  );
+}`,
+    prompt: "Create a React 4-column responsive card grid where each card shows a monospace number label, a serif title, an accent-colored sub-label, and a description paragraph. Collapse to 2 columns on tablet and 1 on mobile.",
+    tags: ["cards", "grid", "4-col", "numbered", "serif", "principles", "pillars"],
+  },
+  {
+    name: "DiagnosticGrid",
+    slug: "diagnostic-grid",
+    path: "cards/DiagnosticGrid.tsx",
+    category: "cards",
+    code: `type DiagItem = { tag: string; title: string; description: string; };
+type Props = { items: DiagItem[]; };
+export function DiagnosticGrid({ items }: Props) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
+      {items.map((item) => (
+        <div key={item.tag} className="p-6 border border-black/[0.06] rounded-xl bg-black/[0.02]">
+          <span className="inline-block px-2.5 py-1 rounded-full bg-[rgba(234,179,8,0.2)] text-[#b45309] font-mono text-[10px] tracking-[0.15em] mb-3">{item.tag}</span>
+          <h3 className="font-serif font-medium text-[#0a0a0a] mt-0 mb-1.5 text-[22px]">{item.title}</h3>
+          <p className="text-[#4a4a4c] m-0 text-[15px]">{item.description}</p>
+        </div>
+      ))}
+    </div>
+  );
+}`,
+    prompt: "Create a React 2-column diagnostic card grid. Each card has a small warning-colored monospace pill tag at the top, a serif title, and a muted description. Collapse to single column on mobile. Use an amber/warning color palette for the tags.",
+    tags: ["cards", "grid", "diagnostic", "warning", "2-col", "tag", "status"],
+  },
+  {
+    name: "CalloutBox",
+    slug: "callout-box",
+    path: "callouts/CalloutBox.tsx",
+    category: "callouts",
+    code: `import { ReactNode } from "react";
+type CheckItem = { symbol: string; content: ReactNode; };
+type Props = { title: string; intro?: string; label?: string; items?: CheckItem[]; footer?: string; };
+export function CalloutBox({ title, intro, label, items = [], footer }: Props) {
+  return (
+    <div className="mt-8 p-8 border border-[#b45309] rounded-[14px]" style={{ background: "linear-gradient(180deg, rgba(234,179,8,0.2), rgba(0,0,0,0.02))" }}>
+      <h3 className="font-serif font-medium text-[#0a0a0a] text-2xl mt-0 mb-2.5">{title}</h3>
+      {intro && <p className="text-[#4a4a4c] mt-0 mb-4">{intro}</p>}
+      {label && <div className="font-mono text-[11px] tracking-[0.3em] text-[#b45309] mt-5 mb-2 uppercase">{label}</div>}
+      {items.length > 0 && (
+        <ul className="list-none p-0 m-0 flex flex-col gap-2">
+          {items.map((item, i) => (
+            <li key={i} className="flex gap-2.5 items-start text-[15px] text-[#1a1a1a]">
+              <span className="inline-flex w-[22px] h-[22px] items-center justify-center rounded-full bg-[rgba(234,179,8,0.2)] text-[#b45309] text-xs shrink-0">{item.symbol}</span>
+              <span>{item.content}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {footer && <p className="text-[#4a4a4c] mt-4 mb-0 font-medium">{footer}</p>}
+    </div>
+  );
+}`,
+    prompt: "Create a React callout/alert box component with an amber warning border gradient background, a serif title, optional intro paragraph, a monospace section label, a symbol checklist, and an optional footer.",
+    tags: ["callout", "warning", "alert", "checklist", "amber", "gradient", "diagnosis"],
+  },
+  {
+    name: "Checklist",
+    slug: "checklist",
+    path: "lists/Checklist.tsx",
+    category: "lists",
+    code: `import { ReactNode } from "react";
+type CheckItem = { symbol: string; text: ReactNode; };
+type Props = { items: CheckItem[]; };
+export function Checklist({ items }: Props) {
+  return (
+    <ul className="list-none p-0 my-6 flex flex-col gap-2.5">
+      {items.map((item, i) => (
+        <li key={i} className="flex gap-3 items-start px-4 py-[14px] bg-black/[0.02] border border-black/[0.06] rounded-[10px] text-[#1a1a1a] text-[15px]">
+          <span className="inline-flex w-[22px] h-[22px] items-center justify-center rounded-full bg-[rgba(5,150,105,0.1)] text-[#059669] text-xs shrink-0">{item.symbol}</span>
+          <span>{item.text}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}`,
+    prompt: "Create a React checklist component where each item is a card-like row with a circular accent badge showing a symbol on the left and text content on the right. Support JSX content in the text slot for rich formatting.",
+    tags: ["checklist", "list", "badge", "check", "accent", "card-row"],
+  },
+  {
+    name: "ScrollReveal",
+    slug: "scroll-reveal",
+    path: "animation/ScrollReveal.tsx",
+    category: "animation",
+    code: `"use client";
+import { useEffect, useRef, ReactNode } from "react";
+type Variant = "up" | "left" | "right" | "scale";
+type Props = { children: ReactNode; variant?: Variant; delay?: 0|100|200|300|400|500; className?: string; };
+const revealStyle = \`
+  .sr-up{opacity:0;transform:translateY(32px) scale(.97);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);will-change:opacity,transform} .sr-up.in{opacity:1;transform:translateY(0) scale(1)}
+  .sr-left{opacity:0;transform:translateX(-40px) scale(.97);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);will-change:opacity,transform} .sr-left.in{opacity:1;transform:translateX(0) scale(1)}
+  .sr-right{opacity:0;transform:translateX(40px) scale(.97);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);will-change:opacity,transform} .sr-right.in{opacity:1;transform:translateX(0) scale(1)}
+  .sr-scale{opacity:0;transform:scale(.88);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);will-change:opacity,transform} .sr-scale.in{opacity:1;transform:scale(1)}
+  .sr-d1{transition-delay:.1s} .sr-d2{transition-delay:.2s} .sr-d3{transition-delay:.3s} .sr-d4{transition-delay:.4s} .sr-d5{transition-delay:.5s}
+  @media(prefers-reduced-motion:reduce){.sr-up,.sr-left,.sr-right,.sr-scale{opacity:1;transform:none;transition:none}}
+\`;
+const vc = { up:"sr-up", left:"sr-left", right:"sr-right", scale:"sr-scale" };
+export function ScrollReveal({ children, variant = "up", delay = 0, className = "" }: Props) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    if (!("IntersectionObserver" in window)) { el.classList.add("in"); return; }
+    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { el.classList.add("in"); io.disconnect(); } }, { threshold: 0.1, rootMargin: "0px 0px -60px 0px" });
+    io.observe(el); return () => io.disconnect();
+  }, []);
+  const cls = [vc[variant], delay ? \`sr-d\${delay/100}\` : "", className].filter(Boolean).join(" ");
+  return (<><style>{revealStyle}</style><div ref={ref} className={cls}>{children}</div></>);
+}`,
+    prompt: "Create a React scroll-reveal wrapper component that uses IntersectionObserver to add an .in class when the element enters the viewport, triggering CSS transitions. Support four animation variants: fade-up, slide-from-left, slide-from-right, and scale-up. Include stagger delay support and respect prefers-reduced-motion.",
+    tags: ["scroll", "reveal", "animation", "intersection-observer", "fade", "wrapper", "motion"],
+  },
+  {
+    name: "SiteFooter",
+    slug: "site-footer",
+    path: "layout/SiteFooter.tsx",
+    category: "layout",
+    code: `type FooterColumn = { heading: string; links: { label: string; href: string }[]; };
+type Props = { brandName?: string; tagline?: string; columns?: FooterColumn[]; copyright?: string; publishedBy?: { label: string; href: string }; };
+export function SiteFooter({ brandName = "BRAND", tagline = "", columns = [], copyright = \`© \${new Date().getFullYear()} Brand. All rights reserved.\`, publishedBy }: Props) {
+  return (
+    <footer className="border-t border-black/[0.06] px-6 pt-16 pb-7 mt-10">
+      <div className="max-w-[1200px] mx-auto grid gap-8" style={{ gridTemplateColumns: \`2fr \${columns.map(() => "1fr").join(" ")}\` }}>
+        <div>
+          <div className="flex items-center gap-2.5 font-semibold tracking-[0.08em] text-[#0a0a0a] text-[13px]">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#059669] shadow-[0_0_12px_#059669] shrink-0" />{brandName}
+          </div>
+          {tagline && <p className="text-sm text-[#8a8a8e] mt-2.5 max-w-[360px]">{tagline}</p>}
+        </div>
+        {columns.map((col) => (
+          <div key={col.heading}>
+            <h4 className="font-mono text-[11px] tracking-[0.3em] text-[#059669] mt-0 mb-3.5 uppercase">{col.heading}</h4>
+            <ul className="list-none p-0 m-0">{col.links.map((l) => (<li key={l.href} className="mb-2"><a href={l.href} className="text-[#4a4a4c] text-sm hover:text-[#0a0a0a] transition-colors no-underline">{l.label}</a></li>))}</ul>
+          </div>
+        ))}
+      </div>
+      <div className="max-w-[1200px] mx-auto flex justify-between flex-wrap gap-3 mt-12 pt-[22px] border-t border-black/[0.06] text-[#8a8a8e] text-xs">
+        <span>{copyright}</span>
+        {publishedBy && <span>Published by <a href={publishedBy.href} className="text-[#4a4a4c] hover:text-[#0a0a0a] no-underline">{publishedBy.label}</a></span>}
+      </div>
+    </footer>
+  );
+}`,
+    prompt: "Create a React site footer with a 4-column responsive grid: brand column with dot logo + tagline on the left, then 3 link columns with monospace headings. Include a bottom bar with copyright text and a Published by attribution. Collapse to 2 columns on tablet and 1 on mobile.",
+    tags: ["footer", "grid", "links", "responsive", "brand", "copyright"],
+  },
 ];
 
 export function getComponent(slug: string): ComponentEntry | undefined {
