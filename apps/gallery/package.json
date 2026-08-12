@@ -8,22 +8,29 @@
     "start": "next start"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@radix-ui/react-select": "^2.0.0",
     "@repo/registry": "*",
     "@repo/ui": "*",
+    "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "gsap": "^3.14.2",
     "lucide-react": "^0.400.0",
+    "motion": "^12.0.0",
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
-    "tailwind-merge": "^3.5.0"
+    "rough-notation": "^0.5.1",
+    "tailwind-merge": "^3.5.0",
+    "three": "^0.170.0"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.0",
+    "@types/three": "^0.170.0",
     "autoprefixer": "^10.4.0",
     "postcss": "^8.4.0",
     "tailwindcss": "^3.4.0",
