@@ -261,14 +261,14 @@ npx yash-ui add stepper
 npx yash-ui add tubelight-navbar
 ```
 
-> **Note:** the CLI's `COMPONENT_MAP` (`packages/cli/bin/index.js`) currently covers the earlier subset of components (`glass-button` → `text-disperse-link`). For newer components (e.g. the e-commerce, LanceMart, and layout additions), copy the source directly from `packages/ui/src/<category>/` or use the gallery's copy-code button until the CLI map is extended.
+All 73 registry components are installable via the CLI — `packages/cli/bin/index.js`'s `COMPONENT_MAP` stays in sync with `packages/registry/src/index.ts`.
 
 ## Adding a New Component
 
 1. Add the component source under `packages/ui/src/<category>/YourComponent.tsx` and export it from `packages/ui/src/index.ts`.
 2. Add an entry to the `registry` array in `packages/registry/src/index.ts` with `name`, `slug`, `path`, `category`, the raw `code` string, a `prompt` description, and `tags`.
 3. Import and register a preview for it in `apps/gallery/src/app/page.tsx` (and `component/[slug]/page.tsx` if it needs a custom interactive preview).
-4. (Optional) Add it to `COMPONENT_MAP` in `packages/cli/bin/index.js` so it's installable via the CLI.
+4. Add it to `COMPONENT_MAP` (and the help text) in `packages/cli/bin/index.js` so it's installable via the CLI.
 
 ## Monorepo Scripts
 

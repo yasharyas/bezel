@@ -50,6 +50,39 @@ const COMPONENT_MAP = {
   marquee: "animation/Marquee.tsx",
   "contact-section": "sections/ContactSection.tsx",
   "text-disperse-link": "buttons/TextDisperseLink.tsx",
+  "image-with-fallback": "media/ImageWithFallback.tsx",
+  "skeleton-card": "loaders/SkeletonCard.tsx",
+  "ecom-empty-state": "feedback/EcomEmptyState.tsx",
+  breadcrumb: "navigation/Breadcrumb.tsx",
+  "category-chips": "navigation/CategoryChips.tsx",
+  "category-grid": "navigation/CategoryGrid.tsx",
+  "search-overlay": "overlays/SearchOverlay.tsx",
+  "mobile-bottom-nav": "navigation/MobileBottomNav.tsx",
+  "product-card": "cards/ProductCard.tsx",
+  "sticky-cart-bar": "panels/StickyCartBar.tsx",
+  "app-header": "layout/AppHeader.tsx",
+  "bakery-product-card": "cards/BakeryProductCard.tsx",
+  "testimonial-card": "cards/TestimonialCard.tsx",
+  "faq-accordion": "sections/FAQAccordion.tsx",
+  "whatsapp-fab": "buttons/WhatsAppFAB.tsx",
+  "image-placeholder": "feedback/ImagePlaceholder.tsx",
+  "sticky-navbar": "navigation/StickyNavbar.tsx",
+  "error-boundary": "feedback/ErrorBoundary.tsx",
+  "sticky-nav": "navigation/StickyNav.tsx",
+  "use-theme-ripple": "hooks/useThemeRipple.tsx",
+  "shiny-badge": "badges/ShinyBadge.tsx",
+  "border-beam-button": "buttons/BorderBeamButton.tsx",
+  "typing-hero": "sections/TypingHero.tsx",
+  "feature-card-grid": "cards/FeatureCardGrid.tsx",
+  "numbered-steps-list": "lists/NumberedStepsList.tsx",
+  "formula-block": "display/FormulaBlock.tsx",
+  "signal-card-grid": "cards/SignalCardGrid.tsx",
+  "principle-card-grid": "cards/PrincipleCardGrid.tsx",
+  "diagnostic-grid": "cards/DiagnosticGrid.tsx",
+  "callout-box": "callouts/CalloutBox.tsx",
+  checklist: "lists/Checklist.tsx",
+  "scroll-reveal": "animation/ScrollReveal.tsx",
+  "site-footer": "layout/SiteFooter.tsx",
 };
 
 function showHelp() {
@@ -100,6 +133,39 @@ function showHelp() {
     marquee              Infinite GSAP scrolling text marquee
     contact-section      Dark contact card with animated border & spotlight
     text-disperse-link   GSAP per-character scatter hover link
+    image-with-fallback  Image that falls back to a placeholder SVG on error
+    skeleton-card        Pulse-animated skeleton card and row placeholders
+    ecom-empty-state     Cart/search/category/network empty states
+    breadcrumb           Accessible breadcrumb trail with Home icon
+    category-chips       Scrollable category filter chips (framer-motion)
+    category-grid        Responsive category grid with staggered entrance
+    search-overlay       Fullscreen search overlay with recent/popular searches
+    mobile-bottom-nav    Mobile bottom nav with animated active indicator
+    product-card         E-commerce product card with cart stepper animation
+    sticky-cart-bar      Sticky mobile cart summary bar (framer-motion)
+    app-header           Sticky app header with search bar and cart badge
+    bakery-product-card  Product card with shimmer placeholder and hover lift
+    testimonial-card     Testimonial card with star rating and avatar
+    faq-accordion        Accessible FAQ accordion, one item open at a time
+    whatsapp-fab         Floating WhatsApp chat button
+    image-placeholder    Image skeleton placeholder with shimmer overlay
+    sticky-navbar        Sticky navbar with frosted-glass scroll effect
+    error-boundary       Class-based error boundary with fallback UI
+    sticky-nav           Glassmorphism sticky nav with theme toggle
+    use-theme-ripple     Dark/light toggle hook with ripple reveal animation
+    shiny-badge          Pill badge with shimmering gradient-sweep text
+    border-beam-button   Button with animated gradient border beam
+    typing-hero          Hero section with typewriter-animated subtitle
+    feature-card-grid    Responsive 3-column feature card grid
+    numbered-steps-list  Ordered list with monospace step numbers
+    formula-block        Monospace formula display in accent-bordered box
+    signal-card-grid     5-column card grid with serif display letters
+    principle-card-grid  4-column principle card grid
+    diagnostic-grid      2-column diagnostic card grid with warning pills
+    callout-box          Amber warning-style callout box
+    checklist            Card-row checklist with circular accent badges
+    scroll-reveal        IntersectionObserver reveal wrapper, 4 variants
+    site-footer          4-column responsive footer with copyright bar
 
   Example:
     npx yash-ui add glass-button
