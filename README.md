@@ -2,6 +2,8 @@
 
 A production-ready UI component library, gallery, and CLI — built as a Turborepo monorepo. 73 components across 23 categories, each with copy-paste-ready code, a live preview, and the original generation prompt.
 
+**Live gallery:** [yash-ui-system-gallery.vercel.app](https://yash-ui-system-gallery.vercel.app/)
+
 ## Structure
 
 ```
@@ -239,6 +241,8 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 ## Gallery App
 
 `apps/gallery` is a Next.js app that renders every registry entry with a live preview, a popup/fullscreen view, and a copy-to-clipboard code panel. Each component also has its own detail page at `/component/<slug>`.
+
+Live at [yash-ui-system-gallery.vercel.app](https://yash-ui-system-gallery.vercel.app/), or run it locally:
 
 ```bash
 cd apps/gallery
