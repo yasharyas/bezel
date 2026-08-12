@@ -37,7 +37,7 @@ export function StickyNav({
         </nav>
 
         <button
-          className="flex items-center justify-center w-9 h-9 rounded-full border border-black/[0.13] cursor-pointer bg-black/[0.02] text-[#4a4a4c] hover:text-[#0a0a0a] hover:bg-black/[0.04] transition-all shrink-0 p-0"
+          className="flex items-center justify-center w-9 h-9 rounded-full border border-black/[0.13] cursor-pointer bg-black/[0.02] text-[#4a4a4c] hover:text-[#0a0a0a] hover:bg-black/[0.04] transition-[color,background-color,transform] duration-150 active:scale-[0.93] shrink-0 p-0"
           aria-label="Toggle theme"
           onClick={onThemeToggle}
         >

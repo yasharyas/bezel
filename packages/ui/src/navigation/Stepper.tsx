@@ -29,7 +29,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
         </div>
         <div className="w-full h-2 bg-neutral-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-indigo-500 rounded-full transition-all duration-500 ease-out"
+            className="h-full bg-indigo-500 rounded-full transition-[width] duration-500 ease-out"
             style={{ width: `${(currentStep / totalSteps) * 100}%` }}
           />
         </div>
@@ -41,7 +41,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
               <div
                 key={step.id}
                 className={[
-                  'w-2 h-2 rounded-full transition-all duration-300',
+                  'w-2 h-2 rounded-full transition-[background-color,transform] duration-300',
                   isCompleted ? 'bg-green-500' : isCurrent ? 'bg-indigo-500 scale-125' : 'bg-neutral-300',
                 ].join(' ')}
               />
@@ -62,7 +62,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
                 <div className="flex flex-col items-center flex-shrink-0 w-16">
                   <div
                     className={[
-                      'w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300',
+                      'w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-[background-color,color,box-shadow] duration-300',
                       isCompleted
                         ? 'bg-green-500 text-white'
                         : isCurrent
@@ -90,7 +90,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
                 {index < steps.length - 1 && (
                   <div
                     className={[
-                      'flex-1 h-0.5 mt-[18px] transition-all duration-300',
+                      'flex-1 h-0.5 mt-[18px] transition-[background-color] duration-300',
                       isCompleted ? 'bg-green-500' : 'bg-neutral-200',
                     ].join(' ')}
                   />

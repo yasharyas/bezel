@@ -22,7 +22,7 @@ interface GlassButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 export function GlassButton({ children, className = "", ...props }: GlassButtonProps) {
   return (
     <button
-      className={\`px-6 py-2 rounded-xl font-medium text-white backdrop-blur-md bg-white/10 border border-white/20 shadow-lg hover:bg-white/20 transition-all duration-200 \${className}\`}
+      className={\`px-6 py-2 rounded-xl font-medium text-white backdrop-blur-md bg-white/10 border border-white/20 shadow-lg hover:bg-white/20 transition-[background-color,transform] duration-150 active:scale-[0.97] \${className}\`}
       {...props}
     >
       {children}
@@ -72,7 +72,7 @@ export function Input({ label, className = "", ...props }: InputProps) {
     <div className="flex flex-col gap-1.5">
       {label && <label className="text-sm text-white/70 font-medium">{label}</label>}
       <input
-        className={\`px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all \${className}\`}
+        className={\`px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 transition-[border-color,box-shadow] duration-200 \${className}\`}
         {...props}
       />
     </div>
@@ -104,8 +104,17 @@ type TextInputProps = {
 };
 
 export function TextInput({
-  name, label, value, onChange, placeholder, error, disabled,
-  type = 'text', mandatory, uppercase, maxLength,
+  name,
+  label,
+  value,
+  onChange,
+  placeholder,
+  error,
+  disabled,
+  type = 'text',
+  mandatory,
+  uppercase,
+  maxLength,
 }: TextInputProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
@@ -119,14 +128,19 @@ export function TextInput({
         {mandatory && <span className="text-red-500 ml-1">*</span>}
       </label>
       <input
-        id={name} name={name} type={type} value={value}
-        onChange={handleChange} placeholder={placeholder}
-        disabled={disabled} maxLength={maxLength}
+        id={name}
+        name={name}
+        type={type}
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        disabled={disabled}
+        maxLength={maxLength}
         className={[
           'h-11 px-4 rounded-full border bg-white text-neutral-900 placeholder:text-neutral-400',
-          'focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-200',
+          'focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-[border-color,box-shadow] duration-200',
           uppercase ? 'uppercase' : '',
-          error ? 'border-red-500' : 'border-neutral-300',
+          error ? 'border-red-500 focus:border-red-500' : 'border-neutral-300',
           disabled ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed' : '',
         ].join(' ')}
         autoComplete="off"
@@ -155,26 +169,50 @@ type RadioGroupProps = {
   mandatory?: boolean;
 };
 
-export function RadioGroup({ name, label, value, onChange, options, error, mandatory }: RadioGroupProps) {
+export function RadioGroup({
+  name,
+  label,
+  value,
+  onChange,
+  options,
+  error,
+  mandatory,
+}: RadioGroupProps) {
   return (
     <fieldset className="flex flex-col gap-2">
       <legend className="text-sm font-medium text-neutral-700 mb-1">
-        {label}{mandatory && <span className="text-red-500 ml-1">*</span>}
+        {label}
+        {mandatory && <span className="text-red-500 ml-1">*</span>}
       </legend>
       <div className="flex flex-wrap gap-3">
         {options.map(option => (
-          <label key={option} className={[
-            'flex items-center gap-2 px-4 py-2.5 rounded-full border cursor-pointer',
-            'transition-all duration-200 min-h-[48px] select-none',
-            value === option
-              ? 'border-indigo-500 bg-indigo-50 text-indigo-600 font-medium'
-              : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
-          ].join(' ')}>
-            <input type="radio" name={name} value={option} checked={value === option}
-              onChange={() => onChange(option)} className="sr-only" />
-            <span className={['w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0',
-              value === option ? 'border-indigo-500' : 'border-neutral-400'].join(' ')}>
-              {value === option && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
+          <label
+            key={option}
+            className={[
+              'flex items-center gap-2 px-4 py-2.5 rounded-full border cursor-pointer',
+              'transition-[border-color,background-color,color] duration-200 min-h-[48px] select-none',
+              value === option
+                ? 'border-indigo-500 bg-indigo-50 text-indigo-600 font-medium'
+                : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
+            ].join(' ')}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={option}
+              checked={value === option}
+              onChange={() => onChange(option)}
+              className="sr-only"
+            />
+            <span
+              className={[
+                'w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0',
+                value === option ? 'border-indigo-500' : 'border-neutral-400',
+              ].join(' ')}
+            >
+              {value === option && (
+                <span className="w-2 h-2 rounded-full bg-indigo-500" />
+              )}
             </span>
             <span className="text-sm">{option}</span>
           </label>
@@ -203,25 +241,44 @@ type CheckboxProps = {
   mandatory?: boolean;
 };
 
-export function Checkbox({ name, label, checked, onChange, error, mandatory }: CheckboxProps) {
+export function Checkbox({
+  name,
+  label,
+  checked,
+  onChange,
+  error,
+  mandatory,
+}: CheckboxProps) {
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={name} className="flex items-center gap-3 cursor-pointer min-h-[48px] select-none">
-        <div className={[
-          'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
-          checked ? 'bg-indigo-500 border-indigo-500' : 'border-neutral-400 bg-white',
-          error ? 'border-red-500' : '',
-        ].join(' ')}>
+      <label
+        htmlFor={name}
+        className="flex items-center gap-3 cursor-pointer min-h-[48px] select-none"
+      >
+        <div
+          className={[
+            'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-[background-color,border-color] duration-200',
+            checked ? 'bg-indigo-500 border-indigo-500' : 'border-neutral-400 bg-white',
+            error ? 'border-red-500' : '',
+          ].join(' ')}
+        >
           {checked && (
             <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           )}
         </div>
-        <input id={name} name={name} type="checkbox" checked={checked}
-          onChange={e => onChange(e.target.checked)} className="sr-only" />
+        <input
+          id={name}
+          name={name}
+          type="checkbox"
+          checked={checked}
+          onChange={e => onChange(e.target.checked)}
+          className="sr-only"
+        />
         <span className="text-sm text-neutral-700">
-          {label}{mandatory && <span className="text-red-500 ml-1">*</span>}
+          {label}
+          {mandatory && <span className="text-red-500 ml-1">*</span>}
         </span>
       </label>
       {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
@@ -247,30 +304,87 @@ type DOBPickerProps = {
   mandatory?: boolean;
 };
 
-// Converts ISO yyyy-mm-dd to DD/MM/YYYY display
 function toDisplay(iso: string): string {
   if (!iso) return '';
   const parts = iso.split('-');
   if (parts.length !== 3) return '';
-  return parts[2] + '/' + parts[1] + '/' + parts[0];
+  const [y, m, d] = parts;
+  return \`\${d}/\${m}/\${y}\`;
+}
+
+function toISO(display: string): string {
+  const digits = display.replace(/\\D/g, '');
+  if (digits.length !== 8) return '';
+  const d = digits.slice(0, 2);
+  const m = digits.slice(2, 4);
+  const y = digits.slice(4, 8);
+  const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+  if (
+    date.getFullYear() !== parseInt(y) ||
+    date.getMonth() !== parseInt(m) - 1 ||
+    date.getDate() !== parseInt(d)
+  ) return '';
+  return \`\${y}-\${m.padStart(2, '0')}-\${d.padStart(2, '0')}\`;
 }
 
 export function DOBPicker({ name, label, value, onChange, error, mandatory }: DOBPickerProps) {
   const [displayValue, setDisplayValue] = useState(() => toDisplay(value));
-  useEffect(() => { setDisplayValue(toDisplay(value)); }, [value]);
-  // Auto-formats DD/MM/YYYY with validation
+
+  useEffect(() => {
+    setDisplayValue(toDisplay(value));
+  }, [value]);
+
+  const handleChange = (raw: string) => {
+    const incoming = raw.replace(/\\D/g, '').slice(0, 8);
+    const prev = displayValue.replace(/\\D/g, '');
+
+    if (incoming.length <= prev.length) {
+      let formatted = incoming;
+      if (incoming.length > 4) formatted = \`\${incoming.slice(0, 2)}/\${incoming.slice(2, 4)}/\${incoming.slice(4)}\`;
+      else if (incoming.length > 2) formatted = \`\${incoming.slice(0, 2)}/\${incoming.slice(2)}\`;
+      setDisplayValue(formatted);
+      onChange(incoming.length === 8 ? (toISO(formatted) || '') : '');
+      return;
+    }
+
+    let sanitized = '';
+    for (let i = 0; i < incoming.length; i++) {
+      const d = parseInt(incoming[i], 10);
+      if (i === 0) { if (d > 3) return; sanitized += incoming[i]; }
+      else if (i === 1) { const day = parseInt(incoming.slice(0, 2), 10); if (day < 1 || day > 31) return; sanitized += incoming[i]; }
+      else if (i === 2) { if (d > 1) return; sanitized += incoming[i]; }
+      else if (i === 3) { const month = parseInt(incoming.slice(2, 4), 10); if (month < 1 || month > 12) return; sanitized += incoming[i]; }
+      else sanitized += incoming[i];
+    }
+
+    let formatted = sanitized;
+    if (sanitized.length > 4) formatted = \`\${sanitized.slice(0, 2)}/\${sanitized.slice(2, 4)}/\${sanitized.slice(4)}\`;
+    else if (sanitized.length > 2) formatted = \`\${sanitized.slice(0, 2)}/\${sanitized.slice(2)}\`;
+    setDisplayValue(formatted);
+    onChange(sanitized.length === 8 ? (toISO(formatted) || '') : '');
+  };
+
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={name} className="text-sm font-medium text-neutral-700">
-        {label}{mandatory && <span className="text-red-500 ml-1">*</span>}
+        {label}
+        {mandatory && <span className="text-red-500 ml-1">*</span>}
       </label>
-      <input id={name} name={name} type="text" inputMode="numeric"
-        placeholder="DD/MM/YYYY" value={displayValue}
-        onChange={e => { /* masked input logic */ }}
+      <input
+        id={name}
+        name={name}
+        type="text"
+        inputMode="numeric"
+        placeholder="DD/MM/YYYY"
+        value={displayValue}
+        onChange={e => handleChange(e.target.value)}
         maxLength={10}
-        className={['h-11 px-4 rounded-full border bg-white text-neutral-900 placeholder:text-neutral-400',
-          'focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-200',
-          error ? 'border-red-500' : 'border-neutral-300'].join(' ')} />
+        className={[
+          'h-11 px-4 rounded-full border bg-white text-neutral-900 placeholder:text-neutral-400',
+          'focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-[border-color,box-shadow] duration-200',
+          error ? 'border-red-500' : 'border-neutral-300',
+        ].join(' ')}
+      />
       {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
     </div>
   );
@@ -287,36 +401,85 @@ export function DOBPicker({ name, label, value, onChange, error, mandatory }: DO
 import * as Select from '@radix-ui/react-select';
 import { ChevronDown, Check } from 'lucide-react';
 
+// Real @keyframes (not a transition) so Radix's Presence waits for
+// \`animationend\` before unmounting the content, instead of popping instantly.
+const selectPopStyle = \`
+  @keyframes yui-select-pop-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  @keyframes yui-select-pop-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.96); } }
+\`;
+
 type SelectInputProps = {
-  name: string; label: string; value: string;
+  name: string;
+  label: string;
+  value: string;
   onChange: (value: string) => void;
-  options: string[]; placeholder?: string;
-  error?: string; mandatory?: boolean;
+  options: string[];
+  placeholder?: string;
+  error?: string;
+  mandatory?: boolean;
 };
 
-export function SelectInput({ name, label, value, onChange, options, placeholder, error, mandatory }: SelectInputProps) {
+export function SelectInput({
+  name,
+  label,
+  value,
+  onChange,
+  options,
+  placeholder,
+  error,
+  mandatory,
+}: SelectInputProps) {
   return (
     <div className="flex flex-col gap-1">
+      <style>{selectPopStyle}</style>
       <label htmlFor={name} className="text-sm font-medium text-neutral-700">
-        {label}{mandatory && <span className="text-red-500 ml-1">*</span>}
+        {label}
+        {mandatory && <span className="text-red-500 ml-1">*</span>}
       </label>
       <Select.Root value={value || undefined} onValueChange={onChange}>
-        <Select.Trigger id={name} className={[
-          'h-11 px-4 rounded-full border bg-white flex items-center justify-between gap-2',
-          'focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-200',
-          !value ? 'text-neutral-400' : 'text-neutral-900',
-          error ? 'border-red-500' : 'border-neutral-300',
-        ].join(' ')}>
+        <Select.Trigger
+          id={name}
+          className={[
+            'h-11 px-4 rounded-full border bg-white flex items-center justify-between gap-2 text-left',
+            'focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-[border-color,box-shadow,transform] duration-200 active:scale-[0.99]',
+            !value ? 'text-neutral-400' : 'text-neutral-900',
+            error ? 'border-red-500' : 'border-neutral-300',
+            'data-[state=open]:border-indigo-500 data-[state=open]:ring-2 data-[state=open]:ring-indigo-300',
+          ].join(' ')}
+        >
           <Select.Value placeholder={placeholder ?? 'Select an option'} />
-          <Select.Icon><ChevronDown className="w-4 h-4 text-neutral-400" /></Select.Icon>
+          <Select.Icon>
+            <ChevronDown className="w-4 h-4 text-neutral-400" />
+          </Select.Icon>
         </Select.Trigger>
+
         <Select.Portal>
-          <Select.Content className="bg-white border rounded-lg shadow-md overflow-hidden z-50" position="popper" sideOffset={4}>
+          <Select.Content
+            className={[
+              'bg-white border border-neutral-200 rounded-lg shadow-md overflow-hidden z-50 min-w-[var(--radix-select-trigger-width)]',
+              '[transform-origin:var(--radix-select-content-transform-origin)]',
+              'data-[state=open]:animate-[yui-select-pop-in_160ms_cubic-bezier(0.23,1,0.32,1)]',
+              'data-[state=closed]:animate-[yui-select-pop-out_120ms_cubic-bezier(0.23,1,0.32,1)]',
+            ].join(' ')}
+            position="popper"
+            sideOffset={4}
+          >
             <Select.Viewport className="p-1">
-              {options.map(o => (
-                <Select.Item key={o} value={o} className="flex items-center gap-2 px-3 py-2.5 text-sm rounded-md cursor-pointer outline-none data-[highlighted]:bg-indigo-50 data-[highlighted]:text-indigo-600">
-                  <Select.ItemText>{o}</Select.ItemText>
-                  <Select.ItemIndicator className="ml-auto"><Check className="w-4 h-4" /></Select.ItemIndicator>
+              {options.map(option => (
+                <Select.Item
+                  key={option}
+                  value={option}
+                  className={[
+                    'flex items-center gap-2 px-3 py-2.5 text-sm rounded-md cursor-pointer outline-none text-neutral-700',
+                    'data-[highlighted]:bg-indigo-50 data-[highlighted]:text-indigo-600',
+                    'data-[state=checked]:font-medium data-[state=checked]:text-indigo-600',
+                    'transition-colors duration-150',
+                  ].join(' ')}
+                >
+                  <Select.ItemText>{option}</Select.ItemText>
+                  <Select.ItemIndicator className="ml-auto">
+                    <Check className="w-4 h-4" />
+                  </Select.ItemIndicator>
                 </Select.Item>
               ))}
             </Select.Viewport>
@@ -339,36 +502,135 @@ export function SelectInput({ name, label, value, onChange, options, placeholder
 import { Upload, Eye, X, FileText } from 'lucide-react';
 
 type FileUploadProps = {
-  name: string; label: string; value: string;
+  name: string;
+  label: string;
+  value: string;
   onChange: (value: string) => void;
-  error?: string; mandatory?: boolean;
+  error?: string;
+  mandatory?: boolean;
   accept?: string;
 };
 
-export function FileUpload({ name, label, value, onChange, error, mandatory, accept = '.pdf,.jpg,.jpeg,.png' }: FileUploadProps) {
+export function FileUpload({
+  name,
+  label,
+  value,
+  onChange,
+  error,
+  mandatory,
+  accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx',
+}: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-  // Handles file selection, preview, and removal
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onChange(file.name);
+      if (file.type.startsWith('image/')) {
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+      } else {
+        setPreviewUrl(null);
+      }
+    }
+  };
+
+  const handleRemove = () => {
+    onChange('');
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
+    }
+    setShowPreview(false);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
   return (
     <div className="flex flex-col gap-1">
       <label className="text-sm font-medium text-neutral-700">
-        {label}{mandatory && <span className="text-red-500 ml-1">*</span>}
+        {label}
+        {mandatory && <span className="text-red-500 ml-1">*</span>}
       </label>
+
       {!value ? (
-        <div className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-neutral-300 hover:border-indigo-400 cursor-pointer"
-          onClick={() => inputRef.current?.click()} role="button" tabIndex={0}>
-          <Upload className="w-5 h-5 text-neutral-400" />
+        <div
+          className={[
+            'flex items-center gap-3 p-3 rounded-xl border border-dashed cursor-pointer',
+            'transition-[border-color] duration-200 min-h-[48px]',
+            error ? 'border-red-500' : 'border-neutral-300 hover:border-indigo-400',
+          ].join(' ')}
+          onClick={() => inputRef.current?.click()}
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') inputRef.current?.click(); }}
+        >
+          <Upload className="w-5 h-5 text-neutral-400 flex-shrink-0" />
           <span className="text-sm text-neutral-500">Click to upload a file</span>
         </div>
       ) : (
         <div className="flex items-center gap-2 p-3 rounded-xl border border-neutral-300 bg-neutral-50">
-          <FileText className="w-5 h-5 text-indigo-500" />
+          <FileText className="w-5 h-5 text-indigo-500 flex-shrink-0" />
           <span className="text-sm text-neutral-700 truncate flex-1">{value}</span>
+          <div className="flex items-center gap-1">
+            {previewUrl && (
+              <button
+                type="button"
+                onClick={() => setShowPreview(true)}
+                className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors"
+                title="Preview"
+              >
+                <Eye className="w-4 h-4 text-neutral-600" />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors"
+              title="Remove"
+            >
+              <X className="w-4 h-4 text-neutral-600" />
+            </button>
+          </div>
         </div>
       )}
-      <input ref={inputRef} id={name} type="file" className="sr-only" accept={accept} />
+
+      <input
+        ref={inputRef}
+        id={name}
+        name={name}
+        type="file"
+        onChange={handleChange}
+        className="sr-only"
+        accept={accept}
+      />
+
       {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
+
+      {showPreview && previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowPreview(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-lg p-4 max-w-lg w-full mx-4"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-semibold text-neutral-800">{value}</span>
+              <button
+                type="button"
+                onClick={() => setShowPreview(false)}
+                className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-neutral-600" />
+              </button>
+            </div>
+            <img src={previewUrl} alt={value} className="w-full rounded-lg object-contain max-h-[60vh]" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }`,
@@ -382,7 +644,11 @@ export function FileUpload({ name, label, value, onChange, error, mandatory, acc
     category: "navigation",
     code: `import React from 'react';
 
-type Step = { id: string; title: string; };
+type Step = {
+  id: string;
+  title: string;
+};
+
 type StepperProps = {
   steps: Step[];
   currentStepIndex: number;
@@ -392,36 +658,91 @@ type StepperProps = {
 export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperProps) {
   const totalSteps = steps.length;
   const currentStep = currentStepIndex + 1;
+
   return (
     <div className="w-full">
       {/* Mobile: progress bar */}
       <div className="sm:hidden">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-medium text-neutral-500">Step {currentStep} of {totalSteps}</span>
-          <span className="text-xs font-semibold text-indigo-600">{steps[currentStepIndex]?.title}</span>
+          <span className="text-xs font-medium text-neutral-500">
+            Step {currentStep} of {totalSteps}
+          </span>
+          <span className="text-xs font-semibold text-indigo-600">
+            {steps[currentStepIndex]?.title}
+          </span>
         </div>
         <div className="w-full h-2 bg-neutral-200 rounded-full overflow-hidden">
-          <div className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-            style={{ width: (currentStep / totalSteps * 100) + '%' }} />
+          <div
+            className="h-full bg-indigo-500 rounded-full transition-[width] duration-500 ease-out"
+            style={{ width: \`\${(currentStep / totalSteps) * 100}%\` }}
+          />
+        </div>
+        <div className="flex justify-between mt-1.5">
+          {steps.map((step, i) => {
+            const isCompleted = completedStepIds.has(step.id);
+            const isCurrent = i === currentStepIndex;
+            return (
+              <div
+                key={step.id}
+                className={[
+                  'w-2 h-2 rounded-full transition-[background-color,transform] duration-300',
+                  isCompleted ? 'bg-green-500' : isCurrent ? 'bg-indigo-500 scale-125' : 'bg-neutral-300',
+                ].join(' ')}
+              />
+            );
+          })}
         </div>
       </div>
-      {/* Desktop: numbered bubbles with connectors */}
-      <div className="hidden sm:flex items-start w-full px-4">
-        {steps.map((step, i) => {
-          const done = completedStepIds.has(step.id);
-          const curr = i === currentStepIndex;
-          return (
-            <React.Fragment key={step.id}>
-              <div className="flex flex-col items-center w-16">
-                <div className={['w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold',
-                  done ? 'bg-green-500 text-white' : curr ? 'bg-indigo-500 text-white' : 'bg-neutral-200 text-neutral-500'
-                ].join(' ')}>{done ? '✓' : i + 1}</div>
-                <span className="text-xs text-center mt-1.5">{step.title}</span>
-              </div>
-              {i < steps.length - 1 && <div className={'flex-1 h-0.5 mt-[18px] ' + (done ? 'bg-green-500' : 'bg-neutral-200')} />}
-            </React.Fragment>
-          );
-        })}
+
+      {/* Desktop: labelled step indicators */}
+      <div className="hidden sm:block w-full pb-2">
+        <div className="flex items-start w-full px-4">
+          {steps.map((step, index) => {
+            const isCompleted = completedStepIds.has(step.id);
+            const isCurrent = index === currentStepIndex;
+
+            return (
+              <React.Fragment key={step.id}>
+                <div className="flex flex-col items-center flex-shrink-0 w-16">
+                  <div
+                    className={[
+                      'w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-[background-color,color,box-shadow] duration-300',
+                      isCompleted
+                        ? 'bg-green-500 text-white'
+                        : isCurrent
+                          ? 'bg-indigo-500 text-white shadow-[0_0_0_3px_rgba(99,102,241,0.3)]'
+                          : 'bg-neutral-200 text-neutral-500',
+                    ].join(' ')}
+                  >
+                    {isCompleted ? (
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      index + 1
+                    )}
+                  </div>
+                  <span
+                    className={[
+                      'text-xs text-center w-full leading-tight mt-1.5',
+                      isCurrent ? 'text-indigo-600 font-semibold' : isCompleted ? 'text-green-600 font-medium' : 'text-neutral-400',
+                    ].join(' ')}
+                  >
+                    {step.title}
+                  </span>
+                </div>
+                {index < steps.length - 1 && (
+                  <div
+                    className={[
+                      'flex-1 h-0.5 mt-[18px] transition-[background-color] duration-300',
+                      isCompleted ? 'bg-green-500' : 'bg-neutral-200',
+                    ].join(' ')}
+                  />
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -438,25 +759,98 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
 type StepperNavigationProps = {
-  currentStepIndex: number; totalSteps: number;
-  isLoading?: boolean; isLastStep?: boolean;
-  onPrevious: () => void; onNext: () => void; onSubmit: () => void;
+  currentStepIndex: number;
+  totalSteps: number;
+  isLoading?: boolean;
+  loadingLabel?: string;
+  isLastStep?: boolean;
+  onPrevious: () => void;
+  onNext: () => void;
+  onSubmit: () => void;
+  submitLabel?: string;
+  nextLabel?: string;
+  previousLabel?: string;
 };
 
-export function StepperNavigation({ currentStepIndex, isLoading, isLastStep, onPrevious, onNext, onSubmit }: StepperNavigationProps) {
+export function StepperNavigation({
+  currentStepIndex,
+  totalSteps,
+  isLoading = false,
+  loadingLabel,
+  isLastStep = false,
+  onPrevious,
+  onNext,
+  onSubmit,
+  submitLabel = 'Submit',
+  nextLabel = 'Next',
+  previousLabel = 'Previous',
+}: StepperNavigationProps) {
+  const isFirstStep = currentStepIndex === 0;
+
   return (
     <div className="flex items-center gap-4 pt-6 mt-6 border-t border-neutral-200 w-full">
-      {currentStepIndex > 0 && (
-        <button type="button" onClick={onPrevious} disabled={isLoading}
-          className="flex-1 h-9 rounded-full font-semibold bg-neutral-100 text-neutral-800 hover:bg-neutral-200 inline-flex items-center justify-center gap-2">
-          <ChevronLeft className="w-4 h-4" />Previous
+      {!isFirstStep && (
+        <button
+          type="button"
+          onClick={onPrevious}
+          disabled={isLoading}
+          className="flex-1 h-9 px-5 rounded-full font-semibold bg-neutral-100 text-neutral-800
+                     hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-300
+                     transition-[background-color,transform] duration-150 active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100
+                     inline-flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          {previousLabel}
         </button>
       )}
-      <button type="button" onClick={isLastStep ? onSubmit : onNext} disabled={isLoading}
-        className="flex-1 h-9 rounded-full font-semibold bg-indigo-500 text-white hover:bg-indigo-600 inline-flex items-center justify-center gap-2 disabled:opacity-50">
-        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-        {isLastStep ? 'Submit' : 'Next'}<ChevronRight className="w-4 h-4" />
-      </button>
+
+      {isLastStep ? (
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={isLoading}
+          className="flex-1 h-9 px-5 rounded-full font-semibold bg-indigo-500 text-white
+                     hover:bg-indigo-600 active:bg-indigo-700 active:scale-[0.97]
+                     focus:outline-none focus:ring-2 focus:ring-indigo-300
+                     transition-[background-color,transform] duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
+                     inline-flex items-center justify-center gap-2"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {loadingLabel ?? 'Submitting...'}
+            </>
+          ) : (
+            <>
+              {submitLabel}
+              <ChevronRight className="w-4 h-4" />
+            </>
+          )}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={isLoading}
+          className="flex-1 h-9 px-5 rounded-full font-semibold bg-indigo-500 text-white
+                     hover:bg-indigo-600 active:bg-indigo-700 active:scale-[0.97]
+                     focus:outline-none focus:ring-2 focus:ring-indigo-300
+                     transition-[background-color,transform] duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
+                     inline-flex items-center justify-center gap-2"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {loadingLabel ?? 'Saving...'}
+            </>
+          ) : (
+            <>
+              {nextLabel}
+              <ChevronRight className="w-4 h-4" />
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 }`,
@@ -471,28 +865,43 @@ export function StepperNavigation({ currentStepIndex, isLoading, isLastStep, onP
     code: `import React from 'react';
 
 type Phase = 'verifying' | 'validating' | 'submitting' | 'complete';
-type PhaseConfig = { text: string; subtitle: string; };
 
-const DEFAULT_CONFIG: Record<Phase, PhaseConfig> = {
-  verifying:  { text: 'Verifying Details',    subtitle: 'Checking your information...' },
-  validating: { text: 'Validating Documents', subtitle: 'Reviewing uploaded files...' },
-  submitting: { text: 'Submitting',           subtitle: 'Saving your submission...' },
-  complete:   { text: 'All Done!',            subtitle: 'Your submission was successful.' },
+type PhaseConfig = {
+  text: string;
+  subtitle: string;
 };
 
-type SubmissionLoaderProps = { phase: Phase | null; };
+const DEFAULT_PHASES: Phase[] = ['verifying', 'validating', 'submitting', 'complete'];
 
-export function SubmissionLoader({ phase }: SubmissionLoaderProps) {
+const DEFAULT_CONFIG: Record<Phase, PhaseConfig> = {
+  verifying:  { text: 'Verifying Details',     subtitle: 'Checking your information...' },
+  validating: { text: 'Validating Documents',  subtitle: 'Reviewing uploaded files...' },
+  submitting: { text: 'Submitting',            subtitle: 'Saving your submission...' },
+  complete:   { text: 'All Done!',             subtitle: 'Your submission was successful.' },
+};
+
+type SubmissionLoaderProps = {
+  phase: Phase | null;
+  phases?: Phase[];
+  phaseConfig?: Record<Phase, PhaseConfig>;
+};
+
+export function SubmissionLoader({ phase, phases = DEFAULT_PHASES, phaseConfig = DEFAULT_CONFIG }: SubmissionLoaderProps) {
   if (!phase) return null;
-  const config = DEFAULT_CONFIG[phase];
+
+  const config = phaseConfig[phase];
   const isComplete = phase === 'complete';
+  const currentIndex = phases.indexOf(phase);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-lg p-8 max-w-sm w-full mx-4 text-center">
+      <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-12 max-w-sm w-full mx-4 text-center">
+
+        {/* Icon */}
         <div className="flex justify-center mb-6">
           {isComplete ? (
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-              <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-100 flex items-center justify-center">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
@@ -505,8 +914,28 @@ export function SubmissionLoader({ phase }: SubmissionLoaderProps) {
             </div>
           )}
         </div>
-        <h3 className="text-lg font-semibold text-neutral-900 mb-2">{config.text}</h3>
-        <p className="text-sm text-neutral-500">{config.subtitle}</p>
+
+        {/* Text */}
+        <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 mb-2">{config.text}</h3>
+        <p className="text-sm text-neutral-500 mb-6">{config.subtitle}</p>
+
+        {/* Progress dots */}
+        <div className="flex items-center justify-center gap-2">
+          {phases.map((p, i) => (
+            <div
+              key={p}
+              className={[
+                'w-2.5 h-2.5 rounded-full transition-[background-color] duration-300',
+                i <= currentIndex
+                  ? isComplete ? 'bg-green-500' : 'bg-indigo-500'
+                  : 'bg-neutral-200',
+              ].join(' ')}
+            />
+          ))}
+        </div>
+        <p className="text-xs text-neutral-400 mt-3">
+          Step {currentIndex + 1} of {phases.length}
+        </p>
       </div>
     </div>
   );
@@ -588,7 +1017,7 @@ export function TypewriterLoader({ size = 1 }: Props) {
     slug: "toast-container",
     path: "feedback/ToastContainer.tsx",
     category: "feedback",
-    code: `import { useState, useCallback } from 'react';
+    code: `import { useState, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 interface Toast {
@@ -597,6 +1026,7 @@ interface Toast {
 }
 
 let _toastId = 0;
+const EXIT_MS = 200;
 
 export function useToast() {
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -612,19 +1042,72 @@ export function useToast() {
   return { toasts, show };
 }
 
+// @starting-style drives the entrance — it's paint-driven, not a mount
+// effect + requestAnimationFrame, so it still animates even if the tab was
+// backgrounded when the toast was queued (rAF is paused on hidden tabs).
+// Exit uses the [data-leaving] attribute, toggled by plain React state.
+const toastStyle = \`
+  .yui-toast {
+    transform: translateY(0);
+    opacity: 1;
+    transition: transform 200ms cubic-bezier(0.23,1,0.32,1), opacity 200ms cubic-bezier(0.23,1,0.32,1);
+  }
+  @starting-style {
+    .yui-toast { transform: translateY(100%); opacity: 0; }
+  }
+  .yui-toast[data-leaving="true"] { transform: translateY(100%); opacity: 0; }
+\`;
+
+/**
+ * Toasts fire in bursts, so exit uses an interruptible CSS transition (not
+ * @keyframes) — the same approach Sonner uses. When a toast drops out of the
+ * \`toasts\` prop it isn't unmounted immediately; it's kept around just long
+ * enough to play its exit transition, matching how it slid in.
+ */
 export function ToastContainer({ toasts }: { toasts: Toast[] }) {
-  if (toasts.length === 0) return null;
+  const [rendered, setRendered] = useState<(Toast & { leaving?: boolean })[]>([]);
+  const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
+
+  useEffect(() => {
+    const incomingIds = new Set(toasts.map((t) => t.id));
+    setRendered((prev) => {
+      const stillLeaving = prev.filter((t) => !incomingIds.has(t.id) && t.leaving);
+      const newlyLeaving = prev.filter((t) => !incomingIds.has(t.id) && !t.leaving);
+
+      newlyLeaving.forEach((t) => {
+        const timer = setTimeout(() => {
+          setRendered((curr) => curr.filter((c) => c.id !== t.id));
+          timers.current.delete(t.id);
+        }, EXIT_MS);
+        timers.current.set(t.id, timer);
+      });
+
+      return [...toasts, ...stillLeaving, ...newlyLeaving.map((t) => ({ ...t, leaving: true }))];
+    });
+  }, [toasts]);
+
+  useEffect(() => {
+    const map = timers.current;
+    return () => map.forEach(clearTimeout);
+  }, []);
+
+  if (rendered.length === 0) return null;
+
   return createPortal(
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2">
-      {toasts.map((t) => (
-        <div
-          key={t.id}
-          className="bg-neutral-800 text-white text-sm px-4 py-2.5 rounded-xl shadow-lg animate-[slideUp_0.2s_ease-out]"
-        >
-          {t.message}
-        </div>
-      ))}
-    </div>,
+    <>
+      <style>{toastStyle}</style>
+      <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2">
+        {rendered.map((t) => (
+          <div
+            key={t.id}
+            data-leaving={t.leaving ? 'true' : undefined}
+            className="yui-toast bg-neutral-800 text-white text-sm px-4 py-2.5 rounded-xl shadow-lg"
+          >
+            {t.message}
+          </div>
+        ))}
+      </div>
+    </>,
     document.body
   );
 }`,
@@ -690,7 +1173,12 @@ type CollapsibleSidebarProps = {
   dragTransferKey?: string;
 };
 
-export function CollapsibleSidebar({ title = 'Items', categories, searchPlaceholder = 'Search...', dragTransferKey = 'application/sidebar-item' }: CollapsibleSidebarProps) {
+export function CollapsibleSidebar({
+  title = 'Items',
+  categories,
+  searchPlaceholder = 'Search...',
+  dragTransferKey = 'application/sidebar-item',
+}: CollapsibleSidebarProps) {
   const [search, setSearch] = useState('');
   const [collapsed, setCollapsed] = useState(false);
 
@@ -699,12 +1187,16 @@ export function CollapsibleSidebar({ title = 'Items', categories, searchPlacehol
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const filterItem = (item: SidebarItem) => item.label.toLowerCase().includes(search.toLowerCase());
+  const filterItem = (item: SidebarItem) =>
+    item.label.toLowerCase().includes(search.toLowerCase());
 
   if (collapsed) {
     return (
       <div className="w-12 bg-white border-r border-neutral-200 flex flex-col items-center pt-3">
-        <button onClick={() => setCollapsed(false)} className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 transition-colors cursor-pointer">
+        <button
+          onClick={() => setCollapsed(false)}
+          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 transition-colors cursor-pointer"
+        >
           <PanelLeft size={18} />
         </button>
       </div>
@@ -713,34 +1205,60 @@ export function CollapsibleSidebar({ title = 'Items', categories, searchPlacehol
 
   return (
     <div className="w-60 bg-white border-r border-neutral-200 flex flex-col h-full">
+      {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
         <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">{title}</h2>
-        <button onClick={() => setCollapsed(true)} className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer">
+        <button
+          onClick={() => setCollapsed(true)}
+          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
+        >
           <PanelLeftClose size={16} />
         </button>
       </div>
+
+      {/* Search */}
       <div className="px-3 pb-3">
         <div className="relative">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
-          <input type="text" placeholder={searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-300 placeholder-neutral-400 transition" />
+          <input
+            type="text"
+            placeholder={searchPlaceholder}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-300 placeholder-neutral-400 transition"
+          />
         </div>
       </div>
+
+      {/* Item list */}
       <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-4">
         {categories.map((cat) => {
           const filtered = cat.items.filter(filterItem);
           if (filtered.length === 0) return null;
           return (
             <div key={cat.label}>
-              <h3 className="text-[10px] font-semibold text-neutral-300 uppercase tracking-widest mb-2 px-1">{cat.label}</h3>
+              <h3 className="text-[10px] font-semibold text-neutral-300 uppercase tracking-widest mb-2 px-1">
+                {cat.label}
+              </h3>
               <div className="space-y-1.5">
                 {filtered.map((item) => (
-                  <div key={item.id} draggable onDragStart={(e) => onDragStart(e, item)} className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-neutral-50 border border-neutral-100 hover:border-neutral-300 hover:shadow-sm cursor-grab active:cursor-grabbing transition-all group">
-                    <div className="flex items-center justify-center w-7 h-7 rounded-lg transition-transform group-hover:scale-110" style={{ backgroundColor: \`\${item.color}18\` }}>
+                  <div
+                    key={item.id}
+                    draggable
+                    onDragStart={(e) => onDragStart(e, item)}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-neutral-50 border border-neutral-100 hover:border-neutral-300 hover:shadow-sm cursor-grab active:cursor-grabbing transition-[border-color,box-shadow] duration-150 group"
+                  >
+                    <div
+                      className="flex items-center justify-center w-7 h-7 rounded-lg transition-transform group-hover:scale-110"
+                      style={{ backgroundColor: \`\${item.color}18\` }}
+                    >
                       <span style={{ color: item.color, display: 'flex' }}>{item.icon}</span>
                     </div>
                     <div>
                       <div className="text-xs font-medium text-neutral-700">{item.label}</div>
-                      {item.description && <div className="text-[10px] text-neutral-400">{item.description}</div>}
+                      {item.description && (
+                        <div className="text-[10px] text-neutral-400">{item.description}</div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -763,6 +1281,20 @@ export function CollapsibleSidebar({ title = 'Items', categories, searchPlacehol
     code: `import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 
+// @starting-style is paint-driven (not a mount effect + requestAnimationFrame),
+// so the entrance still plays even if the tab was backgrounded when this
+// panel mounted — rAF is paused on hidden tabs, @starting-style isn't.
+const sidePanelStyle = \`
+  .yui-side-panel {
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform 200ms cubic-bezier(0.23,1,0.32,1), opacity 200ms cubic-bezier(0.23,1,0.32,1);
+  }
+  @starting-style {
+    .yui-side-panel { transform: translateX(4%); opacity: 0; }
+  }
+\`;
+
 type SidePanelProps = {
   title: string;
   headerLeft?: ReactNode;
@@ -773,42 +1305,87 @@ type SidePanelProps = {
 
 export function SidePanel({ title, headerLeft, onClose, footer, children }: SidePanelProps) {
   return (
-    <div className="w-72 bg-white border-l border-neutral-200 flex flex-col h-full animate-[slideIn_0.15s_ease-out]">
+    <div className="yui-side-panel w-72 bg-white border-l border-neutral-200 flex flex-col h-full">
+      <style>{sidePanelStyle}</style>
+      {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-neutral-100">
         <div className="flex items-center gap-2">
           {headerLeft}
-          <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">{title}</span>
+          <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+            {title}
+          </span>
         </div>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer">
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
+        >
           <X size={16} />
         </button>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">{children}</div>
-      {footer && <div className="p-4 border-t border-neutral-100">{footer}</div>}
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {children}
+      </div>
+
+      {/* Footer */}
+      {footer && (
+        <div className="p-4 border-t border-neutral-100">
+          {footer}
+        </div>
+      )}
     </div>
   );
 }
 
-export function PanelField({ label, children }: { label: string; children: ReactNode }) {
+type FieldProps = {
+  label: string;
+  children: ReactNode;
+};
+
+export function PanelField({ label, children }: FieldProps) {
   return (
     <div>
-      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">{label}</label>
+      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+        {label}
+      </label>
       <div className="mt-1">{children}</div>
     </div>
   );
 }
 
 export function PanelInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={'w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-300 placeholder-neutral-300 transition ' + (props.className ?? '')} />;
+  return (
+    <input
+      {...props}
+      className={
+        'w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl ' +
+        'focus:outline-none focus:ring-2 focus:ring-neutral-300 placeholder-neutral-300 transition ' +
+        (props.className ?? '')
+      }
+    />
+  );
 }
 
 export function PanelTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea {...props} className={'w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-300 resize-none transition ' + (props.className ?? '')} />;
+  return (
+    <textarea
+      {...props}
+      className={
+        'w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl ' +
+        'focus:outline-none focus:ring-2 focus:ring-neutral-300 resize-none transition ' +
+        (props.className ?? '')
+      }
+    />
+  );
 }
 
 export function PanelDeleteButton({ onClick, label = 'Delete' }: { onClick: () => void; label?: string }) {
   return (
-    <button onClick={onClick} className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer">
+    <button
+      onClick={onClick}
+      className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+    >
       {label}
     </button>
   );
@@ -834,21 +1411,56 @@ type NodeCardProps = {
   bottomHandle?: ReactNode;
 };
 
-export function NodeCard({ label, description, icon, accentColor, selected = false, onClick, topHandle, bottomHandle }: NodeCardProps) {
+export function NodeCard({
+  label,
+  description,
+  icon,
+  accentColor,
+  selected = false,
+  onClick,
+  topHandle,
+  bottomHandle,
+}: NodeCardProps) {
   return (
     <div
-      className={['relative min-w-[180px] max-w-[240px] rounded-2xl bg-white', 'border-2 transition-all duration-150 cursor-pointer', selected ? 'ring-2 ring-offset-2 shadow-md' : 'shadow-sm hover:shadow-md'].join(' ')}
-      style={{ borderColor: selected ? accentColor : '#e2e8f0', ...(selected ? ({ '--tw-ring-color': accentColor } as CSSProperties) : {}) }}
+      className={[
+        'relative min-w-[180px] max-w-[240px] rounded-2xl bg-white',
+        'border-2 transition-shadow duration-150 cursor-pointer',
+        selected ? 'ring-2 ring-offset-2 shadow-md' : 'shadow-sm hover:shadow-md',
+      ].join(' ')}
+      style={{
+        borderColor: selected ? accentColor : '#e2e8f0',
+        ...(selected
+          ? ({ '--tw-ring-color': accentColor } as CSSProperties)
+          : {}),
+      }}
       onClick={onClick}
     >
-      <div className="absolute left-0 top-3 bottom-3 w-1 rounded-full" style={{ backgroundColor: accentColor }} />
+      {/* Left colour accent bar */}
+      <div
+        className="absolute left-0 top-3 bottom-3 w-1 rounded-full"
+        style={{ backgroundColor: accentColor }}
+      />
+
+      {/* Header */}
       <div className="flex items-center gap-2 px-4 pt-3 pb-1">
-        <div className="flex items-center justify-center w-7 h-7 rounded-lg" style={{ backgroundColor: \`\${accentColor}18\` }}>
+        <div
+          className="flex items-center justify-center w-7 h-7 rounded-lg"
+          style={{ backgroundColor: \`\${accentColor}18\` }}
+        >
           <span style={{ color: accentColor, display: 'flex' }}>{icon}</span>
         </div>
         <span className="text-sm font-semibold text-neutral-800 truncate">{label}</span>
       </div>
-      {description && <div className="px-4 pb-3"><p className="text-xs text-neutral-400 truncate">{description}</p></div>}
+
+      {/* Description */}
+      {description && (
+        <div className="px-4 pb-3">
+          <p className="text-xs text-neutral-400 truncate">{description}</p>
+        </div>
+      )}
+
+      {/* Handle slots */}
       {topHandle}
       {bottomHandle}
     </div>
@@ -914,22 +1526,215 @@ export function TubelightNavBar({ items, activeItem, className, onNavigate }: Na
 import { cva, type VariantProps } from "class-variance-authority"
 import { Check, X } from "lucide-react"
 
-const SWITCH_THEME = { "--ease-spring": "cubic-bezier(0.175, 0.885, 0.32, 1.275)" } as React.CSSProperties
+// ── Spring easing ──────────────────────────────────────────────────
+const SWITCH_THEME = {
+  "--ease-spring": "cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+} as React.CSSProperties
+
 const switchVariants = cva(
   "peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
-  { variants: { variant: { primary: "peer-checked:bg-primary peer-checked:border-primary", destructive: "peer-checked:bg-destructive peer-checked:border-destructive" }, size: { default: "h-8 w-[52px]", sm: "h-6 w-10" } }, defaultVariants: { variant: "primary", size: "default" } }
+  {
+    variants: {
+      variant: {
+        primary: "peer-checked:bg-primary peer-checked:border-primary",
+        destructive: "peer-checked:bg-destructive peer-checked:border-destructive",
+      },
+      size: {
+        default: "h-8 w-[52px]",
+        sm: "h-6 w-10",
+      },
+    },
+    defaultVariants: {
+      variant: "primary",
+      size: "default",
+    },
+  }
 )
-export interface MD3SwitchProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">, VariantProps<typeof switchVariants> {
-  onCheckedChange?: (checked: boolean) => void; showIcons?: boolean; checkedIcon?: React.ReactNode; uncheckedIcon?: React.ReactNode; haptic?: "heavy" | "light" | "none"
+
+// ── Web Audio haptic feedback ──────────────────────────────────────
+const playHapticFeedback = (type: "heavy" | "light" | "none") => {
+  if (type === "none" || typeof window === "undefined") return
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext
+    if (!AudioContext) return
+    const ctx = new AudioContext()
+    const oscillator = ctx.createOscillator()
+    const gainNode = ctx.createGain()
+    oscillator.connect(gainNode)
+    gainNode.connect(ctx.destination)
+    const now = ctx.currentTime
+    if (type === "heavy") {
+      oscillator.type = "triangle"
+      oscillator.frequency.setValueAtTime(180, now)
+      oscillator.frequency.exponentialRampToValueAtTime(40, now + 0.15)
+      gainNode.gain.setValueAtTime(0.4, now)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.12)
+      oscillator.start(now)
+      oscillator.stop(now + 0.15)
+    } else {
+      oscillator.type = "sine"
+      oscillator.frequency.setValueAtTime(800, now)
+      gainNode.gain.setValueAtTime(0.15, now)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.08)
+      oscillator.start(now)
+      oscillator.stop(now + 0.08)
+    }
+  } catch { /* silent fail */ }
 }
-export const MD3Switch = React.forwardRef<HTMLInputElement, MD3SwitchProps>(({ className, size, variant, checked, defaultChecked, onCheckedChange, showIcons = false, checkedIcon, uncheckedIcon, haptic = "none", style, disabled, ...props }, ref) => {
-  const [isChecked, setIsChecked] = React.useState(defaultChecked ?? false)
-  React.useEffect(() => { if (checked !== undefined) setIsChecked(checked) }, [checked])
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => { if (!disabled) { const v = e.target.checked; if (checked === undefined) setIsChecked(v); onCheckedChange?.(v) } }
-  const isSmall = size === "sm"
-  // ... (see full source for handle/halo logic)
-  return <label className="group relative inline-flex items-center justify-center min-w-[48px] min-h-[48px]" style={{ ...SWITCH_THEME, ...style }}><input type="checkbox" className="peer sr-only" ref={ref} checked={isChecked} onChange={handleChange} disabled={disabled} {...props} /></label>
-})
+
+export interface MD3SwitchProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size">,
+    VariantProps<typeof switchVariants> {
+  onCheckedChange?: (checked: boolean) => void
+  showIcons?: boolean
+  checkedIcon?: React.ReactNode
+  uncheckedIcon?: React.ReactNode
+  haptic?: "heavy" | "light" | "none"
+}
+
+export const MD3Switch = React.forwardRef<HTMLInputElement, MD3SwitchProps>(
+  ({
+    className,
+    size,
+    variant,
+    checked,
+    defaultChecked,
+    onCheckedChange,
+    showIcons = false,
+    checkedIcon,
+    uncheckedIcon,
+    haptic = "none",
+    style,
+    disabled,
+    ...props
+  }, ref) => {
+    const [isChecked, setIsChecked] = React.useState(defaultChecked ?? false)
+    const [isPressed, setIsPressed] = React.useState(false)
+    const [isHovered, setIsHovered] = React.useState(false)
+
+    React.useEffect(() => {
+      if (checked !== undefined) setIsChecked(checked)
+    }, [checked])
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (disabled) return
+      const newValue = e.target.checked
+      playHapticFeedback(haptic ?? "none")
+      if (checked === undefined) setIsChecked(newValue)
+      onCheckedChange?.(newValue)
+    }
+
+    const isSmall = size === "sm"
+    const translateDist = isSmall ? "translate-x-[16px]" : "translate-x-[20px]"
+    const handleSizeUnchecked = isSmall ? "w-3 h-3 ml-[2px]" : "w-4 h-4 ml-[2px]"
+    const handleSizeChecked = isSmall ? "w-4 h-4" : "w-6 h-6"
+    const handleSizePressed = isSmall ? "w-5 h-5 -ml-[2px]" : "w-7 h-7 -ml-[2px]"
+    const iconClasses = isSmall ? "w-2.5 h-2.5" : "w-3.5 h-3.5"
+    const shouldRenderIcons = showIcons || checkedIcon || uncheckedIcon
+
+    const haloLeft = isChecked
+      ? (isSmall ? "left-[10px]" : "left-[14px]")
+      : shouldRenderIcons && !isSmall
+        ? "left-[14px]"
+        : isSmall
+          ? "left-[8px]"
+          : "left-[10px]"
+
+    return (
+      <label
+        className={[
+          "group relative inline-flex items-center justify-center",
+          disabled ? "cursor-not-allowed opacity-50" : "",
+          "min-w-[48px] min-h-[48px]",
+        ].join(" ")}
+        style={{ ...SWITCH_THEME, ...style }}
+        onPointerDown={() => !disabled && setIsPressed(true)}
+        onPointerUp={() => setIsPressed(false)}
+        onPointerLeave={() => { setIsPressed(false); setIsHovered(false) }}
+        onPointerEnter={() => !disabled && setIsHovered(true)}
+      >
+        <input
+          type="checkbox"
+          className="peer sr-only"
+          ref={ref}
+          checked={isChecked}
+          onChange={handleChange}
+          disabled={disabled}
+          {...props}
+        />
+
+        {/* Track */}
+        <div
+          className={[
+            switchVariants({ variant, size }),
+            "bg-muted border-border",
+            "peer-checked:bg-primary peer-checked:border-primary",
+            className ?? "",
+          ].join(" ")}
+        >
+          {/* Handle container */}
+          <div
+            className={[
+              "pointer-events-none block h-full w-full transition-transform duration-300 ease-[var(--ease-spring)]",
+              isChecked ? translateDist : "translate-x-0",
+            ].join(" ")}
+          >
+            {/* Handle */}
+            <div
+              className={[
+                "absolute top-1/2 -translate-y-1/2 shadow-sm transition-[width,height,margin-left,background-color,color] duration-300 flex items-center justify-center rounded-full left-[2px]",
+                isChecked ? "bg-primary-foreground" : "bg-foreground text-muted",
+                isChecked && variant === "primary" ? "text-primary" : "",
+                isChecked && variant === "destructive" ? "text-destructive" : "",
+                isPressed
+                  ? handleSizePressed
+                  : isChecked || (shouldRenderIcons && !isSmall)
+                    ? handleSizeChecked
+                    : handleSizeUnchecked,
+              ].join(" ")}
+            >
+              {shouldRenderIcons && (
+                <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                  {/* Checked icon */}
+                  <div
+                    className={[
+                      "absolute inset-0 flex items-center justify-center transition-[opacity,transform] duration-300",
+                      isChecked ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 -rotate-45",
+                    ].join(" ")}
+                  >
+                    {checkedIcon ?? <Check className={iconClasses} strokeWidth={4} />}
+                  </div>
+                  {/* Unchecked icon */}
+                  <div
+                    className={[
+                      "absolute inset-0 flex items-center justify-center transition-[opacity,transform] duration-300 text-muted-foreground",
+                      !isChecked ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 rotate-45",
+                    ].join(" ")}
+                  >
+                    {uncheckedIcon ?? <X className={iconClasses} strokeWidth={4} />}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Halo */}
+            <div
+              className={[
+                "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full pointer-events-none transition-[opacity,transform] duration-200",
+                isSmall ? "w-8 h-8" : "w-10 h-10",
+                isChecked
+                  ? variant === "destructive" ? "bg-destructive" : "bg-primary"
+                  : "bg-foreground",
+                isPressed ? "opacity-10 scale-100" : isHovered ? "opacity-5 scale-100" : "opacity-0 scale-50",
+                haloLeft,
+              ].join(" ")}
+            />
+          </div>
+        </div>
+      </label>
+    )
+  }
+)
 MD3Switch.displayName = "MD3Switch"`,
     prompt: "Build a Material Design 3 toggle switch in React with spring-easing physics for the handle, a hover/press halo effect, optional check/X icons that rotate in/out, two sizes (default and sm), primary and destructive color variants, and an optional Web Audio API haptic feedback click sound.",
     tags: ["switch", "toggle", "material-design", "md3", "animated", "haptic", "physics"],
@@ -939,27 +1744,216 @@ MD3Switch.displayName = "MD3Switch"`,
     slug: "dual-confirm-dialog",
     path: "dialogs/DualConfirmDialog.tsx",
     category: "dialogs",
-    code: `import { useState } from "react"
+    code: `import { useEffect, useState } from "react"
 import { AlertTriangle, Loader2 } from "lucide-react"
 
-export interface DeleteProgress { current: number; total: number; strategy?: "frontend" | "backend" }
-export interface DualConfirmDialogProps {
-  open: boolean; onOpenChange: (open: boolean) => void; onConfirm: () => void
-  title: string; description: string; itemCount: number; itemType: string
-  confirmationPhrase?: string; isLoading?: boolean; progress?: DeleteProgress | null
+const EXIT_MS = 160
+
+// @starting-style drives the entrance (paint-driven, not a mount effect +
+// requestAnimationFrame, so it isn't silently skipped if the tab was
+// backgrounded when the dialog opened). Exit still needs JS: the dialog has
+// to stay mounted for one transition after \`open\` goes false, which
+// [data-closing] below drives, kept in sync with the delayed unmount.
+const dialogStyle = \`
+  .yui-dialog-backdrop {
+    opacity: 1;
+    transition: opacity 200ms cubic-bezier(0.23,1,0.32,1);
+  }
+  @starting-style { .yui-dialog-backdrop { opacity: 0; } }
+  .yui-dialog-backdrop[data-closing="true"] { opacity: 0; }
+
+  .yui-dialog {
+    opacity: 1;
+    transform: scale(1);
+    transition: transform 200ms cubic-bezier(0.23,1,0.32,1), opacity 200ms cubic-bezier(0.23,1,0.32,1);
+  }
+  @starting-style { .yui-dialog { opacity: 0; transform: scale(0.96); } }
+  .yui-dialog[data-closing="true"] { opacity: 0; transform: scale(0.96); }
+\`;
+
+export interface DeleteProgress {
+  current: number
+  total: number
+  strategy?: "frontend" | "backend"
 }
 
-export function DualConfirmDialog({ open, onOpenChange, onConfirm, title, description, itemCount, itemType, confirmationPhrase = "DELETE", isLoading = false, progress = null }: DualConfirmDialogProps) {
+export interface DualConfirmDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onConfirm: () => void
+  title: string
+  description: string
+  itemCount: number
+  itemType: string
+  confirmationPhrase?: string
+  isLoading?: boolean
+  progress?: DeleteProgress | null
+}
+
+export function DualConfirmDialog({
+  open,
+  onOpenChange,
+  onConfirm,
+  title,
+  description,
+  itemCount,
+  itemType,
+  confirmationPhrase = "DELETE",
+  isLoading = false,
+  progress = null,
+}: DualConfirmDialogProps) {
   const [step, setStep] = useState<1 | 2>(1)
   const [inputValue, setInputValue] = useState("")
-  const handleClose = () => { if (isLoading) return; setStep(1); setInputValue(""); onOpenChange(false) }
-  if (!open) return null
+
+  // Keep the dialog mounted for one exit transition after \`open\` flips to
+  // false — interruptible if \`open\` flips back true before the timer fires.
+  const [rendered, setRendered] = useState(open)
+
+  useEffect(() => {
+    if (open) {
+      setRendered(true)
+      return
+    }
+    const timer = setTimeout(() => setRendered(false), EXIT_MS)
+    return () => clearTimeout(timer)
+  }, [open])
+
+  const handleFirstConfirm = () => setStep(2)
+  const handleFinalConfirm = () => { if (inputValue === confirmationPhrase) onConfirm() }
+  const handleClose = () => {
+    if (isLoading) return
+    setStep(1)
+    setInputValue("")
+    onOpenChange(false)
+  }
+
+  const progressPercentage = progress
+    ? Math.round((progress.current / progress.total) * 100)
+    : 0
+
+  if (!rendered) return null
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
-      <div className="relative z-10 w-full max-w-md mx-4 bg-background border border-border rounded-lg shadow-xl p-6">
-        <h2 className="flex items-center gap-2 text-lg font-semibold text-destructive mb-4"><AlertTriangle className="h-5 w-5" />{title}</h2>
-        {/* step 1: warning, step 2: type to confirm */}
+      <style>{dialogStyle}</style>
+
+      {/* Backdrop */}
+      <div
+        className="yui-dialog-backdrop absolute inset-0 bg-black/50"
+        data-closing={!open ? "true" : undefined}
+        onClick={handleClose}
+      />
+
+      {/* Dialog — transform-origin stays centered; it isn't anchored to a trigger */}
+      <div
+        className="yui-dialog relative z-10 w-full max-w-md mx-4 bg-background border border-border rounded-lg shadow-xl"
+        data-closing={!open ? "true" : undefined}
+      >
+        {/* Header */}
+        <div className="p-6 pb-0">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-destructive">
+            <AlertTriangle className="h-5 w-5 shrink-0" />
+            {title}
+          </h2>
+        </div>
+
+        {/* Body */}
+        <div className="p-6">
+          {isLoading && progress ? (
+            /* Progress view */
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-2 text-sm">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span>Deleting items...</span>
+              </div>
+              <div className="w-full bg-secondary rounded-full h-2.5">
+                <div
+                  className="bg-primary h-2.5 rounded-full transition-[width] duration-300 ease-[cubic-bezier(0.77,0,0.175,1)]"
+                  style={{ width: \`\${progressPercentage}%\` }}
+                />
+              </div>
+              <p className="text-center text-sm text-muted-foreground">
+                {progress.current} of {progress.total}
+                {progress.strategy === "frontend" && " (sequential mode)"}
+                {progress.strategy === "backend" && " (batch mode)"}
+              </p>
+            </div>
+          ) : step === 1 ? (
+            /* Step 1: warning */
+            <div className="space-y-4">
+              <p className="text-muted-foreground">{description}</p>
+              <div className="p-3 bg-destructive/10 rounded-md border border-destructive/20">
+                <p className="font-semibold text-destructive">
+                  You are about to delete {itemCount} {itemType}{itemCount > 1 ? "s" : ""}.
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">This action cannot be undone.</p>
+              </div>
+            </div>
+          ) : (
+            /* Step 2: type to confirm */
+            <div className="space-y-4">
+              <p className="font-medium text-destructive">⚠️ Final Confirmation Required</p>
+              <p className="text-sm text-muted-foreground">
+                Type{" "}
+                <code className="bg-muted px-2 py-0.5 rounded font-mono text-foreground">
+                  {confirmationPhrase}
+                </code>{" "}
+                to confirm deletion of {itemCount} {itemType}{itemCount > 1 ? "s" : ""}.
+              </p>
+              <input
+                className="w-full px-3 py-2 text-sm font-mono uppercase border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:opacity-50"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder={\`Type \${confirmationPhrase} to confirm\`}
+                autoFocus
+                disabled={isLoading}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && inputValue === confirmationPhrase) handleFinalConfirm()
+                }}
+              />
+              <p className="text-xs text-muted-foreground">Note: Type in UPPERCASE letters</p>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        {!(isLoading && progress) && (
+          <div className="flex justify-end gap-2 px-6 pb-6">
+            {step === 1 ? (
+              <>
+                <button
+                  onClick={handleClose}
+                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-[background-color,transform] active:scale-[0.97]"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleFirstConfirm}
+                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-[background-color,transform] active:scale-[0.97]"
+                >
+                  Continue to Final Confirmation
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setStep(1)}
+                  disabled={isLoading}
+                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-[background-color,transform] active:scale-[0.97] disabled:opacity-50"
+                >
+                  Go Back
+                </button>
+                <button
+                  onClick={handleFinalConfirm}
+                  disabled={inputValue !== confirmationPhrase || isLoading}
+                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-[background-color,transform] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Delete Permanently
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -977,16 +1971,280 @@ export function DualConfirmDialog({ open, onOpenChange, onConfirm, title, descri
 interface BlenderUploadProps {
   onFileSelect: (file: File, dataUrl: string) => void
   onError?: (message: string) => void
-  accept?: string; maxSizeMB?: number; disabled?: boolean
+  accept?: string
+  maxSizeMB?: number
+  disabled?: boolean
 }
 
-export function BlenderUpload({ onFileSelect, onError, accept = ".jpg,.jpeg,.png", maxSizeMB = 1, disabled = false }: BlenderUploadProps) {
+export function BlenderUpload({
+  onFileSelect,
+  onError,
+  accept = ".jpg,.jpeg,.png",
+  maxSizeMB = 1,
+  disabled = false,
+}: BlenderUploadProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isBlending, setIsBlending] = useState(false)
   const [blendComplete, setBlendComplete] = useState(false)
-  const [previewUrl, setPreviewUrl] = useState("")
-  // ... drag/drop handlers, blender SVG, smoothie glass SVG, inline @keyframes
-  return <div className="rounded-xl overflow-hidden">...</div>
+  const [previewUrl, setPreviewUrl] = useState<string>("")
+
+  const processFile = useCallback(
+    async (file: File) => {
+      if (disabled) return
+
+      const validTypes = ["image/jpeg", "image/jpg", "image/png"]
+      if (!validTypes.includes(file.type)) {
+        const errorMsg = "Only .jpg, .jpeg, .png files are allowed"
+        onError?.(errorMsg)
+        return
+      }
+
+      if (file.size > maxSizeMB * 1024 * 1024) {
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2)
+        const errorMsg = \`Image must be less than \${maxSizeMB} MB (selected: \${fileSizeMB} MB)\`
+        onError?.(errorMsg)
+        return
+      }
+
+      setIsBlending(true)
+      setBlendComplete(false)
+      setPreviewUrl("")
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string
+        setTimeout(() => {
+          setIsBlending(false)
+          setBlendComplete(true)
+          setPreviewUrl(dataUrl)
+          onFileSelect(file, dataUrl)
+        }, 2000)
+      }
+      reader.onerror = () => {
+        setIsBlending(false)
+        onError?.("Failed to read file")
+      }
+      reader.readAsDataURL(file)
+    },
+    [disabled, maxSizeMB, onError, onFileSelect]
+  )
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      setIsDragging(false)
+      if (disabled || isBlending || blendComplete) return
+      const file = e.dataTransfer.files[0]
+      if (file) processFile(file)
+    },
+    [disabled, isBlending, blendComplete, processFile]
+  )
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      if (!disabled && !isBlending && !blendComplete) setIsDragging(true)
+    },
+    [disabled, isBlending, blendComplete]
+  )
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }, [])
+
+  const handleClick = useCallback(() => {
+    if (!disabled && !isBlending && !blendComplete) fileInputRef.current?.click()
+  }, [disabled, isBlending, blendComplete])
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (file) processFile(file)
+      e.target.value = ""
+    },
+    [processFile]
+  )
+
+  const resetUpload = useCallback(() => {
+    setBlendComplete(false)
+    setPreviewUrl("")
+  }, [])
+
+  return (
+    <div
+      className={\`relative overflow-hidden rounded-xl transition-transform duration-300 \${isDragging ? "scale-[1.02]" : ""} \${disabled ? "opacity-50 cursor-not-allowed" : blendComplete ? "cursor-default" : "cursor-pointer"}\`}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onClick={handleClick}
+      style={{ background: "#FFFFFF" }}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={accept}
+        className="hidden"
+        onChange={handleFileChange}
+        disabled={disabled}
+      />
+
+      <div
+        className={\`relative p-6 m-3 border-2 border-dashed rounded-lg transition-colors \${
+          isDragging ? "border-[#92A086] bg-[#92A086]/5" : blendComplete ? "border-[#92A086]" : "border-gray-300"
+        }\`}
+        style={{ background: "#FFFFFF" }}
+      >
+        <div className="flex flex-col items-center justify-center">
+
+          {/* Blender SVG (hidden when complete) */}
+          {!blendComplete && (
+            <svg viewBox="0 0 200 260" className="w-44 h-56">
+              {!isBlending && (
+                <>
+                  {/* Left fruits */}
+                  <g>
+                    <g className={isDragging ? "animate-bounce" : ""} style={{ animationDelay: "0s" }}>
+                      <circle cx="25" cy="35" r="14" fill="#F97316" />
+                      <ellipse cx="21" cy="31" rx="4" ry="5" fill="#FDBA74" opacity="0.5" />
+                      <circle cx="25" cy="24" r="3" fill="#92A086" />
+                    </g>
+                    <g className={isDragging ? "animate-bounce" : ""} style={{ animationDelay: "0.1s" }}>
+                      <circle cx="18" cy="58" r="11" fill="#FB923C" />
+                      <ellipse cx="15" cy="55" rx="3" ry="4" fill="#FED7AA" opacity="0.5" />
+                    </g>
+                    <g className={isDragging ? "animate-bounce" : ""} style={{ animationDelay: "0.2s" }}>
+                      <circle cx="35" cy="70" r="9" fill="#F97316" />
+                      <ellipse cx="32" cy="67" rx="2.5" ry="3" fill="#FDBA74" opacity="0.4" />
+                    </g>
+                  </g>
+                  {/* Right fruits */}
+                  <g>
+                    <g className={isDragging ? "animate-bounce" : ""} style={{ animationDelay: "0.15s" }}>
+                      <path d="M160 28 Q173 32, 177 48 Q179 64, 169 72 Q160 76, 151 72 Q141 64, 143 48 Q147 32, 160 28" fill="#DC2626" />
+                      <ellipse cx="151" cy="49" rx="5" ry="8" fill="#FCA5A5" opacity="0.4" />
+                      <ellipse cx="150" cy="46" rx="1.5" ry="2.5" fill="#FDE047" />
+                      <ellipse cx="157" cy="54" rx="1.5" ry="2.5" fill="#FDE047" />
+                      <ellipse cx="167" cy="52" rx="1.5" ry="2.5" fill="#FDE047" />
+                      <ellipse cx="161" cy="64" rx="1.5" ry="2.5" fill="#FDE047" />
+                      <ellipse cx="151" cy="59" rx="1.5" ry="2.5" fill="#FDE047" />
+                      <path d="M160 28 Q160 18, 168 14 Q165 22, 160 28" fill="#92A086" />
+                    </g>
+                    <g className={isDragging ? "animate-bounce" : ""} style={{ animationDelay: "0.3s" }}>
+                      <circle cx="175" cy="45" r="8" fill="#3B82F6" />
+                      <circle cx="172" cy="42" r="2" fill="#93C5FD" opacity="0.6" />
+                      <circle cx="167" cy="56" r="6" fill="#2563EB" />
+                      <circle cx="165" cy="54" r="1.5" fill="#93C5FD" opacity="0.5" />
+                      <circle cx="180" cy="58" r="5" fill="#3B82F6" />
+                    </g>
+                  </g>
+                </>
+              )}
+
+              {/* Blender jar */}
+              <g>
+                <path d="M55 85 L50 195 Q50 210, 70 210 L130 210 Q150 210, 150 195 L145 85 Z" fill="#FFFFFF" stroke="#92A086" strokeWidth="2" />
+                <path d="M60 90 L57 190" stroke="rgba(146,160,134,0.2)" strokeWidth="3" strokeLinecap="round" />
+                {isBlending && (
+                  <g>
+                    <path d="M54 130 L52 195 Q52 205, 70 205 L130 205 Q148 205, 148 195 L146 130 Z" fill="#92A086" opacity="0.7" />
+                    <circle cx="75" cy="155" r="4" fill="#B8C4AC" opacity="0.8" style={{ animation: "blender-bubble1 1s ease-in-out infinite" }} />
+                    <circle cx="100" cy="170" r="5" fill="#A8B89C" opacity="0.7" style={{ animation: "blender-bubble2 1.3s ease-in-out infinite" }} />
+                    <circle cx="125" cy="150" r="3" fill="#C8D4BC" opacity="0.8" style={{ animation: "blender-bubble3 0.9s ease-in-out infinite" }} />
+                    <circle cx="85" cy="180" r="3.5" fill="#B8C4AC" opacity="0.6" style={{ animation: "blender-bubble1 1.1s ease-in-out infinite" }} />
+                    <circle cx="115" cy="163" r="4" fill="#A8B89C" opacity="0.7" style={{ animation: "blender-bubble2 1.4s ease-in-out infinite" }} />
+                  </g>
+                )}
+                <path d="M50 105 Q20 105, 20 135 L20 165 Q20 185, 40 185 L50 185" fill="none" stroke="#92A086" strokeWidth="10" strokeLinecap="round" />
+                <path d="M50 105 Q25 105, 25 135 L25 165 Q25 180, 40 180 L50 180" fill="none" stroke="#FFFFFF" strokeWidth="4" strokeLinecap="round" />
+                <rect x="60" y="210" width="80" height="20" rx="4" fill="#92A086" />
+                <rect x="65" y="214" width="70" height="12" rx="3" fill="#7A8A70" />
+              </g>
+            </svg>
+          )}
+
+          {/* Smoothie glass (shown when complete) */}
+          {blendComplete && (
+            <svg viewBox="0 0 160 200" className="w-40 h-52" style={{ animation: "glass-appear 0.5s ease-out forwards" }}>
+              <rect x="95" y="10" width="6" height="120" rx="3" fill="#92A086" />
+              <rect x="96.5" y="10" width="2" height="120" fill="#A8B89C" opacity="0.5" />
+              <path d="M35 50 L30 160 Q30 175, 50 175 L110 175 Q130 175, 130 160 L125 50 Z" fill="url(#smoothieGradient)" stroke="#92A086" strokeWidth="2" />
+              <path d="M40 55 L37 155" stroke="rgba(255,255,255,0.6)" strokeWidth="4" strokeLinecap="round" />
+              <ellipse cx="80" cy="55" rx="45" ry="8" fill="#A8B89C" />
+              <circle cx="65" cy="53" r="4" fill="#F97316" />
+              <circle cx="85" cy="55" r="3" fill="#3B82F6" />
+              <circle cx="95" cy="52" r="3.5" fill="#DC2626" />
+              <ellipse cx="80" cy="45" rx="30" ry="12" fill="white" />
+              <ellipse cx="70" cy="42" rx="15" ry="8" fill="#FAFAFA" />
+              <ellipse cx="90" cy="43" rx="12" ry="7" fill="#F5F5F5" />
+              <circle cx="80" cy="32" r="10" fill="#DC2626" />
+              <ellipse cx="76" cy="28" rx="3" ry="4" fill="#FCA5A5" opacity="0.6" />
+              <path d="M80 22 Q82 15, 88 12" stroke="#92A086" strokeWidth="2" fill="none" />
+              <ellipse cx="89" cy="11" rx="4" ry="2" fill="#92A086" />
+              <defs>
+                <linearGradient id="smoothieGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#B8C4AC" />
+                  <stop offset="50%" stopColor="#92A086" />
+                  <stop offset="100%" stopColor="#7A8A70" />
+                </linearGradient>
+              </defs>
+            </svg>
+          )}
+
+          {/* Text */}
+          <div className="mt-4 text-center">
+            <h3 className={\`text-xl font-bold transition-colors \${isBlending ? "text-[#7A8A70]" : blendComplete ? "text-[#92A086]" : "text-gray-800"}\`}>
+              {isBlending ? "Uploading..." : blendComplete ? "🍹 Smoothie Served!" : "Drop files to upload"}
+            </h3>
+            <p className="mt-2 text-gray-500">
+              {isBlending ? (
+                "Wait a moment, it's almost ready"
+              ) : blendComplete ? (
+                "Your image is ready to use!"
+              ) : (
+                <>or <span className="text-[#92A086] font-semibold hover:underline">browse</span> to choose a file</>
+              )}
+            </p>
+          </div>
+
+          {/* Preview */}
+          {blendComplete && previewUrl && (
+            <div className="mt-5 p-3 bg-white rounded-lg shadow-md border border-[#92A086]/30">
+              <p className="text-xs text-[#92A086] font-medium mb-2 text-center">📸 Your Image</p>
+              <img src={previewUrl} alt="Uploaded preview" className="max-w-40 max-h-[100px] rounded-md object-cover mx-auto" />
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); resetUpload() }}
+                className="mt-2 w-full py-1.5 px-3 text-xs font-medium text-[#7A8A70] bg-[#92A086]/10 hover:bg-[#92A086]/20 rounded-md transition-colors"
+              >
+                Change image
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <style>{\`
+        @keyframes blender-bubble1 {
+          0%, 100% { transform: translateY(0) scale(1); opacity: 0.8; }
+          50% { transform: translateY(-6px) scale(1.1); opacity: 0.5; }
+        }
+        @keyframes blender-bubble2 {
+          0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+          50% { transform: translateY(-10px) scale(0.9); opacity: 0.4; }
+        }
+        @keyframes blender-bubble3 {
+          0%, 100% { transform: translateY(0) scale(1); opacity: 0.8; }
+          50% { transform: translateY(-5px) scale(1.15); opacity: 0.5; }
+        }
+        @keyframes glass-appear {
+          0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      \`}</style>
+    </div>
+  )
 }`,
     prompt: "Create a drag-and-drop file upload component with a playful blender animation. Show fruits falling in on drag. When uploading, animate liquid blending inside the jar. On completion transform to a smoothie glass with a cherry on top. Show a preview of the uploaded image below with a 'Change image' button. Use inline SVG — no external images.",
     tags: ["upload", "drag-drop", "animated", "file-input", "svg", "playful", "image-preview"],
@@ -1026,22 +2284,96 @@ export function EmptyState({ title, description, icon, actionLabel = "Create", o
     path: "forms/CheckboxVariants.tsx",
     category: "forms",
     code: `"use client"
+
 import * as React from "react"
 
-export const CustomCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ className, ...props }, ref) => (
-  <input type="checkbox" ref={ref} className={"relative box-border block h-[1.5rem] w-[1.5rem] cursor-pointer appearance-none rounded-md bg-slate-200 transition-all duration-300 checked:bg-[#1677ff] hover:border-[#1677ff] " + (className ?? "")} {...props} />
-))
+const CustomCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className, ...props }, ref) => (
+    <input
+      type="checkbox"
+      ref={ref}
+      className={[
+        "border-1 relative box-border block h-[1.5rem] w-[1.5rem] cursor-pointer appearance-none rounded-md border-[#d9d9d9] bg-slate-200 transition-[background-color,border-color] duration-300",
+        "before:absolute before:left-2/4 before:top-[42%] before:h-[10px] before:w-[6px]",
+        "before:-translate-x-2/4 before:-translate-y-2/4 before:rotate-45 before:scale-75",
+        "before:border-b-2 before:border-r-2 before:border-solid before:border-b-white before:border-r-white",
+        "before:opacity-0 before:transition-[transform,opacity] before:delay-100 before:duration-100 before:ease-[cubic-bezier(0.77,0,0.175,1)] before:content-['']",
+        "after:absolute after:inset-0 after:rounded-[7px] after:opacity-0",
+        "after:shadow-[0_0_0_calc(30px_/_2.5)_#1677ff] after:transition-[opacity,box-shadow] after:duration-500 after:ease-out after:content-['']",
+        "checked:border-transparent checked:bg-[#1677ff]",
+        "checked:before:-translate-x-2/4 checked:before:-translate-y-2/4",
+        "checked:before:rotate-45 checked:before:scale-x-[1.4] checked:before:scale-y-[1.4]",
+        "checked:before:opacity-100 checked:before:transition-[transform,opacity] checked:before:delay-100 checked:before:duration-200",
+        "hover:border-[#1677ff] focus:outline-[#1677ff]",
+        "[&:active:not(:checked)]:after:opacity-100 [&:active:not(:checked)]:after:shadow-none [&:active:not(:checked)]:after:transition-none",
+        className,
+      ].filter(Boolean).join(" ")}
+      {...props}
+    />
+  )
+)
 CustomCheckbox.displayName = "CustomCheckbox"
 
-export const GradientCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(({ ...props }, ref) => (
-  <label className="relative block cursor-pointer select-none rounded-md text-3xl">
-    <input ref={ref} type="checkbox" className="peer absolute opacity-0" {...props} />
-    <div className="relative h-[1.6rem] w-[1.6rem] rounded-[0.3em] bg-white peer-checked:bg-black peer-checked:shadow-[0_0_40px_rgba(17,0,248,0.7)]" />
-  </label>
-))
+const GradientCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className, ...props }, ref) => (
+    <label className="relative block cursor-pointer select-none rounded-md text-3xl outline-2 outline-offset-1 outline-gray-700 has-[:focus-visible]:outline">
+      <input ref={ref} type="checkbox" className="peer absolute opacity-0" {...props} />
+      <div className={[
+        "relative left-0 top-0 h-[1.6rem] w-[1.6rem] rounded-[0.3em] bg-white transition-[background-color,box-shadow] duration-300",
+        "after:absolute after:left-0 after:top-0 after:h-[1.6rem] after:w-[1.6rem]",
+        "after:rotate-0 after:rounded-[0.3em] after:border-[2px] after:border-[rgba(0,0,0,0.863)]",
+        "after:transition-[left,top,height,width,border-radius,border-color,transform] after:delay-100 after:duration-300 after:content-['']",
+        "peer-checked:bg-black",
+        "peer-checked:shadow-[-13px_-13px_40px_0px_rgb(17,0,248),13px_-0_40px_0px_rgb(243,11,243),13px_-13px_40px_0px_rgb(253,228,0),13px_0_40px_0px_rgb(107,255,21),13px_13px_40px_0px_rgb(76,0,255),13px_13px_40px_0px_rgb(255,196,0),-13px_13px_40px_0px_rgb(90,105,240)]",
+        "peer-checked:after:left-2 peer-checked:after:top-[1px] peer-checked:after:h-[0.6em]",
+        "peer-checked:after:w-[0.35em] peer-checked:after:rotate-45 peer-checked:after:rounded-[0em]",
+        "peer-checked:after:border-b-[0.1em] peer-checked:after:border-r-[0.1em]",
+        "peer-checked:after:border-[rgba(238,238,238,0)_white_white_#fff0]",
+        "dark:bg-black dark:after:border-[rgba(255,255,255,0.863)]",
+        "dark:peer-checked:bg-white dark:peer-checked:after:border-[rgba(238,238,238,0)_black_black_#fff0]",
+        className,
+      ].filter(Boolean).join(" ")} />
+    </label>
+  )
+)
 GradientCheckbox.displayName = "GradientCheckbox"
 
-export { TransformerCheckbox, AnimatedCheckbox } from "./CheckboxVariants"`,
+const TransformerCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className, ...props }, ref) => (
+    <label className="relative block h-[1.5rem] w-[1.5rem] cursor-pointer rounded-sm outline-2 outline-offset-1 outline-gray-700 has-[:focus-visible]:outline">
+      <input ref={ref} type="checkbox" className="peer absolute h-0 w-0 opacity-0" {...props} />
+      <span className={[
+        "block h-[inherit] w-[inherit] rounded-md border-[2px] border-black transition-[margin,height,width,transform,border-radius,border-color] duration-300",
+        "peer-checked:ml-1 peer-checked:h-5 peer-checked:w-3",
+        "peer-checked:translate-x-[2px] peer-checked:translate-y-[-1px]",
+        "peer-checked:rotate-45 peer-checked:rounded-none",
+        "peer-checked:border-b-[2px] peer-checked:border-l-transparent peer-checked:border-t-transparent",
+        "dark:border-white",
+        className,
+      ].filter(Boolean).join(" ")} />
+    </label>
+  )
+)
+TransformerCheckbox.displayName = "TransformerCheckbox"
+
+const AnimatedCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  ({ className, ...props }, ref) => (
+    <label className="relative block cursor-pointer select-none rounded-full text-2xl outline-2 outline-offset-1 outline-[#0b6e4f] has-[:checked]:rounded-md has-[:focus-visible]:outline">
+      <input ref={ref} type="checkbox" className="peer absolute h-0 w-0 opacity-0" {...props} />
+      <div className={[
+        "relative left-0 top-0 h-[1.5rem] w-[1.5rem] rounded-[50%] bg-slate-200 transition duration-300",
+        "after:absolute after:left-[0.5rem] after:top-1 after:hidden after:h-[0.8rem] after:w-[0.5rem]",
+        "after:rotate-45 after:border-b-[0.2rem] after:border-r-[0.2rem] after:content-['']",
+        "focus:outline-[#0b6e4f]",
+        "peer-checked:animate-pulse peer-checked:rounded-lg peer-checked:bg-[#0b6e4f] peer-checked:after:block",
+        className,
+      ].filter(Boolean).join(" ")} />
+    </label>
+  )
+)
+AnimatedCheckbox.displayName = "AnimatedCheckbox"
+
+export { CustomCheckbox, GradientCheckbox, TransformerCheckbox, AnimatedCheckbox }`,
     prompt: "Create four stylized checkbox variants using only Tailwind CSS and pseudo-elements — no SVGs. Include: (1) Ant Design style with blue ripple, (2) rainbow gradient glow, (3) border morphs into a checkmark, (4) circular checkbox that pulses green when checked.",
     tags: ["checkbox", "animated", "variants", "gradient", "morphing", "tailwind", "custom"],
   },
@@ -1552,23 +2884,79 @@ export function SkeletonRow() {
     code: `"use client";
 import { ShoppingBag, Search, Wifi, LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
+
 type EmptyType = "cart" | "search" | "category" | "network";
-type Props = { type: EmptyType; query?: string; onCTA?: () => void; };
-const config: Record<EmptyType, { icon: LucideIcon; title: string; desc: string; cta: string; color: string }> = {
-  cart: { icon: ShoppingBag, title: "Your cart is empty", desc: "Add items from the store to get started", cta: "Start Shopping", color: "text-primary" },
-  search: { icon: Search, title: "No results found", desc: "Try different keywords or browse categories", cta: "Clear Search", color: "text-muted-foreground" },
-  category: { icon: ShoppingBag, title: "Nothing here yet", desc: "Try a different category", cta: "View All", color: "text-muted-foreground" },
-  network: { icon: Wifi, title: "Couldn't load items", desc: "Check your connection and try again", cta: "Retry", color: "text-destructive" },
+
+type Props = {
+  /** Preset type that determines icon, title, description and CTA label */
+  type: EmptyType;
+  /** Search query string — only shown when type === "search" */
+  query?: string;
+  /** CTA button click handler. Button is hidden when omitted. */
+  onCTA?: () => void;
 };
+
+const config: Record<EmptyType, { icon: LucideIcon; title: string; desc: string; cta: string; color: string }> = {
+  cart: {
+    icon: ShoppingBag,
+    title: "Your cart is empty",
+    desc: "Add items from the store to get started",
+    cta: "Start Shopping",
+    color: "text-primary",
+  },
+  search: {
+    icon: Search,
+    title: "No results found",
+    desc: "Try different keywords or browse categories",
+    cta: "Clear Search",
+    color: "text-muted-foreground",
+  },
+  category: {
+    icon: ShoppingBag,
+    title: "Nothing here yet",
+    desc: "Try a different category",
+    cta: "View All",
+    color: "text-muted-foreground",
+  },
+  network: {
+    icon: Wifi,
+    title: "Couldn't load items",
+    desc: "Check your connection and try again",
+    cta: "Retry",
+    color: "text-destructive",
+  },
+};
+
 export function EcomEmptyState({ type, query, onCTA }: Props) {
-  const c = config[type]; const Icon = c.icon;
+  const c = config[type];
+  const Icon = c.icon;
+
   return (
-    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center justify-center py-16 px-6 text-center">
-      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4"><Icon className={\`w-9 h-9 \${c.color}\`} /></div>
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col items-center justify-center py-16 px-6 text-center"
+    >
+      <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
+        <Icon className={\`w-9 h-9 \${c.color}\`} />
+      </div>
       <h3 className="m-0 mb-2 text-lg font-semibold">{c.title}</h3>
-      <p className="text-muted-foreground m-0 mb-1 max-w-xs">{type === "search" && query ? \`No items matching "\${query}"\` : c.desc}</p>
-      {type === "search" && <p className="text-muted-foreground m-0 mb-5 text-sm">Try: atta, rice, milk, vegetables…</p>}
-      {onCTA && <button onClick={onCTA} className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 active:scale-95 transition-all">{c.cta}</button>}
+      <p className="text-muted-foreground m-0 mb-1 max-w-xs">
+        {type === "search" && query ? \`No items matching "\${query}"\` : c.desc}
+      </p>
+      {type === "search" && (
+        <p className="text-muted-foreground m-0 mb-5 text-sm">
+          Try: atta, rice, milk, vegetables…
+        </p>
+      )}
+      {onCTA && (
+        <button
+          onClick={onCTA}
+          className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150"
+        >
+          {c.cta}
+        </button>
+      )}
     </motion.div>
   );
 }`,
@@ -1623,17 +3011,45 @@ export function Breadcrumb({ items, className = "" }: Props) {
 import { useRef } from "react";
 import { motion } from "framer-motion";
 import type { ElementType } from "react";
-export interface ChipCategory { id: string; name: string; icon: ElementType; color: string; bg?: string; }
-type Props = { categories: ChipCategory[]; activeCategory: string; onCategoryChange: (id: string) => void; };
+
+export interface ChipCategory {
+  id: string;
+  name: string;
+  icon: ElementType;
+  /** Tailwind color class for the icon when inactive, e.g. "text-green-700" */
+  color: string;
+  bg?: string;
+}
+
+type Props = {
+  categories: ChipCategory[];
+  activeCategory: string;
+  onCategoryChange: (id: string) => void;
+};
+
 export function CategoryChips({ categories, activeCategory, onCategoryChange }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div ref={scrollRef} className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}>
+    <div
+      ref={scrollRef}
+      className="flex gap-2 overflow-x-auto pb-1"
+      style={{ scrollbarWidth: "none", msOverflowStyle: "none" } as React.CSSProperties}
+    >
       {categories.map((cat) => {
-        const Icon = cat.icon; const isActive = activeCategory === cat.id;
+        const Icon = cat.icon;
+        const isActive = activeCategory === cat.id;
         return (
-          <motion.button key={cat.id} whileTap={{ scale: 0.94 }} onClick={() => onCategoryChange(cat.id)}
-            className={\`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all shrink-0 border \${isActive ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20" : "bg-white text-foreground border-border hover:border-primary/40 hover:bg-primary/5"}\`}>
+          <motion.button
+            key={cat.id}
+            whileTap={{ scale: 0.94 }}
+            onClick={() => onCategoryChange(cat.id)}
+            className={\`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-[background-color,border-color,color] duration-150 shrink-0 border \${
+              isActive
+                ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
+                : "bg-white text-neutral-900 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+            }\`}
+          >
             <Icon className={\`w-3.5 h-3.5 \${isActive ? "text-primary-foreground" : cat.color}\`} />
             {cat.name}
           </motion.button>
@@ -1763,27 +3179,184 @@ export function MobileBottomNav({ tabs, activeTab, onTabChange }: Props) {
 import { Plus, Minus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-export interface EcomProduct { id: string; name: string; price: number; unit: string; image: string; inStock: boolean; discount?: number; }
-type Props = { product: EcomProduct; quantity: number; onAdd: () => void; onDecrease: () => void; onNotify?: () => void; onCardClick?: () => void; };
+
+export interface EcomProduct {
+  id: string;
+  name: string;
+  /** Current selling price */
+  price: number;
+  /** Unit/weight label, e.g. "500g", "1 litre" */
+  unit: string;
+  image: string;
+  inStock: boolean;
+  /** Discount percentage 0–100 */
+  discount?: number;
+}
+
+type Props = {
+  product: EcomProduct;
+  quantity: number;
+  onAdd: () => void;
+  onDecrease: () => void;
+  /** Called when "Notify me" is tapped on out-of-stock items */
+  onNotify?: () => void;
+  /** Navigate to product detail */
+  onCardClick?: () => void;
+};
+
 export function ProductCard({ product, quantity, onAdd, onDecrease, onNotify, onCardClick }: Props) {
   const [justAdded, setJustAdded] = useState(false);
-  const handleAdd = () => { onAdd(); if (quantity === 0) { setJustAdded(true); setTimeout(() => setJustAdded(false), 600); } };
-  const discountedFromPrice = product.discount ? Math.round(product.price / (1 - product.discount / 100)) : null;
+
+  const handleAdd = () => {
+    onAdd();
+    if (quantity === 0) {
+      setJustAdded(true);
+      setTimeout(() => setJustAdded(false), 600);
+    }
+  };
+
+  const discountedFromPrice = product.discount
+    ? Math.round(product.price / (1 - product.discount / 100))
+    : null;
+
   return (
-    <motion.div layout whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }} className="bg-card rounded-xl border border-border overflow-hidden transition-shadow relative">
-      <button onClick={onCardClick} className="block w-full relative aspect-square bg-muted overflow-hidden focus:outline-none" aria-label={\`View details for \${product.name}\`} tabIndex={onCardClick ? 0 : -1}>
-        <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-300 hover:scale-105" loading="lazy" />
-        {product.discount && product.inStock && <div className="absolute top-2 left-2 bg-destructive text-destructive-foreground px-2 py-0.5 rounded-md text-xs font-bold">{product.discount}% OFF</div>}
-        {!product.inStock && <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-2 p-2"><span className="bg-white text-foreground px-3 py-1 rounded-md text-sm font-semibold">Out of Stock</span>{onNotify && <button onClick={e => { e.stopPropagation(); onNotify(); }} className="flex items-center gap-1 bg-[#25D366] text-white px-2.5 py-1 rounded-md text-xs font-medium hover:bg-[#22c35e] active:scale-95 transition-all">Notify me</button>}</div>}
-        <AnimatePresence>{justAdded && <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-primary/15 flex items-center justify-center pointer-events-none"><motion.div initial={{ scale: 0.5 }} animate={{ scale: 1 }} exit={{ scale: 1.2, opacity: 0 }} className="w-10 h-10 bg-primary rounded-full flex items-center justify-center"><Plus className="w-5 h-5 text-primary-foreground" /></motion.div></motion.div>}</AnimatePresence>
-        <AnimatePresence>{quantity > 0 && <motion.div initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0 }} className="absolute top-2 right-2 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-[10px] font-bold shadow">{quantity}</motion.div>}</AnimatePresence>
+    <motion.div
+      layout
+      whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(0,0,0,0.10)" }}
+      className="bg-card rounded-xl border border-border overflow-hidden transition-shadow relative"
+    >
+      {/* Image */}
+      <button
+        onClick={onCardClick}
+        className="block w-full relative aspect-square bg-muted overflow-hidden focus:outline-none"
+        aria-label={\`View details for \${product.name}\`}
+        tabIndex={onCardClick ? 0 : -1}
+      >
+        <img
+          src={product.image}
+          alt={product.name}
+          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+          loading="lazy"
+        />
+
+        {/* Discount badge */}
+        {product.discount && product.inStock && (
+          <div className="absolute top-2 left-2 bg-destructive text-destructive-foreground px-2 py-0.5 rounded-md text-xs font-bold">
+            {product.discount}% OFF
+          </div>
+        )}
+
+        {/* Out of stock overlay */}
+        {!product.inStock && (
+          <div className="absolute inset-0 bg-black/55 flex flex-col items-center justify-center gap-2 p-2">
+            <span className="bg-white text-foreground px-3 py-1 rounded-md text-sm font-semibold">
+              Out of Stock
+            </span>
+            {onNotify && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onNotify(); }}
+                className="flex items-center gap-1 bg-[#25D366] text-white px-2.5 py-1 rounded-md text-xs font-medium hover:bg-[#22c35e] active:scale-[0.95] transition-[background-color,transform] duration-150"
+              >
+                Notify me
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* "Added" flash overlay */}
+        <AnimatePresence>
+          {justAdded && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-primary/15 flex items-center justify-center pointer-events-none"
+            >
+              <motion.div
+                initial={{ scale: 0.5 }}
+                animate={{ scale: 1 }}
+                exit={{ scale: 1.2, opacity: 0 }}
+                className="w-10 h-10 bg-primary rounded-full flex items-center justify-center"
+              >
+                <Plus className="w-5 h-5 text-primary-foreground" />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Quantity bubble */}
+        <AnimatePresence>
+          {quantity > 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0 }}
+              className="absolute top-2 right-2 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-[10px] font-bold shadow"
+            >
+              {quantity}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </button>
+
+      {/* Content */}
       <div className="p-3">
-        <button onClick={onCardClick} className="text-left w-full hover:text-primary transition-colors focus:outline-none"><h3 className="line-clamp-2 m-0 mb-0.5 text-sm font-semibold leading-tight">{product.name}</h3></button>
+        <button
+          onClick={onCardClick}
+          className="text-left w-full no-underline text-inherit hover:text-primary transition-colors focus:outline-none"
+        >
+          <h3 className="line-clamp-2 m-0 mb-0.5 text-sm font-semibold leading-tight">{product.name}</h3>
+        </button>
         <p className="text-muted-foreground text-xs m-0 mb-2">{product.unit}</p>
+
         <div className="flex items-center justify-between gap-2 min-h-[36px]">
-          <div className="flex items-baseline gap-1.5 flex-wrap"><span className="font-bold text-sm">₹{product.price}</span>{discountedFromPrice && <span className="line-through text-muted-foreground text-xs">₹{discountedFromPrice}</span>}</div>
-          {product.inStock && <AnimatePresence mode="wait" initial={false}>{quantity === 0 ? <motion.button key="add" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} onClick={handleAdd} className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 active:scale-95 transition-all">ADD</motion.button> : <motion.div key="stepper" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="flex items-center gap-1 bg-primary text-primary-foreground rounded-lg px-1.5 py-1"><button onClick={onDecrease} className="w-6 h-6 flex items-center justify-center hover:opacity-75"><Minus className="w-3.5 h-3.5" /></button><span className="w-5 text-center text-sm font-semibold">{quantity}</span><button onClick={handleAdd} className="w-6 h-6 flex items-center justify-center hover:opacity-75"><Plus className="w-3.5 h-3.5" /></button></motion.div>}</AnimatePresence>}
+          {/* Price */}
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="font-bold text-sm">₹{product.price}</span>
+            {discountedFromPrice && (
+              <span className="line-through text-muted-foreground text-xs">₹{discountedFromPrice}</span>
+            )}
+          </div>
+
+          {/* ADD button / stepper */}
+          {product.inStock && (
+            <AnimatePresence mode="wait" initial={false}>
+              {quantity === 0 ? (
+                <motion.button
+                  key="add"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  onClick={handleAdd}
+                  className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 active:scale-[0.95] transition-[opacity,transform] duration-150"
+                >
+                  ADD
+                </motion.button>
+              ) : (
+                <motion.div
+                  key="stepper"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  className="flex items-center gap-1 bg-primary text-primary-foreground rounded-lg px-1.5 py-1"
+                >
+                  <button
+                    onClick={onDecrease}
+                    className="w-6 h-6 flex items-center justify-center hover:opacity-75 transition-opacity"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="w-5 text-center text-sm font-semibold">{quantity}</span>
+                  <button
+                    onClick={handleAdd}
+                    className="w-6 h-6 flex items-center justify-center hover:opacity-75 transition-opacity"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </div>
       </div>
     </motion.div>
@@ -1833,30 +3406,149 @@ export function StickyCartBar({ itemCount, totalPrice, onViewCart, primaryAction
 import { Search, ShoppingCart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ReactNode } from "react";
-type Props = { storeName: string; tagline?: string; cartItemCount: number; isOpen?: boolean; infoBanner?: string; onCartClick: () => void; onSearchClick: () => void; ctaButton?: { label: string; icon: ReactNode; onClick: () => void; colorClass?: string; }; };
-export function AppHeader({ storeName, tagline, cartItemCount, isOpen, infoBanner, onCartClick, onSearchClick, ctaButton }: Props) {
+
+type Props = {
+  /** Store/app name */
+  storeName: string;
+  /** Tagline shown below name on sm+ screens */
+  tagline?: string;
+  /** Number shown in cart badge */
+  cartItemCount: number;
+  /** Show a live "Open/Closed" status dot */
+  isOpen?: boolean;
+  /** Info bar text */
+  infoBanner?: string;
+  onCartClick: () => void;
+  onSearchClick: () => void;
+  /** Optional extra CTA (e.g. WhatsApp, phone) */
+  ctaButton?: {
+    label: string;
+    icon: ReactNode;
+    onClick: () => void;
+    colorClass?: string;
+  };
+};
+
+export function AppHeader({
+  storeName,
+  tagline,
+  cartItemCount,
+  isOpen,
+  infoBanner,
+  onCartClick,
+  onSearchClick,
+  ctaButton,
+}: Props) {
   return (
-    <motion.header initial={{ y: -100 }} animate={{ y: 0 }} className="sticky top-0 z-50 bg-white border-b border-border shadow-sm">
+    <motion.header
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      className="sticky top-0 z-50 bg-white border-b border-border shadow-sm"
+    >
+      {/* Top info bar */}
       {(infoBanner || isOpen !== undefined) && (
         <div className="bg-primary text-primary-foreground px-4 py-1.5">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-3">{isOpen !== undefined && <span className="flex items-center gap-1.5 font-medium"><span className={\`w-1.5 h-1.5 rounded-full \${isOpen ? "bg-green-300 animate-pulse" : "bg-red-300"}\`} />{isOpen ? "Open Now" : "Closed"}</span>}{infoBanner && <span className="hidden sm:inline opacity-80">{infoBanner}</span>}</div>
-            {ctaButton && <button onClick={ctaButton.onClick} className="flex items-center gap-1.5 hover:opacity-80 transition-opacity shrink-0 font-medium">{ctaButton.icon}<span>{ctaButton.label}</span></button>}
+            <div className="flex items-center gap-3">
+              {isOpen !== undefined && (
+                <span className="flex items-center gap-1.5 font-medium">
+                  <span
+                    className={\`w-1.5 h-1.5 rounded-full \${
+                      isOpen ? "bg-green-300 animate-pulse" : "bg-red-300"
+                    }\`}
+                  />
+                  {isOpen ? "Open Now" : "Closed"}
+                </span>
+              )}
+              {infoBanner && (
+                <span className="hidden sm:inline opacity-80">{infoBanner}</span>
+              )}
+            </div>
+            {ctaButton && (
+              <button
+                onClick={ctaButton.onClick}
+                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity shrink-0 font-medium"
+              >
+                {ctaButton.icon}
+                <span>{ctaButton.label}</span>
+              </button>
+            )}
           </div>
         </div>
       )}
-      <div className="px-4 py-3"><div className="max-w-7xl mx-auto flex items-center gap-3">
-        <div className="shrink-0"><h1 className="text-primary m-0 leading-none text-xl font-extrabold tracking-tight">{storeName}</h1>{tagline && <p className="text-[10px] text-muted-foreground m-0 hidden sm:block">{tagline}</p>}</div>
-        <div className="flex-1 max-w-2xl hidden md:block"><button onClick={onSearchClick} className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-muted rounded-xl text-muted-foreground text-sm hover:bg-muted/80 hover:ring-2 hover:ring-primary/20 transition-all text-left"><Search className="w-4 h-4 shrink-0" /><span>Search…</span></button></div>
-        <div className="flex items-center gap-2 ml-auto md:ml-0">
-          <button onClick={onSearchClick} className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors" aria-label="Search"><Search className="w-5 h-5 text-muted-foreground" /></button>
-          {ctaButton && <button onClick={ctaButton.onClick} className={\`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all text-sm font-medium text-white \${ctaButton.colorClass ?? "bg-primary"}\`}>{ctaButton.icon}<span className="hidden lg:inline">{ctaButton.label}</span></button>}
-          <button onClick={onCartClick} className="relative flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 active:scale-95 transition-all text-sm font-medium" aria-label={\`Cart, \${cartItemCount} items\`}>
-            <ShoppingCart className="w-4 h-4" /><span className="hidden md:inline">Cart</span>
-            <AnimatePresence>{cartItemCount > 0 && <motion.span key={cartItemCount} initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center leading-none">{cartItemCount > 99 ? "99+" : cartItemCount}</motion.span>}</AnimatePresence>
-          </button>
+
+      {/* Main header row */}
+      <div className="px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          {/* Logo / wordmark */}
+          <div className="shrink-0">
+            <h1 className="text-neutral-900 m-0 leading-none text-xl font-extrabold tracking-tight">
+              {storeName}
+            </h1>
+            {tagline && (
+              <p className="text-[10px] text-neutral-500 m-0 hidden sm:block">{tagline}</p>
+            )}
+          </div>
+
+          {/* Desktop inline search bar */}
+          <div className="flex-1 max-w-2xl hidden md:block">
+            <button
+              onClick={onSearchClick}
+              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-gray-100 rounded-xl text-gray-400 text-sm hover:bg-gray-200 transition-colors duration-150 text-left"
+            >
+              <Search className="w-4 h-4 shrink-0" />
+              <span>Search…</span>
+            </button>
+          </div>
+
+          {/* Right actions */}
+          <div className="flex items-center gap-2 ml-auto md:ml-0">
+            {/* Mobile search icon */}
+            <button
+              onClick={onSearchClick}
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5 text-gray-500" />
+            </button>
+
+            {/* CTA button (desktop) */}
+            {ctaButton && (
+              <button
+                onClick={ctaButton.onClick}
+                className={\`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150 text-sm font-medium text-white \${
+                  ctaButton.colorClass ?? "bg-primary"
+                }\`}
+              >
+                {ctaButton.icon}
+                <span className="hidden lg:inline">{ctaButton.label}</span>
+              </button>
+            )}
+
+            {/* Cart button */}
+            <button
+              onClick={onCartClick}
+              className="relative flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150 text-sm font-medium"
+              aria-label={\`Cart, \${cartItemCount} items\`}
+            >
+              <ShoppingCart className="w-4 h-4" />
+              <span className="hidden md:inline">Cart</span>
+              <AnimatePresence>
+                {cartItemCount > 0 && (
+                  <motion.span
+                    key={cartItemCount}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center leading-none"
+                  >
+                    {cartItemCount > 99 ? "99+" : cartItemCount}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </button>
+          </div>
         </div>
-      </div></div>
+      </div>
     </motion.header>
   );
 }`,
@@ -1871,38 +3563,101 @@ export function AppHeader({ storeName, tagline, cartItemCount, isOpen, infoBanne
     category: "cards",
     code: `"use client";
 import type { ReactNode } from "react";
-interface PlaceholderProps { aspectRatio?: string; label?: string; rounded?: string; className?: string; }
-function ImagePlaceholder({ aspectRatio="1/1", label="", rounded="rounded-xl", className="" }: PlaceholderProps) {
+
+interface PlaceholderProps {
+  aspectRatio?: string;
+  label?: string;
+  rounded?: string;
+  className?: string;
+}
+
+function ImagePlaceholder({ aspectRatio = "1/1", label = "", rounded = "rounded-xl", className = "" }: PlaceholderProps) {
   return (
-    <div className={\`relative overflow-hidden bg-neutral-100 \${rounded} \${className}\`} style={{ aspectRatio }} role="img" aria-label={label||"Image placeholder"}>
+    <div
+      className={\`relative overflow-hidden bg-neutral-100 \${rounded} \${className}\`}
+      style={{ aspectRatio }}
+      role="img"
+      aria-label={label || "Image placeholder"}
+    >
       <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-neutral-200 via-neutral-100 to-neutral-200" />
       <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-400">
-        <svg className="w-10 h-10 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        <svg className="w-10 h-10 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
         {label && <span className="text-xs font-medium opacity-60">{label}</span>}
       </div>
     </div>
   );
 }
-export interface BakeryProduct { name: string; image?: string; price: number|string; originalPrice?: number|string; badge?: string; tag?: string; description?: string; }
-type Props = { product: BakeryProduct; href: string; currencySymbol?: string; unitLabel?: string; ctaLabel?: ReactNode|string; };
-export function BakeryProductCard({ product, href, currencySymbol="₹", unitLabel="/kg", ctaLabel="View & Customize" }: Props) {
+
+export interface BakeryProduct {
+  name: string;
+  image?: string;
+  price: number | string;
+  originalPrice?: number | string;
+  badge?: string;
+  tag?: string;
+  description?: string;
+}
+
+type Props = {
+  product: BakeryProduct;
+  href: string;
+  currencySymbol?: string;
+  unitLabel?: string;
+  ctaLabel?: ReactNode | string;
+};
+
+export function BakeryProductCard({ product, href, currencySymbol = "₹", unitLabel = "/kg", ctaLabel = "View & Customize" }: Props) {
   return (
-    <a href={href} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-neutral-100 block">
+    <a
+      href={href}
+      className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-neutral-100 block"
+    >
       <div className="relative overflow-hidden">
-        {product.image ? <img src={product.image} alt={product.name} loading="lazy" className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500" />
-          : <ImagePlaceholder aspectRatio="1/1" label={product.name} rounded="rounded-none" className="group-hover:scale-105 transition-transform duration-500" />}
-        {product.badge && <span className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">{product.badge}</span>}
-        {product.tag && <span className="absolute top-3 right-3 bg-green-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">{product.tag}</span>}
+        {product.image ? (
+          <img
+            src={product.image}
+            alt={product.name}
+            loading="lazy"
+            className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <ImagePlaceholder
+            aspectRatio="1/1"
+            label={product.name}
+            rounded="rounded-none"
+            className="group-hover:scale-105 transition-transform duration-500"
+          />
+        )}
+        {product.badge && (
+          <span className="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+            {product.badge}
+          </span>
+        )}
+        {product.tag && (
+          <span className="absolute top-3 right-3 bg-green-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+            {product.tag}
+          </span>
+        )}
       </div>
       <div className="p-3 sm:p-4">
-        <h3 className="font-semibold text-sm sm:text-base text-neutral-900 mb-1 line-clamp-1 group-hover:text-neutral-700 transition-colors">{product.name}</h3>
-        {product.description && <p className="text-neutral-500 text-xs mb-2 line-clamp-2 hidden sm:block">{product.description}</p>}
+        <h3 className="font-semibold text-sm sm:text-base text-neutral-900 mb-1 line-clamp-1 group-hover:text-neutral-700 transition-colors">
+          {product.name}
+        </h3>
+        {product.description && (
+          <p className="text-neutral-500 text-xs mb-2 line-clamp-2 hidden sm:block">{product.description}</p>
+        )}
         <div className="flex items-baseline gap-1 sm:gap-2 mb-2 sm:mb-3">
           <span className="text-neutral-900 font-bold text-base sm:text-lg">{currencySymbol}{product.price}</span>
-          {product.originalPrice && <span className="text-neutral-400 text-xs line-through">{currencySymbol}{product.originalPrice}</span>}
+          {product.originalPrice && (
+            <span className="text-neutral-400 text-xs line-through">{currencySymbol}{product.originalPrice}</span>
+          )}
           <span className="text-neutral-400 text-[10px] sm:text-xs">{unitLabel}</span>
         </div>
-        <span className="w-full bg-neutral-900 text-white text-[10px] sm:text-xs font-medium py-2 sm:py-2.5 rounded-full group-hover:bg-neutral-700 transition-colors flex items-center justify-center gap-1.5 min-h-[40px]">{ctaLabel}</span>
+        <span className="w-full bg-neutral-900 text-white text-[10px] sm:text-xs font-medium py-2 sm:py-2.5 rounded-full group-hover:bg-neutral-700 transition-colors flex items-center justify-center gap-1.5 min-h-[40px]">
+          {ctaLabel}
+        </span>
       </div>
     </a>
   );
@@ -1946,24 +3701,53 @@ export function TestimonialCard({ testimonial }: Props) {
     code: `"use client";
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
-export interface FAQItem { q: string; a: string; }
-interface FAQItemProps { faq: FAQItem; isOpen: boolean; onToggle: () => void; }
+
+export interface FAQItem {
+  q: string;
+  a: string;
+}
+
+interface FAQItemProps {
+  faq: FAQItem;
+  isOpen: boolean;
+  onToggle: () => void;
+}
+
 function FAQItemRow({ faq, isOpen, onToggle }: FAQItemProps) {
   return (
     <div className="border-b border-neutral-100 last:border-b-0">
-      <button onClick={onToggle} aria-expanded={isOpen} className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer group">
-        <span className="text-neutral-900 text-sm sm:text-base font-medium group-hover:text-neutral-600 transition-colors">{faq.q}</span>
-        <ChevronDown size={18} className={\`shrink-0 text-neutral-400 transition-transform duration-300 \${isOpen?"rotate-180":""}\`} />
+      <button
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer group"
+      >
+        <span className="text-neutral-900 text-sm sm:text-base font-medium group-hover:text-neutral-600 transition-colors">
+          {faq.q}
+        </span>
+        <ChevronDown
+          size={18}
+          className={\`shrink-0 text-neutral-400 transition-transform duration-300 \${isOpen ? "rotate-180" : ""}\`}
+        />
       </button>
-      <div className="overflow-hidden transition-all duration-300" style={{ maxHeight: isOpen?"200px":"0", opacity: isOpen?1:0 }}>
+      <div
+        className="overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(0.77,0,0.175,1)]"
+        style={{ maxHeight: isOpen ? "200px" : "0", opacity: isOpen ? 1 : 0 }}
+      >
         <p className="text-neutral-500 text-sm leading-relaxed pb-5">{faq.a}</p>
       </div>
     </div>
   );
 }
-type Props = { items: FAQItem[]; title?: string; subtitle?: string; };
-export function FAQAccordion({ items, title="Frequently Asked Questions", subtitle="" }: Props) {
+
+type Props = {
+  items: FAQItem[];
+  title?: string;
+  subtitle?: string;
+};
+
+export function FAQAccordion({ items, title = "Frequently Asked Questions", subtitle = "" }: Props) {
   const [openIndex, setOpenIndex] = useState(0);
+
   return (
     <section className="py-16 lg:py-20 bg-white">
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
@@ -1972,7 +3756,14 @@ export function FAQAccordion({ items, title="Frequently Asked Questions", subtit
           {subtitle && <p className="text-neutral-500 text-sm">{subtitle}</p>}
         </div>
         <div className="bg-neutral-50 rounded-2xl px-6 sm:px-8">
-          {items.map((faq, i) => <FAQItemRow key={i} faq={faq} isOpen={openIndex===i} onToggle={() => setOpenIndex(openIndex===i?-1:i)} />)}
+          {items.map((faq, i) => (
+            <FAQItemRow
+              key={i}
+              faq={faq}
+              isOpen={openIndex === i}
+              onToggle={() => setOpenIndex(openIndex === i ? -1 : i)}
+            />
+          ))}
         </div>
       </div>
     </section>
@@ -1987,16 +3778,32 @@ export function FAQAccordion({ items, title="Frequently Asked Questions", subtit
     path: "buttons/WhatsAppFAB.tsx",
     category: "buttons",
     code: `import { MessageCircle } from "lucide-react";
-type Props = { phoneNumber: string; message?: string; tooltipText?: string; };
-export function WhatsAppFAB({ phoneNumber, message="Hello! I have a question.", tooltipText="Chat with us!" }: Props) {
+
+type Props = {
+  phoneNumber: string;
+  message?: string;
+  tooltipText?: string;
+};
+
+export function WhatsAppFAB({ phoneNumber, message = "Hello! I have a question.", tooltipText = "Chat with us!" }: Props) {
   const encodedMsg = encodeURIComponent(message);
   const href = \`https://wa.me/\${phoneNumber}?text=\${encodedMsg}\`;
+
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer"
-      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 group"
-      aria-label="Chat on WhatsApp" title="Chat on WhatsApp">
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-[background-color,box-shadow,transform] duration-300 hover:scale-110 active:scale-105 group"
+      aria-label="Chat on WhatsApp"
+      title="Chat on WhatsApp"
+    >
       <MessageCircle size={26} fill="white" />
-      {tooltipText && <span className="absolute right-full mr-3 bg-white text-gray-800 text-xs font-medium px-3 py-1.5 rounded-full shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">{tooltipText}</span>}
+      {tooltipText && (
+        <span className="absolute right-full mr-3 bg-white text-gray-800 text-xs font-medium px-3 py-1.5 rounded-full shadow-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+          {tooltipText}
+        </span>
+      )}
     </a>
   );
 }`,
@@ -2033,33 +3840,158 @@ import { useState, useEffect } from "react";
 import { Menu, X, Search, ShoppingBag, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ReactNode } from "react";
-export interface NavLink { label: string; href: string; }
-type Props = { brand: string|ReactNode; links?: NavLink[]; cartCount?: number; announcementText?: string; onSearchClick?: () => void; onAccountClick?: () => void; onCartClick?: () => void; };
-export function StickyNavbar({ brand, links=[], cartCount=0, announcementText="", onSearchClick, onAccountClick, onCartClick }: Props) {
+
+export interface NavLink {
+  label: string;
+  href: string;
+}
+
+type Props = {
+  brand: string | ReactNode;
+  links?: NavLink[];
+  cartCount?: number;
+  announcementText?: string;
+  onSearchClick?: () => void;
+  onAccountClick?: () => void;
+  onCartClick?: () => void;
+};
+
+export function StickyNavbar({
+  brand,
+  links = [],
+  cartCount = 0,
+  announcementText = "",
+  onSearchClick,
+  onAccountClick,
+  onCartClick,
+}: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activePath, setActivePath] = useState("/");
-  useEffect(() => { if (typeof window !== "undefined") setActivePath(window.location.pathname); }, []);
-  useEffect(() => { const fn = () => setScrolled(window.scrollY > 20); window.addEventListener("scroll", fn); return () => window.removeEventListener("scroll", fn); }, []);
-  useEffect(() => { document.body.style.overflow = isOpen ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [isOpen]);
-  return (<>
-    {announcementText && <div className="bg-neutral-900 text-white text-center py-2 text-xs tracking-wide"><p>{announcementText}</p></div>}
-    <nav className={\`sticky top-0 z-50 transition-all duration-300 \${scrolled?"bg-white/95 backdrop-blur-md shadow-md":"bg-white"}\`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-16">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          <a href="/" className="flex items-center">{typeof brand==="string"?<span className="text-xl font-bold text-neutral-900">{brand}</span>:brand}</a>
-          <div className="hidden lg:flex items-center gap-8">{links.map(link=><a key={link.href} href={link.href} className={\`text-sm font-medium transition-colors duration-200 hover:text-neutral-900 \${activePath===link.href?"text-neutral-900 border-b-2 border-neutral-900 pb-0.5":"text-neutral-500"}\`}>{link.label}</a>)}</div>
-          <div className="hidden lg:flex items-center gap-4">
-            {onSearchClick && <button onClick={onSearchClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Search"><Search size={20} /></button>}
-            {onAccountClick && <button onClick={onAccountClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Account"><User size={20} /></button>}
-            {onCartClick && <button onClick={onCartClick} className="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label={\`Cart, \${cartCount} items\`}><ShoppingBag size={20} />{cartCount>0&&<span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">{cartCount}</span>}</button>}
-          </div>
-          <button className="lg:hidden p-2 text-neutral-900 cursor-pointer" onClick={()=>setIsOpen(!isOpen)} aria-label={isOpen?"Close menu":"Open menu"} aria-expanded={isOpen}>{isOpen?<X size={24}/>:<Menu size={24}/>}</button>
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setActivePath(window.location.pathname);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isOpen]);
+
+  return (
+    <>
+      {announcementText && (
+        <div className="bg-neutral-900 text-white text-center py-2 text-xs tracking-wide">
+          <p>{announcementText}</p>
         </div>
-      </div>
-      <AnimatePresence>{isOpen&&<motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:"auto"}} exit={{opacity:0,height:0}} transition={{duration:0.25,ease:"easeOut"}} className="lg:hidden bg-white border-t border-neutral-100 overflow-hidden"><div className="px-4 sm:px-6 py-4 space-y-1">{links.map(link=><a key={link.href} href={link.href} onClick={()=>setIsOpen(false)} className={\`block py-3 px-4 rounded-lg text-sm font-medium transition-colors \${activePath===link.href?"bg-neutral-900 text-white":"text-neutral-700 hover:bg-neutral-50"}\`}>{link.label}</a>)}</div></motion.div>}</AnimatePresence>
-    </nav>
-  </>);
+      )}
+      <nav
+        className={\`sticky top-0 z-50 transition-[background-color,box-shadow,backdrop-filter] duration-300 \${
+          scrolled ? "bg-white/95 backdrop-blur-md shadow-md" : "bg-white"
+        }\`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-16">
+          <div className="flex items-center justify-between h-16 lg:h-20">
+            {/* Brand */}
+            <a href="/" className="flex items-center">
+              {typeof brand === "string" ? (
+                <span className="text-xl font-bold text-neutral-900">{brand}</span>
+              ) : brand}
+            </a>
+
+            {/* Desktop links */}
+            <div className="hidden lg:flex items-center gap-8">
+              {links.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className={\`text-sm font-medium transition-colors duration-200 hover:text-neutral-900 \${
+                    activePath === link.href
+                      ? "text-neutral-900 border-b-2 border-neutral-900 pb-0.5"
+                      : "text-neutral-500"
+                  }\`}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+
+            {/* Desktop actions */}
+            <div className="hidden lg:flex items-center gap-4">
+              {onSearchClick && (
+                <button onClick={onSearchClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Search">
+                  <Search size={20} />
+                </button>
+              )}
+              {onAccountClick && (
+                <button onClick={onAccountClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Account">
+                  <User size={20} />
+                </button>
+              )}
+              {onCartClick && (
+                <button onClick={onCartClick} className="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label={\`Cart, \${cartCount} items\`}>
+                  <ShoppingBag size={20} />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+              )}
+            </div>
+
+            {/* Mobile toggle */}
+            <button
+              className="lg:hidden p-2 text-neutral-900 cursor-pointer"
+              onClick={() => setIsOpen(!isOpen)}
+              aria-label={isOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isOpen}
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile drawer */}
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="lg:hidden bg-white border-t border-neutral-100 overflow-hidden"
+            >
+              <div className="px-4 sm:px-6 py-4 space-y-1">
+                {links.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setIsOpen(false)}
+                    className={\`block py-3 px-4 rounded-lg text-sm font-medium transition-colors \${
+                      activePath === link.href
+                        ? "bg-neutral-900 text-white"
+                        : "text-neutral-700 hover:bg-neutral-50"
+                    }\`}
+                  >
+                    {link.label}
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
+    </>
+  );
 }`,
     prompt: "Build a sticky responsive navbar in React with Tailwind CSS and Framer Motion. Include an optional announcement bar above it. On scroll, apply a frosted-glass effect (backdrop-blur + shadow). Desktop: logo left, nav links center, icon actions right (search, account, cart with badge). Mobile: hamburger that toggles an animated slide-down drawer with full-width links. Lock body scroll when drawer is open. Accept all nav links, brand, cart count, and action handlers as props. No router dependency.",
     tags: ["navbar", "sticky", "responsive", "mobile-drawer", "blur", "announcement-bar", "cart-badge"],
@@ -2100,28 +4032,75 @@ export class ErrorBoundary extends Component<Props, State> {
     path: "navigation/StickyNav.tsx",
     category: "navigation",
     code: `type NavLink = { label: string; href: string };
+
 type Props = {
   brandName?: string;
   links?: NavLink[];
   onThemeToggle?: () => void;
   isDark?: boolean;
 };
-export function StickyNav({ brandName = "BRAND", links = [], onThemeToggle, isDark = false }: Props) {
+
+export function StickyNav({
+  brandName = "BRAND",
+  links = [],
+  onThemeToggle,
+  isDark = false,
+}: Props) {
   return (
     <header className="sticky top-0 z-50 bg-[rgba(245,245,247,0.8)] backdrop-saturate-[180%] backdrop-blur-[12px] border-b border-black/[0.06]">
       <div className="max-w-[1200px] mx-auto px-6 py-[14px] flex items-center gap-6">
-        <a className="flex items-center gap-2.5 font-semibold tracking-[0.08em] text-[#0a0a0a] no-underline" href="#">
+        <a
+          className="flex items-center gap-2.5 font-semibold tracking-[0.08em] text-[#0a0a0a] no-underline"
+          href="#"
+        >
           <span className="w-2.5 h-2.5 rounded-full bg-[#059669] shadow-[0_0_12px_#059669] shrink-0" />
           <span className="text-[13px]">{brandName}</span>
         </a>
+
         <nav className="ml-auto flex gap-[22px]">
           {links.map((l) => (
-            <a key={l.href} href={l.href} className="text-[13px] text-[#4a4a4c] hover:text-[#0a0a0a] transition-colors no-underline">{l.label}</a>
+            <a
+              key={l.href}
+              href={l.href}
+              className="text-[13px] text-[#4a4a4c] hover:text-[#0a0a0a] transition-colors no-underline"
+            >
+              {l.label}
+            </a>
           ))}
         </nav>
-        <button className="flex items-center justify-center w-9 h-9 rounded-full border border-black/[0.13] cursor-pointer bg-black/[0.02] text-[#4a4a4c] hover:text-[#0a0a0a] hover:bg-black/[0.04] transition-all shrink-0 p-0" aria-label="Toggle theme" onClick={onThemeToggle}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" style={{ display: isDark ? "none" : "block" }}><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" style={{ display: isDark ? "block" : "none" }}><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+
+        <button
+          className="flex items-center justify-center w-9 h-9 rounded-full border border-black/[0.13] cursor-pointer bg-black/[0.02] text-[#4a4a4c] hover:text-[#0a0a0a] hover:bg-black/[0.04] transition-[color,background-color,transform] duration-150 active:scale-[0.93] shrink-0 p-0"
+          aria-label="Toggle theme"
+          onClick={onThemeToggle}
+        >
+          {/* Moon – shown in light mode */}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-4 h-4 pointer-events-none"
+            style={{ display: isDark ? "none" : "block" }}
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          {/* Sun – shown in dark mode */}
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="w-4 h-4 pointer-events-none"
+            style={{ display: isDark ? "block" : "none" }}
+          >
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
         </button>
       </div>
     </header>
@@ -2192,27 +4171,72 @@ export function ShinyBadge({ spark = "✦", text }: Props) {
     path: "buttons/BorderBeamButton.tsx",
     category: "buttons",
     code: `import { useEffect, useRef } from "react";
-type Props = { label: string; variant?: "primary" | "ghost"; onClick?: () => void; href?: string; };
+
+type Props = {
+  label: string;
+  variant?: "primary" | "ghost";
+  onClick?: () => void;
+  href?: string;
+};
+
 const beamStyle = \`
   @keyframes border-beam-travel { to { offset-distance: 100%; } }
   .beam-btn { position: relative; isolation: isolate; overflow: hidden; }
-  .beam-border { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1; padding: 1px; background: rgba(255,255,255,0.09); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-  .beam-dot { position: absolute; width: 80px; aspect-ratio: 1; background: linear-gradient(to left, #ffaa40, #9c40ff, transparent); offset-path: rect(0 100% 100% 0 round 10px); offset-distance: 0%; animation: border-beam-travel 4s linear infinite; }
+  .beam-border {
+    position: absolute; inset: 0; border-radius: inherit;
+    pointer-events: none; z-index: 1; padding: 1px;
+    background: rgba(255,255,255,0.09);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .beam-dot {
+    position: absolute; width: 80px; aspect-ratio: 1;
+    background: linear-gradient(to left, #ffaa40, #9c40ff, transparent);
+    offset-path: rect(0 100% 100% 0 round 10px);
+    offset-distance: 0%;
+    animation: border-beam-travel 4s linear infinite;
+  }
   @media (prefers-reduced-motion: reduce) { .beam-dot { animation: none; } }
 \`;
+
 export function BorderBeamButton({ label, variant = "primary", onClick, href }: Props) {
   const ref = useRef<HTMLButtonElement & HTMLAnchorElement>(null);
+
   useEffect(() => {
-    const btn = ref.current; if (!btn) return;
-    const border = document.createElement("span"); border.className = "beam-border"; border.setAttribute("aria-hidden", "true");
-    const dot = document.createElement("span"); dot.className = "beam-dot"; border.appendChild(dot); btn.appendChild(border);
+    const btn = ref.current;
+    if (!btn) return;
+    const border = document.createElement("span");
+    border.className = "beam-border";
+    border.setAttribute("aria-hidden", "true");
+    const dot = document.createElement("span");
+    dot.className = "beam-dot";
+    border.appendChild(dot);
+    btn.appendChild(border);
     return () => border.remove();
   }, []);
-  const base = "beam-btn inline-flex items-center justify-center px-5 py-[11px] rounded-[10px] text-sm font-medium tracking-[0.01em] border cursor-pointer transition-all duration-200 relative overflow-hidden no-underline";
+
+  const base =
+    "beam-btn inline-flex items-center justify-center px-5 py-[11px] rounded-[10px] text-sm font-medium tracking-[0.01em] border cursor-pointer transition-[transform,filter] duration-200 relative overflow-hidden no-underline active:scale-[0.97]";
   const primary = "bg-[#0a0a0a] text-[#fafafa] border-[#0a0a0a] hover:-translate-y-px hover:brightness-105";
-  const ghost = "bg-transparent text-[#1a1a1a] border-black/[0.13]";
+  const ghost = "bg-transparent text-[#1a1a1a] border-black/[0.13] hover:bg-transparent";
+
   const cls = \`\${base} \${variant === "primary" ? primary : ghost}\`;
-  return (<><style>{beamStyle}</style>{href ? <a href={href} className={cls} ref={ref as React.Ref<HTMLAnchorElement>}>{label}</a> : <button className={cls} onClick={onClick} ref={ref as React.Ref<HTMLButtonElement>}>{label}</button>}</>);
+
+  return (
+    <>
+      <style>{beamStyle}</style>
+      {href ? (
+        <a href={href} className={cls} ref={ref as React.Ref<HTMLAnchorElement>}>
+          {label}
+        </a>
+      ) : (
+        <button className={cls} onClick={onClick} ref={ref as React.Ref<HTMLButtonElement>}>
+          {label}
+        </button>
+      )}
+    </>
+  );
 }`,
     prompt: "Create a React button component with an animated border-beam effect using CSS offset-path and offset-distance. A gradient dot should travel continuously around the button border. Support primary and ghost variants, and render as either a button or anchor based on an href prop.",
     tags: ["button", "border-beam", "animated", "gradient", "offset-path"],
@@ -2262,14 +4286,26 @@ export function TypingHero({ title, titleHighlight, subtitle, typingDelay = 480,
     slug: "feature-card-grid",
     path: "cards/FeatureCardGrid.tsx",
     category: "cards",
-    code: `type FeatureCard = { label: string; title: string; };
-type Props = { cards: FeatureCard[]; };
+    code: `type FeatureCard = {
+  label: string;
+  title: string;
+};
+
+type Props = {
+  cards: FeatureCard[];
+};
+
 export function FeatureCardGrid({ cards }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12">
       {cards.map((card, i) => (
-        <div key={i} className="flex flex-col gap-2 p-[22px] rounded-xl bg-black/[0.02] border border-black/[0.06] transition-all duration-[250ms] hover:bg-black/[0.04] hover:border-[#059669] hover:-translate-y-0.5">
-          <div className="font-mono text-[11px] tracking-[0.2em] text-[#059669] uppercase">{card.label}</div>
+        <div
+          key={i}
+          className="flex flex-col gap-2 p-[22px] rounded-xl bg-black/[0.02] border border-black/[0.06] transition-[background-color,border-color,transform] duration-[250ms] hover:bg-black/[0.04] hover:border-[#059669] hover:-translate-y-0.5"
+        >
+          <div className="font-mono text-[11px] tracking-[0.2em] text-[#059669] uppercase">
+            {card.label}
+          </div>
           <div className="text-[17px] text-[#0a0a0a] font-medium">{card.title}</div>
         </div>
       ))}

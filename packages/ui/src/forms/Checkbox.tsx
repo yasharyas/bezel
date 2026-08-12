@@ -25,7 +25,7 @@ export function Checkbox({
       >
         <div
           className={[
-            'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+            'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-[background-color,border-color] duration-200',
             checked ? 'bg-indigo-500 border-indigo-500' : 'border-neutral-400 bg-white',
             error ? 'border-red-500' : '',
           ].join(' ')}

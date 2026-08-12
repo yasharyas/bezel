@@ -57,7 +57,7 @@ export function StickyNavbar({
         </div>
       )}
       <nav
-        className={`sticky top-0 z-50 transition-all duration-300 ${
+        className={`sticky top-0 z-50 transition-[background-color,box-shadow,backdrop-filter] duration-300 ${
           scrolled ? "bg-white/95 backdrop-blur-md shadow-md" : "bg-white"
         }`}
       >

@@ -39,7 +39,7 @@ export function StepperNavigation({
           disabled={isLoading}
           className="flex-1 h-9 px-5 rounded-full font-semibold bg-neutral-100 text-neutral-800
                      hover:bg-neutral-200 focus:outline-none focus:ring-2 focus:ring-indigo-300
-                     transition-all duration-200 disabled:opacity-50
+                     transition-[background-color,transform] duration-150 active:scale-[0.97] disabled:opacity-50 disabled:active:scale-100
                      inline-flex items-center justify-center gap-2"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -53,9 +53,9 @@ export function StepperNavigation({
           onClick={onSubmit}
           disabled={isLoading}
           className="flex-1 h-9 px-5 rounded-full font-semibold bg-indigo-500 text-white
-                     hover:bg-indigo-600 active:bg-indigo-700
+                     hover:bg-indigo-600 active:bg-indigo-700 active:scale-[0.97]
                      focus:outline-none focus:ring-2 focus:ring-indigo-300
-                     transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                     transition-[background-color,transform] duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
                      inline-flex items-center justify-center gap-2"
         >
           {isLoading ? (
@@ -76,9 +76,9 @@ export function StepperNavigation({
           onClick={onNext}
           disabled={isLoading}
           className="flex-1 h-9 px-5 rounded-full font-semibold bg-indigo-500 text-white
-                     hover:bg-indigo-600 active:bg-indigo-700
+                     hover:bg-indigo-600 active:bg-indigo-700 active:scale-[0.97]
                      focus:outline-none focus:ring-2 focus:ring-indigo-300
-                     transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed
+                     transition-[background-color,transform] duration-150 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100
                      inline-flex items-center justify-center gap-2"
         >
           {isLoading ? (

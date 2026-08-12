@@ -78,7 +78,7 @@ export function ProductCard({ product, quantity, onAdd, onDecrease, onNotify, on
             {onNotify && (
               <button
                 onClick={(e) => { e.stopPropagation(); onNotify(); }}
-                className="flex items-center gap-1 bg-[#25D366] text-white px-2.5 py-1 rounded-md text-xs font-medium hover:bg-[#22c35e] active:scale-95 transition-all"
+                className="flex items-center gap-1 bg-[#25D366] text-white px-2.5 py-1 rounded-md text-xs font-medium hover:bg-[#22c35e] active:scale-[0.95] transition-[background-color,transform] duration-150"
               >
                 Notify me
               </button>
@@ -151,7 +151,7 @@ export function ProductCard({ product, quantity, onAdd, onDecrease, onNotify, on
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   onClick={handleAdd}
-                  className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 active:scale-95 transition-all"
+                  className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 active:scale-[0.95] transition-[opacity,transform] duration-150"
                 >
                   ADD
                 </motion.button>

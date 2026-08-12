@@ -106,7 +106,7 @@ export function BlenderUpload({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl transition-all duration-300 ${isDragging ? "scale-[1.02]" : ""} ${disabled ? "opacity-50 cursor-not-allowed" : blendComplete ? "cursor-default" : "cursor-pointer"}`}
+      className={`relative overflow-hidden rounded-xl transition-transform duration-300 ${isDragging ? "scale-[1.02]" : ""} ${disabled ? "opacity-50 cursor-not-allowed" : blendComplete ? "cursor-default" : "cursor-pointer"}`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

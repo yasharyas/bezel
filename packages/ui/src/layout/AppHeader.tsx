@@ -90,7 +90,7 @@ export function AppHeader({
           <div className="flex-1 max-w-2xl hidden md:block">
             <button
               onClick={onSearchClick}
-              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-gray-100 rounded-xl text-gray-400 text-sm hover:bg-gray-200 transition-all text-left"
+              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-gray-100 rounded-xl text-gray-400 text-sm hover:bg-gray-200 transition-colors duration-150 text-left"
             >
               <Search className="w-4 h-4 shrink-0" />
               <span>Search…</span>
@@ -112,7 +112,7 @@ export function AppHeader({
             {ctaButton && (
               <button
                 onClick={ctaButton.onClick}
-                className={`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:opacity-90 active:scale-95 transition-all text-sm font-medium text-white ${
+                className={`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150 text-sm font-medium text-white ${
                   ctaButton.colorClass ?? "bg-primary"
                 }`}
               >
@@ -124,7 +124,7 @@ export function AppHeader({
             {/* Cart button */}
             <button
               onClick={onCartClick}
-              className="relative flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 active:scale-95 transition-all text-sm font-medium"
+              className="relative flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150 text-sm font-medium"
               aria-label={`Cart, ${cartItemCount} items`}
             >
               <ShoppingCart className="w-4 h-4" />

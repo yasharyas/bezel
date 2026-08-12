@@ -25,7 +25,7 @@ export function NodeCard({
     <div
       className={[
         'relative min-w-[180px] max-w-[240px] rounded-2xl bg-white',
-        'border-2 transition-all duration-150 cursor-pointer',
+        'border-2 transition-shadow duration-150 cursor-pointer',
         selected ? 'ring-2 ring-offset-2 shadow-md' : 'shadow-sm hover:shadow-md',
       ].join(' ')}
       style={{

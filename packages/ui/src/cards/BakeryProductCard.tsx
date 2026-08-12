@@ -49,7 +49,7 @@ export function BakeryProductCard({ product, href, currencySymbol = "₹", unitL
   return (
     <a
       href={href}
-      className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-neutral-100 block"
+      className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-neutral-100 block"
     >
       <div className="relative overflow-hidden">
         {product.image ? (

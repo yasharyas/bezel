@@ -151,14 +151,14 @@ export const MD3Switch = React.forwardRef<HTMLInputElement, MD3SwitchProps>(
           {/* Handle container */}
           <div
             className={[
-              "pointer-events-none block h-full w-full transition-all duration-300 ease-[var(--ease-spring)]",
+              "pointer-events-none block h-full w-full transition-transform duration-300 ease-[var(--ease-spring)]",
               isChecked ? translateDist : "translate-x-0",
             ].join(" ")}
           >
             {/* Handle */}
             <div
               className={[
-                "absolute top-1/2 -translate-y-1/2 shadow-sm transition-all duration-300 flex items-center justify-center rounded-full left-[2px]",
+                "absolute top-1/2 -translate-y-1/2 shadow-sm transition-[width,height,margin-left,background-color,color] duration-300 flex items-center justify-center rounded-full left-[2px]",
                 isChecked ? "bg-primary-foreground" : "bg-foreground text-muted",
                 isChecked && variant === "primary" ? "text-primary" : "",
                 isChecked && variant === "destructive" ? "text-destructive" : "",
@@ -174,7 +174,7 @@ export const MD3Switch = React.forwardRef<HTMLInputElement, MD3SwitchProps>(
                   {/* Checked icon */}
                   <div
                     className={[
-                      "absolute inset-0 flex items-center justify-center transition-all duration-300",
+                      "absolute inset-0 flex items-center justify-center transition-[opacity,transform] duration-300",
                       isChecked ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 -rotate-45",
                     ].join(" ")}
                   >
@@ -183,7 +183,7 @@ export const MD3Switch = React.forwardRef<HTMLInputElement, MD3SwitchProps>(
                   {/* Unchecked icon */}
                   <div
                     className={[
-                      "absolute inset-0 flex items-center justify-center transition-all duration-300 text-muted-foreground",
+                      "absolute inset-0 flex items-center justify-center transition-[opacity,transform] duration-300 text-muted-foreground",
                       !isChecked ? "opacity-100 scale-100 rotate-0" : "opacity-0 scale-50 rotate-45",
                     ].join(" ")}
                   >
@@ -196,7 +196,7 @@ export const MD3Switch = React.forwardRef<HTMLInputElement, MD3SwitchProps>(
             {/* Halo */}
             <div
               className={[
-                "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full pointer-events-none transition-all duration-200",
+                "absolute top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full pointer-events-none transition-[opacity,transform] duration-200",
                 isSmall ? "w-8 h-8" : "w-10 h-10",
                 isChecked
                   ? variant === "destructive" ? "bg-destructive" : "bg-primary"

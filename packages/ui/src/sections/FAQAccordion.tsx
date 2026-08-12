@@ -30,7 +30,7 @@ function FAQItemRow({ faq, isOpen, onToggle }: FAQItemProps) {
         />
       </button>
       <div
-        className="overflow-hidden transition-all duration-300"
+        className="overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(0.77,0,0.175,1)]"
         style={{ maxHeight: isOpen ? "200px" : "0", opacity: isOpen ? 1 : 0 }}
       >
         <p className="text-neutral-500 text-sm leading-relaxed pb-5">{faq.a}</p>

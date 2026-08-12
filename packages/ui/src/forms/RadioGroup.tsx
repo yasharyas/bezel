@@ -31,7 +31,7 @@ export function RadioGroup({
             key={option}
             className={[
               'flex items-center gap-2 px-4 py-2.5 rounded-full border cursor-pointer',
-              'transition-all duration-200 min-h-[48px] select-none',
+              'transition-[border-color,background-color,color] duration-200 min-h-[48px] select-none',
               value === option
                 ? 'border-indigo-500 bg-indigo-50 text-indigo-600 font-medium'
                 : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',

@@ -61,7 +61,7 @@ export function SubmissionLoader({ phase, phases = DEFAULT_PHASES, phaseConfig =
             <div
               key={p}
               className={[
-                'w-2.5 h-2.5 rounded-full transition-all duration-300',
+                'w-2.5 h-2.5 rounded-full transition-[background-color] duration-300',
                 i <= currentIndex
                   ? isComplete ? 'bg-green-500' : 'bg-indigo-500'
                   : 'bg-neutral-200',

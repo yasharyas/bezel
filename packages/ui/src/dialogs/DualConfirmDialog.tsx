@@ -1,5 +1,29 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AlertTriangle, Loader2 } from "lucide-react"
+
+const EXIT_MS = 160
+
+// @starting-style drives the entrance (paint-driven, not a mount effect +
+// requestAnimationFrame, so it isn't silently skipped if the tab was
+// backgrounded when the dialog opened). Exit still needs JS: the dialog has
+// to stay mounted for one transition after `open` goes false, which
+// [data-closing] below drives, kept in sync with the delayed unmount.
+const dialogStyle = `
+  .yui-dialog-backdrop {
+    opacity: 1;
+    transition: opacity 200ms cubic-bezier(0.23,1,0.32,1);
+  }
+  @starting-style { .yui-dialog-backdrop { opacity: 0; } }
+  .yui-dialog-backdrop[data-closing="true"] { opacity: 0; }
+
+  .yui-dialog {
+    opacity: 1;
+    transform: scale(1);
+    transition: transform 200ms cubic-bezier(0.23,1,0.32,1), opacity 200ms cubic-bezier(0.23,1,0.32,1);
+  }
+  @starting-style { .yui-dialog { opacity: 0; transform: scale(0.96); } }
+  .yui-dialog[data-closing="true"] { opacity: 0; transform: scale(0.96); }
+`;
 
 export interface DeleteProgress {
   current: number
@@ -35,6 +59,19 @@ export function DualConfirmDialog({
   const [step, setStep] = useState<1 | 2>(1)
   const [inputValue, setInputValue] = useState("")
 
+  // Keep the dialog mounted for one exit transition after `open` flips to
+  // false — interruptible if `open` flips back true before the timer fires.
+  const [rendered, setRendered] = useState(open)
+
+  useEffect(() => {
+    if (open) {
+      setRendered(true)
+      return
+    }
+    const timer = setTimeout(() => setRendered(false), EXIT_MS)
+    return () => clearTimeout(timer)
+  }, [open])
+
   const handleFirstConfirm = () => setStep(2)
   const handleFinalConfirm = () => { if (inputValue === confirmationPhrase) onConfirm() }
   const handleClose = () => {
@@ -48,18 +85,24 @@ export function DualConfirmDialog({
     ? Math.round((progress.current / progress.total) * 100)
     : 0
 
-  if (!open) return null
+  if (!rendered) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <style>{dialogStyle}</style>
+
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="yui-dialog-backdrop absolute inset-0 bg-black/50"
+        data-closing={!open ? "true" : undefined}
         onClick={handleClose}
       />
 
-      {/* Dialog */}
-      <div className="relative z-10 w-full max-w-md mx-4 bg-background border border-border rounded-lg shadow-xl">
+      {/* Dialog — transform-origin stays centered; it isn't anchored to a trigger */}
+      <div
+        className="yui-dialog relative z-10 w-full max-w-md mx-4 bg-background border border-border rounded-lg shadow-xl"
+        data-closing={!open ? "true" : undefined}
+      >
         {/* Header */}
         <div className="p-6 pb-0">
           <h2 className="flex items-center gap-2 text-lg font-semibold text-destructive">
@@ -79,7 +122,7 @@ export function DualConfirmDialog({
               </div>
               <div className="w-full bg-secondary rounded-full h-2.5">
                 <div
-                  className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                  className="bg-primary h-2.5 rounded-full transition-[width] duration-300 ease-[cubic-bezier(0.77,0,0.175,1)]"
                   style={{ width: `${progressPercentage}%` }}
                 />
               </div>
@@ -134,13 +177,13 @@ export function DualConfirmDialog({
               <>
                 <button
                   onClick={handleClose}
-                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-colors"
+                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-[background-color,transform] active:scale-[0.97]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleFirstConfirm}
-                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-[background-color,transform] active:scale-[0.97]"
                 >
                   Continue to Final Confirmation
                 </button>
@@ -150,14 +193,14 @@ export function DualConfirmDialog({
                 <button
                   onClick={() => setStep(1)}
                   disabled={isLoading}
-                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-colors disabled:opacity-50"
+                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-[background-color,transform] active:scale-[0.97] disabled:opacity-50"
                 >
                   Go Back
                 </button>
                 <button
                   onClick={handleFinalConfirm}
                   disabled={inputValue !== confirmationPhrase || isLoading}
-                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-[background-color,transform] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Delete Permanently
                 </button>

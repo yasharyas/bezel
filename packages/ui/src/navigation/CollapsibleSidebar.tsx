@@ -96,7 +96,7 @@ export function CollapsibleSidebar({
                     key={item.id}
                     draggable
                     onDragStart={(e) => onDragStart(e, item)}
-                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-neutral-50 border border-neutral-100 hover:border-neutral-300 hover:shadow-sm cursor-grab active:cursor-grabbing transition-all group"
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-neutral-50 border border-neutral-100 hover:border-neutral-300 hover:shadow-sm cursor-grab active:cursor-grabbing transition-[border-color,box-shadow] duration-150 group"
                   >
                     <div
                       className="flex items-center justify-center w-7 h-7 rounded-lg transition-transform group-hover:scale-110"

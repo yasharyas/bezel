@@ -86,7 +86,7 @@ export function DOBPicker({ name, label, value, onChange, error, mandatory }: DO
         maxLength={10}
         className={[
           'h-11 px-4 rounded-full border bg-white text-neutral-900 placeholder:text-neutral-400',
-          'focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-all duration-200',
+          'focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-[border-color,box-shadow] duration-200',
           error ? 'border-red-500' : 'border-neutral-300',
         ].join(' ')}
       />

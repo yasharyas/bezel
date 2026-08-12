@@ -1,6 +1,20 @@
 import type { ReactNode } from 'react';
 import { X } from 'lucide-react';
 
+// @starting-style is paint-driven (not a mount effect + requestAnimationFrame),
+// so the entrance still plays even if the tab was backgrounded when this
+// panel mounted — rAF is paused on hidden tabs, @starting-style isn't.
+const sidePanelStyle = `
+  .yui-side-panel {
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform 200ms cubic-bezier(0.23,1,0.32,1), opacity 200ms cubic-bezier(0.23,1,0.32,1);
+  }
+  @starting-style {
+    .yui-side-panel { transform: translateX(4%); opacity: 0; }
+  }
+`;
+
 type SidePanelProps = {
   title: string;
   headerLeft?: ReactNode;
@@ -11,7 +25,8 @@ type SidePanelProps = {
 
 export function SidePanel({ title, headerLeft, onClose, footer, children }: SidePanelProps) {
   return (
-    <div className="w-72 bg-white border-l border-neutral-200 flex flex-col h-full animate-[slideIn_0.15s_ease-out]">
+    <div className="yui-side-panel w-72 bg-white border-l border-neutral-200 flex flex-col h-full">
+      <style>{sidePanelStyle}</style>
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-neutral-100">
         <div className="flex items-center gap-2">

@@ -45,7 +45,7 @@ export function BorderBeamButton({ label, variant = "primary", onClick, href }: 
   }, []);
 
   const base =
-    "beam-btn inline-flex items-center justify-center px-5 py-[11px] rounded-[10px] text-sm font-medium tracking-[0.01em] border cursor-pointer transition-all duration-200 relative overflow-hidden no-underline";
+    "beam-btn inline-flex items-center justify-center px-5 py-[11px] rounded-[10px] text-sm font-medium tracking-[0.01em] border cursor-pointer transition-[transform,filter] duration-200 relative overflow-hidden no-underline active:scale-[0.97]";
   const primary = "bg-[#0a0a0a] text-[#fafafa] border-[#0a0a0a] hover:-translate-y-px hover:brightness-105";
   const ghost = "bg-transparent text-[#1a1a1a] border-black/[0.13] hover:bg-transparent";
 

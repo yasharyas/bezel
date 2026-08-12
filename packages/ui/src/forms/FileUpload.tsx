@@ -58,7 +58,7 @@ export function FileUpload({
         <div
           className={[
             'flex items-center gap-3 p-3 rounded-xl border border-dashed cursor-pointer',
-            'transition-all duration-200 min-h-[48px]',
+            'transition-[border-color] duration-200 min-h-[48px]',
             error ? 'border-red-500' : 'border-neutral-300 hover:border-indigo-400',
           ].join(' ')}
           onClick={() => inputRef.current?.click()}

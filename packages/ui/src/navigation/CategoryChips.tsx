@@ -35,7 +35,7 @@ export function CategoryChips({ categories, activeCategory, onCategoryChange }: 
             key={cat.id}
             whileTap={{ scale: 0.94 }}
             onClick={() => onCategoryChange(cat.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-all shrink-0 border ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-[background-color,border-color,color] duration-150 shrink-0 border ${
               isActive
                 ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
                 : "bg-white text-neutral-900 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
