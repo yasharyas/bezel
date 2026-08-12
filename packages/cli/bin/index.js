@@ -83,6 +83,42 @@ const COMPONENT_MAP = {
   checklist: "lists/Checklist.tsx",
   "scroll-reveal": "animation/ScrollReveal.tsx",
   "site-footer": "layout/SiteFooter.tsx",
+  "depth-text": "display/DepthText.tsx",
+  magnet: "interaction/Magnet.tsx",
+  "glare-hover": "interaction/GlareHover.tsx",
+  "cinematic-water-background": "media/CinematicWaterBackground.tsx",
+  "conic-border-button": "buttons/ConicBorderButton.tsx",
+  "pointer-glow-card": "cards/PointerGlowCard.tsx",
+  "shiny-gradient-text": "display/ShinyGradientText.tsx",
+  "blur-in-reveal": "animation/BlurInReveal.tsx",
+  "section-progress-rail": "navigation/SectionProgressRail.tsx",
+  "edge-fade-marquee": "animation/EdgeFadeMarquee.tsx",
+  "parallax-product-stage": "sections/ParallaxProductStage.tsx",
+  "stagger-blur-text": "animation/StaggerBlurText.tsx",
+  "animated-gradient-rule": "dividers/AnimatedGradientRule.tsx",
+  "jewelry-cursor": "interaction/JewelryCursor.tsx",
+  "scroll-unfurl-preloader": "loaders/ScrollUnfurlPreloader.tsx",
+  "foil-specular-card": "cards/FoilSpecularCard.tsx",
+  "wax-seal-button": "buttons/WaxSealButton.tsx",
+  "canvas-petal-field": "animation/CanvasPetalField.tsx",
+  "film-grain-overlay": "overlays/FilmGrainOverlay.tsx",
+  "scratch-foil-reveal": "interaction/ScratchFoilReveal.tsx",
+  "pixel-demorph-image": "media/PixelDemorphImage.tsx",
+  "scroll-parallax-layer": "animation/ScrollParallaxLayer.tsx",
+  "till-receipt-print": "feedback/TillReceiptPrint.tsx",
+  "magic-rings": "animation/MagicRings.tsx",
+  "star-border": "buttons/StarBorder.tsx",
+  "shiny-text": "animation/ShinyText.tsx",
+  "circular-text": "display/CircularText.tsx",
+  "pinched-button": "buttons/PinchedButton.tsx",
+  // multi-step-loader is intentionally omitted: it imports MagicRings and
+  // ShinyText via relative paths, which the CLI's flat single-file copy
+  // can't preserve. Browse it in the gallery and copy all three by hand.
+  "metallic-logo-shimmer": "media/MetallicLogoShimmer.tsx",
+  highlighter: "animation/Highlighter.tsx",
+  "text-type": "animation/TextType.tsx",
+  "celebration-overlay": "feedback/CelebrationOverlay.tsx",
+  "damask-tile-backdrop": "layout/DamaskTileBackdrop.tsx",
 };
 
 function showHelp() {
@@ -166,6 +202,39 @@ function showHelp() {
     checklist            Card-row checklist with circular accent badges
     scroll-reveal        IntersectionObserver reveal wrapper, 4 variants
     site-footer          4-column responsive footer with copyright bar
+    depth-text           Extruded 3D text with pointer-tilt and auto-orbit
+    magnet               Magnetic pointer-attraction wrapper for CTAs
+    glare-hover          Pointer-following specular glare overlay
+    cinematic-water-background  Layered SVG underwater parallax background
+    conic-border-button  Pill button with a spinning conic-gradient border
+    pointer-glow-card    Card with a pointer-following glowing border ring
+    shiny-gradient-text  Animated shimmering gradient text sweep
+    blur-in-reveal       Scroll-triggered blur + fade + slide-up reveal
+    section-progress-rail  Fixed dot-to-pill section scroll indicator
+    edge-fade-marquee    Infinite marquee with soft-faded edges
+    parallax-product-stage  GSAP hero product theatre with pointer parallax
+    stagger-blur-text    Word-by-word blur-in text generate effect
+    animated-gradient-rule  Sliding gradient divider line
+    jewelry-cursor        GSAP gold dot + lagging ring custom cursor
+    scroll-unfurl-preloader  Parchment scroll-unfurl fullscreen preloader
+    foil-specular-card    Invitation card with pointer-tracked foil sheen
+    wax-seal-button       Press-in CTA with a radiating SVG ring on hover
+    canvas-petal-field    Ambient falling marigold/jasmine canvas particles
+    film-grain-overlay    Fixed full-viewport animated film-grain noise
+    scratch-foil-reveal   Canvas scratch-off foil revealing content beneath
+    pixel-demorph-image   Scroll-triggered pixel-block to sharp image reveal
+    scroll-parallax-layer GSAP ScrollTrigger depth/rotate parallax wrapper
+    till-receipt-print    Clip-path receipt print-out with PAID stamp
+    magic-rings           Three.js shader backdrop of expanding rings
+    star-border            Button with sliding radial-gradient border beams
+    shiny-text             Motion-driven gradient text shine sweep
+    circular-text          Characters orbiting a ring, hover speed control
+    pinched-button         Asymmetric-radius editorial CTA with hover lift
+    metallic-logo-shimmer  Masked metallic sweep + glow over a logo image
+    highlighter             Rough-notation hand-drawn highlight/underline
+    text-type               Typewriter with GSAP blinking cursor
+    celebration-overlay     Confetti burst overlay with GSAP card entrance
+    damask-tile-backdrop    Fixed repeating ornamental pattern backdrop
 
   Example:
     npx yash-ui add glass-button

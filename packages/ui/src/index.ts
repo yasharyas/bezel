@@ -110,3 +110,43 @@ export { CalloutBox } from "./callouts/CalloutBox";
 export { Checklist } from "./lists/Checklist";
 export { ScrollReveal } from "./animation/ScrollReveal";
 export { SiteFooter } from "./layout/SiteFooter";
+
+// Purelane extraction — high-craft visual/motion components
+export { DepthText } from "./display/DepthText";
+export { Magnet } from "./interaction/Magnet";
+export { GlareHover } from "./interaction/GlareHover";
+export { CinematicWaterBackground } from "./media/CinematicWaterBackground";
+export { ConicBorderButton } from "./buttons/ConicBorderButton";
+export { PointerGlowCard } from "./cards/PointerGlowCard";
+export { ShinyGradientText } from "./display/ShinyGradientText";
+export { BlurInReveal } from "./animation/BlurInReveal";
+export { SectionProgressRail } from "./navigation/SectionProgressRail";
+export { EdgeFadeMarquee } from "./animation/EdgeFadeMarquee";
+export { ParallaxProductStage } from "./sections/ParallaxProductStage";
+export { StaggerBlurText } from "./animation/StaggerBlurText";
+export { AnimatedGradientRule } from "./dividers/AnimatedGradientRule";
+
+// Paigam extraction — ceremonial invitation motion components
+export { JewelryCursor } from "./interaction/JewelryCursor";
+export { ScrollUnfurlPreloader } from "./loaders/ScrollUnfurlPreloader";
+export { FoilSpecularCard } from "./cards/FoilSpecularCard";
+export { WaxSealButton } from "./buttons/WaxSealButton";
+export { CanvasPetalField } from "./animation/CanvasPetalField";
+export { FilmGrainOverlay } from "./overlays/FilmGrainOverlay";
+export { ScratchFoilReveal } from "./interaction/ScratchFoilReveal";
+export { PixelDemorphImage } from "./media/PixelDemorphImage";
+export { ScrollParallaxLayer, FallingPetalField } from "./animation/ScrollParallaxLayer";
+export { TillReceiptPrint } from "./feedback/TillReceiptPrint";
+
+// House of Saverah extraction — WebGL / editorial motion components
+export { MagicRings, LOADER_MAGIC_RINGS } from "./animation/MagicRings";
+export { StarBorder } from "./buttons/StarBorder";
+export { ShinyText } from "./animation/ShinyText";
+export { CircularText } from "./display/CircularText";
+export { PinchedButton } from "./buttons/PinchedButton";
+export { MultiStepLoader } from "./loaders/MultiStepLoader";
+export { MetallicLogoShimmer } from "./media/MetallicLogoShimmer";
+export { Highlighter } from "./animation/Highlighter";
+export { TextType } from "./animation/TextType";
+export { CelebrationOverlay } from "./feedback/CelebrationOverlay";
+export { DamaskTileBackdrop, TiledGlassSurface } from "./layout/DamaskTileBackdrop";

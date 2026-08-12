@@ -89,6 +89,42 @@ import {
   Checklist,
   ScrollReveal,
   SiteFooter,
+  // Purelane extraction — high-craft visual/motion components
+  DepthText,
+  Magnet,
+  GlareHover,
+  CinematicWaterBackground,
+  ConicBorderButton,
+  PointerGlowCard,
+  ShinyGradientText,
+  BlurInReveal,
+  EdgeFadeMarquee,
+  ParallaxProductStage,
+  StaggerBlurText,
+  AnimatedGradientRule,
+  // Paigam extraction — ceremonial invitation motion components
+  JewelryCursor,
+  ScrollUnfurlPreloader,
+  FoilSpecularCard,
+  WaxSealButton,
+  CanvasPetalField,
+  FilmGrainOverlay,
+  ScratchFoilReveal,
+  PixelDemorphImage,
+  FallingPetalField,
+  TillReceiptPrint,
+  // House of Saverah extraction — WebGL / editorial motion components
+  MagicRings,
+  StarBorder,
+  ShinyText,
+  CircularText,
+  PinchedButton,
+  MultiStepLoader,
+  MetallicLogoShimmer,
+  Highlighter,
+  TextType,
+  CelebrationOverlay,
+  TiledGlassSurface,
 } from "@repo/ui";
 import { registry } from "@repo/registry";
 
@@ -898,6 +934,74 @@ const popupPreviews: Record<string, () => React.ReactNode> = {
   ),
 };
 
+/* ── Purelane / Paigam / House of Saverah preview wrappers ── */
+const PLACEHOLDER_IMG =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='400'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fbbf24'/%3E%3Cstop offset='1' stop-color='%23ea580c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='320' height='400' fill='url(%23g)'/%3E%3C/svg%3E";
+const PLACEHOLDER_LOGO =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='60'%3E%3Ctext x='50%25' y='55%25' font-family='Georgia,serif' font-size='28' fill='%23292524' text-anchor='middle' dominant-baseline='middle'%3EBRAND%3C/text%3E%3C/svg%3E";
+
+function ScrollUnfurlPreloaderPreview() {
+  const [show, setShow] = useState(false);
+  const [key, setKey] = useState(0);
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <button
+        onClick={() => { setKey((k) => k + 1); setShow(true); }}
+        className="px-3 py-1.5 text-xs rounded-lg bg-neutral-800 text-white"
+      >
+        Show Preloader
+      </button>
+      {show && (
+        <ScrollUnfurlPreloader
+          key={key}
+          brand="Paigam"
+          onceKey={null}
+          onComplete={() => setShow(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function MultiStepLoaderPreview() {
+  const [loading, setLoading] = useState(false);
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <button onClick={() => setLoading(true)} className="px-3 py-1.5 text-xs rounded-lg bg-neutral-800 text-white">
+        Show Loader
+      </button>
+      <MultiStepLoader
+        loading={loading}
+        loop={false}
+        title="Setting up"
+        duration={1100}
+        loadingStates={[{ text: "Verifying details" }, { text: "Uploading documents" }, { text: "Notifying reviewers" }]}
+        onComplete={() => setLoading(false)}
+      />
+      {loading && (
+        <button
+          onClick={() => setLoading(false)}
+          className="fixed top-4 right-4 z-[110] px-4 py-2 rounded-lg bg-white text-neutral-900 text-sm font-medium shadow-lg hover:bg-neutral-100 transition-colors"
+        >
+          ✕ Close
+        </button>
+      )}
+    </div>
+  );
+}
+
+function CelebrationOverlayPreview() {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <button onClick={() => setOpen(true)} className="px-3 py-1.5 text-xs rounded-lg bg-neutral-800 text-white">
+        Celebrate
+      </button>
+      {open && <CelebrationOverlay open replayMs={0} onContinue={() => setOpen(false)} />}
+    </div>
+  );
+}
+
 const previews: Record<string, React.ReactNode> = {
   "glass-button": <GlassButton>Click Me</GlassButton>,
   card: (
@@ -1158,6 +1262,211 @@ const previews: Record<string, React.ReactNode> = {
         ]}
         copyright="© 2026 MyApp. All rights reserved."
       />
+    </div>
+  ),
+
+  // ── Purelane extraction ──────────────────────────────────────────────
+  "depth-text": (
+    <div className="flex items-center justify-center p-4" style={{ background: "#0d0d10", borderRadius: 12 }}>
+      <DepthText text="Depth" faceColor="#f8fafc" depthColor="#7c3aed" layers={22} depth={1.6} fontSize="2.5rem" />
+    </div>
+  ),
+  magnet: (
+    <div className="flex items-center justify-center p-6">
+      <Magnet padding={40} magnetStrength={6} wrapperClassName="inline-block">
+        <button className="rounded-full bg-indigo-500 px-5 py-2.5 text-sm font-medium text-white">
+          Hover near me
+        </button>
+      </Magnet>
+    </div>
+  ),
+  "glare-hover": (
+    <div className="p-4">
+      <div className="w-40 overflow-hidden rounded-2xl border border-black/10">
+        <GlareHover>
+          <div className="aspect-[4/3] bg-gradient-to-br from-teal-700 to-emerald-500" />
+        </GlareHover>
+      </div>
+    </div>
+  ),
+  "cinematic-water-background": (
+    <div className="relative h-40 w-full overflow-hidden rounded-xl">
+      <CinematicWaterBackground scene={1} bubbleCount={10} />
+    </div>
+  ),
+  "conic-border-button": (
+    <div className="flex items-center justify-center p-4" style={{ background: "#0d0d10", borderRadius: 12 }}>
+      <ConicBorderButton>Shop now</ConicBorderButton>
+    </div>
+  ),
+  "pointer-glow-card": (
+    <div className="p-4" style={{ background: "#f5f5f7", borderRadius: 12 }}>
+      <PointerGlowCard className="w-48 p-4">
+        <h3 className="text-sm font-bold text-neutral-900">Kitchen essentials</h3>
+        <p className="mt-1 text-xs text-neutral-500">Move your cursor over the card.</p>
+      </PointerGlowCard>
+    </div>
+  ),
+  "shiny-gradient-text": (
+    <div className="flex items-center justify-center p-6" style={{ background: "#0d0d10", borderRadius: 12 }}>
+      <span className="text-2xl font-black">
+        <ShinyGradientText>Clean that keeps up.</ShinyGradientText>
+      </span>
+    </div>
+  ),
+  "blur-in-reveal": (
+    <BlurInReveal as="div" className="p-4 text-center text-sm text-neutral-700">
+      Plant-based cleaners for kitchen grease, hard water, and floors.
+    </BlurInReveal>
+  ),
+  "section-progress-rail": (
+    <div className="flex items-center justify-center gap-3 p-4">
+      {[0, 1, 2, 3].map((i) => (
+        <span
+          key={i}
+          className="rounded-full"
+          style={
+            i === 1
+              ? { width: 8, height: 22, borderRadius: 999, background: "#f0a03c", boxShadow: "0 0 0 5px rgba(240,160,60,0.18)" }
+              : { width: 8, height: 8, background: "rgba(0,0,0,0.15)" }
+          }
+        />
+      ))}
+    </div>
+  ),
+  "edge-fade-marquee": (
+    <EdgeFadeMarquee duration={18} fadeColor="#0c0c0f" className="py-3 text-white">
+      <span className="px-4 text-xs uppercase tracking-widest">Free shipping</span>
+      <span className="px-4 text-xs uppercase tracking-widest">Any 3 for ₹499</span>
+      <span className="px-4 text-xs uppercase tracking-widest">COD available</span>
+    </EdgeFadeMarquee>
+  ),
+  "parallax-product-stage": (
+    <div style={{ transform: "scale(0.42)", transformOrigin: "top center", height: 180, overflow: "hidden" }}>
+      <ParallaxProductStage
+        items={[
+          { id: "a", label: "Tap cleaner", media: <div className="h-full bg-sky-200/30" /> },
+          { id: "b", label: "Kitchen cleaner", media: <div className="h-full bg-emerald-200/30" /> },
+          { id: "c", label: "Floor cleaner", media: <div className="h-full bg-amber-200/30" /> },
+        ]}
+      />
+    </div>
+  ),
+  "stagger-blur-text": (
+    <StaggerBlurText className="p-4 text-sm text-neutral-700" text="Plant-based cleaners for everyday chores." />
+  ),
+  "animated-gradient-rule": (
+    <div className="w-48 p-4">
+      <AnimatedGradientRule />
+    </div>
+  ),
+
+  // ── Paigam extraction ──────────────────────────────────────────────
+  "jewelry-cursor": (
+    <div className="flex items-center gap-2 p-4">
+      <div className="w-6 h-6 rounded-full border-[1.5px]" style={{ borderColor: "#c9a227" }} />
+      <span className="text-xs text-neutral-500">Gold dot + lagging ring (moves with the page cursor)</span>
+    </div>
+  ),
+  "scroll-unfurl-preloader": <ScrollUnfurlPreloaderPreview />,
+  "foil-specular-card": (
+    <div style={{ transform: "scale(0.55)", transformOrigin: "top center", height: 260, overflow: "hidden" }}>
+      <FoilSpecularCard />
+    </div>
+  ),
+  "wax-seal-button": (
+    <div className="flex gap-4 items-center justify-center p-4" style={{ background: "#1a1208", borderRadius: 12 }}>
+      <WaxSealButton label="Compose yours" />
+      <WaxSealButton label="See the craft" variant="ghost" />
+    </div>
+  ),
+  "canvas-petal-field": (
+    <div className="relative h-40 w-full overflow-hidden rounded-xl" style={{ background: "#1a1310" }}>
+      <CanvasPetalField count={12} />
+    </div>
+  ),
+  "film-grain-overlay": (
+    <div className="relative h-32 w-full overflow-hidden rounded-xl" style={{ background: "#0d0a09" }}>
+      <FilmGrainOverlay
+        opacity={0.12}
+        className="absolute inset-0 h-full w-full mix-blend-overlay"
+      />
+    </div>
+  ),
+  "scratch-foil-reveal": (
+    <ScratchFoilReveal className="h-40 w-48 rounded-xl overflow-hidden">
+      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-200 to-rose-300 text-sm font-serif">
+        You&rsquo;re invited
+      </div>
+    </ScratchFoilReveal>
+  ),
+  "pixel-demorph-image": (
+    <div className="w-32">
+      <PixelDemorphImage src={PLACEHOLDER_IMG} alt="Demo" className="aspect-[4/5] w-full rounded-lg" />
+    </div>
+  ),
+  "scroll-parallax-layer": (
+    <div className="relative h-32 w-full overflow-hidden rounded-xl" style={{ background: "#1a1310" }}>
+      <FallingPetalField colors={["#c9a227", "#d98c1f", "#8b1a1a"]} className="inset-x-0 top-0 h-full" />
+    </div>
+  ),
+  "till-receipt-print": (
+    <div style={{ transform: "scale(0.5)", transformOrigin: "top center", height: 260, overflow: "hidden" }}>
+      <TillReceiptPrint
+        amount="₹2,499"
+        rows={[{ label: "Item", value: "Wedding Invite" }, { label: "Plan", value: "Atelier" }]}
+      />
+    </div>
+  ),
+
+  // ── House of Saverah extraction ──────────────────────────────────────
+  "magic-rings": (
+    <div className="relative h-40 w-full overflow-hidden rounded-xl" style={{ background: "#0d0d10" }}>
+      <MagicRings color="#912c22" colorTwo="#c9a04a" ringCount={5} opacity={0.85} />
+    </div>
+  ),
+  "star-border": (
+    <div className="flex items-center justify-center p-4" style={{ background: "#f7f3ee", borderRadius: 12 }}>
+      <StarBorder tone="primary">Continue</StarBorder>
+    </div>
+  ),
+  "shiny-text": (
+    <div className="flex items-center justify-center p-6" style={{ background: "#f7f3ee", borderRadius: 12 }}>
+      <ShinyText text="Reviewing documents…" className="text-lg font-medium" />
+    </div>
+  ),
+  "circular-text": (
+    <div className="flex items-center justify-center p-4">
+      <CircularText text="HOUSE OF SAVERAH • EST 2024 • " size="sm" />
+    </div>
+  ),
+  "pinched-button": (
+    <div className="flex gap-3 items-center justify-center p-4" style={{ background: "#f7f3ee", borderRadius: 12 }}>
+      <PinchedButton tone="solid">Vendor portal</PinchedButton>
+    </div>
+  ),
+  "multi-step-loader": <MultiStepLoaderPreview />,
+  "metallic-logo-shimmer": (
+    <div className="flex items-center justify-center p-4" style={{ background: "#f7f3ee", borderRadius: 12 }}>
+      <MetallicLogoShimmer src={PLACEHOLDER_LOGO} maxWidth="10rem" />
+    </div>
+  ),
+  highlighter: (
+    <div className="flex items-center justify-center p-4 text-lg">
+      Plan events that feel <Highlighter action="underline" color="#c9a04a">unforgettable</Highlighter>
+    </div>
+  ),
+  "text-type": (
+    <div className="flex items-center justify-center p-4">
+      <TextType as="span" className="text-base font-medium" text={["Curated venues", "Trusted vendors"]} loop />
+    </div>
+  ),
+  "celebration-overlay": <CelebrationOverlayPreview />,
+  "damask-tile-backdrop": (
+    <div className="p-4" style={{ background: "hsl(40 33% 97%)", borderRadius: 12 }}>
+      <TiledGlassSurface className="p-4 w-48">
+        <span className="text-sm font-medium" style={{ color: "#292524" }}>Tiled glass surface</span>
+      </TiledGlassSurface>
     </div>
   ),
 };

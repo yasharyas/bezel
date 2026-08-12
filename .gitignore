@@ -3,3 +3,6 @@ dist
 .next
 .turbo
 *.tsbuildinfo
+
+# Component extraction tooling — never commit
+extracted components which will beadded to library/EXTRACTION_PROMPT.md
