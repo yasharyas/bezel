@@ -83,7 +83,7 @@ function BrassRod() {
  * and the stage lifts/blurs away.
  */
 export function ScrollUnfurlPreloader({
-  brand = "Paigam",
+  brand = "YASH",
   onComplete,
   onceKey = "scroll-unfurl-seen",
   durationMs = 2200,

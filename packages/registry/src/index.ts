@@ -957,12 +957,12 @@ type ScreenLayoutProps = {
   children: React.ReactNode;
 };
 
-export function ScreenLayout({ brandInitials = 'YB', brandName = 'Your Brand', title, subtitle, stepper, navigation, children }: ScreenLayoutProps) {
+export function ScreenLayout({ brandInitials = 'YASH', brandName = 'YASH', title, subtitle, stepper, navigation, children }: ScreenLayoutProps) {
   return (
     <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
       <header className="bg-white border-b border-neutral-200 px-4 py-4 sm:px-6">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-xs">{brandInitials}</div>
+          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-[9px] tracking-tight">{brandInitials}</div>
           <span className="text-base font-semibold text-neutral-800">{brandName}</span>
         </div>
       </header>
@@ -2529,7 +2529,7 @@ export function Preloader({ name = "LOADING", onComplete }: Props) {
     code: `"use client";
 type NavLink = { label: string; href: string };
 type Props = { logo?: string; logoHref?: string; navLinks?: NavLink[]; ctaLabel?: string; ctaHref?: string; visible?: boolean };
-export function SiteHeader({ logo="BRAND.", logoHref="/", navLinks=[], ctaLabel="GET IN TOUCH", ctaHref="#contact", visible=true }: Props) {
+export function SiteHeader({ logo="YASH", logoHref="/", navLinks=[], ctaLabel="GET IN TOUCH", ctaHref="#contact", visible=true }: Props) {
   return (
     <header style={{ display:"flex",alignItems:"center",justifyContent:"space-between",position:"fixed",top:0,left:0,width:"100%",padding:"2rem 5rem",zIndex:1000,transform:visible?"translateY(0)":"translateY(-100%)",transition:"transform 0.8s cubic-bezier(0.25,1,0.5,1)" }}>
       <a href={logoHref} style={{ fontSize:"2rem",fontWeight:500,color:"#fff",textDecoration:"none" }}>{logo}</a>
@@ -2552,7 +2552,7 @@ export function SiteHeader({ logo="BRAND.", logoHref="/", navLinks=[], ctaLabel=
 import { useState } from "react";
 type NavLink = { label: string; href: string };
 type Props = { logo?: string; logoHref?: string; links?: NavLink[] };
-export function MobileMenu({ logo="MK.", logoHref="/", links=[] }: Props) {
+export function MobileMenu({ logo="YASH", logoHref="/", links=[] }: Props) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -4041,7 +4041,7 @@ type Props = {
 };
 
 export function StickyNav({
-  brandName = "BRAND",
+  brandName = "YASH",
   links = [],
   onThemeToggle,
   isDark = false,
@@ -4521,7 +4521,7 @@ export function ScrollReveal({ children, variant = "up", delay = 0, className = 
     category: "layout",
     code: `type FooterColumn = { heading: string; links: { label: string; href: string }[]; };
 type Props = { brandName?: string; tagline?: string; columns?: FooterColumn[]; copyright?: string; publishedBy?: { label: string; href: string }; };
-export function SiteFooter({ brandName = "BRAND", tagline = "", columns = [], copyright = \`© \${new Date().getFullYear()} Brand. All rights reserved.\`, publishedBy }: Props) {
+export function SiteFooter({ brandName = "YASH", tagline = "", columns = [], copyright = \`© \${new Date().getFullYear()} YASH. All rights reserved.\`, publishedBy }: Props) {
   return (
     <footer className="border-t border-black/[0.06] px-6 pt-16 pb-7 mt-10">
       <div className="max-w-[1200px] mx-auto grid gap-8" style={{ gridTemplateColumns: \`2fr \${columns.map(() => "1fr").join(" ")}\` }}>
@@ -4602,7 +4602,7 @@ export type DepthTextProps = {
 };
 
 export function DepthText({
-  text = "Elevate",
+  text = "YASH",
   layers = 34,
   depth = 2.4,
   faceColor = "#f8fafc",
@@ -6569,7 +6569,7 @@ function BrassRod() {
  * and the stage lifts/blurs away.
  */
 export function ScrollUnfurlPreloader({
-  brand = "Paigam",
+  brand = "YASH",
   onComplete,
   onceKey = "scroll-unfurl-seen",
   durationMs = 2200,
@@ -7866,7 +7866,7 @@ type TillReceiptPrintProps = {
  * PAID stamp thumps with a noise mask. Pure CSS choreography + one printed flag.
  */
 export function TillReceiptPrint({
-  brand = "Paigam",
+  brand = "YASH",
   eyebrow = "Payment receipt",
   amountLabel = "Amount paid",
   amount,
@@ -9416,7 +9416,7 @@ export type MetallicLogoShimmerProps = {
  */
 export function MetallicLogoShimmer({
   src,
-  alt = "Brand logo",
+  alt = "YASH logo",
   className,
   style,
   maxWidth = "min(100%, 28rem)",

@@ -12,10 +12,10 @@ type Props = {
 };
 
 export function SiteFooter({
-  brandName = "BRAND",
+  brandName = "YASH",
   tagline = "",
   columns = [],
-  copyright = `© ${new Date().getFullYear()} Brand. All rights reserved.`,
+  copyright = `© ${new Date().getFullYear()} YASH. All rights reserved.`,
   publishedBy,
 }: Props) {
   return (

@@ -17,7 +17,7 @@ export type MetallicLogoShimmerProps = {
  */
 export function MetallicLogoShimmer({
   src,
-  alt = "Brand logo",
+  alt = "YASH logo",
   className,
   style,
   maxWidth = "min(100%, 28rem)",

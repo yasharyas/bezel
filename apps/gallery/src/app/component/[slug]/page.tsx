@@ -7,6 +7,7 @@ import {
   GlassButton,
   Card,
   Input,
+  ScreenLayout,
   TextInput,
   RadioGroup,
   Checkbox,
@@ -379,7 +380,7 @@ function PreloaderPreview() {
   return (
     <div className="flex flex-col items-center gap-2">
       <button onClick={() => setShow(true)} className="px-3 py-1.5 text-xs rounded-lg bg-neutral-800 text-white">Show Preloader</button>
-      {show && <Preloader name="YASH UI." onComplete={() => setShow(false)} />}
+      {show && <Preloader name="YASH" onComplete={() => setShow(false)} />}
     </div>
   );
 }
@@ -388,7 +389,7 @@ function SiteHeaderPreview() {
   return (
     <div className="w-full overflow-hidden rounded-xl border border-white/10 bg-black relative" style={{ height: "60px" }}>
       <div className="flex items-center justify-between px-4 py-2">
-        <span className="text-sm font-semibold text-white">BRAND.</span>
+        <span className="text-sm font-semibold text-white">YASH</span>
         <div className="flex gap-3 text-xs text-neutral-400">
           <span>Work</span><span>Studio</span><span>Contact</span>
         </div>
@@ -403,7 +404,7 @@ function MobileMenuPreview() {
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="w-full flex items-center justify-between px-4 py-2 rounded-xl bg-black border border-white/10">
-        <span className="text-sm font-semibold text-white">MK.</span>
+        <span className="text-sm font-semibold text-white">YASH</span>
         <button onClick={() => setOpen((o) => !o)} className="flex flex-col gap-1 w-6" aria-label="menu">
           <span className={`block h-0.5 bg-white rounded transition-transform ${open ? "translate-y-1.5 rotate-45" : ""}`} />
           <span className={`block h-0.5 bg-white rounded transition-opacity ${open ? "opacity-0" : ""}`} />
@@ -472,7 +473,7 @@ function ProjectCardPreview() {
 function MarqueePreview() {
   return (
     <div className="w-full overflow-hidden" style={{ color: "white" }}>
-      <Marquee text="yash ui" fontSize="4rem" speed={15} opacity={0.6} />
+      <Marquee text="YASH" fontSize="4rem" speed={15} opacity={0.6} />
     </div>
   );
 }
@@ -515,8 +516,10 @@ const previews: Record<string, React.ReactNode> = {
   "stepper-navigation": <StepperNavPreview />,
   "submission-loader": <SubmissionLoaderPreview />,
   "screen-layout": (
-    <div className="text-neutral-400 text-sm italic">
-      ScreenLayout is a full-page wrapper — see code below for usage.
+    <div className="w-full overflow-hidden rounded-xl border border-neutral-200" style={{ height: 72 }}>
+      <ScreenLayout title="Details">
+        <span />
+      </ScreenLayout>
     </div>
   ),
   "typewriter-loader": <TypewriterLoader />,

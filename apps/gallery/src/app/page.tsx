@@ -8,6 +8,7 @@ import {
   GlassButton,
   Card,
   Input,
+  ScreenLayout,
   TextInput,
   RadioGroup,
   Checkbox,
@@ -412,7 +413,7 @@ function PreloaderPreview() {
   return (
     <div className="flex flex-col items-center gap-2">
       <button onClick={() => setShow(true)} className="px-3 py-1.5 text-xs rounded-lg bg-neutral-800 text-white">Show Preloader</button>
-      {show && <Preloader name="YASH UI." onComplete={() => setShow(false)} />}
+      {show && <Preloader name="YASH" onComplete={() => setShow(false)} />}
     </div>
   );
 }
@@ -421,7 +422,7 @@ function SiteHeaderPreview() {
   return (
     <div className="w-full overflow-hidden rounded-xl border border-white/10 bg-black relative" style={{ height: "60px" }}>
       <div className="flex items-center justify-between px-4 py-2">
-        <span className="text-sm font-semibold text-white">BRAND.</span>
+        <span className="text-sm font-semibold text-white">YASH</span>
         <div className="flex gap-3 text-xs text-neutral-400">
           <span>Work</span><span>Studio</span><span>Contact</span>
         </div>
@@ -436,7 +437,7 @@ function MobileMenuPreview() {
   return (
     <div className="flex flex-col items-center gap-2">
       <div className="w-full flex items-center justify-between px-4 py-2 rounded-xl bg-black border border-white/10">
-        <span className="text-sm font-semibold text-white">MK.</span>
+        <span className="text-sm font-semibold text-white">YASH</span>
         <button onClick={() => setOpen((o) => !o)} className="flex flex-col gap-1 w-6" aria-label="menu">
           <span className={`block h-0.5 bg-white rounded transition-transform ${open ? "translate-y-1.5 rotate-45" : ""}`} />
           <span className={`block h-0.5 bg-white rounded transition-opacity ${open ? "opacity-0" : ""}`} />
@@ -505,7 +506,7 @@ function ProjectCardPreview() {
 function MarqueePreview() {
   return (
     <div className="w-full overflow-hidden" style={{ color: "white" }}>
-      <Marquee text="yash ui" fontSize="4rem" speed={15} opacity={0.6} />
+      <Marquee text="YASH" fontSize="4rem" speed={15} opacity={0.6} />
     </div>
   );
 }
@@ -584,7 +585,7 @@ function AppHeaderPreview() {
   return (
     <div style={{ width: "100%", transform: "scale(0.85)", transformOrigin: "top" }}>
       <AppHeader
-        storeName="FreshMart"
+        storeName="YASH"
         tagline="Delivery in 30 mins"
         cartItemCount={3}
         isOpen={true}
@@ -614,7 +615,7 @@ function StickyNavbarPreview() {
   return (
     <div style={{ transform: "scale(0.75)", transformOrigin: "top" }}>
       <StickyNavbar
-        brand="My Store"
+        brand="YASH"
         announcementText="Free shipping over ₹499!"
         links={[
           { label: "Home", href: "/" },
@@ -633,7 +634,7 @@ function StickyNavbarPreview() {
 const popupPreviews: Record<string, () => React.ReactNode> = {
   marquee: () => (
     <div className="w-full overflow-hidden" style={{ color: "white" }}>
-      <Marquee text="yash ui" fontSize="7rem" speed={12} opacity={0.9} />
+      <Marquee text="YASH" fontSize="7rem" speed={12} opacity={0.9} />
       <Marquee text="components" fontSize="4rem" speed={8} opacity={0.5} separator=" ★ " />
     </div>
   ),
@@ -680,6 +681,13 @@ const popupPreviews: Record<string, () => React.ReactNode> = {
   "mobile-menu": () => <MobileMenuPreview />,
   preloader: () => <PreloaderPreview />,
   "site-header": () => <SiteHeaderPreview />,
+  "screen-layout": () => (
+    <div className="w-full overflow-hidden rounded-xl border border-neutral-200 bg-white" style={{ maxHeight: 420 }}>
+      <ScreenLayout title="Account details" subtitle="Confirm your information">
+        <p className="text-sm text-neutral-500">Form fields go here.</p>
+      </ScreenLayout>
+    </div>
+  ),
   "blender-upload": () => (
     <div style={{ width: "320px" }}>
       <BlenderUpload onFileSelect={() => {}} maxSizeMB={10} />
@@ -778,7 +786,7 @@ const popupPreviews: Record<string, () => React.ReactNode> = {
   "sticky-nav": () => (
     <div style={{ width: "100%", background: "#f5f5f7", borderRadius: 12, overflow: "hidden" }}>
       <StickyNav
-        brandName="LANCEMRT"
+        brandName="YASH"
         isDark={false}
         links={[
           { label: "Features", href: "#" },
@@ -920,15 +928,15 @@ const popupPreviews: Record<string, () => React.ReactNode> = {
   "site-footer": () => (
     <div style={{ background: "#f5f5f7", borderRadius: 16, width: "100%", overflow: "hidden" }}>
       <SiteFooter
-        brandName="MYAPP"
+        brandName="YASH"
         tagline="Modern tooling for modern teams."
         columns={[
           { heading: "Product",  links: [{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }, { label: "Changelog", href: "#" }] },
           { heading: "Company",  links: [{ label: "About", href: "#" }, { label: "Blog", href: "#" }, { label: "Careers", href: "#" }] },
-          { heading: "Contact",  links: [{ label: "hello@myapp.com", href: "mailto:hello@myapp.com" }, { label: "Twitter", href: "#" }] },
+          { heading: "Contact",  links: [{ label: "hello@yash.com", href: "mailto:hello@yash.com" }, { label: "Twitter", href: "#" }] },
         ]}
-        copyright="© 2026 MyApp. All rights reserved."
-        publishedBy={{ label: "MyApp Team", href: "#" }}
+        copyright="© 2026 YASH. All rights reserved."
+        publishedBy={{ label: "YASH", href: "#" }}
       />
     </div>
   ),
@@ -938,7 +946,7 @@ const popupPreviews: Record<string, () => React.ReactNode> = {
 const PLACEHOLDER_IMG =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='400'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23fbbf24'/%3E%3Cstop offset='1' stop-color='%23ea580c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='320' height='400' fill='url(%23g)'/%3E%3C/svg%3E";
 const PLACEHOLDER_LOGO =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='60'%3E%3Ctext x='50%25' y='55%25' font-family='Georgia,serif' font-size='28' fill='%23292524' text-anchor='middle' dominant-baseline='middle'%3EBRAND%3C/text%3E%3C/svg%3E";
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='60'%3E%3Ctext x='50%25' y='55%25' font-family='Georgia,serif' font-size='28' fill='%23292524' text-anchor='middle' dominant-baseline='middle'%3EYASH%3C/text%3E%3C/svg%3E";
 
 function ScrollUnfurlPreloaderPreview() {
   const [show, setShow] = useState(false);
@@ -954,7 +962,7 @@ function ScrollUnfurlPreloaderPreview() {
       {show && (
         <ScrollUnfurlPreloader
           key={key}
-          brand="Paigam"
+          brand="YASH"
           onceKey={null}
           onComplete={() => setShow(false)}
         />
@@ -1024,8 +1032,10 @@ const previews: Record<string, React.ReactNode> = {
   "stepper-navigation": <StepperNavPreview />,
   "submission-loader": <SubmissionLoaderPreview />,
   "screen-layout": (
-    <div className="text-neutral-500 text-xs italic text-center px-4">
-      ScreenLayout — Full-page form wrapper
+    <div className="w-full overflow-hidden rounded-xl border border-neutral-200" style={{ height: 72 }}>
+      <ScreenLayout title="Details">
+        <span />
+      </ScreenLayout>
     </div>
   ),
   "typewriter-loader": <TypewriterLoader />,
@@ -1145,7 +1155,7 @@ const previews: Record<string, React.ReactNode> = {
   "sticky-nav": (
     <div style={{ width: "100%", transform: "scale(0.85)", transformOrigin: "top center" }}>
       <StickyNav
-        brandName="LANCEMRT"
+        brandName="YASH"
         isDark={false}
         links={[{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }]}
       />
@@ -1254,13 +1264,13 @@ const previews: Record<string, React.ReactNode> = {
   "site-footer": (
     <div style={{ background: "#f5f5f7", borderRadius: 12, transform: "scale(0.55)", transformOrigin: "top center", height: 200, overflow: "hidden" }}>
       <SiteFooter
-        brandName="MYAPP"
+        brandName="YASH"
         tagline="Modern tooling for modern teams."
         columns={[
           { heading: "Product", links: [{ label: "Features", href: "#" }, { label: "Pricing", href: "#" }] },
           { heading: "Company", links: [{ label: "About", href: "#" }, { label: "Blog", href: "#" }] },
         ]}
-        copyright="© 2026 MyApp. All rights reserved."
+        copyright="© 2026 YASH. All rights reserved."
       />
     </div>
   ),
@@ -1268,7 +1278,7 @@ const previews: Record<string, React.ReactNode> = {
   // ── Purelane extraction ──────────────────────────────────────────────
   "depth-text": (
     <div className="flex items-center justify-center p-4" style={{ background: "#0d0d10", borderRadius: 12 }}>
-      <DepthText text="Depth" faceColor="#f8fafc" depthColor="#7c3aed" layers={22} depth={1.6} fontSize="2.5rem" />
+      <DepthText text="YASH" faceColor="#f8fafc" depthColor="#7c3aed" layers={22} depth={1.6} fontSize="2.5rem" />
     </div>
   ),
   magnet: (
@@ -1310,7 +1320,7 @@ const previews: Record<string, React.ReactNode> = {
   "shiny-gradient-text": (
     <div className="flex items-center justify-center p-6" style={{ background: "#0d0d10", borderRadius: 12 }}>
       <span className="text-2xl font-black">
-        <ShinyGradientText>Clean that keeps up.</ShinyGradientText>
+        <ShinyGradientText>YASH</ShinyGradientText>
       </span>
     </div>
   ),
@@ -1437,7 +1447,7 @@ const previews: Record<string, React.ReactNode> = {
   ),
   "circular-text": (
     <div className="flex items-center justify-center p-4">
-      <CircularText text="HOUSE OF SAVERAH • EST 2024 • " size="sm" />
+      <CircularText text="YASH • EST 2024 • " size="sm" />
     </div>
   ),
   "pinched-button": (
