@@ -8,7 +8,7 @@ type Props = {
 };
 
 export function StickyNav({
-  brandName = "BRAND",
+  brandName = "YASH",
   links = [],
   onThemeToggle,
   isDark = false,

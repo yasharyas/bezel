@@ -28,7 +28,7 @@ type TillReceiptPrintProps = {
  * PAID stamp thumps with a noise mask. Pure CSS choreography + one printed flag.
  */
 export function TillReceiptPrint({
-  brand = "ceremonial",
+  brand = "YASH",
   eyebrow = "Payment receipt",
   amountLabel = "Amount paid",
   amount,

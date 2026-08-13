@@ -12,7 +12,7 @@ type Props = {
 };
 
 export function SiteHeader({
-  logo = "BRAND.",
+  logo = "YASH",
   logoHref = "/",
   navLinks = [],
   ctaLabel = "GET IN TOUCH",

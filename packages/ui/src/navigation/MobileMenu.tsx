@@ -9,7 +9,7 @@ type Props = {
   links?: NavLink[];
 };
 
-export function MobileMenu({ logo = "MK.", logoHref = "/", links = [] }: Props) {
+export function MobileMenu({ logo = "YASH", logoHref = "/", links = [] }: Props) {
   const [open, setOpen] = useState(false);
 
   return (

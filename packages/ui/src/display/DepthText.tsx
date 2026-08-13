@@ -47,7 +47,7 @@ export type DepthTextProps = {
 };
 
 export function DepthText({
-  text = "Elevate",
+  text = "YASH",
   layers = 34,
   depth = 2.4,
   faceColor = "#f8fafc",
