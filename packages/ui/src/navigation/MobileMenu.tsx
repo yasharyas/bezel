@@ -32,6 +32,7 @@ export function MobileMenu({ logo = "YASH", logoHref = "/", links = [] }: Props)
           transition: transform 0.4s cubic-bezier(0.25,1,0.5,1), opacity 0.3s;
           transform-origin: center;
         }
+        .yui-burger:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         .yui-burger.open span:nth-child(1) { transform: translateY(0.8rem) rotate(45deg); }
         .yui-burger.open span:nth-child(2) { opacity: 0; }
         .yui-burger.open span:nth-child(3) { transform: translateY(-0.8rem) rotate(-45deg); }
@@ -52,6 +53,7 @@ export function MobileMenu({ logo = "YASH", logoHref = "/", links = [] }: Props)
           transition: background 0.3s, color 0.3s;
         }
         .yui-moverlay li a:hover { background: #fff; color: #000; }
+        .yui-moverlay li a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
       `}</style>
       <nav className="yui-mnav">
         <a href={logoHref} className="yui-mnav-logo">{logo}</a>

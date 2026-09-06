@@ -50,6 +50,7 @@ export function ConicBorderButton({
           transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .cbb:hover { transform: translateY(-2px); }
+        .cbb:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         .cbb::after {
           content: "";
           position: absolute;

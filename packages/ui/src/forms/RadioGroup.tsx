@@ -32,6 +32,7 @@ export function RadioGroup({
             className={[
               'flex items-center gap-2 px-4 py-2.5 rounded-full border cursor-pointer',
               'transition-[border-color,background-color,color] duration-200 min-h-[48px] select-none',
+              'has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#912c22]',
               value === option
                 ? 'border-indigo-500 bg-indigo-50 text-indigo-600 font-medium'
                 : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',

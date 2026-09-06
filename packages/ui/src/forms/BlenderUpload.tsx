@@ -90,6 +90,16 @@ export function BlenderUpload({
     if (!disabled && !isBlending && !blendComplete) fileInputRef.current?.click()
   }, [disabled, isBlending, blendComplete])
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key !== "Enter" && e.key !== " ") return
+      // Space would scroll the page if it reached the document.
+      if (e.key === " ") e.preventDefault()
+      handleClick()
+    },
+    [handleClick]
+  )
+
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
@@ -106,11 +116,14 @@ export function BlenderUpload({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl transition-transform duration-300 ${isDragging ? "scale-[1.02]" : ""} ${disabled ? "opacity-50 cursor-not-allowed" : blendComplete ? "cursor-default" : "cursor-pointer"}`}
+      className={`relative overflow-hidden rounded-xl transition-transform duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] ${isDragging ? "scale-[1.02]" : ""} ${disabled ? "opacity-50 cursor-not-allowed" : blendComplete ? "cursor-default" : "cursor-pointer"}`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
       style={{ background: "#FFFFFF" }}
     >
       <input
@@ -248,7 +261,7 @@ export function BlenderUpload({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); resetUpload() }}
-                className="mt-2 w-full py-1.5 px-3 text-xs font-medium text-[#7A8A70] bg-[#92A086]/10 hover:bg-[#92A086]/20 rounded-md transition-colors"
+                className="mt-2 w-full py-1.5 px-3 text-xs font-medium text-[#7A8A70] bg-[#92A086]/10 hover:bg-[#92A086]/20 rounded-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               >
                 Change image
               </button>

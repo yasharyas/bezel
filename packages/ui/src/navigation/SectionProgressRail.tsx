@@ -42,6 +42,11 @@ export function SectionProgressRail({
           transition: 0.3s cubic-bezier(0.22, 1, 0.36, 1);
           position: relative;
         }
+        /* 8px dot targets, so the outline sits further out to stay legible */
+        .spr a:focus-visible {
+          outline: 2px solid #fff;
+          outline-offset: 4px;
+        }
         .spr a.spr--on {
           background: var(--spr-active, #f0a03c);
           box-shadow: 0 0 0 5px color-mix(in srgb, var(--spr-active, #f0a03c) 18%, transparent);
