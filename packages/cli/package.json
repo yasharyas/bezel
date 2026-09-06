@@ -1,17 +1,47 @@
 {
   "name": "bezel-cli",
   "version": "0.0.1",
-  "private": true,
-  "description": "Bezel CLI - copies a component's source file into your project.",
+  "description": "Copy a Bezel component's source file into your project, shadcn-style. Requires bezel-ui to be installed.",
+  "keywords": [
+    "cli",
+    "react",
+    "component-library",
+    "design-system",
+    "bezel",
+    "bezel-ui",
+    "scaffold",
+    "ui-components"
+  ],
   "license": "MIT",
+  "author": "Yash Arya (https://yash-arya.com)",
+  "homepage": "https://yash-ui-system-gallery.vercel.app/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yasharyas/bezel.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/yasharyas/bezel/issues"
+  },
   "bin": {
     "bezel": "./bin/index.js"
   },
   "files": [
     "bin"
   ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "echo 'cli ready'"
+  },
+  "peerDependencies": {
+    "bezel-ui": "^0.0.1"
+  },
+  "peerDependenciesMeta": {
+    "bezel-ui": {
+      "optional": true
+    }
   },
   "dependencies": {}
 }
