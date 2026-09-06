@@ -474,7 +474,7 @@ function CircleCTAPreview() {
 function ImageRevealPreview() {
   return (
     <div className="text-neutral-500 text-xs italic text-center px-4">
-      ImageReveal — scroll-triggered GSAP clip-path reveal
+      ImageReveal: scroll-triggered GSAP clip-path reveal
     </div>
   );
 }
@@ -1024,7 +1024,7 @@ const previews: Record<string, React.ReactNode> = {
   "dob-picker": <DOBPickerPreview />,
   "select-input": (
     <div className="text-neutral-500 text-xs italic text-center px-4">
-      SelectInput — Radix UI Select dropdown
+      SelectInput: Radix UI Select dropdown
     </div>
   ),
   "file-upload": <FileUploadPreview />,
