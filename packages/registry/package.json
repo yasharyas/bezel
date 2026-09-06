@@ -9,7 +9,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "lint": "tsc --noEmit"
+    "generate": "node scripts/generate.mjs",
+    "check:registry": "node scripts/generate.mjs --check",
+    "lint": "node scripts/generate.mjs --check && tsc --noEmit"
   },
   "devDependencies": {
     "typescript": "^5.4.0"
