@@ -1,6 +1,6 @@
 {
   "name": "bezel-ui",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Bezel is a React component library for interface work that needs motion and craft: animated navigation, scroll reveals, cursors, loaders and editorial layout primitives, shipped as readable TypeScript source.",
   "keywords": [
     "react",
