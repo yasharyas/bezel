@@ -3,7 +3,43 @@
 const fs = require("fs");
 const path = require("path");
 
-const COMPONENTS_DIR = path.join(__dirname, "../../ui/src");
+// Component source lives in the `bezel-ui` package, not in this one. Resolve it
+// the way Node would from two vantage points:
+//
+//   process.cwd()  the project the user is running `bezel add` in, where
+//                  `bezel-ui` is a normal dependency. This is the only path
+//                  that matters for an installed CLI.
+//   __dirname      alongside the CLI itself. Covers a global install that
+//                  carries `bezel-ui` with it, and this repo, where npm
+//                  workspaces symlink `bezel-ui` into the root node_modules.
+//
+// Both are plain Node resolution, so there is no in-repo special case to keep
+// in sync — the monorepo just happens to satisfy the second lookup.
+function resolveComponentsDir() {
+  for (const from of [process.cwd(), __dirname]) {
+    let pkgJsonPath;
+    try {
+      pkgJsonPath = require.resolve("bezel-ui/package.json", { paths: [from] });
+    } catch {
+      continue;
+    }
+    const srcDir = path.join(path.dirname(pkgJsonPath), "src");
+    if (fs.existsSync(srcDir)) return srcDir;
+  }
+  return null;
+}
+
+function missingLibraryError() {
+  console.error("Cannot find the bezel-ui component source.");
+  console.error("");
+  console.error("The CLI copies files out of the bezel-ui package, so it has to");
+  console.error("be installed in this project first:");
+  console.error("");
+  console.error("  npm install bezel-ui");
+  console.error("");
+  console.error(`Looked in: ${process.cwd()} and ${__dirname}`);
+  process.exit(1);
+}
 
 const args = process.argv.slice(2);
 const command = args[0];
@@ -128,6 +164,9 @@ function showHelp() {
   Usage:
     bezel add <component>
 
+  Requires bezel-ui to be installed in the project:
+    npm install bezel-ui
+
   Components:
     glass-button         Glassmorphism button
     card                 Translucent card
@@ -249,9 +288,13 @@ function addComponent(slug) {
     process.exit(1);
   }
 
-  const srcFile = path.join(COMPONENTS_DIR, fileName);
+  const componentsDir = resolveComponentsDir();
+  if (!componentsDir) missingLibraryError();
+
+  const srcFile = path.join(componentsDir, fileName);
   if (!fs.existsSync(srcFile)) {
     console.error(`Source file not found: ${srcFile}`);
+    console.error("The installed bezel-ui version may not contain this component.");
     process.exit(1);
   }
 
