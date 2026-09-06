@@ -41,7 +41,7 @@ export function MobileBottomNav({ tabs, activeTab, onTabChange }: Props) {
               key={tab.id}
               onClick={() => (tab.action ? tab.action() : onTabChange(tab.id))}
               style={hasAccent ? { color: tab.accentColor } : undefined}
-              className={`flex flex-col items-center gap-0.5 py-2.5 px-1 relative transition-colors ${
+              className={`flex flex-col items-center gap-0.5 py-2.5 px-1 relative transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] ${
                 hasAccent
                   ? ""
                   : isActive

@@ -52,7 +52,7 @@ export function WaxSealButton({
   };
 
   if (variant === "ghost") {
-    const ghostClass = `group relative inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] ${className ?? ""}`;
+    const ghostClass = `group relative inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${className ?? ""}`;
     const ghostStyle = { color: "#f5f0e8" };
     const underline = (
       <span
@@ -77,7 +77,7 @@ export function WaxSealButton({
     );
   }
 
-  const primaryClass = `relative inline-flex items-center justify-center rounded-[2px] px-8 py-4 text-sm uppercase tracking-[0.18em] ${className ?? ""}`;
+  const primaryClass = `relative inline-flex items-center justify-center rounded-[2px] px-8 py-4 text-sm uppercase tracking-[0.18em] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${className ?? ""}`;
   const primaryStyle = {
     background: foil,
     color: ink,

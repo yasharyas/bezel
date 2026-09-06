@@ -24,6 +24,7 @@ export function FeaturedProjectCard({
       <style>{`
         .yui-feat-card { position: relative; }
         .yui-feat-card a { display: block; text-decoration: none; color: inherit; }
+        .yui-feat-card a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         .yui-feat-img {
           width: 100%; overflow: hidden; border-radius: 2rem;
           aspect-ratio: 4/3; isolation: isolate;

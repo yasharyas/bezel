@@ -19,7 +19,7 @@ function FAQItemRow({ faq, isOpen, onToggle }: FAQItemProps) {
       <button
         onClick={onToggle}
         aria-expanded={isOpen}
-        className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer group"
+        className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
       >
         <span className="text-neutral-900 text-sm sm:text-base font-medium group-hover:text-neutral-600 transition-colors">
           {faq.q}

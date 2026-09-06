@@ -19,7 +19,7 @@ const CustomCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttribu
         "checked:before:-translate-x-2/4 checked:before:-translate-y-2/4",
         "checked:before:rotate-45 checked:before:scale-x-[1.4] checked:before:scale-y-[1.4]",
         "checked:before:opacity-100 checked:before:transition-[transform,opacity] checked:before:delay-100 checked:before:duration-200",
-        "hover:border-[#1677ff] focus:outline-[#1677ff]",
+        "hover:border-[#1677ff] outline-2 outline-offset-1 outline-[#1677ff] focus-visible:outline",
         "[&:active:not(:checked)]:after:opacity-100 [&:active:not(:checked)]:after:shadow-none [&:active:not(:checked)]:after:transition-none",
         className,
       ].filter(Boolean).join(" ")}

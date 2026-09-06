@@ -39,7 +39,7 @@ export function TubelightNavBar({ items, activeItem, className, onNavigate }: Na
           const Icon = item.icon
           const isActive = currentActive === item.name
           const baseClasses =
-            "relative cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-full transition-colors text-center text-foreground/80 hover:text-primary" +
+            "relative cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-full transition-colors text-center text-foreground/80 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]" +
             (isActive ? " bg-muted text-primary" : "")
 
           const content = (

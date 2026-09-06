@@ -30,7 +30,7 @@ export function StickyCartBar({ itemCount, totalPrice, onViewCart, primaryAction
             {/* Summary row */}
             <button
               onClick={onViewCart}
-              className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/5 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -53,7 +53,7 @@ export function StickyCartBar({ itemCount, totalPrice, onViewCart, primaryAction
             <div className="flex border-t border-white/10">
               <button
                 onClick={onViewCart}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium hover:bg-white/5 transition-colors border-r border-white/10"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium hover:bg-white/5 transition-colors border-r border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 <ShoppingCart className="w-4 h-4" />
                 View Cart
@@ -61,7 +61,7 @@ export function StickyCartBar({ itemCount, totalPrice, onViewCart, primaryAction
               {primaryAction && (
                 <button
                   onClick={primaryAction.onClick}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-colors ${
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
                     primaryAction.colorClass ?? "bg-[#25D366] hover:bg-[#22c35e]"
                   }`}
                 >

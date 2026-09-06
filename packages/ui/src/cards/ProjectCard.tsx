@@ -15,6 +15,7 @@ export function ProjectCard({ title, subtitle = "", imageSrc, imageAlt = "", hre
       <style>{`
         .yui-proj-card { position: relative; break-inside: avoid; margin-bottom: 3rem; }
         .yui-proj-card a { display: block; text-decoration: none; color: inherit; }
+        .yui-proj-card a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         .yui-proj-card-img {
           overflow: hidden; border-radius: 1.5rem; isolation: isolate;
           aspect-ratio: 4/3;
