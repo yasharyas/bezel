@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 const SITE_URL = "https://bezel-ui.vercel.app";
-const TITLE = "Bezel — Component Gallery";
+const TITLE = "Bezel · Component Gallery";
 const DESCRIPTION =
   "Bezel is a React component library for interface work that needs motion and craft. Preview every component, then copy the source.";
 
@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               rel="noopener noreferrer"
               className="text-sm text-neutral-500 hover:text-white transition-colors"
             >
-              Built by Yash Arya — yash-arya.com
+              Built by Yash Arya · yash-arya.com
             </a>
           </div>
         </footer>
