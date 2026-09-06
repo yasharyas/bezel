@@ -6,7 +6,7 @@ A bezel is the frame that holds a lens, a watch face, a screen — the precise e
 
 Bezel is source-distributed. You install it, you import it, and the actual `.tsx` lands in your bundle unminified and readable. Nothing is hidden behind a compiled artifact, so when a component is 90% right you can open it, read it, and fork it into your own codebase without fighting a build.
 
-**[Browse every component with a live preview →](https://yash-ui-system-gallery.vercel.app/)**
+**[Browse every component with a live preview →](https://bezel-ui.vercel.app/)**
 
 ---
 
