@@ -4,7 +4,7 @@ A React component library for interfaces that move — motion, navigation, point
 
 A bezel is the frame that holds a lens, a watch face or a screen: the precise edge around the thing you actually look at. That is the scope of the library — the framing around your content.
 
-**Live gallery:** [yash-ui-system-gallery.vercel.app](https://yash-ui-system-gallery.vercel.app/) — the source of truth for what currently ships.
+**Live gallery:** [bezel-ui.vercel.app](https://bezel-ui.vercel.app/) — the source of truth for what currently ships.
 
 ## Structure
 
@@ -244,7 +244,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 
 `apps/gallery` is a Next.js app that renders every registry entry with a live preview, a popup/fullscreen view, and a copy-to-clipboard code panel. Each component also has its own detail page at `/component/<slug>`.
 
-Live at [yash-ui-system-gallery.vercel.app](https://yash-ui-system-gallery.vercel.app/), or run it locally:
+Live at [bezel-ui.vercel.app](https://bezel-ui.vercel.app/), or run it locally:
 
 ```bash
 cd apps/gallery

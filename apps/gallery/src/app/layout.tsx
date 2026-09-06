@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-const SITE_URL = "https://yash-ui-system-gallery.vercel.app";
+const SITE_URL = "https://bezel-ui.vercel.app";
 const TITLE = "Bezel — Component Gallery";
 const DESCRIPTION =
   "Bezel is a React component library for interface work that needs motion and craft. Preview every component, then copy the source.";
