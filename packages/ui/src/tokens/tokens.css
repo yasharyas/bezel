@@ -1,0 +1,218 @@
+/*
+ * Bezel design tokens.
+ *
+ * Every value here was read out of the components, not invented for this file.
+ * Where a value is new it is because the measured one failed the WCAG AA gate
+ * in `scripts/check-contrast.mjs`; those four cases are marked AA-CORRECTED and
+ * the original is kept next to them so nothing silently changes meaning.
+ *
+ * Import once at your app root:
+ *   import "bezel-ui/tokens.css";
+ *
+ * Components in this library are copy-paste files that carry their own literal
+ * values, so these tokens are a theming surface, not a runtime dependency —
+ * override a variable and the components you have themed follow.
+ */
+
+:root {
+  /* ---------------------------------------------------------------------
+   * COLOUR — ink on paper
+   *
+   * The library has two surface worlds. "Paper" is the light editorial one
+   * (7 of the top 10 colour literals live here); "void" is the dark glass one
+   * used by GlassButton, Card and the gallery chrome.
+   * ------------------------------------------------------------------- */
+
+  /* Text, darkest to lightest. Every one of these passes 4.5:1 on every
+   * paper surface below, except --bz-ink-disabled, which is exempt under
+   * WCAG 1.4.3 (inactive controls) and must never carry active text. */
+  --bz-ink: #0a0a0a;          /* body + headings. Measured in 12 files.   19.8:1 on paper */
+  --bz-ink-muted: #4a4a4c;    /* secondary copy. Measured in 8 files.      8.8:1 on paper */
+  --bz-ink-subtle: #6b6b70;   /* AA-CORRECTED from the measured #8a8a8e,
+                               * which is 3.44:1 and fails AA for body text.
+                               * #8a8a8e survives below as the disabled tone. 5.3:1 */
+  --bz-ink-disabled: #8a8a8e; /* AA-exempt. Disabled labels only.          3.4:1 */
+
+  /* Paper surfaces */
+  --bz-paper: #ffffff;         /* the default ground */
+  --bz-paper-sunken: #fafafa;  /* the opaque form of bg-black/[0.02], used in 5 card grids */
+  --bz-paper-raised: #f7f3ee;  /* the cream in PinchedButton / StarBorder / CelebrationOverlay */
+
+  /* Hairlines. Opaque equivalents are given so contrast can be reasoned about. */
+  --bz-line: rgba(10, 10, 10, 0.06);          /* border-black/[0.06], 4 files */
+  --bz-line-strong: rgba(10, 10, 10, 0.13);   /* border-black/[0.13], 2 files */
+  --bz-line-opaque: #f0f0f0;
+  --bz-line-strong-opaque: #dedede;
+
+  /* Void surfaces (dark glass) */
+  --bz-void: #0c0c0f;          /* the gallery ground */
+  --bz-void-raised: #1a1a1a;
+  --bz-void-ink: #ffffff;
+  --bz-void-ink-muted: rgba(255, 255, 255, 0.8);
+  --bz-void-line: rgba(255, 255, 255, 0.1);
+  --bz-void-fill: rgba(255, 255, 255, 0.05);
+
+  /* ---------------------------------------------------------------------
+   * COLOUR — accents
+   *
+   * Four accent families arrived with four source projects. They are all kept
+   * because components depend on them, but each now declares what it is safe
+   * for. `-fill` is a background that carries the stated ink; the bare token is
+   * safe as text on paper. Where those differ the second value is AA-CORRECTED.
+   * ------------------------------------------------------------------- */
+
+  /* Brick — the house accent. Used by the newest and best-built components
+   * (PinchedButton, StarBorder, ShinyText, MagicRings, CelebrationOverlay).
+   * Safe both as text on paper and as a fill under white. */
+  --bz-accent: #912c22;
+  --bz-accent-fill: #912c22;
+  --bz-accent-on-fill: #ffffff;   /* 8.1:1 */
+
+  /* Amber — callouts and warnings. Safe as text and as a fill under white. */
+  --bz-amber: #b45309;
+  --bz-amber-fill: #b45309;
+  --bz-amber-on-fill: #ffffff;    /* 5.0:1 */
+
+  /* Emerald — success and editorial rules.
+   * The measured #059669 is 3.77:1 and fails AA in BOTH directions, so it is
+   * demoted to decoration and large text (AA Large, 3:1) only. */
+  --bz-emerald-decor: #059669;    /* rules, dots, borders, text >= 24px only */
+  --bz-emerald: #047857;          /* AA-CORRECTED for body text.  5.5:1 */
+  --bz-emerald-fill: #047857;
+  --bz-emerald-on-fill: #ffffff;  /* 5.5:1 */
+
+  /* Gold — foil and ornament. The measured #c9a227 is 2.42:1 against white and
+   * must never carry white text; it takes ink instead. */
+  --bz-gold-fill: #c9a227;
+  --bz-gold-on-fill: #0a0a0a;     /* 8.2:1 */
+  --bz-gold: #7a6015;             /* AA-CORRECTED for text on paper.  6.0:1 */
+
+  /* Destructive. red-500 is the universal error colour across the 7 form
+   * components, but at 3.76:1 it fails as text, so text uses red-700. */
+  --bz-danger-decor: #ef4444;     /* the measured red-500: borders and marks */
+  --bz-danger: #b91c1c;           /* AA-CORRECTED for error text.  5.9:1 */
+  --bz-danger-fill: #b91c1c;
+  --bz-danger-on-fill: #ffffff;   /* 5.9:1 */
+
+  /* ---------------------------------------------------------------------
+   * FOCUS
+   *
+   * Non-negotiable. The ring is 2px at 2px offset so it clears the 3:1
+   * non-text contrast bar against both paper and void.
+   * ------------------------------------------------------------------- */
+  /* Written as literals rather than var(--bz-accent) so the contrast gate can
+   * measure them without resolving the cascade. They track the accent. */
+  --bz-focus-ring: #912c22;                /* on paper */
+  --bz-focus-ring-void: #ffffff;           /* on dark surfaces */
+  --bz-focus-width: 2px;
+  --bz-focus-offset: 2px;
+
+  /* ---------------------------------------------------------------------
+   * TYPE
+   *
+   * The scale is Tailwind's, because that is what the components use:
+   * text-sm accounts for 77 uses and text-xs for 46, so the system is
+   * genuinely small-text-first and the scale below reflects that weighting.
+   * ------------------------------------------------------------------- */
+  --bz-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --bz-font-serif: Georgia, "Times New Roman", ui-serif, serif;   /* 10 font-serif uses + 3 inline Georgia */
+  --bz-font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace; /* 11 font-mono uses */
+
+  --bz-text-2xs: 0.6875rem;   /* 11px — the 0.68/0.7rem mono eyebrows */
+  --bz-text-xs: 0.75rem;      /* 46 uses */
+  --bz-text-sm: 0.875rem;     /* 77 uses — the workhorse */
+  --bz-text-base: 1rem;
+  --bz-text-lg: 1.125rem;
+  --bz-text-xl: 1.25rem;
+  --bz-text-2xl: 1.5rem;
+  --bz-text-3xl: 1.875rem;
+  --bz-text-4xl: 2.25rem;
+  --bz-text-5xl: 3rem;
+  --bz-text-6xl: 3.75rem;
+
+  --bz-weight-normal: 400;
+  --bz-weight-medium: 500;    /* 55 uses — the default for controls */
+  --bz-weight-semibold: 600;  /* 37 uses */
+  --bz-weight-bold: 700;      /* 18 uses */
+
+  --bz-leading-tight: 1.15;
+  --bz-leading-snug: 1.35;
+  --bz-leading-normal: 1.55;
+
+  /* Display type is set in clamp() throughout; this is the observed shape. */
+  --bz-display-clamp: clamp(3rem, 8vw, 12rem);
+
+  /* ---------------------------------------------------------------------
+   * SPACING — 4px base, matching the Tailwind steps the components use.
+   * ------------------------------------------------------------------- */
+  --bz-space-0: 0;
+  --bz-space-1: 0.25rem;
+  --bz-space-1-5: 0.375rem;
+  --bz-space-2: 0.5rem;    /* the dominant gap: 27 uses across the library */
+  --bz-space-2-5: 0.625rem;
+  --bz-space-3: 0.75rem;   /* second most common gap */
+  --bz-space-4: 1rem;      /* the dominant horizontal padding */
+  --bz-space-5: 1.25rem;
+  --bz-space-6: 1.5rem;    /* card padding; also where the stray 22px belongs */
+  --bz-space-8: 2rem;
+  --bz-space-10: 2.5rem;
+  --bz-space-12: 3rem;
+  --bz-space-16: 4rem;
+
+  /* The smallest comfortable hit target. forms/ already holds this line with
+   * min-h-[48px] in 4 components; feedback/ and navigation/ do not. */
+  --bz-target-min: 48px;
+
+  /* ---------------------------------------------------------------------
+   * RADIUS
+   *
+   * rounded-full is the single most common shape in the library (32 uses
+   * counting the 999px spellings), so the system is pill-first.
+   * ------------------------------------------------------------------- */
+  --bz-radius-none: 0;
+  --bz-radius-xs: 2px;     /* WaxSealButton, FoilSpecularCard */
+  --bz-radius-sm: 6px;
+  --bz-radius-md: 10px;    /* BorderBeamButton */
+  --bz-radius-lg: 12px;    /* rounded-xl — 15 uses */
+  --bz-radius-xl: 16px;    /* rounded-2xl */
+  --bz-radius-2xl: 24px;
+  --bz-radius-3xl: 32px;
+  --bz-radius-full: 999px; /* the default for controls */
+
+  /* PinchedButton's signature asymmetric shape, kept because it is the one
+   * piece of form language the library owns outright. */
+  --bz-radius-pinched: 0 40px 0 40px;
+
+  /* ---------------------------------------------------------------------
+   * MOTION
+   *
+   * Durations are the measured ones. Easings are not: the components carry
+   * five near-identical editorial ease-out curves
+   * (.23,1,.32,1 / .22,1,.36,1 / .16,1,.3,1 / .25,1,.5,1 / .25,1,.5,1).
+   * They are collapsed to the most-used one. Nobody can tell them apart and
+   * a system that ships five is not making a decision.
+   * ------------------------------------------------------------------- */
+  --bz-duration-instant: 0ms;
+  --bz-duration-fast: 150ms;    /* state flips: hover, colour, ring */
+  --bz-duration-base: 300ms;    /* the most common single duration in the library */
+  --bz-duration-slow: 500ms;
+  --bz-duration-slower: 800ms;  /* scroll reveals */
+  --bz-duration-entrance: 950ms;
+
+  /* Ambient loops. These run forever, so they must always be gated on
+   * prefers-reduced-motion. */
+  --bz-duration-loop-short: 3s;
+  --bz-duration-loop: 5s;
+  --bz-duration-loop-long: 40s; /* marquees */
+
+  --bz-ease-out: cubic-bezier(0.23, 1, 0.32, 1);      /* the one editorial curve */
+  --bz-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);  /* FAQ, progress bars */
+  --bz-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* overshoot: stamps, pops */
+  --bz-ease-linear: linear;                            /* loops only */
+
+  /* GSAP equivalents, so timeline code and CSS agree:
+   *   --bz-ease-out      ~ "power3.out"
+   *   --bz-ease-in-out   ~ "power2.inOut"
+   *   --bz-ease-linear   ~ "none"
+   */
+}

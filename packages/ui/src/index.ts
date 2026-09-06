@@ -1,3 +1,22 @@
+// Design tokens. The stylesheet is a separate entry point so it can be
+// imported once at the app root: import "bezel-ui/tokens.css";
+export {
+  tokens,
+  color,
+  font,
+  fontSize,
+  fontWeight,
+  lineHeight,
+  space,
+  targetMin,
+  radius,
+  duration,
+  easing,
+  gsapEasing,
+  focus,
+} from "./tokens";
+export type { Tokens } from "./tokens";
+
 // Original components
 export { GlassButton } from "./GlassButton";
 export { Card } from "./Card";

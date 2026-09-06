@@ -33,17 +33,23 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./tokens": "./src/tokens/index.ts",
+    "./tokens.css": "./src/tokens/tokens.css",
     "./*": "./src/*.tsx",
     "./package.json": "./package.json"
   },
   "files": [
     "src",
+    "scripts",
+    "PRINCIPLES.md",
+    "STATES.md",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "tsc",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "check:contrast": "node scripts/check-contrast.mjs"
   },
   "peerDependencies": {
     "@radix-ui/react-select": "^2.0.0",
