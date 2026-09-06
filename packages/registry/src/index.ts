@@ -1,3 +1,7 @@
+// GENERATED FILE — do not edit by hand.
+// Run `npm run generate -w @bezel/registry` after changing a component.
+// Source of truth: packages/ui/src for code, metadata.json for everything else.
+
 export interface ComponentEntry {
   name: string;
   slug: string;
@@ -22,7 +26,7 @@ interface GlassButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
 export function GlassButton({ children, className = "", ...props }: GlassButtonProps) {
   return (
     <button
-      className={\`px-6 py-2 rounded-xl font-medium text-white backdrop-blur-md bg-white/10 border border-white/20 shadow-lg hover:bg-white/20 transition-[background-color,transform] duration-150 active:scale-[0.97] \${className}\`}
+      className={\`px-6 py-2 rounded-xl font-medium text-white backdrop-blur-md bg-white/10 border border-white/20 shadow-lg hover:bg-white/20 transition-[background-color,transform] duration-150 active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 \${className}\`}
       {...props}
     >
       {children}
@@ -81,7 +85,6 @@ export function Input({ label, className = "", ...props }: InputProps) {
     prompt: "A styled input field with optional label.",
     tags: ["input", "form", "ui"],
   },
-  // === Stepper Form Components ===
   {
     name: "TextInput",
     slug: "text-input",
@@ -191,6 +194,7 @@ export function RadioGroup({
             className={[
               'flex items-center gap-2 px-4 py-2.5 rounded-full border cursor-pointer',
               'transition-[border-color,background-color,color] duration-200 min-h-[48px] select-none',
+              'has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#912c22]',
               value === option
                 ? 'border-indigo-500 bg-indigo-50 text-indigo-600 font-medium'
                 : 'border-neutral-300 bg-white text-neutral-700 hover:border-neutral-400',
@@ -253,7 +257,7 @@ export function Checkbox({
     <div className="flex flex-col gap-1">
       <label
         htmlFor={name}
-        className="flex items-center gap-3 cursor-pointer min-h-[48px] select-none"
+        className="flex items-center gap-3 cursor-pointer min-h-[48px] select-none has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#912c22]"
       >
         <div
           className={[
@@ -559,6 +563,7 @@ export function FileUpload({
           className={[
             'flex items-center gap-3 p-3 rounded-xl border border-dashed cursor-pointer',
             'transition-[border-color] duration-200 min-h-[48px]',
+            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]',
             error ? 'border-red-500' : 'border-neutral-300 hover:border-indigo-400',
           ].join(' ')}
           onClick={() => inputRef.current?.click()}
@@ -578,7 +583,7 @@ export function FileUpload({
               <button
                 type="button"
                 onClick={() => setShowPreview(true)}
-                className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors"
+                className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                 title="Preview"
               >
                 <Eye className="w-4 h-4 text-neutral-600" />
@@ -587,7 +592,7 @@ export function FileUpload({
             <button
               type="button"
               onClick={handleRemove}
-              className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors"
+              className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               title="Remove"
             >
               <X className="w-4 h-4 text-neutral-600" />
@@ -951,30 +956,50 @@ export function SubmissionLoader({ phase, phases = DEFAULT_PHASES, phaseConfig =
     code: `import React from 'react';
 
 type ScreenLayoutProps = {
-  brandInitials?: string; brandName?: string;
-  title: string; subtitle?: string;
-  stepper?: React.ReactNode; navigation?: React.ReactNode;
+  brandInitials?: string;
+  brandName?: string;
+  title: string;
+  subtitle?: string;
+  stepper?: React.ReactNode;
+  navigation?: React.ReactNode;
   children: React.ReactNode;
 };
 
-export function ScreenLayout({ brandInitials = 'YASH', brandName = 'YASH', title, subtitle, stepper, navigation, children }: ScreenLayoutProps) {
+export function ScreenLayout({
+  brandInitials = 'YASH',
+  brandName = 'YASH',
+  title,
+  subtitle,
+  stepper,
+  navigation,
+  children,
+}: ScreenLayoutProps) {
   return (
     <div className="min-h-screen bg-[#F7F8FA] flex flex-col">
+      {/* Header */}
       <header className="bg-white border-b border-neutral-200 px-4 py-4 sm:px-6">
-        <div className="max-w-3xl mx-auto flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-[9px] tracking-tight">{brandInitials}</div>
-          <span className="text-base font-semibold text-neutral-800">{brandName}</span>
+        <div className="max-w-3xl mx-auto">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-[9px] tracking-tight">
+              {brandInitials}
+            </div>
+            <span className="text-base font-semibold text-neutral-800">{brandName}</span>
+          </div>
         </div>
       </header>
+
       <div className="flex-1 px-4 py-6 sm:px-6">
         <div className="max-w-3xl mx-auto">
           {stepper && <div className="mb-6">{stepper}</div>}
-          <div className="bg-white rounded-xl shadow-lg border border-neutral-200/80 p-5 sm:p-8">
+
+          <div className="bg-white rounded-xl shadow-[0_4px_24px_-4px_rgba(0,0,0,0.12),0_1px_4px_-1px_rgba(0,0,0,0.06)] border border-neutral-200/80 p-5 sm:p-8">
             <div className="mb-6">
               <h2 className="text-xl font-semibold text-neutral-900 sm:text-2xl">{title}</h2>
               {subtitle && <p className="text-sm text-neutral-500 mt-1">{subtitle}</p>}
             </div>
+
             {children}
+
             {navigation && <div>{navigation}</div>}
           </div>
         </div>
@@ -1134,7 +1159,7 @@ export function ToolbarButton({ icon, onClick, disabled, title }: ToolbarButtonP
       onClick={onClick}
       disabled={disabled}
       title={title}
-      className="p-2 rounded-xl text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed"
+      className="p-2 rounded-xl text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700 disabled:opacity-30 disabled:hover:bg-transparent transition-colors cursor-pointer disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
     >
       {icon}
     </button>
@@ -1195,7 +1220,8 @@ export function CollapsibleSidebar({
       <div className="w-12 bg-white border-r border-neutral-200 flex flex-col items-center pt-3">
         <button
           onClick={() => setCollapsed(false)}
-          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 transition-colors cursor-pointer"
+          aria-label="Expand sidebar"
+          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <PanelLeft size={18} />
         </button>
@@ -1210,7 +1236,8 @@ export function CollapsibleSidebar({
         <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">{title}</h2>
         <button
           onClick={() => setCollapsed(true)}
-          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
+          aria-label="Collapse sidebar"
+          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <PanelLeftClose size={16} />
         </button>
@@ -1317,7 +1344,8 @@ export function SidePanel({ title, headerLeft, onClose, footer, children }: Side
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
+          aria-label="Close panel"
+          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <X size={16} />
         </button>
@@ -1384,7 +1412,7 @@ export function PanelDeleteButton({ onClick, label = 'Delete' }: { onClick: () =
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+      className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
     >
       {label}
     </button>
@@ -1426,6 +1454,7 @@ export function NodeCard({
       className={[
         'relative min-w-[180px] max-w-[240px] rounded-2xl bg-white',
         'border-2 transition-shadow duration-150 cursor-pointer',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]',
         selected ? 'ring-2 ring-offset-2 shadow-md' : 'shadow-sm hover:shadow-md',
       ].join(' ')}
       style={{
@@ -1434,7 +1463,15 @@ export function NodeCard({
           ? ({ '--tw-ring-color': accentColor } as CSSProperties)
           : {}),
       }}
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        // Space would otherwise scroll the canvas
+        if (event.key === ' ') event.preventDefault();
+        onClick?.();
+      }}
     >
       {/* Left colour accent bar */}
       <div
@@ -1475,40 +1512,95 @@ export function NodeCard({
     path: "navigation/TubelightNavBar.tsx",
     category: "navigation",
     code: `"use client"
+
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import type { LucideIcon } from "lucide-react"
 
-export interface NavItem { name: string; url: string; icon: LucideIcon; onClick?: () => void }
-interface NavBarProps { items: NavItem[]; activeItem?: string; className?: string; onNavigate?: (url: string) => void }
+export interface NavItem {
+  name: string
+  url: string
+  icon: LucideIcon
+  onClick?: () => void
+}
+
+interface NavBarProps {
+  items: NavItem[]
+  activeItem?: string
+  className?: string
+  onNavigate?: (url: string) => void
+}
 
 export function TubelightNavBar({ items, activeItem, className, onNavigate }: NavBarProps) {
   const [isMobile, setIsMobile] = useState(false)
+
   const currentActive = activeItem ?? items[0]?.name ?? ""
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768)
-    handleResize(); window.addEventListener("resize", handleResize)
+    handleResize()
+    window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
+
   return (
-    <div className={\`fixed bottom-0 sm:top-0 left-1/2 -translate-x-1/2 z-50 mb-3 sm:mb-0 sm:pt-3 pointer-events-none\${className ? \` \${className}\` : ""}\`}>
+    <div
+      className={\`fixed bottom-0 sm:top-0 left-1/2 -translate-x-1/2 z-50 mb-3 sm:mb-0 sm:pt-3 pointer-events-none\${className ? \` \${className}\` : ""}\`}
+    >
       <div className="flex items-center gap-1 bg-background/5 border border-border backdrop-blur-lg py-0.5 px-0.5 rounded-full shadow-lg pointer-events-auto">
         {items.map((item) => {
-          const Icon = item.icon; const isActive = currentActive === item.name
-          const baseClasses = "relative cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-full transition-colors text-center text-foreground/80 hover:text-primary" + (isActive ? " bg-muted text-primary" : "")
-          const content = (<>
-            <span className={isMobile ? "hidden" : "hidden md:inline"}>{item.name}</span>
-            <span className={isMobile ? "inline" : "md:hidden"}><Icon size={14} strokeWidth={2.5} /></span>
-            {isActive && (<motion.div layoutId="lamp" className="absolute inset-0 w-full bg-primary/5 rounded-full -z-10" initial={false} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-t-full">
-                <div className="absolute w-8 h-4 bg-primary/20 rounded-full blur-md -top-1.5 -left-1" />
-                <div className="absolute w-6 h-4 bg-primary/20 rounded-full blur-md -top-0.5" />
-                <div className="absolute w-3 h-3 bg-primary/20 rounded-full blur-sm top-0 left-1.5" />
-              </div>
-            </motion.div>)}
-          </>)
-          if (item.onClick) return <button key={item.name} onClick={item.onClick} className={baseClasses}>{content}</button>
-          return <a key={item.name} href={item.url} onClick={(e) => { if (onNavigate) { e.preventDefault(); onNavigate(item.url) } }} className={baseClasses}>{content}</a>
+          const Icon = item.icon
+          const isActive = currentActive === item.name
+          const baseClasses =
+            "relative cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-full transition-colors text-center text-foreground/80 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]" +
+            (isActive ? " bg-muted text-primary" : "")
+
+          const content = (
+            <>
+              <span className={isMobile ? "hidden" : "hidden md:inline"}>{item.name}</span>
+              <span className={isMobile ? "inline" : "md:hidden"}>
+                <Icon size={14} strokeWidth={2.5} />
+              </span>
+              {isActive && (
+                <motion.div
+                  layoutId="lamp"
+                  className="absolute inset-0 w-full bg-primary/5 rounded-full -z-10"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                  <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-t-full">
+                    <div className="absolute w-8 h-4 bg-primary/20 rounded-full blur-md -top-1.5 -left-1" />
+                    <div className="absolute w-6 h-4 bg-primary/20 rounded-full blur-md -top-0.5" />
+                    <div className="absolute w-3 h-3 bg-primary/20 rounded-full blur-sm top-0 left-1.5" />
+                  </div>
+                </motion.div>
+              )}
+            </>
+          )
+
+          if (item.onClick) {
+            return (
+              <button key={item.name} onClick={item.onClick} className={baseClasses}>
+                {content}
+              </button>
+            )
+          }
+
+          return (
+            <a
+              key={item.name}
+              href={item.url}
+              onClick={(e) => {
+                if (onNavigate) {
+                  e.preventDefault()
+                  onNavigate(item.url)
+                }
+              }}
+              className={baseClasses}
+            >
+              {content}
+            </a>
+          )
         })}
       </div>
     </div>
@@ -1532,7 +1624,7 @@ const SWITCH_THEME = {
 } as React.CSSProperties
 
 const switchVariants = cva(
-  "peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
+  "peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 transition-colors duration-300 peer-focus-visible:outline-none peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-background peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -1923,13 +2015,13 @@ export function DualConfirmDialog({
               <>
                 <button
                   onClick={handleClose}
-                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-[background-color,transform] active:scale-[0.97]"
+                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-[background-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleFirstConfirm}
-                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-[background-color,transform] active:scale-[0.97]"
+                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-[background-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                 >
                   Continue to Final Confirmation
                 </button>
@@ -1939,14 +2031,14 @@ export function DualConfirmDialog({
                 <button
                   onClick={() => setStep(1)}
                   disabled={isLoading}
-                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-[background-color,transform] active:scale-[0.97] disabled:opacity-50"
+                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-[background-color,transform] active:scale-[0.97] disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                 >
                   Go Back
                 </button>
                 <button
                   onClick={handleFinalConfirm}
                   disabled={inputValue !== confirmationPhrase || isLoading}
-                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-[background-color,transform] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-[background-color,transform] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                 >
                   Delete Permanently
                 </button>
@@ -2058,6 +2150,16 @@ export function BlenderUpload({
     if (!disabled && !isBlending && !blendComplete) fileInputRef.current?.click()
   }, [disabled, isBlending, blendComplete])
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key !== "Enter" && e.key !== " ") return
+      // Space would scroll the page if it reached the document.
+      if (e.key === " ") e.preventDefault()
+      handleClick()
+    },
+    [handleClick]
+  )
+
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0]
@@ -2074,11 +2176,14 @@ export function BlenderUpload({
 
   return (
     <div
-      className={\`relative overflow-hidden rounded-xl transition-transform duration-300 \${isDragging ? "scale-[1.02]" : ""} \${disabled ? "opacity-50 cursor-not-allowed" : blendComplete ? "cursor-default" : "cursor-pointer"}\`}
+      className={\`relative overflow-hidden rounded-xl transition-transform duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] \${isDragging ? "scale-[1.02]" : ""} \${disabled ? "opacity-50 cursor-not-allowed" : blendComplete ? "cursor-default" : "cursor-pointer"}\`}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
       style={{ background: "#FFFFFF" }}
     >
       <input
@@ -2216,7 +2321,7 @@ export function BlenderUpload({
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); resetUpload() }}
-                className="mt-2 w-full py-1.5 px-3 text-xs font-medium text-[#7A8A70] bg-[#92A086]/10 hover:bg-[#92A086]/20 rounded-md transition-colors"
+                className="mt-2 w-full py-1.5 px-3 text-xs font-medium text-[#7A8A70] bg-[#92A086]/10 hover:bg-[#92A086]/20 rounded-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               >
                 Change image
               </button>
@@ -2257,19 +2362,38 @@ export function BlenderUpload({
     code: `import { Plus } from "lucide-react"
 
 interface EmptyStateProps {
-  title: string; description: string; icon?: React.ReactNode
-  actionLabel?: string; onAction?: () => void; showAction?: boolean
+  title: string
+  description: string
+  icon?: React.ReactNode
+  actionLabel?: string
+  onAction?: () => void
+  showAction?: boolean
 }
 
-export function EmptyState({ title, description, icon, actionLabel = "Create", onAction, showAction = true }: EmptyStateProps) {
+export function EmptyState({
+  title,
+  description,
+  icon,
+  actionLabel = "Create",
+  onAction,
+  showAction = true,
+}: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
-      {icon && <div className="mb-4 text-muted-foreground/40">{icon}</div>}
+      {icon && (
+        <div className="mb-4 text-muted-foreground/40">
+          {icon}
+        </div>
+      )}
       <h3 className="text-lg font-semibold mb-2">{title}</h3>
       <p className="text-sm text-muted-foreground max-w-md mb-6">{description}</p>
       {showAction && onAction && (
-        <button onClick={onAction} className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-          <Plus className="h-4 w-4" />{actionLabel}
+        <button
+          onClick={onAction}
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+        >
+          <Plus className="h-4 w-4" />
+          {actionLabel}
         </button>
       )}
     </div>
@@ -2304,7 +2428,7 @@ const CustomCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttribu
         "checked:before:-translate-x-2/4 checked:before:-translate-y-2/4",
         "checked:before:rotate-45 checked:before:scale-x-[1.4] checked:before:scale-y-[1.4]",
         "checked:before:opacity-100 checked:before:transition-[transform,opacity] checked:before:delay-100 checked:before:duration-200",
-        "hover:border-[#1677ff] focus:outline-[#1677ff]",
+        "hover:border-[#1677ff] outline-2 outline-offset-1 outline-[#1677ff] focus-visible:outline",
         "[&:active:not(:checked)]:after:opacity-100 [&:active:not(:checked)]:after:shadow-none [&:active:not(:checked)]:after:transition-none",
         className,
       ].filter(Boolean).join(" ")}
@@ -2382,11 +2506,20 @@ export { CustomCheckbox, GradientCheckbox, TransformerCheckbox, AnimatedCheckbox
     slug: "loading-spinner",
     path: "feedback/LoadingSpinner.tsx",
     category: "feedback",
-    code: `const sizes = { sm: "h-4 w-4 border-2", md: "h-8 w-8 border-3", lg: "h-12 w-12 border-4" }
+    code: `const sizes = {
+  sm: "h-4 w-4 border-2",
+  md: "h-8 w-8 border-3",
+  lg: "h-12 w-12 border-4",
+}
 
-export const LoadingSpinner = ({ size = "md", className }: { size?: "sm" | "md" | "lg"; className?: string }) => (
-  <div className={"flex items-center justify-center" + (className ? \` \${className}\` : "")}>
-    <div className={"animate-spin rounded-full border-primary border-t-transparent " + sizes[size]} />
+interface LoadingSpinnerProps {
+  size?: "sm" | "md" | "lg"
+  className?: string
+}
+
+export const LoadingSpinner = ({ size = "md", className }: LoadingSpinnerProps) => (
+  <div className={\`flex items-center justify-center\${className ? \` \${className}\` : ""}\`}>
+    <div className={\`animate-spin rounded-full border-primary border-t-transparent \${sizes[size]}\`} />
   </div>
 )`,
     prompt: "Create a minimal centered loading spinner with three sizes (sm/md/lg) using Tailwind's animate-spin and a colored border with a transparent top to create the spinning arc effect.",
@@ -2399,19 +2532,63 @@ export const LoadingSpinner = ({ size = "md", className }: { size?: "sm" | "md" 
     category: "cards",
     code: `import { IndianRupee, Receipt, Percent } from "lucide-react"
 
-export function PriceBreakdown({ price, gstPercent, priceLabel = "Base Price" }: { price: number; gstPercent: number; priceLabel?: string }) {
+interface PriceBreakdownProps {
+  price: number
+  gstPercent: number
+  priceLabel?: string
+}
+
+export function PriceBreakdown({
+  price,
+  gstPercent,
+  priceLabel = "Base Price",
+}: PriceBreakdownProps) {
   const validPrice = Number.isFinite(price) && price > 0 ? price : 0
+  const validGst = Number.isFinite(gstPercent) && gstPercent >= 0 ? gstPercent : 0
+
   if (validPrice === 0) return null
-  const gstAmount = validPrice * (gstPercent / 100)
+
+  const gstAmount = validPrice * (validGst / 100)
   const totalPrice = validPrice + gstAmount
+
   return (
     <div className="rounded-lg border bg-muted/40 p-4 space-y-3">
-      <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide"><Receipt className="h-4 w-4" />Price Breakdown</div>
+      <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+        <Receipt className="h-4 w-4" />
+        Price Breakdown
+      </div>
+
       <div className="space-y-2">
-        <div className="flex justify-between text-sm"><span className="flex items-center gap-2 text-muted-foreground"><IndianRupee className="h-3.5 w-3.5" />{priceLabel}</span><span>₹{validPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span></div>
-        <div className="flex justify-between text-sm"><span className="flex items-center gap-2 text-muted-foreground"><Percent className="h-3.5 w-3.5" />GST ({gstPercent}%)</span><span>{gstAmount > 0 ? \`₹\${gstAmount.toLocaleString("en-IN")}\` : "—"}</span></div>
+        <div className="flex items-center justify-between text-sm">
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <IndianRupee className="h-3.5 w-3.5" />
+            {priceLabel}
+          </span>
+          <span className="font-medium">
+            ₹{validPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between text-sm">
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <Percent className="h-3.5 w-3.5" />
+            GST ({validGst}%)
+          </span>
+          <span className="font-medium">
+            {gstAmount > 0
+              ? \`₹\${gstAmount.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\`
+              : "—"}
+          </span>
+        </div>
+
         <div className="border-t" />
-        <div className="flex justify-between"><span className="text-sm font-semibold">Total Price</span><span className="text-lg font-bold text-primary">₹{totalPrice.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span></div>
+
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-semibold">Total Price</span>
+          <span className="text-lg font-bold text-primary">
+            ₹{totalPrice.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </span>
+        </div>
       </div>
     </div>
   )
@@ -2427,22 +2604,99 @@ export function PriceBreakdown({ price, gstPercent, priceLabel = "Base Price" }:
     code: `import * as React from "react"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
-export const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
-  <nav role="navigation" aria-label="pagination" className={"mx-auto flex w-full justify-center" + (className ? \` \${className}\` : "")} {...props} />
+function paginationLinkClass(isActive?: boolean, extra?: string) {
+  const base =
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 w-10"
+  const variant = isActive
+    ? "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+    : "hover:bg-accent hover:text-accent-foreground"
+  return [base, variant, extra ?? ""].filter(Boolean).join(" ")
+}
+
+const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
+  <nav
+    role="navigation"
+    aria-label="pagination"
+    className={\`mx-auto flex w-full justify-center\${className ? \` \${className}\` : ""}\`}
+    {...props}
+  />
 )
-export const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(({ className, ...props }, ref) => (
-  <ul ref={ref} className={"flex flex-row items-center gap-1" + (className ? \` \${className}\` : "")} {...props} />
-))
-export const PaginationItem = React.forwardRef<HTMLLIElement, React.ComponentProps<"li">>(({ ...props }, ref) => <li ref={ref} {...props} />)
-type PaginationLinkProps = { isActive?: boolean } & React.ComponentProps<"a">
-export const PaginationLink = ({ className, isActive, ...props }: PaginationLinkProps) => (
-  <a aria-current={isActive ? "page" : undefined} className={"inline-flex items-center justify-center h-10 w-10 rounded-md text-sm hover:bg-accent" + (isActive ? " border border-input" : "") + (className ? \` \${className}\` : "")} {...props} />
+Pagination.displayName = "Pagination"
+
+const PaginationContent = React.forwardRef<HTMLUListElement, React.ComponentProps<"ul">>(
+  ({ className, ...props }, ref) => (
+    <ul
+      ref={ref}
+      className={\`flex flex-row items-center gap-1\${className ? \` \${className}\` : ""}\`}
+      {...props}
+    />
+  )
 )
-export const PaginationPrevious = ({ ...props }) => <PaginationLink aria-label="Go to previous page" className="w-auto px-4 gap-1" {...props}><ChevronLeft className="h-4 w-4" /><span>Previous</span></PaginationLink>
-export const PaginationNext = ({ ...props }) => <PaginationLink aria-label="Go to next page" className="w-auto px-4 gap-1" {...props}><span>Next</span><ChevronRight className="h-4 w-4" /></PaginationLink>
-export const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => (
-  <span aria-hidden className={"flex h-10 w-10 items-center justify-center" + (className ? \` \${className}\` : "")} {...props}><MoreHorizontal className="h-4 w-4" /><span className="sr-only">More pages</span></span>
-)`,
+PaginationContent.displayName = "PaginationContent"
+
+const PaginationItem = React.forwardRef<HTMLLIElement, React.ComponentProps<"li">>(
+  ({ className, ...props }, ref) => <li ref={ref} className={className} {...props} />
+)
+PaginationItem.displayName = "PaginationItem"
+
+type PaginationLinkProps = {
+  isActive?: boolean
+} & React.ComponentProps<"a">
+
+const PaginationLink = ({ className, isActive, ...props }: PaginationLinkProps) => (
+  <a
+    aria-current={isActive ? "page" : undefined}
+    className={paginationLinkClass(isActive, className)}
+    {...props}
+  />
+)
+PaginationLink.displayName = "PaginationLink"
+
+const PaginationPrevious = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => (
+  <PaginationLink
+    aria-label="Go to previous page"
+    className={\`gap-1 pl-2.5 w-auto px-4\${className ? \` \${className}\` : ""}\`}
+    {...props}
+  >
+    <ChevronLeft className="h-4 w-4" />
+    <span>Previous</span>
+  </PaginationLink>
+)
+PaginationPrevious.displayName = "PaginationPrevious"
+
+const PaginationNext = ({ className, ...props }: React.ComponentProps<typeof PaginationLink>) => (
+  <PaginationLink
+    aria-label="Go to next page"
+    className={\`gap-1 pr-2.5 w-auto px-4\${className ? \` \${className}\` : ""}\`}
+    {...props}
+  >
+    <span>Next</span>
+    <ChevronRight className="h-4 w-4" />
+  </PaginationLink>
+)
+PaginationNext.displayName = "PaginationNext"
+
+const PaginationEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => (
+  <span
+    aria-hidden
+    className={\`flex h-10 w-10 items-center justify-center\${className ? \` \${className}\` : ""}\`}
+    {...props}
+  >
+    <MoreHorizontal className="h-4 w-4" />
+    <span className="sr-only">More pages</span>
+  </span>
+)
+PaginationEllipsis.displayName = "PaginationEllipsis"
+
+export {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+}`,
     prompt: "Create an accessible, composable pagination component. Include Pagination, PaginationContent, PaginationItem, PaginationLink (with isActive), PaginationPrevious, PaginationNext, and PaginationEllipsis. Use lucide-react for chevron and ellipsis icons. Keep it fully keyboard and screen-reader accessible.",
     tags: ["pagination", "composable", "accessible", "aria"],
   },
@@ -2457,26 +2711,92 @@ import gsap from "gsap";
 
 export function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const cursor = cursorRef.current;
     if (!cursor) return;
+
+    let currentX = window.innerWidth / 2;
+    let currentY = window.innerHeight / 2;
+
     const onMove = (e: MouseEvent) => {
+      currentX = e.clientX;
+      currentY = e.clientY;
       cursor.classList.add("active");
-      gsap.to(cursor, { x: e.clientX - cursor.offsetWidth / 2, y: e.clientY - cursor.offsetHeight / 2, duration: 0.55, ease: "power3.out" });
+      gsap.to(cursor, {
+        x: currentX - cursor.offsetWidth / 2,
+        y: currentY - cursor.offsetHeight / 2,
+        duration: 0.55,
+        ease: "power3.out",
+      });
     };
+
     const onEnterGrow = () => gsap.to(cursor, { scale: 2.5, duration: 0.3, ease: "power2.out" });
     const onLeaveGrow = () => gsap.to(cursor, { scale: 1, duration: 0.3, ease: "power2.out" });
+
+    const onHide = () => gsap.to(cursor, { opacity: 0, duration: 0.3 });
+    const onShow = () => cursor.classList.contains("active") && gsap.to(cursor, { opacity: 1, duration: 0.3 });
+
+    const setupGrow = () => {
+      document.querySelectorAll("[data-cursor-grow]").forEach((el) => {
+        el.addEventListener("mouseenter", onEnterGrow);
+        el.addEventListener("mouseleave", onLeaveGrow);
+      });
+    };
+
     document.addEventListener("mousemove", onMove);
-    document.querySelectorAll("[data-cursor-grow]").forEach((el) => { el.addEventListener("mouseenter", onEnterGrow); el.addEventListener("mouseleave", onLeaveGrow); });
-    return () => { document.removeEventListener("mousemove", onMove); };
+    document.addEventListener("mouseleave", onHide);
+    document.addEventListener("mouseenter", onShow);
+    setupGrow();
+
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseleave", onHide);
+      document.removeEventListener("mouseenter", onShow);
+      document.querySelectorAll("[data-cursor-grow]").forEach((el) => {
+        el.removeEventListener("mouseenter", onEnterGrow);
+        el.removeEventListener("mouseleave", onLeaveGrow);
+      });
+    };
   }, []);
+
   return (
-    <div ref={cursorRef} style={{ width:"1.7rem",height:"1.7rem",position:"fixed",top:0,left:0,pointerEvents:"none",mixBlendMode:"difference",zIndex:100000,opacity:0 }}>
-      <span style={{ position:"absolute",background:"#fff",width:"0.5rem",height:"0.2rem",top:"50%",transform:"translateY(-50%)",left:0 }} />
-      <span style={{ position:"absolute",background:"#fff",width:"0.5rem",height:"0.2rem",top:"50%",transform:"translateY(-50%)",right:0 }} />
-      <span style={{ position:"absolute",background:"#fff",height:"0.5rem",width:"0.2rem",left:"50%",transform:"translateX(-50%)",top:0 }} />
-      <span style={{ position:"absolute",background:"#fff",height:"0.5rem",width:"0.2rem",left:"50%",transform:"translateX(-50%)",bottom:0 }} />
-    </div>
+    <>
+      <style>{\`
+        .yui-cursor {
+          width: 1.7rem; height: 1.7rem;
+          position: fixed; top: 0; left: 0;
+          pointer-events: none;
+          mix-blend-mode: difference;
+          z-index: 100000; opacity: 0;
+          transition: opacity 0.3s;
+        }
+        .yui-cursor.active { opacity: 1; }
+        .yui-cursor-bar {
+          position: absolute;
+          background-color: #fff;
+        }
+        .yui-cursor-left, .yui-cursor-right {
+          width: 0.5rem; height: 0.2rem;
+          top: 50%; transform: translateY(-50%);
+        }
+        .yui-cursor-top, .yui-cursor-bottom {
+          height: 0.5rem; width: 0.2rem;
+          left: 50%; transform: translateX(-50%);
+        }
+        .yui-cursor-right { right: 0; }
+        .yui-cursor-left { left: 0; }
+        .yui-cursor-top { top: 0; }
+        .yui-cursor-bottom { bottom: 0; }
+        @media (max-width: 768px) { .yui-cursor { display: none; } }
+      \`}</style>
+      <div className="yui-cursor" ref={cursorRef}>
+        <span className="yui-cursor-bar yui-cursor-top" />
+        <span className="yui-cursor-bar yui-cursor-bottom" />
+        <span className="yui-cursor-bar yui-cursor-left" />
+        <span className="yui-cursor-bar yui-cursor-right" />
+      </div>
+    </>
   );
 }`,
     prompt: "Create a minimal cross-hair custom cursor using CSS that replaces the browser cursor. The cursor has four short white bars forming a plus/crosshair. It follows the mouse smoothly with GSAP lag. On hover over [data-cursor-grow] elements it scales up to 2.5x. Uses mix-blend-mode: difference.",
@@ -2491,31 +2811,83 @@ export function CustomCursor() {
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-type Props = { name?: string; onComplete: () => void };
+type Props = {
+  name?: string;
+  onComplete: () => void;
+};
+
 export function Preloader({ name = "LOADING", onComplete }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
+
   useEffect(() => {
-    const preloader = rootRef.current; const counterEl = counterRef.current;
+    const preloader = rootRef.current;
+    const counterEl = counterRef.current;
     if (!preloader || !counterEl) return;
+
     const chars = Array.from(preloader.querySelectorAll<HTMLElement>(".yui-pl-char"));
     const obj = { value: 0 };
-    const tl = gsap.timeline({ onComplete: () => gsap.delayedCall(0.1, onComplete) });
-    tl.to(obj, { value: 100, duration: 1.6, ease: "power2.inOut", onUpdate: () => { counterEl.textContent = Math.round(obj.value) + "%"; } });
+
+    const tl = gsap.timeline({
+      onComplete: () => {
+        gsap.delayedCall(0.1, onComplete);
+      },
+    });
+
+    // Count 0 → 100
+    tl.to(obj, {
+      value: 100,
+      duration: 1.6,
+      ease: "power2.inOut",
+      onUpdate: () => {
+        counterEl.textContent = Math.round(obj.value) + "%";
+      },
+    });
+
+    // Reveal letters
     tl.to(chars, { y: 0, duration: 1, stagger: 0.035, ease: "power3.out" }, 0.2);
-    tl.to(chars.slice(1,-1), { opacity: 0, y: "-20%", duration: 0.5, stagger: 0.02 }, "+=0.3");
+
+    // Fade non-key chars then slide preloader up
+    tl.to(chars.slice(1, -1), { opacity: 0, y: "-20%", duration: 0.5, stagger: 0.02, ease: "power2.in" }, "+=0.3");
     tl.to(preloader, { yPercent: -100, duration: 0.9, ease: "power3.inOut" }, "-=0.2");
+
     return () => { tl.kill(); };
   }, [onComplete]);
+
+  const letters = name.split("").map((ch, i) => (
+    <span key={i} className="yui-pl-char" style={{ display: "inline-block", transform: "translateY(110%)" }}>
+      {ch === " " ? "\\u00A0" : ch}
+    </span>
+  ));
+
   return (
-    <div ref={rootRef} style={{ position:"fixed",inset:0,zIndex:10000,background:"#fff",display:"flex",justifyContent:"center",alignItems:"center" }}>
-      <div style={{ display:"flex",overflow:"hidden",fontSize:"clamp(3rem,8vw,12rem)",fontWeight:500,color:"#000" }}>
-        {name.split("").map((ch,i) => <span key={i} className="yui-pl-char" style={{ display:"inline-block",transform:"translateY(110%)" }}>{ch === " " ? "\u00A0" : ch}</span>)}
+    <>
+      <style>{\`
+        .yui-pl-root {
+          position: fixed; top: 0; left: 0;
+          width: 100%; height: 100%;
+          z-index: 10000; background: #fff;
+          display: flex; justify-content: center; align-items: center;
+        }
+        .yui-pl-name {
+          display: flex; overflow: hidden;
+          color: #000;
+          font-size: clamp(3rem, 8vw, 12rem);
+          font-weight: 500; letter-spacing: -0.05em;
+        }
+        .yui-pl-counter {
+          position: fixed; right: 5rem; bottom: 5rem;
+          font-size: clamp(4rem, 6vw, 10rem);
+          font-weight: 500; color: #000; overflow: hidden;
+        }
+      \`}</style>
+      <div className="yui-pl-root" ref={rootRef}>
+        <div className="yui-pl-name">{letters}</div>
+        <div className="yui-pl-counter">
+          <span ref={counterRef}>0%</span>
+        </div>
       </div>
-      <div style={{ position:"fixed",right:"5rem",bottom:"5rem",fontSize:"clamp(4rem,6vw,10rem)",fontWeight:500,color:"#000" }}>
-        <span ref={counterRef}>0%</span>
-      </div>
-    </div>
+    </>
   );
 }`,
     prompt: "Create a fullscreen white preloader that animates each letter of a name into view sliding up from below. A percentage counter in the bottom-right corner counts from 0% to 100%. When complete, non-key letters fade out, then the whole panel slides upward off screen revealing the page.",
@@ -2527,17 +2899,113 @@ export function Preloader({ name = "LOADING", onComplete }: Props) {
     path: "navigation/SiteHeader.tsx",
     category: "navigation",
     code: `"use client";
+
 type NavLink = { label: string; href: string };
-type Props = { logo?: string; logoHref?: string; navLinks?: NavLink[]; ctaLabel?: string; ctaHref?: string; visible?: boolean };
-export function SiteHeader({ logo="YASH", logoHref="/", navLinks=[], ctaLabel="GET IN TOUCH", ctaHref="#contact", visible=true }: Props) {
+
+type Props = {
+  logo?: string;
+  logoHref?: string;
+  navLinks?: NavLink[];
+  ctaLabel?: string;
+  ctaHref?: string;
+  visible?: boolean;
+};
+
+export function SiteHeader({
+  logo = "YASH",
+  logoHref = "/",
+  navLinks = [],
+  ctaLabel = "GET IN TOUCH",
+  ctaHref = "#contact",
+  visible = true,
+}: Props) {
   return (
-    <header style={{ display:"flex",alignItems:"center",justifyContent:"space-between",position:"fixed",top:0,left:0,width:"100%",padding:"2rem 5rem",zIndex:1000,transform:visible?"translateY(0)":"translateY(-100%)",transition:"transform 0.8s cubic-bezier(0.25,1,0.5,1)" }}>
-      <a href={logoHref} style={{ fontSize:"2rem",fontWeight:500,color:"#fff",textDecoration:"none" }}>{logo}</a>
-      <ul style={{ display:"flex",listStyle:"none",gap:"1.5rem",margin:0,padding:0 }}>
-        {navLinks.map(link => <li key={link.href}><a href={link.href} style={{ color:"#fff",textDecoration:"none",fontSize:"1rem",fontWeight:500 }}>{link.label}</a></li>)}
-      </ul>
-      <a href={ctaHref} style={{ padding:"0.5rem 1.4rem",borderRadius:"999px",border:"1px solid rgba(255,255,255,0.3)",color:"#fff",textDecoration:"none",fontSize:"0.9rem",fontWeight:500 }}>{ctaLabel}</a>
-    </header>
+    <>
+      <style>{\`
+        .yui-site-header {
+          display: flex; align-items: center; justify-content: space-between;
+          position: fixed; top: 0; left: 0; width: 100%;
+          padding: 2rem 5rem; z-index: 1000;
+          transform: translateY(-100%);
+          transition: transform 0.8s cubic-bezier(0.25,1,0.5,1);
+        }
+        .yui-site-header.visible { transform: translateY(0); }
+        .yui-site-header-logo { font-size: 2rem; letter-spacing: -0.1rem; font-weight: 500; color: #fff; text-decoration: none; }
+        .yui-site-header-nav { display: flex; list-style: none; gap: 1.5rem; margin: 0; padding: 0; }
+        .yui-nav-item {
+          position: relative; overflow: hidden;
+          font-size: 1rem; font-weight: 500;
+          border-radius: 999px; cursor: pointer;
+        }
+        .yui-nav-link {
+          position: relative; display: inline-flex; flex-direction: column;
+          overflow: hidden; line-height: 1; padding: 0.5rem 1.2rem;
+          text-decoration: none;
+        }
+        .yui-nav-link .link-outer { display: block; color: #fff; transition: transform 0.5s cubic-bezier(0.25,1,0.5,1); }
+        .yui-nav-link .link-inner {
+          position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+          display: flex; align-items: center; justify-content: center;
+          color: #000; transform: translateY(100%);
+          transition: transform 0.5s cubic-bezier(0.25,1,0.5,1);
+        }
+        .yui-nav-item:hover .link-outer { transform: translateY(-100%); }
+        .yui-nav-item:hover .link-inner { transform: translateY(0); }
+        /* Outline goes on the item, not the link: the item clips its children */
+        .yui-nav-item:has(:focus-visible) { outline: 2px solid #fff; outline-offset: 2px; }
+        .yui-nav-bubble {
+          position: absolute; inset: 0; overflow: hidden; border-radius: 999px; pointer-events: none;
+        }
+        .yui-nav-bubble::before {
+          content: ''; position: absolute; width: 150%; height: 150%;
+          background: #fff; border-radius: 50%;
+          top: 100%; left: -25%; transform: translateY(0);
+          transition: top 0.4s cubic-bezier(0.25,1,0.5,1);
+        }
+        .yui-nav-item:hover .yui-nav-bubble::before { top: -25%; }
+        .yui-site-cta {
+          position: relative; overflow: hidden;
+          display: inline-flex; align-items: center;
+          padding: 0.5rem 1.4rem; border-radius: 999px;
+          border: 1px solid rgba(255,255,255,0.3);
+          font-size: 0.9rem; font-weight: 500; color: #fff;
+          text-decoration: none; cursor: pointer;
+        }
+        .yui-site-cta .link-outer { position: relative; z-index: 1; transition: color 0.3s; }
+        .yui-site-cta-bubble {
+          position: absolute; inset: 0; overflow: hidden; border-radius: 999px;
+        }
+        .yui-site-cta-bubble::before {
+          content: ''; position: absolute; width: 150%; height: 150%;
+          background: #fff; border-radius: 50%;
+          top: 100%; left: -25%;
+          transition: top 0.4s cubic-bezier(0.25,1,0.5,1);
+        }
+        .yui-site-cta:hover .yui-site-cta-bubble::before { top: -25%; }
+        .yui-site-cta:hover .link-outer { color: #000; }
+        .yui-site-cta:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+      \`}</style>
+      <header className={\`yui-site-header\${visible ? " visible" : ""}\`}>
+        <a href={logoHref} className="yui-site-header-logo">{logo}</a>
+        {navLinks.length > 0 && (
+          <ul className="yui-site-header-nav">
+            {navLinks.map((link) => (
+              <li key={link.href} className="yui-nav-item">
+                <div className="yui-nav-bubble" />
+                <a href={link.href} className="yui-nav-link">
+                  <span className="link-outer">{link.label}</span>
+                  <span className="link-inner">{link.label}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+        <a href={ctaHref} className="yui-site-cta">
+          <div className="yui-site-cta-bubble" />
+          <span className="link-outer">{ctaLabel}</span>
+        </a>
+      </header>
+    </>
   );
 }`,
     prompt: "Design a fixed top navigation bar for a dark portfolio site. Logo text on the left, navigation links in the center, and a contact CTA button on the right. Each nav link has a dual-text slide-up effect on hover. The CTA button has an expanding white circle bubble that fills from below on hover.",
@@ -2550,23 +3018,78 @@ export function SiteHeader({ logo="YASH", logoHref="/", navLinks=[], ctaLabel="G
     category: "navigation",
     code: `"use client";
 import { useState } from "react";
+
 type NavLink = { label: string; href: string };
-type Props = { logo?: string; logoHref?: string; links?: NavLink[] };
-export function MobileMenu({ logo="YASH", logoHref="/", links=[] }: Props) {
+
+type Props = {
+  logo?: string;
+  logoHref?: string;
+  links?: NavLink[];
+};
+
+export function MobileMenu({ logo = "YASH", logoHref = "/", links = [] }: Props) {
   const [open, setOpen] = useState(false);
+
   return (
     <>
-      <nav style={{ display:"flex",alignItems:"center",justifyContent:"space-between",position:"fixed",top:0,left:0,width:"100%",padding:"2rem",zIndex:2000,mixBlendMode:"difference" }}>
-        <a href={logoHref} style={{ fontSize:"2.5rem",fontWeight:500,color:"#fff",textDecoration:"none" }}>{logo}</a>
-        <button onClick={() => setOpen(o=>!o)} aria-label={open?"Close":"Open menu"} style={{ width:"2.4rem",height:"1.8rem",display:"flex",flexDirection:"column",justifyContent:"space-between",background:"none",border:"none",cursor:"pointer",padding:0 }}>
-          <span style={{ width:"100%",height:"0.2rem",background:"#fff",borderRadius:"999px",transition:"transform 0.4s",transform:open?"translateY(0.8rem) rotate(45deg)":"none" }} />
-          <span style={{ width:"100%",height:"0.2rem",background:"#fff",borderRadius:"999px",transition:"opacity 0.3s",opacity:open?0:1 }} />
-          <span style={{ width:"100%",height:"0.2rem",background:"#fff",borderRadius:"999px",transition:"transform 0.4s",transform:open?"translateY(-0.8rem) rotate(-45deg)":"none" }} />
+      <style>{\`
+        .yui-mnav {
+          display: flex; align-items: center; justify-content: space-between;
+          position: fixed; top: 0; left: 0; width: 100%;
+          padding: 2rem; z-index: 2000;
+          mix-blend-mode: difference;
+        }
+        .yui-mnav-logo { font-size: 2.5rem; font-weight: 500; color: #fff; text-decoration: none; }
+        .yui-burger {
+          width: 2.4rem; height: 1.8rem;
+          display: flex; flex-direction: column; justify-content: space-between;
+          background: none; border: none; cursor: pointer; padding: 0;
+        }
+        .yui-burger span {
+          width: 100%; height: 0.2rem; background: #fff; border-radius: 999px;
+          transition: transform 0.4s cubic-bezier(0.25,1,0.5,1), opacity 0.3s;
+          transform-origin: center;
+        }
+        .yui-burger:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .yui-burger.open span:nth-child(1) { transform: translateY(0.8rem) rotate(45deg); }
+        .yui-burger.open span:nth-child(2) { opacity: 0; }
+        .yui-burger.open span:nth-child(3) { transform: translateY(-0.8rem) rotate(-45deg); }
+        .yui-moverlay {
+          position: fixed; inset: 0; z-index: 1999;
+          background: #000;
+          display: flex; align-items: center; justify-content: center;
+          opacity: 0; visibility: hidden;
+          transition: opacity 0.5s, visibility 0.5s;
+        }
+        .yui-moverlay.open { opacity: 1; visibility: visible; }
+        .yui-moverlay ul { display: flex; flex-direction: column; gap: 2.5rem; list-style: none; margin: 0; padding: 0; text-align: center; }
+        .yui-moverlay li a {
+          display: inline-block;
+          font-size: 3rem; font-weight: 500; color: #fff;
+          text-decoration: none; text-transform: uppercase; letter-spacing: -0.05em;
+          padding: 0.3rem 1.5rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 999px;
+          transition: background 0.3s, color 0.3s;
+        }
+        .yui-moverlay li a:hover { background: #fff; color: #000; }
+        .yui-moverlay li a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+      \`}</style>
+      <nav className="yui-mnav">
+        <a href={logoHref} className="yui-mnav-logo">{logo}</a>
+        <button
+          className={\`yui-burger\${open ? " open" : ""}\`}
+          onClick={() => setOpen((o) => !o)}
+          aria-label={open ? "Close menu" : "Open menu"}
+        >
+          <span /><span /><span />
         </button>
       </nav>
-      <div onClick={() => setOpen(false)} style={{ position:"fixed",inset:0,zIndex:1999,background:"#000",display:"flex",alignItems:"center",justifyContent:"center",opacity:open?1:0,visibility:open?"visible":"hidden",transition:"opacity 0.5s,visibility 0.5s" }}>
-        <ul onClick={e=>e.stopPropagation()} style={{ display:"flex",flexDirection:"column",gap:"2.5rem",listStyle:"none",margin:0,padding:0,textAlign:"center" }}>
-          {links.map(link => <li key={link.href}><a href={link.href} onClick={()=>setOpen(false)} style={{ display:"inline-block",fontSize:"3rem",fontWeight:500,color:"#fff",textDecoration:"none",textTransform:"uppercase",padding:"0.3rem 1.5rem",border:"1px solid rgba(255,255,255,0.2)",borderRadius:"999px" }}>{link.label}</a></li>)}
+      <div className={\`yui-moverlay\${open ? " open" : ""}\`} onClick={() => setOpen(false)}>
+        <ul onClick={(e) => e.stopPropagation()}>
+          {links.map((link) => (
+            <li key={link.href}>
+              <a href={link.href} onClick={() => setOpen(false)}>{link.label}</a>
+            </li>
+          ))}
         </ul>
       </div>
     </>
@@ -2582,26 +3105,113 @@ export function MobileMenu({ logo="YASH", logoHref="/", links=[] }: Props) {
     category: "dividers",
     code: `"use client";
 import { useEffect, useRef } from "react";
-type Props = { label?: string; index?: string; total?: string };
-export function ElasticLineDivider({ label="", index="01/", total="/04" }: Props) {
+
+type Props = {
+  label?: string;
+  index?: string;
+  total?: string;
+};
+
+export function ElasticLineDivider({ label = "", index = "01/", total = "/04" }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const raf = useRef<number | null>(null);
+
   useEffect(() => {
-    const svg = svgRef.current; if (!svg) return;
-    const NUM = 80; const points: {x:number;y:number;vy:number;ay:number}[] = [];
-    let W=0,H=0,mouseX=0,mouseY=0,hovering=false;
-    const resize = () => { const r=svg.getBoundingClientRect(); W=r.width; H=r.height; for(let i=0;i<NUM;i++) points[i]={x:(i/(NUM-1))*W,y:H/2,vy:0,ay:0}; };
-    const getPath = () => { let d=\`M \${points[0].x} \${points[0].y}\`; for(let i=1;i<NUM-1;i++){const mx=(points[i].x+points[i+1].x)/2;const my=(points[i].y+points[i+1].y)/2;d+=\` Q \${points[i].x} \${points[i].y} \${mx} \${my}\`;} d+=\` L \${points[NUM-1].x} \${points[NUM-1].y}\`; return d; };
+    const svg = svgRef.current;
+    if (!svg) return;
+
+    const NUM = 80;
+    const points: { x: number; y: number; vy: number; ay: number }[] = [];
+    let W = 0, H = 0;
+
+    const resize = () => {
+      const rect = svg.getBoundingClientRect();
+      W = rect.width;
+      H = rect.height;
+      for (let i = 0; i < NUM; i++) {
+        points[i] = { x: (i / (NUM - 1)) * W, y: H / 2, vy: 0, ay: 0 };
+      }
+    };
+
+    const getPath = () => {
+      if (!points.length) return "";
+      let d = \`M \${points[0].x} \${points[0].y}\`;
+      for (let i = 1; i < NUM - 1; i++) {
+        const mx = (points[i].x + points[i + 1].x) / 2;
+        const my = (points[i].y + points[i + 1].y) / 2;
+        d += \` Q \${points[i].x} \${points[i].y} \${mx} \${my}\`;
+      }
+      d += \` L \${points[NUM - 1].x} \${points[NUM - 1].y}\`;
+      return d;
+    };
+
     const pathEl = svg.querySelector<SVGPathElement>(".yui-elastic-path");
-    let raf: number;
-    const tick = () => { const cy=H/2; for(let i=0;i<NUM;i++){const p=points[i];const dist=Math.abs(p.x-mouseX);const inf=hovering?Math.max(0,1-dist/80):0;const target=hovering?cy+(mouseY-cy)*inf:cy;p.ay=(target-p.y)*0.12;p.vy=p.vy*0.7+p.ay;p.y+=p.vy;} if(pathEl)pathEl.setAttribute("d",getPath()); raf=requestAnimationFrame(tick); };
-    resize(); window.addEventListener("resize",resize); svg.addEventListener("mousemove",(e)=>{const r=svg.getBoundingClientRect();mouseX=e.clientX-r.left;mouseY=e.clientY-r.top;}); svg.addEventListener("mouseenter",()=>{hovering=true;}); svg.addEventListener("mouseleave",()=>{hovering=false;}); raf=requestAnimationFrame(tick);
-    return () => { window.removeEventListener("resize",resize); cancelAnimationFrame(raf); };
+    let mouseY = 0, mouseX = 0, hovering = false;
+
+    const onMove = (e: MouseEvent) => {
+      const rect = svg.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    };
+
+    const SPRING = 0.12, DAMPING = 0.7, SPREAD = 80;
+
+    const tick = () => {
+      const cy = H / 2;
+      for (let i = 0; i < NUM; i++) {
+        const p = points[i];
+        const dist = Math.abs(p.x - mouseX);
+        const influence = hovering ? Math.max(0, 1 - dist / SPREAD) : 0;
+        const target = hovering ? cy + (mouseY - cy) * influence : cy;
+        p.ay = (target - p.y) * SPRING;
+        p.vy = p.vy * DAMPING + p.ay;
+        p.y += p.vy;
+      }
+      if (pathEl) pathEl.setAttribute("d", getPath());
+      raf.current = requestAnimationFrame(tick);
+    };
+
+    const onEnter = () => { hovering = true; };
+    const onLeave = () => { hovering = false; };
+
+    resize();
+    window.addEventListener("resize", resize);
+    svg.addEventListener("mousemove", onMove);
+    svg.addEventListener("mouseenter", onEnter);
+    svg.addEventListener("mouseleave", onLeave);
+    raf.current = requestAnimationFrame(tick);
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      svg.removeEventListener("mousemove", onMove);
+      svg.removeEventListener("mouseenter", onEnter);
+      svg.removeEventListener("mouseleave", onLeave);
+      if (raf.current) cancelAnimationFrame(raf.current);
+    };
   }, []);
+
   return (
-    <div style={{ width:"100%",margin:"2rem 0" }}>
-      <svg ref={svgRef} style={{ display:"block",width:"100%",height:"60px",cursor:"crosshair" }}><path className="yui-elastic-path" d="" style={{ fill:"none",stroke:"currentColor",strokeWidth:1.5,opacity:0.6 }} /></svg>
-      <div style={{ display:"flex",justifyContent:"space-between",fontSize:"0.8rem",opacity:0.5,marginTop:"0.25rem",textTransform:"uppercase",letterSpacing:"0.05em" }}><span>{index}</span>{label&&<span>{label}</span>}<span>{total}</span></div>
-    </div>
+    <>
+      <style>{\`
+        .yui-elastic-wrap { width: 100%; padding: 0 0; margin: 2rem 0; position: relative; }
+        .yui-elastic-svg { display: block; width: 100%; height: 60px; cursor: crosshair; }
+        .yui-elastic-path { fill: none; stroke: currentColor; stroke-width: 1.5; opacity: 0.6; }
+        .yui-elastic-meta {
+          display: flex; justify-content: space-between; align-items: center;
+          font-size: 0.8rem; opacity: 0.5; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+      \`}</style>
+      <div className="yui-elastic-wrap">
+        <svg ref={svgRef} className="yui-elastic-svg">
+          <path className="yui-elastic-path" d="" />
+        </svg>
+        <div className="yui-elastic-meta">
+          <span>{index}</span>
+          {label && <span>{label}</span>}
+          <span>{total}</span>
+        </div>
+      </div>
+    </>
   );
 }`,
     prompt: "Create an interactive SVG horizontal divider line that reacts to mouse movement like an elastic thread with spring physics. When the cursor hovers and moves vertically over the line, it deflects the nearest points up or down. A wave propagates outward to neighboring points, damped like a guitar string.",
@@ -2615,29 +3225,78 @@ export function ElasticLineDivider({ label="", index="01/", total="/04" }: Props
     code: `"use client";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-type Props = { href: string; label?: string; size?: number; strokeColor?: string };
-export function CircleCTA({ href, label="view\\nmore", size=10, strokeColor="#fff" }: Props) {
+
+type Props = {
+  href: string;
+  label?: string;
+  size?: number;
+  strokeColor?: string;
+};
+
+export function CircleCTA({ href, label = "view\\nmore", size = 10, strokeColor = "#fff" }: Props) {
   const ctaRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const el = ctaRef.current; if (!el) return;
-    const circle = el.querySelector<SVGCircleElement>(".yui-circle-draw"); if (!circle) return;
-    const r = parseFloat(circle.getAttribute("r")||"48");
-    const c = 2 * Math.PI * r;
-    gsap.set(circle, { strokeDasharray: c, strokeDashoffset: c });
-    const onEnter = () => gsap.to(circle, { strokeDashoffset: 0, duration: 0.6, ease: "power3.out" });
-    const onLeave = () => gsap.to(circle, { strokeDashoffset: c, duration: 0.5, ease: "power3.in" });
-    el.addEventListener("mouseenter", onEnter); el.addEventListener("mouseleave", onLeave);
-    return () => { el.removeEventListener("mouseenter", onEnter); el.removeEventListener("mouseleave", onLeave); };
+    const el = ctaRef.current;
+    if (!el) return;
+    const circle = el.querySelector<SVGCircleElement>(".yui-circle-draw");
+    if (!circle) return;
+
+    const r = parseFloat(circle.getAttribute("r") || "48");
+    const circumference = 2 * Math.PI * r;
+
+    gsap.set(circle, {
+      strokeDasharray: circumference,
+      strokeDashoffset: circumference,
+    });
+
+    const onEnter = () =>
+      gsap.to(circle, { strokeDashoffset: 0, duration: 0.6, ease: "power3.out" });
+    const onLeave = () =>
+      gsap.to(circle, { strokeDashoffset: circumference, duration: 0.5, ease: "power3.in" });
+
+    el.addEventListener("mouseenter", onEnter);
+    el.addEventListener("mouseleave", onLeave);
+    return () => {
+      el.removeEventListener("mouseenter", onEnter);
+      el.removeEventListener("mouseleave", onLeave);
+    };
   }, []);
+
+  const lines = label.split("\\n");
+
   return (
-    <div ref={ctaRef} style={{ position:"relative",display:"inline-block",width:\`\${size}rem\`,height:\`\${size}rem\` }}>
-      <a href={href} style={{ display:"flex",alignItems:"center",justifyContent:"center",width:"100%",height:"100%",position:"relative",textDecoration:"none" }}>
-        <svg viewBox="0 0 100 100" style={{ position:"absolute",top:0,left:0,width:"100%",height:"100%",transform:"rotate(-90deg)" }}><circle className="yui-circle-draw" cx="50" cy="50" r="48" fill="none" stroke={strokeColor} strokeWidth="1" /></svg>
-        <div style={{ position:"relative",zIndex:1,textAlign:"center",lineHeight:1.2,fontSize:"0.85rem",fontWeight:500,textTransform:"uppercase" }}>
-          {label.split("\\n").map((l,i)=><span key={i} style={{display:"block"}}>{l}</span>)}
-        </div>
-      </a>
-    </div>
+    <>
+      <style>{\`
+        .yui-circle-cta { position: relative; display: inline-block; }
+        .yui-circle-cta a { display: flex; align-items: center; justify-content: center; position: relative; width: 100%; height: 100%; }
+        .yui-circle-cta a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .yui-circle-cta svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+        .yui-circle-draw { fill: none; stroke-width: 1; }
+        .yui-circle-label {
+          position: relative; z-index: 1; text-align: center; line-height: 1.2;
+          font-size: 0.85rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase;
+          transition: opacity 0.3s;
+        }
+        .yui-circle-cta:hover .yui-circle-label { opacity: 0.7; }
+      \`}</style>
+      <div
+        ref={ctaRef}
+        className="yui-circle-cta"
+        style={{ width: \`\${size}rem\`, height: \`\${size}rem\` }}
+      >
+        <a href={href}>
+          <svg viewBox="0 0 100 100">
+            <circle className="yui-circle-draw" cx="50" cy="50" r="48" stroke={strokeColor} />
+          </svg>
+          <div className="yui-circle-label">
+            {lines.map((line, i) => (
+              <span key={i} style={{ display: "block" }}>{line}</span>
+            ))}
+          </div>
+        </a>
+      </div>
+    </>
   );
 }`,
     prompt: "Create a circular call-to-action button that draws an SVG circle stroke around itself on hover using GSAP strokeDashoffset animation. The circle starts invisible and animates to fully drawn on mouseenter, then retracts on mouseleave. Centered label text inside the circle.",
@@ -2652,24 +3311,66 @@ export function CircleCTA({ href, label="view\\nmore", size=10, strokeColor="#ff
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+
 gsap.registerPlugin(ScrollTrigger);
-type Props = { src: string; alt?: string; className?: string; borderRadius?: string; aspectRatio?: string };
-export function ImageReveal({ src, alt="", className="", borderRadius="4rem", aspectRatio="3/2" }: Props) {
+
+type Props = {
+  src: string;
+  alt?: string;
+  className?: string;
+  borderRadius?: string;
+  aspectRatio?: string;
+};
+
+export function ImageReveal({
+  src,
+  alt = "",
+  className = "",
+  borderRadius = "4rem",
+  aspectRatio = "3/2",
+}: Props) {
   const wrapRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const wrap = wrapRef.current; if (!wrap) return;
-    const img = wrap.querySelector<HTMLImageElement>("img"); if (!img) return;
-    gsap.set(wrap, { clipPath:"inset(100% 0 0 0)", borderRadius });
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const img = wrap.querySelector<HTMLImageElement>("img");
+    if (!img) return;
+
+    gsap.set(wrap, { clipPath: "inset(100% 0 0 0)", borderRadius });
     gsap.set(img, { scale: 1.4 });
-    const trig = ScrollTrigger.create({ trigger: wrap, start: "top 85%", end: "bottom 15%",
-      onEnter: () => gsap.to([wrap, img], { clipPath:"inset(0% 0 0 0)", scale:1, duration:1.2, ease:"power3.out" }),
-      onLeaveBack: () => gsap.to([wrap, img], { clipPath:"inset(100% 0 0 0)", scale:1.4, duration:0.8, ease:"power3.in" }),
+
+    const trig = ScrollTrigger.create({
+      trigger: wrap,
+      start: "top 85%",
+      end: "bottom 15%",
+      onEnter: () =>
+        gsap.to([wrap, img], {
+          clipPath: "inset(0% 0 0 0)",
+          scale: 1,
+          duration: 1.2,
+          ease: "power3.out",
+          stagger: 0,
+        }),
+      onLeaveBack: () =>
+        gsap.to([wrap, img], {
+          clipPath: "inset(100% 0 0 0)",
+          scale: 1.4,
+          duration: 0.8,
+          ease: "power3.in",
+        }),
     });
+
     return () => { trig.kill(); };
   }, [borderRadius]);
+
   return (
-    <div ref={wrapRef} className={className} style={{ overflow:"hidden", aspectRatio, borderRadius, width:"100%" }}>
-      <img src={src} alt={alt} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }} />
+    <div
+      ref={wrapRef}
+      className={className}
+      style={{ overflow: "hidden", aspectRatio, borderRadius, width: "100%" }}
+    >
+      <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
     </div>
   );
 }`,
@@ -2682,21 +3383,76 @@ export function ImageReveal({ src, alt="", className="", borderRadius="4rem", as
     path: "cards/FeaturedProjectCard.tsx",
     category: "cards",
     code: `"use client";
-type Props = { title: string; eyebrow?: string; imageSrc: string; imageAlt?: string; href?: string; tags?: string[]; alignRight?: boolean };
-export function FeaturedProjectCard({ title, eyebrow="", imageSrc, imageAlt="", href="#", tags=[], alignRight=false }: Props) {
+
+type Props = {
+  title: string;
+  eyebrow?: string;
+  imageSrc: string;
+  imageAlt?: string;
+  href?: string;
+  tags?: string[];
+  alignRight?: boolean;
+};
+
+export function FeaturedProjectCard({
+  title,
+  eyebrow = "",
+  imageSrc,
+  imageAlt = "",
+  href = "#",
+  tags = [],
+  alignRight = false,
+}: Props) {
   return (
-    <article style={{ position:"relative" }}>
-      <a href={href} style={{ display:"block",textDecoration:"none",color:"inherit" }}>
-        <div style={{ width:alignRight?"70%":"100%",marginLeft:alignRight?"auto":undefined,overflow:"hidden",borderRadius:"2rem",aspectRatio:"4/3" }}>
-          <img src={imageSrc} alt={imageAlt} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block",transition:"transform 0.9s cubic-bezier(0.25,1,0.5,1)" }} />
-        </div>
-        <div style={{ marginTop:"2rem",textAlign:alignRight?"right":undefined }}>
-          {eyebrow && <span style={{ display:"block",fontSize:"0.8rem",letterSpacing:"0.15em",textTransform:"uppercase",opacity:0.5,marginBottom:"0.5rem" }}>{eyebrow}</span>}
-          <h2 style={{ fontSize:"clamp(3.5rem,6vw,8rem)",fontWeight:600,lineHeight:0.9,letterSpacing:"-0.04em",textTransform:"uppercase",margin:"0 0 1.5rem" }}>{title}</h2>
-          {tags.length>0 && <div style={{ display:"flex",gap:"0.75rem",justifyContent:alignRight?"flex-end":undefined }}>{tags.map(t=><span key={t} style={{ fontSize:"0.7rem",letterSpacing:"0.1em",textTransform:"uppercase",padding:"0.25rem 0.75rem",border:"1px solid currentColor",borderRadius:"999px",opacity:0.5 }}>{t}</span>)}</div>}
-        </div>
-      </a>
-    </article>
+    <>
+      <style>{\`
+        .yui-feat-card { position: relative; }
+        .yui-feat-card a { display: block; text-decoration: none; color: inherit; }
+        .yui-feat-card a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .yui-feat-img {
+          width: 100%; overflow: hidden; border-radius: 2rem;
+          aspect-ratio: 4/3; isolation: isolate;
+        }
+        .yui-feat-card--right .yui-feat-img { width: 70%; margin-left: auto; }
+        .yui-feat-img img {
+          width: 100%; height: 100%; object-fit: cover; display: block;
+          transition: transform 0.9s cubic-bezier(0.25,1,0.5,1);
+        }
+        .yui-feat-card:hover .yui-feat-img img { transform: scale(1.05); }
+        .yui-feat-info { margin-top: 2rem; }
+        .yui-feat-info--right { text-align: right; }
+        .yui-feat-eyebrow {
+          display: block; font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase;
+          opacity: 0.5; margin-bottom: 0.5rem;
+        }
+        .yui-feat-title {
+          font-size: clamp(3.5rem, 6vw, 8rem); font-weight: 600; line-height: 0.9;
+          letter-spacing: -0.04em; text-transform: uppercase; margin: 0 0 1.5rem;
+        }
+        .yui-feat-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+        .yui-feat-info--right .yui-feat-meta { justify-content: flex-end; }
+        .yui-feat-tag {
+          font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+          padding: 0.25rem 0.75rem; border: 1px solid currentColor; border-radius: 999px; opacity: 0.5;
+        }
+      \`}</style>
+      <article className={\`yui-feat-card\${alignRight ? " yui-feat-card--right" : ""}\`}>
+        <a href={href}>
+          <div className="yui-feat-img">
+            <img src={imageSrc} alt={imageAlt} />
+          </div>
+          <div className={\`yui-feat-info\${alignRight ? " yui-feat-info--right" : ""}\`}>
+            {eyebrow && <span className="yui-feat-eyebrow">{eyebrow}</span>}
+            <h2 className="yui-feat-title">{title}</h2>
+            {tags.length > 0 && (
+              <div className="yui-feat-meta">
+                {tags.map((t) => <span key={t} className="yui-feat-tag">{t}</span>)}
+              </div>
+            )}
+          </div>
+        </a>
+      </article>
+    </>
   );
 }`,
     prompt: "Create a large full-width project card for a portfolio showcase. It has a tall rounded image on top, followed by a small eyebrow label, a large bold title in uppercase, and meta tags below. Every other card shifts the image to the right 70% and right-aligns the text for visual rhythm.",
@@ -2708,20 +3464,56 @@ export function FeaturedProjectCard({ title, eyebrow="", imageSrc, imageAlt="", 
     path: "cards/ProjectCard.tsx",
     category: "cards",
     code: `"use client";
-type Props = { title: string; subtitle?: string; imageSrc: string; imageAlt?: string; href?: string; large?: boolean };
-export function ProjectCard({ title, subtitle="", imageSrc, imageAlt="", href="#", large=false }: Props) {
+
+type Props = {
+  title: string;
+  subtitle?: string;
+  imageSrc: string;
+  imageAlt?: string;
+  href?: string;
+  large?: boolean;
+};
+
+export function ProjectCard({ title, subtitle = "", imageSrc, imageAlt = "", href = "#", large = false }: Props) {
   return (
-    <article style={{ position:"relative",breakInside:"avoid",marginBottom:"3rem" }}>
-      <a href={href} style={{ display:"block",textDecoration:"none",color:"inherit" }}>
-        <div style={{ overflow:"hidden",borderRadius:"1.5rem",aspectRatio:"4/3" }}>
-          <img src={imageSrc} alt={imageAlt} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block",transition:"transform 0.8s cubic-bezier(0.25,1,0.5,1)" }} />
-        </div>
-        <div style={{ marginTop:"1.5rem" }}>
-          <h3 style={{ fontSize:large?"4rem":"2.5rem",fontWeight:600,lineHeight:1,letterSpacing:"-0.05em",textTransform:"uppercase",margin:"0 0 0.4rem" }}>{title}</h3>
-          {subtitle && <span style={{ fontSize:"0.75rem",letterSpacing:"0.08em",textTransform:"uppercase",opacity:0.5 }}>{subtitle}</span>}
-        </div>
-      </a>
-    </article>
+    <>
+      <style>{\`
+        .yui-proj-card { position: relative; break-inside: avoid; margin-bottom: 3rem; }
+        .yui-proj-card a { display: block; text-decoration: none; color: inherit; }
+        .yui-proj-card a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .yui-proj-card-img {
+          overflow: hidden; border-radius: 1.5rem; isolation: isolate;
+          aspect-ratio: 4/3;
+        }
+        .yui-proj-card-img img {
+          width: 100%; height: 100%; object-fit: cover; display: block;
+          transition: transform 0.8s cubic-bezier(0.25,1,0.5,1);
+        }
+        .yui-proj-card:hover .yui-proj-card-img img { transform: scale(1.05); }
+        .yui-proj-card-info { margin-top: 1.5rem; }
+        .yui-proj-card-info h3 {
+          font-size: 2.5rem; font-weight: 600; line-height: 1;
+          letter-spacing: -0.05em; text-transform: uppercase; margin: 0 0 0.4rem;
+        }
+        .yui-proj-card--large .yui-proj-card-info h3 {
+          font-size: 4rem; letter-spacing: -0.08em;
+        }
+        .yui-proj-card-info span {
+          font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.5;
+        }
+      \`}</style>
+      <article className={\`yui-proj-card\${large ? " yui-proj-card--large" : ""}\`}>
+        <a href={href}>
+          <div className="yui-proj-card-img">
+            <img src={imageSrc} alt={imageAlt} />
+          </div>
+          <div className="yui-proj-card-info">
+            <h3>{title}</h3>
+            {subtitle && <span>{subtitle}</span>}
+          </div>
+        </a>
+      </article>
+    </>
   );
 }`,
     prompt: "Create a masonry-style project card for a photography portfolio grid. It has a rounded image that scales slightly on hover, a title in large uppercase text, and a small subtitle below. Two-column CSS masonry layout, single column on mobile.",
@@ -2735,24 +3527,71 @@ export function ProjectCard({ title, subtitle="", imageSrc, imageAlt="", href="#
     code: `"use client";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-type Props = { text: string; speed?: number; fontSize?: string; opacity?: number; separator?: string };
-export function Marquee({ text, speed=20, fontSize="21rem", opacity=0.08, separator=" \u2014\u00A0" }: Props) {
+
+type Props = {
+  text: string;
+  speed?: number;
+  fontSize?: string;
+  opacity?: number;
+  separator?: string;
+};
+
+export function Marquee({ text, speed = 20, fontSize = "21rem", opacity = 0.08, separator = " \\u2014\\u00A0" }: Props) {
   const trackRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const track = trackRef.current; if (!track) return;
-    const fill = () => { const items=Array.from(track.children) as HTMLElement[]; if(!items.length)return; const total=items.reduce((s,el)=>s+el.offsetWidth,0); const needed=Math.ceil((window.innerWidth*3)/total)+1; const tmpl=items[0].cloneNode(true) as HTMLElement; while(track.children.length<needed*items.length)track.appendChild(tmpl.cloneNode(true)); };
+    const track = trackRef.current;
+    if (!track) return;
+
+    // Duplicate items until they fill > 2x the viewport width
+    const fill = () => {
+      const items = Array.from(track.children) as HTMLElement[];
+      if (!items.length) return;
+      const totalW = items.reduce((sum, el) => sum + el.offsetWidth, 0);
+      const needed = Math.ceil((window.innerWidth * 3) / totalW) + 1;
+      const template = items[0].cloneNode(true) as HTMLElement;
+      while (track.children.length < needed * items.length) {
+        track.appendChild(template.cloneNode(true));
+      }
+    };
+
     fill();
-    const firstItem=track.children[0] as HTMLElement;
-    const itemW=firstItem?.offsetWidth||200;
-    const tween=gsap.to(track,{x:\`-=\${itemW}\`,duration:itemW/speed,ease:"none",repeat:-1,modifiers:{x:gsap.utils.unitize((x:number)=>parseFloat(String(x))%itemW)}});
+
+    const firstItem = track.children[0] as HTMLElement;
+    const itemW = firstItem?.offsetWidth || 200;
+    const duration = itemW / speed;
+
+    const tween = gsap.to(track, {
+      x: \`-=\${itemW}\`,
+      duration,
+      ease: "none",
+      repeat: -1,
+      modifiers: {
+        x: gsap.utils.unitize((x: string) => parseFloat(x) % itemW),
+      },
+    });
+
     return () => { tween.kill(); };
   }, [text, speed]);
+
   return (
-    <div style={{ overflow:"hidden",pointerEvents:"none",margin:"3rem 0",width:"100%" }}>
-      <div ref={trackRef} style={{ display:"flex",whiteSpace:"nowrap",willChange:"transform" }}>
-        <span style={{ fontSize,fontWeight:600,letterSpacing:"-0.04em",textTransform:"uppercase",flexShrink:0,opacity }}>{text}{separator}</span>
+    <>
+      <style>{\`
+        .yui-marquee-root { overflow: hidden; pointer-events: none; margin: 3rem 0; width: 100%; }
+        .yui-marquee-track { display: flex; white-space: nowrap; will-change: transform; }
+        .yui-marquee-item {
+          font-weight: 600; letter-spacing: -0.04em; text-transform: uppercase;
+          flex-shrink: 0;
+        }
+      \`}</style>
+      <div className="yui-marquee-root">
+        <div ref={trackRef} className="yui-marquee-track">
+          <span className="yui-marquee-item" style={{ fontSize, opacity }}>
+            {text}{separator}
+          </span>
+        </div>
       </div>
-    </div>
+    </>
   );
 }`,
     prompt: "Create an infinite horizontal scrolling marquee of repeated text using GSAP. The text is oversized (20+ rem), uppercase, white, and semi-transparent (~8% opacity) for a background watermark effect. It scrolls left endlessly at a constant speed.",
@@ -2766,28 +3605,146 @@ export function Marquee({ text, speed=20, fontSize="21rem", opacity=0.08, separa
     code: `"use client";
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-type Props = { eyebrow?: string; heading?: string; subheading?: string; ctaHref?: string };
-export function ContactSection({ eyebrow="GOT A PROJECT IN MIND?", heading="LET'S", subheading="TALK.", ctaHref="mailto:hello@example.com" }: Props) {
+
+type Props = {
+  eyebrow?: string;
+  heading?: string;
+  subheading?: string;
+  ctaHref?: string;
+  /** Optional image URL to mask through the heading text via background-clip */
+  headingImageSrc?: string;
+};
+
+export function ContactSection({
+  eyebrow = "GOT A PROJECT IN MIND?",
+  heading = "LET'S",
+  subheading = "TALK.",
+  ctaHref = "mailto:hello@example.com",
+  headingImageSrc,
+}: Props) {
   const spotlightRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const section=sectionRef.current; const spotlight=spotlightRef.current;
-    if(!section||!spotlight)return;
-    const onMove=(e:MouseEvent)=>{const r=section.getBoundingClientRect();gsap.to(spotlight,{x:e.clientX-r.left-spotlight.offsetWidth/2,y:e.clientY-r.top-spotlight.offsetHeight/2,duration:0.6,ease:"power3.out"});};
-    section.addEventListener("mousemove",onMove); return()=>section.removeEventListener("mousemove",onMove);
-  },[]);
+    const section = sectionRef.current;
+    const spotlight = spotlightRef.current;
+    if (!section || !spotlight) return;
+
+    const onMove = (e: MouseEvent) => {
+      const rect = section.getBoundingClientRect();
+      gsap.to(spotlight, {
+        x: e.clientX - rect.left - spotlight.offsetWidth / 2,
+        y: e.clientY - rect.top - spotlight.offsetHeight / 2,
+        duration: 0.6,
+        ease: "power3.out",
+      });
+    };
+
+    section.addEventListener("mousemove", onMove);
+    return () => section.removeEventListener("mousemove", onMove);
+  }, []);
+
   return (
-    <div ref={sectionRef} style={{ position:"relative",overflow:"hidden",minHeight:"60vh",padding:"6rem 5rem",background:"radial-gradient(ellipse at 60% 40%,#1a1a2e 0%,#000 70%)",borderRadius:"2rem",display:"flex",flexDirection:"column",justifyContent:"center" }}>
-      <div ref={spotlightRef} style={{ position:"absolute",width:"30rem",height:"30rem",borderRadius:"50%",background:"radial-gradient(circle,rgba(99,102,241,0.15) 0%,transparent 70%)",pointerEvents:"none" }} />
-      <div style={{ position:"relative",zIndex:1 }}>
-        <p style={{ fontSize:"0.8rem",letterSpacing:"0.15em",textTransform:"uppercase",opacity:0.5,marginBottom:"1.5rem" }}>{eyebrow}</p>
-        <h2 style={{ fontSize:"clamp(5rem,10vw,14rem)",fontWeight:700,lineHeight:0.85,letterSpacing:"-0.05em",textTransform:"uppercase",margin:"0 0 3rem" }}><span style={{display:"block"}}>{heading}</span><span style={{display:"block"}}>{subheading}</span></h2>
-        <a href={ctaHref} style={{ display:"flex",alignItems:"center",justifyContent:"center",position:"relative",width:"10rem",height:"10rem",textDecoration:"none" }}>
-          <svg viewBox="0 0 100 100" style={{ position:"absolute",top:0,left:0,width:"100%",height:"100%",transform:"rotate(-90deg)" }}><circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="1" /></svg>
-          <div style={{ position:"relative",zIndex:1,textAlign:"center",fontSize:"0.75rem",fontWeight:500,textTransform:"uppercase",opacity:0.8,lineHeight:1.3 }}><span style={{display:"block"}}>write a</span><span style={{display:"block"}}>message</span></div>
-        </a>
+    <>
+      <style>{\`
+        @property --yui-border-angle {
+          syntax: '<angle>';
+          initial-value: 0deg;
+          inherits: false;
+        }
+        .yui-contact {
+          position: relative; overflow: hidden;
+          min-height: 60vh; padding: 6rem 5rem;
+          background: radial-gradient(ellipse at 60% 40%, #1a1a2e 0%, #000 70%);
+          border-radius: 2rem;
+          display: flex; flex-direction: column; justify-content: center;
+        }
+        .yui-contact::before {
+          content: ''; position: absolute; inset: -2px; border-radius: inherit; z-index: 0;
+          background: conic-gradient(
+            from var(--yui-border-angle),
+            transparent 70%,
+            rgba(99,102,241,0.6) 80%,
+            rgba(139,92,246,0.8) 85%,
+            rgba(99,102,241,0.6) 90%,
+            transparent 100%
+          );
+          animation: yui-border-spin 4s linear infinite;
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor; mask-composite: exclude;
+          padding: 2px;
+        }
+        @keyframes yui-border-spin { to { --yui-border-angle: 360deg; } }
+        .yui-contact-spotlight {
+          position: absolute; width: 30rem; height: 30rem; border-radius: 50%;
+          background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+          pointer-events: none; will-change: transform; z-index: 1;
+        }
+        .yui-contact-content { position: relative; z-index: 2; }
+        .yui-contact-eyebrow {
+          font-size: 0.8rem; letter-spacing: 0.15em; text-transform: uppercase;
+          opacity: 0.5; margin-bottom: 1.5rem;
+        }
+        .yui-contact-heading {
+          font-size: clamp(5rem, 10vw, 14rem); font-weight: 700; line-height: 0.85;
+          letter-spacing: -0.05em; text-transform: uppercase; margin: 0 0 3rem;
+        }
+        .yui-contact-circle {
+          position: relative; width: 10rem; height: 10rem;
+        }
+        .yui-contact-circle a {
+          display: flex; align-items: center; justify-content: center;
+          width: 100%; height: 100%; text-decoration: none; position: relative;
+        }
+        .yui-contact-circle a:focus-visible {
+          outline: 2px solid #fff;
+          outline-offset: 2px;
+        }
+        .yui-contact-circle svg {
+          position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);
+        }
+        .yui-contact-circle-label {
+          position: relative; z-index: 1; text-align: center; line-height: 1.3;
+          font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.8;
+        }
+        @media (max-width: 768px) {
+          .yui-contact { padding: 5rem 2rem; min-height: auto; }
+          .yui-contact-heading { font-size: 5rem; }
+        }
+      \`}</style>
+      <div ref={sectionRef} className="yui-contact">
+        <div ref={spotlightRef} className="yui-contact-spotlight" />
+        <div className="yui-contact-content">
+          <p className="yui-contact-eyebrow">{eyebrow}</p>
+          <h2
+            className="yui-contact-heading"
+            style={headingImageSrc ? {
+              backgroundImage: \`url(\${headingImageSrc})\`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              WebkitBackgroundClip: "text",
+              backgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              color: "transparent",
+            } : undefined}
+          >
+            <span style={{ display: "block" }}>{heading}</span>
+            <span style={{ display: "block" }}>{subheading}</span>
+          </h2>
+          <div className="yui-contact-circle">
+            <a href={ctaHref}>
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="1" className="yui-contact-circle-draw" />
+              </svg>
+              <div className="yui-contact-circle-label">
+                <span style={{ display: "block" }}>write a</span>
+                <span style={{ display: "block" }}>message</span>
+              </div>
+            </a>
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }`,
     prompt: "Create a dark contact section card with a rotating conic-gradient border animated via CSS custom property. A large glowing spotlight follows the cursor inside the card. The card contains a small eyebrow label, a massive two-word heading, and a circular CTA button.",
@@ -2801,22 +3758,80 @@ export function ContactSection({ eyebrow="GOT A PROJECT IN MIND?", heading="LET'
     code: `"use client";
 import { useRef } from "react";
 import gsap from "gsap";
-const SCATTER=[{x:-0.8,y:-0.6,rz:-29},{x:-0.2,y:-0.4,rz:-6},{x:-0.5,y:0.3,rz:-14},{x:0.3,y:-0.5,rz:10},{x:0.6,y:0.4,rz:18},{x:-0.4,y:0.7,rz:-22},{x:0.1,y:-0.8,rz:5},{x:0.8,y:0.6,rz:20}];
-type Props = { label: string; href: string; target?: string; rel?: string; className?: string };
-export function TextDisperseLink({ label, href, target, rel, className="" }: Props) {
+
+const SCATTER = [
+  { x: -0.8, y: -0.6, rz: -29 }, { x: -0.2, y: -0.4, rz: -6 },
+  { x: -0.5, y: 0.3, rz: -14 }, { x: 0.3, y: -0.5, rz: 10 },
+  { x: 0.6, y: 0.4, rz: 18 }, { x: -0.4, y: 0.7, rz: -22 },
+  { x: 0.1, y: -0.8, rz: 5 }, { x: 0.8, y: 0.6, rz: 20 },
+];
+
+type Props = {
+  label: string;
+  href: string;
+  target?: string;
+  rel?: string;
+  className?: string;
+};
+
+export function TextDisperseLink({ label, href, target, rel, className = "" }: Props) {
   const linkRef = useRef<HTMLAnchorElement>(null);
-  const scatter = () => { const chars=linkRef.current?.querySelectorAll<HTMLElement>(".yui-dchar"); if(!chars)return; chars.forEach((ch,i)=>{const s=SCATTER[i%SCATTER.length];const em=parseFloat(getComputedStyle(ch).fontSize)||16;gsap.to(ch,{x:s.x*em,y:s.y*em,rotateZ:s.rz,duration:0.4,ease:"power3.out"});}); };
-  const gather = () => { const chars=linkRef.current?.querySelectorAll<HTMLElement>(".yui-dchar"); if(!chars)return; gsap.to(Array.from(chars),{x:0,y:0,rotateZ:0,duration:0.5,ease:"power3.out",stagger:0.015}); };
+
+  const scatter = () => {
+    const chars = linkRef.current?.querySelectorAll<HTMLElement>(".yui-dchar");
+    if (!chars) return;
+    chars.forEach((ch, i) => {
+      const s = SCATTER[i % SCATTER.length];
+      const em = parseFloat(getComputedStyle(ch).fontSize) || 16;
+      gsap.to(ch, {
+        x: s.x * em,
+        y: s.y * em,
+        rotateZ: s.rz,
+        duration: 0.4,
+        ease: "power3.out",
+      });
+    });
+  };
+
+  const gather = () => {
+    const chars = linkRef.current?.querySelectorAll<HTMLElement>(".yui-dchar");
+    if (!chars) return;
+    gsap.to(Array.from(chars), {
+      x: 0, y: 0, rotateZ: 0,
+      duration: 0.5, ease: "power3.out", stagger: 0.015,
+    });
+  };
+
   return (
-    <a ref={linkRef} href={href} target={target} rel={rel} className={["yui-disperse-link",className].filter(Boolean).join(" ")} onMouseEnter={scatter} onMouseLeave={gather} style={{ display:"inline-flex",cursor:"pointer",textDecoration:"none",fontWeight:500,textTransform:"uppercase",letterSpacing:"0.03em" }}>
-      {label.split("").map((ch,i)=><span key={i} className="yui-dchar" style={{ display:"inline-block",willChange:"transform" }}>{ch===" "?"\u00A0":ch}</span>)}
-    </a>
+    <>
+      <style>{\`
+        .yui-disperse-link {
+          display: inline-flex; gap: 0; cursor: pointer;
+          text-decoration: none; font-weight: 500; text-transform: uppercase;
+          letter-spacing: 0.03em;
+        }
+        .yui-disperse-link:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+        .yui-dchar { display: inline-block; will-change: transform; }
+      \`}</style>
+      <a
+        ref={linkRef}
+        href={href}
+        target={target}
+        rel={rel}
+        className={["yui-disperse-link", className].filter(Boolean).join(" ")}
+        onMouseEnter={scatter}
+        onMouseLeave={gather}
+      >
+        {label.split("").map((ch, i) => (
+          <span key={i} className="yui-dchar">{ch === " " ? "\\u00A0" : ch}</span>
+        ))}
+      </a>
+    </>
   );
 }`,
     prompt: "Create a text link where each character scatters to a pre-defined offset (translates + rotates) on hover, then snaps back to their resting positions on mouse leave. Offsets are proportional to the current font-size in em. Animation is handled by GSAP with power3 easing.",
     tags: ["text", "hover", "scatter", "gsap", "character-animation", "social", "link"],
   },
-  // ── Grocery / ecommerce components ──
   {
     name: "ImageWithFallback",
     slug: "image-with-fallback",
@@ -2824,18 +3839,32 @@ export function TextDisperseLink({ label, href, target, rel, className="" }: Pro
     category: "media",
     code: `"use client";
 import { useState } from "react";
-const ERROR_IMG_SRC = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIzLjciPjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiByeD0iNiIvPjxwYXRoIGQ9Im0xNiA1OCAxNi0xOCAzMiAzMiIvPjxjaXJjbGUgY3g9IjUzIiBjeT0iMzUiIHI9IjciLz48L3N2Zz4KCg==";
+
+const ERROR_IMG_SRC =
+  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIzLjciPjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiByeD0iNiIvPjxwYXRoIGQ9Im0xNiA1OCAxNi0xOCAzMiAzMiIvPjxjaXJjbGUgY3g9IjUzIiBjeT0iMzUiIHI9IjciLz48L3N2Zz4KCg==";
+
 export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElement>) {
   const [didError, setDidError] = useState(false);
   const { src, alt, style, className, ...rest } = props;
+
   return didError ? (
-    <div className={\`inline-block bg-gray-100 text-center align-middle \${className ?? ""}\`} style={style}>
+    <div
+      className={\`inline-block bg-gray-100 text-center align-middle \${className ?? ""}\`}
+      style={style}
+    >
       <div className="flex items-center justify-center w-full h-full">
         <img src={ERROR_IMG_SRC} alt="Error loading image" {...rest} data-original-url={src} />
       </div>
     </div>
   ) : (
-    <img src={src} alt={alt} className={className} style={style} {...rest} onError={() => setDidError(true)} />
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      style={style}
+      {...rest}
+      onError={() => setDidError(true)}
+    />
   );
 }`,
     prompt: "Create a React image component that renders a standard <img> tag but gracefully falls back to a built-in SVG placeholder when the image fails to load. Accept all standard HTML img attributes as props. Show a gray container with a centered broken-image SVG icon as the fallback.",
@@ -2861,6 +3890,7 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
     </div>
   );
 }
+
 export function SkeletonRow() {
   return (
     <div className="flex gap-3 p-3 bg-muted rounded-lg animate-pulse">
@@ -2952,7 +3982,7 @@ export function EcomEmptyState({ type, query, onCTA }: Props) {
       {onCTA && (
         <button
           onClick={onCTA}
-          className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150"
+          className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           {c.cta}
         </button>
@@ -2970,28 +4000,61 @@ export function EcomEmptyState({ type, query, onCTA }: Props) {
     category: "navigation",
     code: `"use client";
 import { ChevronRight, Home } from "lucide-react";
-export interface BreadcrumbItem { label: string; href?: string; onClick?: () => void; }
-type Props = { items: BreadcrumbItem[]; className?: string; };
+
+export interface BreadcrumbItem {
+  /** Display text */
+  label: string;
+  /** Renders as an anchor/link if provided */
+  href?: string;
+  /** Renders as a button if provided (and no href) */
+  onClick?: () => void;
+}
+
+type Props = {
+  items: BreadcrumbItem[];
+  className?: string;
+};
+
 export function Breadcrumb({ items, className = "" }: Props) {
   return (
     <nav aria-label="Breadcrumb" className={className}>
       <ol className="flex items-center gap-0.5 flex-wrap text-xs text-muted-foreground">
         {items.map((item, i) => {
-          const isLast = i === items.length - 1; const isFirst = i === 0;
+          const isLast = i === items.length - 1;
+          const isFirst = i === 0;
           return (
             <li key={i} className="flex items-center gap-0.5 min-w-0">
-              {i > 0 && <ChevronRight className="w-3 h-3 mx-0.5 shrink-0 opacity-40" />}
+              {i > 0 && (
+                <ChevronRight className="w-3 h-3 mx-0.5 shrink-0 opacity-40" />
+              )}
               {isLast ? (
-                <span className="font-medium text-foreground truncate max-w-[160px]" aria-current="page" title={item.label}>{item.label}</span>
+                <span
+                  className="font-medium text-foreground truncate max-w-[160px]"
+                  aria-current="page"
+                  title={item.label}
+                >
+                  {item.label}
+                </span>
               ) : item.href ? (
-                <a href={item.href} className="flex items-center gap-1 hover:text-primary transition-colors whitespace-nowrap underline-offset-2 hover:underline">
-                  {isFirst && <Home className="w-3 h-3 shrink-0" />}{item.label}
+                <a
+                  href={item.href}
+                  className="flex items-center gap-1 hover:text-primary transition-colors whitespace-nowrap underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+                >
+                  {isFirst && <Home className="w-3 h-3 shrink-0" />}
+                  {item.label}
                 </a>
               ) : item.onClick ? (
-                <button type="button" onClick={item.onClick} className="hover:text-primary transition-colors whitespace-nowrap cursor-pointer bg-transparent border-0 p-0 text-xs text-muted-foreground">
-                  {isFirst && <Home className="w-3 h-3 shrink-0 inline mr-1" />}{item.label}
+                <button
+                  type="button"
+                  onClick={item.onClick}
+                  className="hover:text-primary transition-colors whitespace-nowrap underline-offset-2 hover:underline cursor-pointer bg-transparent border-0 p-0 text-xs text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+                >
+                  {isFirst && <Home className="w-3 h-3 shrink-0 inline mr-1" />}
+                  {item.label}
                 </button>
-              ) : <span className="whitespace-nowrap">{item.label}</span>}
+              ) : (
+                <span className="whitespace-nowrap">{item.label}</span>
+              )}
             </li>
           );
         })}
@@ -3044,7 +4107,7 @@ export function CategoryChips({ categories, activeCategory, onCategoryChange }: 
             key={cat.id}
             whileTap={{ scale: 0.94 }}
             onClick={() => onCategoryChange(cat.id)}
-            className={\`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-[background-color,border-color,color] duration-150 shrink-0 border \${
+            className={\`flex items-center gap-1.5 px-3 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-[background-color,border-color,color] duration-150 shrink-0 border focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] \${
               isActive
                 ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
                 : "bg-white text-neutral-900 border-gray-200 hover:border-gray-300 hover:bg-gray-50"
@@ -3069,20 +4132,40 @@ export function CategoryChips({ categories, activeCategory, onCategoryChange }: 
     code: `"use client";
 import { motion } from "framer-motion";
 import type { ElementType } from "react";
-export interface GridCategory { id: string; name: string; icon: ElementType; color: string; }
-type Props = { categories: GridCategory[]; onCategoryClick?: (categoryId: string) => void; };
+
+export interface GridCategory {
+  id: string;
+  name: string;
+  icon: ElementType;
+  /** Combined Tailwind bg+text classes, e.g. "bg-green-100 text-green-700" */
+  color: string;
+}
+
+type Props = {
+  categories: GridCategory[];
+  onCategoryClick?: (categoryId: string) => void;
+};
+
 export function CategoryGrid({ categories, onCategoryClick }: Props) {
   return (
     <div className="grid grid-cols-4 md:grid-cols-8 gap-3 md:gap-4">
       {categories.map((category, index) => {
         const Icon = category.icon;
         return (
-          <motion.button key={category.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }}
-            onClick={() => onCategoryClick?.(category.id)} className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-muted transition-colors">
-            <div className={\`w-14 h-14 md:w-16 md:h-16 rounded-full \${category.color} flex items-center justify-center\`}>
+          <motion.button
+            key={category.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+            onClick={() => onCategoryClick?.(category.id)}
+            className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-neutral-100 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+          >
+            <div
+              className={\`w-14 h-14 md:w-16 md:h-16 rounded-full \${category.color} flex items-center justify-center\`}
+            >
               <Icon className="w-7 h-7 md:w-8 md:h-8" />
             </div>
-            <span className="text-center leading-tight text-xs">{category.name}</span>
+            <span className="text-center leading-tight text-xs text-neutral-900">{category.name}</span>
           </motion.button>
         );
       })}
@@ -3101,35 +4184,181 @@ export function CategoryGrid({ categories, onCategoryClick }: Props) {
 import { useState, useEffect, useRef } from "react";
 import { Search, X, Clock, TrendingUp, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-type Props = { isOpen: boolean; onClose: () => void; onSearch: (query: string) => void; currentQuery?: string; popularSearches?: string[]; storageKey?: string; };
-export function SearchOverlay({ isOpen, onClose, onSearch, currentQuery = "", popularSearches = [], storageKey = "app_recent_searches" }: Props) {
+
+type Props = {
+  isOpen: boolean;
+  onClose: () => void;
+  onSearch: (query: string) => void;
+  currentQuery?: string;
+  /** Shown in the "Popular" section */
+  popularSearches?: string[];
+  /** localStorage key for persisting recent searches */
+  storageKey?: string;
+};
+
+export function SearchOverlay({
+  isOpen,
+  onClose,
+  onSearch,
+  currentQuery = "",
+  popularSearches = [],
+  storageKey = "app_recent_searches",
+}: Props) {
   const [value, setValue] = useState(currentQuery);
   const [recent, setRecent] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  function getRecent(): string[] { try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; } }
-  function saveRecent(term: string) { try { const prev = getRecent().filter(s => s !== term); localStorage.setItem(storageKey, JSON.stringify([term, ...prev].slice(0, 8))); } catch {} }
-  function clearRecent() { try { localStorage.removeItem(storageKey); } catch {} }
-  useEffect(() => { if (isOpen) { setValue(currentQuery); setRecent(getRecent()); setTimeout(() => inputRef.current?.focus(), 100); } }, [isOpen, currentQuery]);
-  const commit = (term: string) => { if (!term.trim()) return; saveRecent(term.trim()); onSearch(term.trim()); onClose(); };
-  const handleKey = (e: React.KeyboardEvent) => { if (e.key === "Enter") commit(value); if (e.key === "Escape") onClose(); };
+
+  function getRecent(): string[] {
+    try { return JSON.parse(localStorage.getItem(storageKey) || "[]"); } catch { return []; }
+  }
+
+  function saveRecent(term: string) {
+    try {
+      const prev = getRecent().filter((s) => s !== term);
+      localStorage.setItem(storageKey, JSON.stringify([term, ...prev].slice(0, 8)));
+    } catch { /* ignore */ }
+  }
+
+  function clearRecent() {
+    try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      setValue(currentQuery);
+      setRecent(getRecent());
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, currentQuery]);
+
+  const commit = (term: string) => {
+    if (!term.trim()) return;
+    saveRecent(term.trim());
+    onSearch(term.trim());
+    onClose();
+  };
+
+  const handleKey = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") commit(value);
+    if (e.key === "Escape") onClose();
+  };
+
+  const handleClearRecent = () => { clearRecent(); setRecent([]); };
+
   return (
     <AnimatePresence>
-      {isOpen && (<>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm" />
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ type: "spring", damping: 30, stiffness: 400 }} className="fixed top-0 left-0 right-0 z-[61] bg-white shadow-2xl rounded-b-2xl max-h-[80vh] flex flex-col">
-          <div className="flex items-center gap-3 p-4 border-b border-border">
-            <Search className="w-5 h-5 text-muted-foreground shrink-0" />
-            <input ref={inputRef} type="text" value={value} onChange={e => setValue(e.target.value)} onKeyDown={handleKey} placeholder="Search…" className="flex-1 text-base outline-none bg-transparent placeholder:text-muted-foreground" />
-            {value && <button onClick={() => setValue("")} className="p-1 hover:bg-muted rounded-full transition-colors"><X className="w-4 h-4 text-muted-foreground" /></button>}
-            <button onClick={onClose} className="text-primary font-medium text-sm shrink-0 hover:opacity-70 transition-opacity">Cancel</button>
-          </div>
-          <div className="overflow-y-auto flex-1 p-4 space-y-5">
-            {recent.length > 0 && <div><div className="flex items-center justify-between mb-2"><span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> Recent</span><button onClick={() => { clearRecent(); setRecent([]); }} className="text-xs text-primary hover:underline">Clear</button></div><div className="flex flex-wrap gap-2">{recent.map(r => <button key={r} onClick={() => commit(r)} className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full text-sm hover:bg-primary/10 hover:text-primary transition-colors"><Clock className="w-3.5 h-3.5 text-muted-foreground" />{r}</button>)}</div></div>}
-            {popularSearches.length > 0 && <div><div className="flex items-center gap-1 mb-2"><TrendingUp className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Popular</span></div><div className="flex flex-wrap gap-2">{popularSearches.map(s => <button key={s} onClick={() => commit(s)} className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium hover:bg-primary/20 transition-colors">{s}<ChevronRight className="w-3 h-3" /></button>)}</div></div>}
-          </div>
-          {value.trim() && <div className="p-4 border-t border-border"><button onClick={() => commit(value)} className="w-full bg-primary text-primary-foreground py-3 rounded-xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity active:scale-[0.98]"><Search className="w-4 h-4" />Search for &ldquo;{value}&rdquo;</button></div>}
-        </motion.div>
-      </>)}
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/40 z-[60] backdrop-blur-sm"
+          />
+
+          {/* Panel */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ type: "spring", damping: 30, stiffness: 400 }}
+            className="fixed top-0 left-0 right-0 z-[61] bg-white shadow-2xl rounded-b-2xl max-h-[80vh] flex flex-col"
+          >
+            {/* Input row */}
+            <div className="flex items-center gap-3 p-4 border-b border-border">
+              <Search className="w-5 h-5 text-muted-foreground shrink-0" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                onKeyDown={handleKey}
+                placeholder="Search…"
+                className="flex-1 text-base outline-none bg-transparent placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+              />
+              {value && (
+                <button onClick={() => setValue("")} className="p-1 hover:bg-muted rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]">
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="text-primary font-medium text-sm shrink-0 hover:opacity-70 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 p-4 space-y-5">
+              {/* Recent */}
+              {recent.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5" /> Recent
+                    </span>
+                    <button onClick={handleClearRecent} className="text-xs text-primary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]">
+                      Clear
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {recent.map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => commit(r)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full text-sm hover:bg-primary/10 hover:text-primary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+                      >
+                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Popular */}
+              {popularSearches.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-1 mb-2">
+                    <TrendingUp className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                      Popular
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {popularSearches.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => commit(s)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium hover:bg-primary/20 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+                      >
+                        {s}
+                        <ChevronRight className="w-3 h-3" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* CTA */}
+            {value.trim() && (
+              <div className="p-4 border-t border-border">
+                <button
+                  onClick={() => commit(value)}
+                  className="w-full bg-primary text-primary-foreground py-3 rounded-xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+                >
+                  <Search className="w-4 h-4" />
+                  Search for &ldquo;{value}&rdquo;
+                </button>
+              </div>
+            )}
+          </motion.div>
+        </>
+      )}
     </AnimatePresence>
   );
 }`,
@@ -3144,21 +4373,78 @@ export function SearchOverlay({ isOpen, onClose, onSearch, currentQuery = "", po
     code: `"use client";
 import { motion, AnimatePresence } from "framer-motion";
 import type { ElementType } from "react";
-export interface NavTab { id: string; icon: ElementType; label: string; badge?: number; action?: () => void; accentColor?: string; }
-type Props = { tabs: NavTab[]; activeTab: string; onTabChange: (tab: string) => void; };
+
+export interface NavTab {
+  id: string;
+  icon: ElementType;
+  label: string;
+  badge?: number;
+  /** Override onTabChange with a custom action */
+  action?: () => void;
+  /** CSS color string for special accent tabs (e.g. WhatsApp green) */
+  accentColor?: string;
+}
+
+type Props = {
+  tabs: NavTab[];
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+};
+
 export function MobileBottomNav({ tabs, activeTab, onTabChange }: Props) {
   return (
-    <motion.nav initial={{ y: 100 }} animate={{ y: 0 }} className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
-      <div className="grid px-1" style={{ gridTemplateColumns: \`repeat(\${tabs.length}, minmax(0, 1fr))\` }}>
+    <motion.nav
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      <div
+        className="grid px-1"
+        style={{ gridTemplateColumns: \`repeat(\${tabs.length}, minmax(0, 1fr))\` }}
+      >
         {tabs.map((tab) => {
-          const Icon = tab.icon; const isActive = activeTab === tab.id; const hasAccent = !!tab.accentColor;
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          const hasAccent = !!tab.accentColor;
+
           return (
-            <button key={tab.id} onClick={() => tab.action ? tab.action() : onTabChange(tab.id)} style={hasAccent ? { color: tab.accentColor } : undefined}
-              className={\`flex flex-col items-center gap-0.5 py-2.5 px-1 relative transition-colors \${hasAccent ? "" : isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"}\`}>
-              {isActive && !hasAccent && <motion.div layoutId="nav-indicator" className="absolute top-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-full" transition={{ type: "spring", damping: 20, stiffness: 400 }} />}
-              <div className="relative"><Icon className="w-5 h-5" />
-                <AnimatePresence>{tab.badge !== undefined && tab.badge > 0 && <motion.span key={tab.badge} initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full min-w-[16px] h-4 flex items-center justify-center text-[9px] font-bold px-0.5 leading-none">{tab.badge > 99 ? "99+" : tab.badge}</motion.span>}</AnimatePresence>
+            <button
+              key={tab.id}
+              onClick={() => (tab.action ? tab.action() : onTabChange(tab.id))}
+              style={hasAccent ? { color: tab.accentColor } : undefined}
+              className={\`flex flex-col items-center gap-0.5 py-2.5 px-1 relative transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] \${
+                hasAccent
+                  ? ""
+                  : isActive
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              }\`}
+            >
+              {isActive && !hasAccent && (
+                <motion.div
+                  layoutId="nav-indicator"
+                  className="absolute top-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-full"
+                  transition={{ type: "spring", damping: 20, stiffness: 400 }}
+                />
+              )}
+
+              <div className="relative">
+                <Icon className="w-5 h-5" />
+                <AnimatePresence>
+                  {tab.badge !== undefined && tab.badge > 0 && (
+                    <motion.span
+                      key={tab.badge}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full min-w-[16px] h-4 flex items-center justify-center text-[9px] font-bold px-0.5 leading-none"
+                    >
+                      {tab.badge > 99 ? "99+" : tab.badge}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </div>
+
               <span className="text-[10px]">{tab.label}</span>
             </button>
           );
@@ -3228,7 +4514,7 @@ export function ProductCard({ product, quantity, onAdd, onDecrease, onNotify, on
       {/* Image */}
       <button
         onClick={onCardClick}
-        className="block w-full relative aspect-square bg-muted overflow-hidden focus:outline-none"
+        className="block w-full relative aspect-square bg-muted overflow-hidden focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         aria-label={\`View details for \${product.name}\`}
         tabIndex={onCardClick ? 0 : -1}
       >
@@ -3303,7 +4589,7 @@ export function ProductCard({ product, quantity, onAdd, onDecrease, onNotify, on
       <div className="p-3">
         <button
           onClick={onCardClick}
-          className="text-left w-full no-underline text-inherit hover:text-primary transition-colors focus:outline-none"
+          className="text-left w-full no-underline text-inherit hover:text-primary transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <h3 className="line-clamp-2 m-0 mb-0.5 text-sm font-semibold leading-tight">{product.name}</h3>
         </button>
@@ -3373,20 +4659,74 @@ export function ProductCard({ product, quantity, onAdd, onDecrease, onNotify, on
     code: `"use client";
 import { ShoppingCart, MessageCircle, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-type Props = { itemCount: number; totalPrice: number; onViewCart: () => void; primaryAction?: { label: string; onClick: () => void; colorClass?: string; }; };
+
+type Props = {
+  itemCount: number;
+  totalPrice: number;
+  onViewCart: () => void;
+  /** Optional second action button (e.g. WhatsApp order) */
+  primaryAction?: {
+    label: string;
+    onClick: () => void;
+    /** Tailwind bg class, default "bg-[#25D366] hover:bg-[#22c35e]" */
+    colorClass?: string;
+  };
+};
+
 export function StickyCartBar({ itemCount, totalPrice, onViewCart, primaryAction }: Props) {
   return (
     <AnimatePresence>
       {itemCount > 0 && (
-        <motion.div initial={{ y: 120 }} animate={{ y: 0 }} exit={{ y: 120 }} transition={{ type: "spring", damping: 25, stiffness: 300 }} className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-3 pb-1">
+        <motion.div
+          initial={{ y: 120 }}
+          animate={{ y: 0 }}
+          exit={{ y: 120 }}
+          transition={{ type: "spring", damping: 25, stiffness: 300 }}
+          className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-3 pb-1"
+        >
           <div className="bg-foreground text-background rounded-2xl shadow-2xl overflow-hidden">
-            <button onClick={onViewCart} className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/5 transition-colors">
-              <div className="flex items-center gap-2"><div className="relative"><ShoppingCart className="w-4 h-4" /><span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">{itemCount}</span></div><span className="text-sm font-medium">{itemCount} item{itemCount !== 1 ? "s" : ""}</span></div>
-              <div className="flex items-center gap-1 text-sm font-semibold">₹{totalPrice}<ChevronUp className="w-4 h-4 opacity-60" /></div>
+            {/* Summary row */}
+            <button
+              onClick={onViewCart}
+              className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-white/5 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <ShoppingCart className="w-4 h-4" />
+                  <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                    {itemCount}
+                  </span>
+                </div>
+                <span className="text-sm font-medium">
+                  {itemCount} item{itemCount !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 text-sm font-semibold">
+                ₹{totalPrice}
+                <ChevronUp className="w-4 h-4 opacity-60" />
+              </div>
             </button>
+
+            {/* Action buttons */}
             <div className="flex border-t border-white/10">
-              <button onClick={onViewCart} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium hover:bg-white/5 transition-colors border-r border-white/10"><ShoppingCart className="w-4 h-4" />View Cart</button>
-              {primaryAction && <button onClick={primaryAction.onClick} className={\`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-colors \${primaryAction.colorClass ?? "bg-[#25D366] hover:bg-[#22c35e]"}\`}><MessageCircle className="w-4 h-4" />{primaryAction.label}</button>}
+              <button
+                onClick={onViewCart}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium hover:bg-white/5 transition-colors border-r border-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+              >
+                <ShoppingCart className="w-4 h-4" />
+                View Cart
+              </button>
+              {primaryAction && (
+                <button
+                  onClick={primaryAction.onClick}
+                  className={\`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white \${
+                    primaryAction.colorClass ?? "bg-[#25D366] hover:bg-[#22c35e]"
+                  }\`}
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  {primaryAction.label}
+                </button>
+              )}
             </div>
           </div>
         </motion.div>
@@ -3467,7 +4807,7 @@ export function AppHeader({
             {ctaButton && (
               <button
                 onClick={ctaButton.onClick}
-                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity shrink-0 font-medium"
+                className="flex items-center gap-1.5 hover:opacity-80 transition-opacity shrink-0 font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
               >
                 {ctaButton.icon}
                 <span>{ctaButton.label}</span>
@@ -3494,7 +4834,7 @@ export function AppHeader({
           <div className="flex-1 max-w-2xl hidden md:block">
             <button
               onClick={onSearchClick}
-              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-gray-100 rounded-xl text-gray-400 text-sm hover:bg-gray-200 transition-colors duration-150 text-left"
+              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-gray-100 rounded-xl text-gray-400 text-sm hover:bg-gray-200 transition-colors duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
             >
               <Search className="w-4 h-4 shrink-0" />
               <span>Search…</span>
@@ -3506,7 +4846,7 @@ export function AppHeader({
             {/* Mobile search icon */}
             <button
               onClick={onSearchClick}
-              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+              className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               aria-label="Search"
             >
               <Search className="w-5 h-5 text-gray-500" />
@@ -3516,7 +4856,7 @@ export function AppHeader({
             {ctaButton && (
               <button
                 onClick={ctaButton.onClick}
-                className={\`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150 text-sm font-medium text-white \${
+                className={\`hidden sm:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150 text-sm font-medium text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] \${
                   ctaButton.colorClass ?? "bg-primary"
                 }\`}
               >
@@ -3528,7 +4868,7 @@ export function AppHeader({
             {/* Cart button */}
             <button
               onClick={onCartClick}
-              className="relative flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150 text-sm font-medium"
+              className="relative flex items-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150 text-sm font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               aria-label={\`Cart, \${cartItemCount} items\`}
             >
               <ShoppingCart className="w-4 h-4" />
@@ -3555,7 +4895,6 @@ export function AppHeader({
     prompt: "Build a sticky responsive app header in React with Framer Motion. Include: a top info banner with a live open/closed indicator dot, optional info text, and optional CTA button. A main row with a logo/wordmark, a desktop inline search bar, a mobile search icon, an optional secondary CTA button, and a cart button with an animated badge count. Slide down from top on mount. Use shadcn/ui Tailwind tokens.",
     tags: ["header", "navbar", "sticky", "responsive", "cart-badge", "animated", "ecommerce"],
   },
-  // ── Blissful Bites components ──
   {
     name: "BakeryProductCard",
     slug: "bakery-product-card",
@@ -3612,7 +4951,7 @@ export function BakeryProductCard({ product, href, currencySymbol = "₹", unitL
   return (
     <a
       href={href}
-      className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-neutral-100 block"
+      className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-300 border border-neutral-100 block focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
     >
       <div className="relative overflow-hidden">
         {product.image ? (
@@ -3671,17 +5010,35 @@ export function BakeryProductCard({ product, href, currencySymbol = "₹", unitL
     path: "cards/TestimonialCard.tsx",
     category: "cards",
     code: `import { Star } from "lucide-react";
-export interface Testimonial { rating: number; text: string; name: string; role?: string; }
-type Props = { testimonial: Testimonial; };
+
+export interface Testimonial {
+  rating: number;
+  text: string;
+  name: string;
+  role?: string;
+}
+
+type Props = {
+  testimonial: Testimonial;
+};
+
 export function TestimonialCard({ testimonial }: Props) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-neutral-100 hover:shadow-md transition-shadow duration-300">
       <div className="flex items-center gap-0.5 mb-4">
-        {Array.from({ length: testimonial.rating }).map((_, i) => <Star key={i} size={14} className="fill-yellow-400 text-yellow-400" />)}
+        {Array.from({ length: testimonial.rating }).map((_, i) => (
+          <Star key={i} size={14} className="fill-yellow-400 text-yellow-400" />
+        ))}
       </div>
-      <p className="text-neutral-600 text-sm leading-relaxed mb-5 italic">&ldquo;{testimonial.text}&rdquo;</p>
+      <p className="text-neutral-600 text-sm leading-relaxed mb-5 italic">
+        &ldquo;{testimonial.text}&rdquo;
+      </p>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-neutral-200 flex items-center justify-center"><span className="text-neutral-600 font-bold text-sm">{testimonial.name.charAt(0)}</span></div>
+        <div className="w-10 h-10 rounded-full bg-neutral-200 flex items-center justify-center">
+          <span className="text-neutral-600 font-bold text-sm">
+            {testimonial.name.charAt(0)}
+          </span>
+        </div>
         <div>
           <p className="text-neutral-900 font-semibold text-sm">{testimonial.name}</p>
           {testimonial.role && <p className="text-neutral-400 text-xs">{testimonial.role}</p>}
@@ -3719,7 +5076,7 @@ function FAQItemRow({ faq, isOpen, onToggle }: FAQItemProps) {
       <button
         onClick={onToggle}
         aria-expanded={isOpen}
-        className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer group"
+        className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
       >
         <span className="text-neutral-900 text-sm sm:text-base font-medium group-hover:text-neutral-600 transition-colors">
           {faq.q}
@@ -3794,7 +5151,7 @@ export function WhatsAppFAB({ phoneNumber, message = "Hello! I have a question."
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-[background-color,box-shadow,transform] duration-300 hover:scale-110 active:scale-105 group"
+      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-[background-color,box-shadow,transform] duration-300 hover:scale-110 active:scale-105 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
       aria-label="Chat on WhatsApp"
       title="Chat on WhatsApp"
     >
@@ -3815,13 +5172,26 @@ export function WhatsAppFAB({ phoneNumber, message = "Hello! I have a question."
     slug: "image-placeholder",
     path: "feedback/ImagePlaceholder.tsx",
     category: "feedback",
-    code: `type Props = { aspectRatio?: string; label?: string; rounded?: string; className?: string; };
-export function ImagePlaceholder({ aspectRatio="4/3", label="", rounded="rounded-xl", className="" }: Props) {
+    code: `type Props = {
+  aspectRatio?: string;
+  label?: string;
+  rounded?: string;
+  className?: string;
+};
+
+export function ImagePlaceholder({ aspectRatio = "4/3", label = "", rounded = "rounded-xl", className = "" }: Props) {
   return (
-    <div className={\`relative overflow-hidden bg-neutral-100 \${rounded} \${className}\`} style={{ aspectRatio }} role="img" aria-label={label||"Image placeholder"}>
+    <div
+      className={\`relative overflow-hidden bg-neutral-100 \${rounded} \${className}\`}
+      style={{ aspectRatio }}
+      role="img"
+      aria-label={label || "Image placeholder"}
+    >
       <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-neutral-200 via-neutral-100 to-neutral-200" />
       <div className="absolute inset-0 flex flex-col items-center justify-center text-neutral-400">
-        <svg className="w-10 h-10 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+        <svg className="w-10 h-10 mb-2 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
         {label && <span className="text-xs font-medium opacity-60">{label}</span>}
       </div>
     </div>
@@ -3913,7 +5283,7 @@ export function StickyNavbar({
                 <a
                   key={link.href}
                   href={link.href}
-                  className={\`text-sm font-medium transition-colors duration-200 hover:text-neutral-900 \${
+                  className={\`text-sm font-medium transition-colors duration-200 hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] \${
                     activePath === link.href
                       ? "text-neutral-900 border-b-2 border-neutral-900 pb-0.5"
                       : "text-neutral-500"
@@ -3927,17 +5297,17 @@ export function StickyNavbar({
             {/* Desktop actions */}
             <div className="hidden lg:flex items-center gap-4">
               {onSearchClick && (
-                <button onClick={onSearchClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Search">
+                <button onClick={onSearchClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]" aria-label="Search">
                   <Search size={20} />
                 </button>
               )}
               {onAccountClick && (
-                <button onClick={onAccountClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Account">
+                <button onClick={onAccountClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]" aria-label="Account">
                   <User size={20} />
                 </button>
               )}
               {onCartClick && (
-                <button onClick={onCartClick} className="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label={\`Cart, \${cartCount} items\`}>
+                <button onClick={onCartClick} className="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]" aria-label={\`Cart, \${cartCount} items\`}>
                   <ShoppingBag size={20} />
                   {cartCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
@@ -3950,7 +5320,7 @@ export function StickyNavbar({
 
             {/* Mobile toggle */}
             <button
-              className="lg:hidden p-2 text-neutral-900 cursor-pointer"
+              className="lg:hidden p-2 text-neutral-900 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? "Close menu" : "Open menu"}
               aria-expanded={isOpen}
@@ -3976,7 +5346,7 @@ export function StickyNavbar({
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={\`block py-3 px-4 rounded-lg text-sm font-medium transition-colors \${
+                    className={\`block py-3 px-4 rounded-lg text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] \${
                       activePath === link.href
                         ? "bg-neutral-900 text-white"
                         : "text-neutral-700 hover:bg-neutral-50"
@@ -4002,30 +5372,57 @@ export function StickyNavbar({
     path: "feedback/ErrorBoundary.tsx",
     category: "feedback",
     code: `import { Component, type ReactNode } from "react";
-interface Props { children: ReactNode; icon?: string; title?: string; description?: string; buttonLabel?: string; }
-interface State { hasError: boolean; }
+
+interface Props {
+  children: ReactNode;
+  icon?: string;
+  title?: string;
+  description?: string;
+  buttonLabel?: string;
+}
+
+interface State {
+  hasError: boolean;
+}
+
 export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) { super(props); this.state = { hasError: false }; }
-  static getDerivedStateFromError(): State { return { hasError: true }; }
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): State {
+    return { hasError: true };
+  }
+
   render() {
-    if (this.state.hasError) return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-6">
-        <div className="text-center max-w-md">
-          <span className="text-6xl block mb-4">{this.props.icon??"⚠️"}</span>
-          <h1 className="text-2xl font-bold text-neutral-900 mb-3">{this.props.title??"Something went wrong"}</h1>
-          <p className="text-neutral-500 text-sm mb-6 leading-relaxed">{this.props.description??"An unexpected error occurred. Please try refreshing the page."}</p>
-          <button onClick={()=>window.location.reload()} className="bg-neutral-900 text-white px-8 py-3 rounded-full font-medium text-sm hover:bg-neutral-700 transition-colors cursor-pointer">{this.props.buttonLabel??"Refresh Page"}</button>
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-6">
+          <div className="text-center max-w-md">
+            <span className="text-6xl block mb-4">{this.props.icon ?? "⚠️"}</span>
+            <h1 className="text-2xl font-bold text-neutral-900 mb-3">
+              {this.props.title ?? "Something went wrong"}
+            </h1>
+            <p className="text-neutral-500 text-sm mb-6 leading-relaxed">
+              {this.props.description ?? "An unexpected error occurred. Please try refreshing the page."}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-neutral-900 text-white px-8 py-3 rounded-full font-medium text-sm hover:bg-neutral-700 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+            >
+              {this.props.buttonLabel ?? "Refresh Page"}
+            </button>
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
     return this.props.children;
   }
 }`,
     prompt: "Create a React class-based ErrorBoundary component with Tailwind CSS fallback UI. Show a full-screen centered error state with a large emoji icon, heading, description, and a reload button. Accept icon, title, description, and button label as props with sensible defaults. Wrap children normally when no error.",
     tags: ["error-boundary", "fallback", "crash", "full-screen", "class-component"],
   },
-
-  // ── LanceMart AI – Project A ─────────────────────────────────────────────
   {
     name: "StickyNav",
     slug: "sticky-nav",
@@ -4062,7 +5459,7 @@ export function StickyNav({
             <a
               key={l.href}
               href={l.href}
-              className="text-[13px] text-[#4a4a4c] hover:text-[#0a0a0a] transition-colors no-underline"
+              className="text-[13px] text-[#4a4a4c] hover:text-[#0a0a0a] transition-colors no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
             >
               {l.label}
             </a>
@@ -4070,7 +5467,7 @@ export function StickyNav({
         </nav>
 
         <button
-          className="flex items-center justify-center w-9 h-9 rounded-full border border-black/[0.13] cursor-pointer bg-black/[0.02] text-[#4a4a4c] hover:text-[#0a0a0a] hover:bg-black/[0.04] transition-[color,background-color,transform] duration-150 active:scale-[0.93] shrink-0 p-0"
+          className="flex items-center justify-center w-9 h-9 rounded-full border border-black/[0.13] cursor-pointer bg-black/[0.02] text-[#4a4a4c] hover:text-[#0a0a0a] hover:bg-black/[0.04] transition-[color,background-color,transform] duration-150 active:scale-[0.93] shrink-0 p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
           aria-label="Toggle theme"
           onClick={onThemeToggle}
         >
@@ -4116,7 +5513,13 @@ export function StickyNav({
     category: "hooks",
     code: `"use client";
 import { useEffect } from "react";
-type Props = { isDark: boolean; onToggle: (nextDark: boolean) => void; storageKey?: string; };
+
+type Props = {
+  isDark: boolean;
+  onToggle: (nextDark: boolean) => void;
+  storageKey?: string;
+};
+
 export function useThemeRipple({ isDark, onToggle, storageKey = "theme" }: Props) {
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -4124,19 +5527,36 @@ export function useThemeRipple({ isDark, onToggle, storageKey = "theme" }: Props
     if (stored === "dark") onToggle(true);
     else if (stored === "light") onToggle(false);
   }, []);
+
   function toggle(e: React.MouseEvent<HTMLButtonElement>) {
     const nextDark = !isDark;
-    const x = e.clientX; const y = e.clientY;
-    const endRadius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+    const x = e.clientX;
+    const y = e.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
     const oldBg = nextDark ? "#f5f5f7" : "#0a0a0a";
-    if (typeof window !== "undefined") localStorage.setItem(storageKey, nextDark ? "dark" : "light");
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, nextDark ? "dark" : "light");
+    }
     onToggle(nextDark);
+
     const overlay = document.createElement("div");
     overlay.style.cssText = \`position:fixed;inset:0;z-index:2147483647;background:\${oldBg};pointer-events:none;will-change:clip-path;\`;
     document.body.appendChild(overlay);
-    const anim = overlay.animate([{ clipPath: \`circle(\${endRadius}px at \${x}px \${y}px)\` }, { clipPath: \`circle(0px at \${x}px \${y}px)\` }], { duration: 650, easing: "cubic-bezier(.2,.7,.2,1)" });
+
+    const anim = overlay.animate(
+      [
+        { clipPath: \`circle(\${endRadius}px at \${x}px \${y}px)\` },
+        { clipPath: \`circle(0px at \${x}px \${y}px)\` },
+      ],
+      { duration: 650, easing: "cubic-bezier(.2,.7,.2,1)" }
+    );
     anim.onfinish = () => overlay.remove();
   }
+
   return { toggle };
 }`,
     prompt: "Write a React hook that toggles dark/light mode with a circular ripple/clip-path animation that expands outward from the click point, revealing the new theme. Persist choice to localStorage. Use the Web Animations API with clip-path circle transition.",
@@ -4147,13 +5567,28 @@ export function useThemeRipple({ isDark, onToggle, storageKey = "theme" }: Props
     slug: "shiny-badge",
     path: "badges/ShinyBadge.tsx",
     category: "badges",
-    code: `type Props = { spark?: string; text: string; };
+    code: `type Props = {
+  spark?: string;
+  text: string;
+};
+
 export function ShinyBadge({ spark = "✦", text }: Props) {
   return (
     <>
       <style>{\`
-        @keyframes shiny-sweep { from { background-position: 200% 0; } to { background-position: -200% 0; } }
-        .shiny-badge-text { background: linear-gradient(110deg, #4a4a4c 40%, #0a0a0a 50%, #4a4a4c 60%); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; animation: shiny-sweep 3s linear infinite; }
+        @keyframes shiny-sweep {
+          from { background-position: 200% 0; }
+          to   { background-position: -200% 0; }
+        }
+        .shiny-badge-text {
+          background: linear-gradient(110deg, #4a4a4c 40%, #0a0a0a 50%, #4a4a4c 60%);
+          background-size: 200% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          color: transparent;
+          animation: shiny-sweep 3s linear infinite;
+        }
       \`}</style>
       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/[0.02] border border-black/[0.13] text-[13px] text-[#0a0a0a]">
         <span className="text-[#b45309]">{spark}</span>
@@ -4182,6 +5617,7 @@ type Props = {
 const beamStyle = \`
   @keyframes border-beam-travel { to { offset-distance: 100%; } }
   .beam-btn { position: relative; isolation: isolate; overflow: hidden; }
+  .beam-btn:focus-visible { outline: 2px solid #912c22; outline-offset: 2px; }
   .beam-border {
     position: absolute; inset: 0; border-radius: inherit;
     pointer-events: none; z-index: 1; padding: 1px;
@@ -4248,34 +5684,95 @@ export function BorderBeamButton({ label, variant = "primary", onClick, href }: 
     category: "sections",
     code: `"use client";
 import { useEffect, useRef, useState, ReactNode } from "react";
-type Props = { title: string; titleHighlight?: string; subtitle: string; typingDelay?: number; typingSpeed?: number; children?: ReactNode; };
+
+type Props = {
+  title: string;
+  titleHighlight?: string;
+  subtitle: string;
+  typingDelay?: number;
+  typingSpeed?: number;
+  children?: ReactNode;
+};
+
 const typingStyle = \`
   @keyframes typing-cursor { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-  .typing-sub::after { content: '|'; display: inline-block; margin-left: 1px; color: #059669; font-weight: 300; animation: typing-cursor .85s step-end infinite; opacity: 0; }
-  .typing-sub.is-typing::after { opacity: 1; } .typing-sub.is-done::after { opacity: 1; }
+  .typing-sub::after {
+    content: '|'; display: inline-block; margin-left: 1px;
+    color: #059669; font-weight: 300;
+    animation: typing-cursor .85s step-end infinite; opacity: 0;
+  }
+  .typing-sub.is-typing::after { opacity: 1; }
+  .typing-sub.is-done::after   { opacity: 1; }
 \`;
-export function TypingHero({ title, titleHighlight, subtitle, typingDelay = 480, typingSpeed = 28, children }: Props) {
+
+export function TypingHero({
+  title,
+  titleHighlight,
+  subtitle,
+  typingDelay = 480,
+  typingSpeed = 28,
+  children,
+}: Props) {
   const subRef = useRef<HTMLParagraphElement>(null);
   const [ctaVisible, setCtaVisible] = useState(false);
+
   useEffect(() => {
-    const el = subRef.current; if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = subtitle; el.classList.add("is-done"); setCtaVisible(true); return; }
+    const el = subRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.textContent = subtitle;
+      el.classList.add("is-done");
+      setCtaVisible(true);
+      return;
+    }
     let i = 0;
     const timer = setTimeout(() => {
       el.classList.add("is-typing");
-      const tick = setInterval(() => { el.textContent = subtitle.slice(0, ++i); if (i >= subtitle.length) { clearInterval(tick); el.classList.remove("is-typing"); el.classList.add("is-done"); setCtaVisible(true); } }, typingSpeed);
+      const tick = setInterval(() => {
+        el.textContent = subtitle.slice(0, ++i);
+        if (i >= subtitle.length) {
+          clearInterval(tick);
+          el.classList.remove("is-typing");
+          el.classList.add("is-done");
+          setCtaVisible(true);
+        }
+      }, typingSpeed);
     }, typingDelay);
     return () => clearTimeout(timer);
   }, [subtitle, typingDelay, typingSpeed]);
+
   return (
-    <><style>{typingStyle}</style>
-    <section className="max-w-[1200px] mx-auto px-6 pt-[72px] pb-12 text-center flex flex-col items-center">
-      <h1 className="font-serif font-medium leading-none mb-[18px] text-[#0a0a0a] tracking-[-0.02em]" style={{ fontSize: "clamp(48px, 9vw, 112px)" }}>
-        {title}{" "}{titleHighlight && <span className="font-serif italic font-medium text-[#0a0a0a]">{titleHighlight}</span>}
-      </h1>
-      <p ref={subRef} className="typing-sub max-w-[640px] text-lg text-[#4a4a4c] mb-7 min-h-[1.6em]" />
-      <div className="flex flex-wrap gap-3 justify-center" style={{ opacity: ctaVisible ? 1 : 0, transform: ctaVisible ? "translateY(0)" : "translateY(10px)", transition: "opacity .5s ease, transform .5s ease", pointerEvents: ctaVisible ? "auto" : "none" }}>{children}</div>
-    </section></>
+    <>
+      <style>{typingStyle}</style>
+      <section className="max-w-[1200px] mx-auto px-6 pt-[72px] pb-12 text-center flex flex-col items-center">
+        <h1
+          className="font-serif font-medium leading-none mb-[18px] text-[#0a0a0a] tracking-[-0.02em]"
+          style={{ fontSize: "clamp(48px, 9vw, 112px)" }}
+        >
+          {title}{" "}
+          {titleHighlight && (
+            <span className="font-serif italic font-medium text-[#0a0a0a]">
+              {titleHighlight}
+            </span>
+          )}
+        </h1>
+        <p
+          ref={subRef}
+          className="typing-sub max-w-[640px] text-lg text-[#4a4a4c] mb-7 min-h-[1.6em]"
+        />
+        <div
+          className="flex flex-wrap gap-3 justify-center"
+          style={{
+            opacity: ctaVisible ? 1 : 0,
+            transform: ctaVisible ? "translateY(0)" : "translateY(10px)",
+            transition: "opacity .5s ease, transform .5s ease",
+            pointerEvents: ctaVisible ? "auto" : "none",
+          }}
+        >
+          {children}
+        </div>
+      </section>
+    </>
   );
 }`,
     prompt: "Create a React hero section with a large serif/sans-serif headline, a typewriter animated subtitle that types character by character with a blinking cursor, and a CTA slot that fades in only after typing completes. Respect prefers-reduced-motion.",
@@ -4320,16 +5817,32 @@ export function FeatureCardGrid({ cards }: Props) {
     slug: "numbered-steps-list",
     path: "lists/NumberedStepsList.tsx",
     category: "lists",
-    code: `type Step = { number: string; title: string; description: string; };
-type Props = { steps: Step[]; };
+    code: `type Step = {
+  number: string;
+  title: string;
+  description: string;
+};
+
+type Props = {
+  steps: Step[];
+};
+
 export function NumberedStepsList({ steps }: Props) {
   return (
     <ol className="mt-12 flex flex-col gap-2 list-none p-0">
       {steps.map((step) => (
-        <li key={step.number} className="grid gap-8 py-8 border-t border-black/[0.06]" style={{ gridTemplateColumns: "90px 1fr" }}>
-          <div className="font-mono text-sm text-[#059669] tracking-[0.2em]">{step.number}</div>
+        <li
+          key={step.number}
+          className="grid gap-8 py-8 border-t border-black/[0.06]"
+          style={{ gridTemplateColumns: "90px 1fr" }}
+        >
+          <div className="font-mono text-sm text-[#059669] tracking-[0.2em]">
+            {step.number}
+          </div>
           <div>
-            <h3 className="font-serif font-medium text-[28px] text-[#0a0a0a] mt-0 mb-2.5">{step.title}</h3>
+            <h3 className="font-serif font-medium text-[28px] text-[#0a0a0a] mt-0 mb-2.5">
+              {step.title}
+            </h3>
             <p className="text-[#4a4a4c] m-0 text-base">{step.description}</p>
           </div>
         </li>
@@ -4345,12 +5858,20 @@ export function NumberedStepsList({ steps }: Props) {
     slug: "formula-block",
     path: "display/FormulaBlock.tsx",
     category: "display",
-    code: `type Props = { formula: string; caption?: string; };
+    code: `type Props = {
+  formula: string;
+  caption?: string;
+};
+
 export function FormulaBlock({ formula, caption }: Props) {
   return (
-    <div className="my-8 p-6 text-center bg-[rgba(5,150,105,0.1)] border border-[#059669] rounded-xl font-mono text-[#0a0a0a] overflow-x-auto break-words" style={{ fontSize: "clamp(14px, 4vw, 20px)" }}>
+    <div className="my-8 p-6 text-center bg-[rgba(5,150,105,0.1)] border border-[#059669] rounded-xl font-mono text-[#0a0a0a] overflow-x-auto break-words"
+      style={{ fontSize: "clamp(14px, 4vw, 20px)" }}
+    >
       <code className="font-[inherit] bg-transparent p-0">{formula}</code>
-      {caption && <div className="mt-2.5 text-xs text-[#4a4a4c] tracking-[0.1em]">{caption}</div>}
+      {caption && (
+        <div className="mt-2.5 text-xs text-[#4a4a4c] tracking-[0.1em]">{caption}</div>
+      )}
     </div>
   );
 }`,
@@ -4362,14 +5883,33 @@ export function FormulaBlock({ formula, caption }: Props) {
     slug: "signal-card-grid",
     path: "cards/SignalCardGrid.tsx",
     category: "cards",
-    code: `type SignalCard = { letter: string; title: string; subtitle: string; description: string; };
-type Props = { cards: SignalCard[]; };
+    code: `type SignalCard = {
+  letter: string;
+  title: string;
+  subtitle: string;
+  description: string;
+};
+
+type Props = {
+  cards: SignalCard[];
+};
+
 export function SignalCardGrid({ cards }: Props) {
   return (
-    <div className="grid gap-3 mt-6" style={{ gridTemplateColumns: \`repeat(\${Math.min(cards.length, 5)}, minmax(0, 1fr))\` }}>
+    <div
+      className="grid gap-3 mt-6"
+      style={{
+        gridTemplateColumns: \`repeat(\${Math.min(cards.length, 5)}, minmax(0, 1fr))\`,
+      }}
+    >
       {cards.map((card) => (
-        <div key={card.letter} className="p-[22px] border border-black/[0.06] rounded-xl bg-black/[0.02]">
-          <div className="font-serif italic text-[44px] text-[#059669] leading-none">{card.letter}</div>
+        <div
+          key={card.letter}
+          className="p-[22px] border border-black/[0.06] rounded-xl bg-black/[0.02]"
+        >
+          <div className="font-serif italic text-[44px] text-[#059669] leading-none">
+            {card.letter}
+          </div>
           <h4 className="mt-2 mb-1 text-base text-[#0a0a0a] font-medium">{card.title}</h4>
           <p className="m-0 mb-1 text-sm text-[#8a8a8e]">{card.subtitle}</p>
           <p className="m-0 text-sm text-[#4a4a4c]">{card.description}</p>
@@ -4386,15 +5926,29 @@ export function SignalCardGrid({ cards }: Props) {
     slug: "principle-card-grid",
     path: "cards/PrincipleCardGrid.tsx",
     category: "cards",
-    code: `type Principle = { number: string; title: string; subtitle: string; description: string; };
-type Props = { principles: Principle[]; };
+    code: `type Principle = {
+  number: string;
+  title: string;
+  subtitle: string;
+  description: string;
+};
+
+type Props = {
+  principles: Principle[];
+};
+
 export function PrincipleCardGrid({ principles }: Props) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
       {principles.map((p) => (
-        <article key={p.number} className="p-[22px] border border-black/[0.06] rounded-xl bg-black/[0.02]">
+        <article
+          key={p.number}
+          className="p-[22px] border border-black/[0.06] rounded-xl bg-black/[0.02]"
+        >
           <div className="font-mono text-[#059669] text-xs tracking-[0.2em]">{p.number}</div>
-          <h3 className="font-serif font-medium mt-2.5 mb-1 text-[22px] text-[#0a0a0a]">{p.title}</h3>
+          <h3 className="font-serif font-medium mt-2.5 mb-1 text-[22px] text-[#0a0a0a]">
+            {p.title}
+          </h3>
           <div className="text-[13px] text-[#059669] mb-2">{p.subtitle}</div>
           <p className="text-[#4a4a4c] text-sm m-0">{p.description}</p>
         </article>
@@ -4410,15 +5964,30 @@ export function PrincipleCardGrid({ principles }: Props) {
     slug: "diagnostic-grid",
     path: "cards/DiagnosticGrid.tsx",
     category: "cards",
-    code: `type DiagItem = { tag: string; title: string; description: string; };
-type Props = { items: DiagItem[]; };
+    code: `type DiagItem = {
+  tag: string;
+  title: string;
+  description: string;
+};
+
+type Props = {
+  items: DiagItem[];
+};
+
 export function DiagnosticGrid({ items }: Props) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-6">
       {items.map((item) => (
-        <div key={item.tag} className="p-6 border border-black/[0.06] rounded-xl bg-black/[0.02]">
-          <span className="inline-block px-2.5 py-1 rounded-full bg-[rgba(234,179,8,0.2)] text-[#b45309] font-mono text-[10px] tracking-[0.15em] mb-3">{item.tag}</span>
-          <h3 className="font-serif font-medium text-[#0a0a0a] mt-0 mb-1.5 text-[22px]">{item.title}</h3>
+        <div
+          key={item.tag}
+          className="p-6 border border-black/[0.06] rounded-xl bg-black/[0.02]"
+        >
+          <span className="inline-block px-2.5 py-1 rounded-full bg-[rgba(234,179,8,0.2)] text-[#b45309] font-mono text-[10px] tracking-[0.15em] mb-3">
+            {item.tag}
+          </span>
+          <h3 className="font-serif font-medium text-[#0a0a0a] mt-0 mb-1.5 text-[22px]">
+            {item.title}
+          </h3>
           <p className="text-[#4a4a4c] m-0 text-[15px]">{item.description}</p>
         </div>
       ))}
@@ -4434,25 +6003,52 @@ export function DiagnosticGrid({ items }: Props) {
     path: "callouts/CalloutBox.tsx",
     category: "callouts",
     code: `import { ReactNode } from "react";
-type CheckItem = { symbol: string; content: ReactNode; };
-type Props = { title: string; intro?: string; label?: string; items?: CheckItem[]; footer?: string; };
+
+type CheckItem = {
+  symbol: string;
+  content: ReactNode;
+};
+
+type Props = {
+  title: string;
+  intro?: string;
+  label?: string;
+  items?: CheckItem[];
+  footer?: string;
+};
+
 export function CalloutBox({ title, intro, label, items = [], footer }: Props) {
   return (
-    <div className="mt-8 p-8 border border-[#b45309] rounded-[14px]" style={{ background: "linear-gradient(180deg, rgba(234,179,8,0.2), rgba(0,0,0,0.02))" }}>
-      <h3 className="font-serif font-medium text-[#0a0a0a] text-2xl mt-0 mb-2.5">{title}</h3>
+    <div
+      className="mt-8 p-8 border border-[#b45309] rounded-[14px]"
+      style={{
+        background: "linear-gradient(180deg, rgba(234,179,8,0.2), rgba(0,0,0,0.02))",
+      }}
+    >
+      <h3 className="font-serif font-medium text-[#0a0a0a] text-2xl mt-0 mb-2.5">
+        {title}
+      </h3>
       {intro && <p className="text-[#4a4a4c] mt-0 mb-4">{intro}</p>}
-      {label && <div className="font-mono text-[11px] tracking-[0.3em] text-[#b45309] mt-5 mb-2 uppercase">{label}</div>}
+      {label && (
+        <div className="font-mono text-[11px] tracking-[0.3em] text-[#b45309] mt-5 mb-2 uppercase">
+          {label}
+        </div>
+      )}
       {items.length > 0 && (
         <ul className="list-none p-0 m-0 flex flex-col gap-2">
           {items.map((item, i) => (
             <li key={i} className="flex gap-2.5 items-start text-[15px] text-[#1a1a1a]">
-              <span className="inline-flex w-[22px] h-[22px] items-center justify-center rounded-full bg-[rgba(234,179,8,0.2)] text-[#b45309] text-xs shrink-0">{item.symbol}</span>
+              <span className="inline-flex w-[22px] h-[22px] items-center justify-center rounded-full bg-[rgba(234,179,8,0.2)] text-[#b45309] text-xs shrink-0">
+                {item.symbol}
+              </span>
               <span>{item.content}</span>
             </li>
           ))}
         </ul>
       )}
-      {footer && <p className="text-[#4a4a4c] mt-4 mb-0 font-medium">{footer}</p>}
+      {footer && (
+        <p className="text-[#4a4a4c] mt-4 mb-0 font-medium">{footer}</p>
+      )}
     </div>
   );
 }`,
@@ -4465,14 +6061,27 @@ export function CalloutBox({ title, intro, label, items = [], footer }: Props) {
     path: "lists/Checklist.tsx",
     category: "lists",
     code: `import { ReactNode } from "react";
-type CheckItem = { symbol: string; text: ReactNode; };
-type Props = { items: CheckItem[]; };
+
+type CheckItem = {
+  symbol: string;
+  text: ReactNode;
+};
+
+type Props = {
+  items: CheckItem[];
+};
+
 export function Checklist({ items }: Props) {
   return (
     <ul className="list-none p-0 my-6 flex flex-col gap-2.5">
       {items.map((item, i) => (
-        <li key={i} className="flex gap-3 items-start px-4 py-[14px] bg-black/[0.02] border border-black/[0.06] rounded-[10px] text-[#1a1a1a] text-[15px]">
-          <span className="inline-flex w-[22px] h-[22px] items-center justify-center rounded-full bg-[rgba(5,150,105,0.1)] text-[#059669] text-xs shrink-0">{item.symbol}</span>
+        <li
+          key={i}
+          className="flex gap-3 items-start px-4 py-[14px] bg-black/[0.02] border border-black/[0.06] rounded-[10px] text-[#1a1a1a] text-[15px]"
+        >
+          <span className="inline-flex w-[22px] h-[22px] items-center justify-center rounded-full bg-[rgba(5,150,105,0.1)] text-[#059669] text-xs shrink-0">
+            {item.symbol}
+          </span>
           <span>{item.text}</span>
         </li>
       ))}
@@ -4489,27 +6098,76 @@ export function Checklist({ items }: Props) {
     category: "animation",
     code: `"use client";
 import { useEffect, useRef, ReactNode } from "react";
+
 type Variant = "up" | "left" | "right" | "scale";
-type Props = { children: ReactNode; variant?: Variant; delay?: 0|100|200|300|400|500; className?: string; };
+
+type Props = {
+  children: ReactNode;
+  variant?: Variant;
+  delay?: 0 | 100 | 200 | 300 | 400 | 500;
+  className?: string;
+};
+
 const revealStyle = \`
-  .sr-up{opacity:0;transform:translateY(32px) scale(.97);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);will-change:opacity,transform} .sr-up.in{opacity:1;transform:translateY(0) scale(1)}
-  .sr-left{opacity:0;transform:translateX(-40px) scale(.97);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);will-change:opacity,transform} .sr-left.in{opacity:1;transform:translateX(0) scale(1)}
-  .sr-right{opacity:0;transform:translateX(40px) scale(.97);transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1);will-change:opacity,transform} .sr-right.in{opacity:1;transform:translateX(0) scale(1)}
-  .sr-scale{opacity:0;transform:scale(.88);transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1);will-change:opacity,transform} .sr-scale.in{opacity:1;transform:scale(1)}
-  .sr-d1{transition-delay:.1s} .sr-d2{transition-delay:.2s} .sr-d3{transition-delay:.3s} .sr-d4{transition-delay:.4s} .sr-d5{transition-delay:.5s}
-  @media(prefers-reduced-motion:reduce){.sr-up,.sr-left,.sr-right,.sr-scale{opacity:1;transform:none;transition:none}}
+  .sr-up    { opacity:0; transform:translateY(32px) scale(.97); transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1); will-change:opacity,transform; }
+  .sr-up.in { opacity:1; transform:translateY(0) scale(1); }
+  .sr-left    { opacity:0; transform:translateX(-40px) scale(.97); transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1); will-change:opacity,transform; }
+  .sr-left.in { opacity:1; transform:translateX(0) scale(1); }
+  .sr-right    { opacity:0; transform:translateX(40px) scale(.97); transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1); will-change:opacity,transform; }
+  .sr-right.in { opacity:1; transform:translateX(0) scale(1); }
+  .sr-scale    { opacity:0; transform:scale(.88); transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1); will-change:opacity,transform; }
+  .sr-scale.in { opacity:1; transform:scale(1); }
+  .sr-d1 { transition-delay:.1s; }
+  .sr-d2 { transition-delay:.2s; }
+  .sr-d3 { transition-delay:.3s; }
+  .sr-d4 { transition-delay:.4s; }
+  .sr-d5 { transition-delay:.5s; }
+  @media (prefers-reduced-motion:reduce) {
+    .sr-up,.sr-left,.sr-right,.sr-scale { opacity:1; transform:none; transition:none; }
+  }
 \`;
-const vc = { up:"sr-up", left:"sr-left", right:"sr-right", scale:"sr-scale" };
+
+const variantClass: Record<Variant, string> = {
+  up: "sr-up",
+  left: "sr-left",
+  right: "sr-right",
+  scale: "sr-scale",
+};
+
 export function ScrollReveal({ children, variant = "up", delay = 0, className = "" }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    const el = ref.current; if (!el) return;
-    if (!("IntersectionObserver" in window)) { el.classList.add("in"); return; }
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { el.classList.add("in"); io.disconnect(); } }, { threshold: 0.1, rootMargin: "0px 0px -60px 0px" });
-    io.observe(el); return () => io.disconnect();
+    const el = ref.current;
+    if (!el) return;
+    if (!("IntersectionObserver" in window)) {
+      el.classList.add("in");
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add("in");
+          io.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: "0px 0px -60px 0px" }
+    );
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
-  const cls = [vc[variant], delay ? \`sr-d\${delay/100}\` : "", className].filter(Boolean).join(" ");
-  return (<><style>{revealStyle}</style><div ref={ref} className={cls}>{children}</div></>);
+
+  const delayClass = delay ? \`sr-d\${delay / 100}\` : "";
+  const cls = [variantClass[variant], delayClass, className].filter(Boolean).join(" ");
+
+  return (
+    <>
+      <style>{revealStyle}</style>
+      <div ref={ref} className={cls}>
+        {children}
+      </div>
+    </>
+  );
 }`,
     prompt: "Create a React scroll-reveal wrapper component that uses IntersectionObserver to add an .in class when the element enters the viewport, triggering CSS transitions. Support four animation variants: fade-up, slide-from-left, slide-from-right, and scale-up. Include stagger delay support and respect prefers-reduced-motion.",
     tags: ["scroll", "reveal", "animation", "intersection-observer", "fade", "wrapper", "motion"],
@@ -4519,28 +6177,79 @@ export function ScrollReveal({ children, variant = "up", delay = 0, className = 
     slug: "site-footer",
     path: "layout/SiteFooter.tsx",
     category: "layout",
-    code: `type FooterColumn = { heading: string; links: { label: string; href: string }[]; };
-type Props = { brandName?: string; tagline?: string; columns?: FooterColumn[]; copyright?: string; publishedBy?: { label: string; href: string }; };
-export function SiteFooter({ brandName = "YASH", tagline = "", columns = [], copyright = \`© \${new Date().getFullYear()} YASH. All rights reserved.\`, publishedBy }: Props) {
+    code: `type FooterColumn = {
+  heading: string;
+  links: { label: string; href: string }[];
+};
+
+type Props = {
+  brandName?: string;
+  tagline?: string;
+  columns?: FooterColumn[];
+  copyright?: string;
+  publishedBy?: { label: string; href: string };
+};
+
+export function SiteFooter({
+  brandName = "YASH",
+  tagline = "",
+  columns = [],
+  copyright = \`© \${new Date().getFullYear()} YASH. All rights reserved.\`,
+  publishedBy,
+}: Props) {
   return (
     <footer className="border-t border-black/[0.06] px-6 pt-16 pb-7 mt-10">
-      <div className="max-w-[1200px] mx-auto grid gap-8" style={{ gridTemplateColumns: \`2fr \${columns.map(() => "1fr").join(" ")}\` }}>
+      <div
+        className="max-w-[1200px] mx-auto grid gap-8"
+        style={{ gridTemplateColumns: \`2fr \${columns.map(() => "1fr").join(" ")}\` }}
+      >
+        {/* Brand column */}
         <div>
           <div className="flex items-center gap-2.5 font-semibold tracking-[0.08em] text-[#0a0a0a] text-[13px]">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#059669] shadow-[0_0_12px_#059669] shrink-0" />{brandName}
+            <span className="w-2.5 h-2.5 rounded-full bg-[#059669] shadow-[0_0_12px_#059669] shrink-0" />
+            {brandName}
           </div>
-          {tagline && <p className="text-sm text-[#8a8a8e] mt-2.5 max-w-[360px]">{tagline}</p>}
+          {tagline && (
+            <p className="text-sm text-[#8a8a8e] mt-2.5 max-w-[360px]">{tagline}</p>
+          )}
         </div>
+
+        {/* Link columns */}
         {columns.map((col) => (
           <div key={col.heading}>
-            <h4 className="font-mono text-[11px] tracking-[0.3em] text-[#059669] mt-0 mb-3.5 uppercase">{col.heading}</h4>
-            <ul className="list-none p-0 m-0">{col.links.map((l) => (<li key={l.href} className="mb-2"><a href={l.href} className="text-[#4a4a4c] text-sm hover:text-[#0a0a0a] transition-colors no-underline">{l.label}</a></li>))}</ul>
+            <h4 className="font-mono text-[11px] tracking-[0.3em] text-[#059669] mt-0 mb-3.5 uppercase">
+              {col.heading}
+            </h4>
+            <ul className="list-none p-0 m-0">
+              {col.links.map((l) => (
+                <li key={l.href} className="mb-2">
+                  <a
+                    href={l.href}
+                    className="text-[#4a4a4c] text-sm hover:text-[#0a0a0a] transition-colors no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+                  >
+                    {l.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           </div>
         ))}
       </div>
+
+      {/* Bottom bar */}
       <div className="max-w-[1200px] mx-auto flex justify-between flex-wrap gap-3 mt-12 pt-[22px] border-t border-black/[0.06] text-[#8a8a8e] text-xs">
         <span>{copyright}</span>
-        {publishedBy && <span>Published by <a href={publishedBy.href} className="text-[#4a4a4c] hover:text-[#0a0a0a] no-underline">{publishedBy.label}</a></span>}
+        {publishedBy && (
+          <span>
+            Published by{" "}
+            <a
+              href={publishedBy.href}
+              className="text-[#4a4a4c] hover:text-[#0a0a0a] no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+            >
+              {publishedBy.label}
+            </a>
+          </span>
+        )}
       </div>
     </footer>
   );
@@ -5396,6 +7105,7 @@ export function ConicBorderButton({
           transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
         }
         .cbb:hover { transform: translateY(-2px); }
+        .cbb:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         .cbb::after {
           content: "";
           position: absolute;
@@ -5779,6 +7489,11 @@ export function SectionProgressRail({
           background: rgba(236, 230, 247, 0.26);
           transition: 0.3s cubic-bezier(0.22, 1, 0.36, 1);
           position: relative;
+        }
+        /* 8px dot targets, so the outline sits further out to stay legible */
+        .spr a:focus-visible {
+          outline: 2px solid #fff;
+          outline-offset: 4px;
         }
         .spr a.spr--on {
           background: var(--spr-active, #f0a03c);
@@ -7034,7 +8749,7 @@ export function WaxSealButton({
   };
 
   if (variant === "ghost") {
-    const ghostClass = \`group relative inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] \${className ?? ""}\`;
+    const ghostClass = \`group relative inline-flex items-center gap-2 text-sm uppercase tracking-[0.2em] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white \${className ?? ""}\`;
     const ghostStyle = { color: "#f5f0e8" };
     const underline = (
       <span
@@ -7059,7 +8774,7 @@ export function WaxSealButton({
     );
   }
 
-  const primaryClass = \`relative inline-flex items-center justify-center rounded-[2px] px-8 py-4 text-sm uppercase tracking-[0.18em] \${className ?? ""}\`;
+  const primaryClass = \`relative inline-flex items-center justify-center rounded-[2px] px-8 py-4 text-sm uppercase tracking-[0.18em] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white \${className ?? ""}\`;
   const primaryStyle = {
     background: foil,
     color: ink,
@@ -8015,7 +9730,7 @@ export function TillReceiptPrint({
           <button
             type="button"
             onClick={onContinue}
-            className="rounded-md bg-[oklch(0.28_0.04_330)] px-6 py-3 text-sm font-medium text-[oklch(0.98_0.01_85)]"
+            className="rounded-md bg-[oklch(0.28_0.04_330)] px-6 py-3 text-sm font-medium text-[oklch(0.98_0.01_85)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
           >
             {continueLabel}
           </button>
@@ -10106,7 +11821,7 @@ export function CelebrationOverlay({
           <p className="mt-3 text-sm leading-relaxed text-neutral-600 sm:text-base">{description}</p>
           <button
             type="button"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#912c22] px-5 py-2.5 text-sm font-semibold text-[#f7f3ee] disabled:opacity-50 sm:mt-8 sm:w-auto"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#912c22] px-5 py-2.5 text-sm font-semibold text-[#f7f3ee] disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] sm:mt-8 sm:w-auto"
             disabled={exiting}
             onClick={handleContinue}
           >
