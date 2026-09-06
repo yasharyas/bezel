@@ -1,17 +1,19 @@
-# yash-ui-system
+# Bezel
 
-A production-ready UI component library, gallery, and CLI — built as a Turborepo monorepo. 73 components across 23 categories, each with copy-paste-ready code, a live preview, and the original generation prompt.
+A React component library for interfaces that move — motion, navigation, pointer behaviour and editorial surfaces — published to npm as [`bezel-ui`](https://www.npmjs.com/package/bezel-ui) and developed here as a Turborepo monorepo with a live gallery and a component-copying CLI.
 
-**Live gallery:** [yash-ui-system-gallery.vercel.app](https://yash-ui-system-gallery.vercel.app/)
+A bezel is the frame that holds a lens, a watch face or a screen: the precise edge around the thing you actually look at. That is the scope of the library — the framing around your content.
+
+**Live gallery:** [yash-ui-system-gallery.vercel.app](https://yash-ui-system-gallery.vercel.app/) — the source of truth for what currently ships.
 
 ## Structure
 
 ```
 root/
   apps/gallery        → Next.js gallery app (browse, preview, and copy component code)
-  packages/ui          → The component source (packages/ui/src/<category>/Component.tsx)
-  packages/registry    → Metadata registry (name, slug, code, prompt, tags) consumed by the gallery + CLI
-  packages/cli         → `yash-ui` CLI that copies a component's source into a target project
+  packages/ui          → `bezel-ui` — the component source (packages/ui/src/<category>/Component.tsx)
+  packages/registry    → `@bezel/registry` — metadata consumed by the gallery + CLI
+  packages/cli         → `bezel-cli` — copies a component's source into a target project
 ```
 
 ## Tech Stack
@@ -250,22 +252,32 @@ npm run dev
 # → http://localhost:3333
 ```
 
-## CLI Usage
+## Using Bezel in your project
 
-The `yash-ui` CLI copies a component's source file straight into `<your-project>/components/ui/`.
-
-```bash
-npx yash-ui add <component>
-npx yash-ui help   # list all available components
-```
+Install the component package from npm:
 
 ```bash
-npx yash-ui add glass-button
-npx yash-ui add stepper
-npx yash-ui add tubelight-navbar
+npm install bezel-ui
 ```
 
-All 73 registry components are installable via the CLI — `packages/cli/bin/index.js`'s `COMPONENT_MAP` stays in sync with `packages/registry/src/index.ts`.
+```tsx
+import { ScrollReveal, ShinyText } from "bezel-ui";
+```
+
+Bezel ships TypeScript source rather than compiled JavaScript, so your bundler has to transpile it (`transpilePackages: ["bezel-ui"]` in Next.js) and Tailwind needs `./node_modules/bezel-ui/src/**/*.{js,ts,jsx,tsx}` in its `content` globs. Full setup notes live in [`packages/ui/README.md`](packages/ui/README.md).
+
+## CLI
+
+`packages/cli` provides a `bezel` binary that copies a component's source file straight into `<your-project>/components/ui/`:
+
+```bash
+bezel add glass-button
+bezel help   # list all available components
+```
+
+**Status: repo-local only, not published.** The CLI resolves components through a path relative to this monorepo (`packages/cli/bin/index.js` → `../../ui/src`), so it only works when run from inside this checkout. It would need to resolve component source from its own package — or from the published `bezel-ui` — before it can ship. The package is marked `private` until then. Note also that the bare name `bezel` is already taken on npm by an unrelated package, so the published package name will have to differ from the binary name.
+
+`COMPONENT_MAP` in `packages/cli/bin/index.js` stays in sync with `packages/registry/src/index.ts`.
 
 ## Adding a New Component
 

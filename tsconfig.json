@@ -12,10 +12,10 @@
     "declarationMap": true,
     "sourceMap": true,
     "paths": {
-      "@repo/ui": ["./packages/ui/src"],
-      "@repo/ui/*": ["./packages/ui/src/*"],
-      "@repo/registry": ["./packages/registry/src"],
-      "@repo/registry/*": ["./packages/registry/src/*"]
+      "bezel-ui": ["./packages/ui/src"],
+      "bezel-ui/*": ["./packages/ui/src/*"],
+      "@bezel/registry": ["./packages/registry/src"],
+      "@bezel/registry/*": ["./packages/registry/src/*"]
     }
   },
   "exclude": ["node_modules", "dist", ".next"]
