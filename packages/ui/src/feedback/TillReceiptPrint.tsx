@@ -177,7 +177,7 @@ export function TillReceiptPrint({
           <button
             type="button"
             onClick={onContinue}
-            className="rounded-md bg-[oklch(0.28_0.04_330)] px-6 py-3 text-sm font-medium text-[oklch(0.98_0.01_85)]"
+            className="rounded-md bg-[oklch(0.28_0.04_330)] px-6 py-3 text-sm font-medium text-[oklch(0.98_0.01_85)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
           >
             {continueLabel}
           </button>

@@ -59,6 +59,7 @@ export function FileUpload({
           className={[
             'flex items-center gap-3 p-3 rounded-xl border border-dashed cursor-pointer',
             'transition-[border-color] duration-200 min-h-[48px]',
+            'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]',
             error ? 'border-red-500' : 'border-neutral-300 hover:border-indigo-400',
           ].join(' ')}
           onClick={() => inputRef.current?.click()}
@@ -78,7 +79,7 @@ export function FileUpload({
               <button
                 type="button"
                 onClick={() => setShowPreview(true)}
-                className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors"
+                className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                 title="Preview"
               >
                 <Eye className="w-4 h-4 text-neutral-600" />
@@ -87,7 +88,7 @@ export function FileUpload({
             <button
               type="button"
               onClick={handleRemove}
-              className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors"
+              className="p-1.5 rounded-full hover:bg-neutral-200 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               title="Remove"
             >
               <X className="w-4 h-4 text-neutral-600" />

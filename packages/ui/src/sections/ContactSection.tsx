@@ -92,6 +92,10 @@ export function ContactSection({
           display: flex; align-items: center; justify-content: center;
           width: 100%; height: 100%; text-decoration: none; position: relative;
         }
+        .yui-contact-circle a:focus-visible {
+          outline: 2px solid #fff;
+          outline-offset: 2px;
+        }
         .yui-contact-circle svg {
           position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg);
         }

@@ -53,6 +53,7 @@ export function TextDisperseLink({ label, href, target, rel, className = "" }: P
           text-decoration: none; font-weight: 500; text-transform: uppercase;
           letter-spacing: 0.03em;
         }
+        .yui-disperse-link:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         .yui-dchar { display: inline-block; will-change: transform; }
       `}</style>
       <a

@@ -26,6 +26,7 @@ export function NodeCard({
       className={[
         'relative min-w-[180px] max-w-[240px] rounded-2xl bg-white',
         'border-2 transition-shadow duration-150 cursor-pointer',
+        'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]',
         selected ? 'ring-2 ring-offset-2 shadow-md' : 'shadow-sm hover:shadow-md',
       ].join(' ')}
       style={{
@@ -34,7 +35,15 @@ export function NodeCard({
           ? ({ '--tw-ring-color': accentColor } as CSSProperties)
           : {}),
       }}
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        // Space would otherwise scroll the canvas
+        if (event.key === ' ') event.preventDefault();
+        onClick?.();
+      }}
     >
       {/* Left colour accent bar */}
       <div

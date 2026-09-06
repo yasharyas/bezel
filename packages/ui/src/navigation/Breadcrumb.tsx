@@ -38,7 +38,7 @@ export function Breadcrumb({ items, className = "" }: Props) {
               ) : item.href ? (
                 <a
                   href={item.href}
-                  className="flex items-center gap-1 hover:text-primary transition-colors whitespace-nowrap underline-offset-2 hover:underline"
+                  className="flex items-center gap-1 hover:text-primary transition-colors whitespace-nowrap underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                 >
                   {isFirst && <Home className="w-3 h-3 shrink-0" />}
                   {item.label}
@@ -47,7 +47,7 @@ export function Breadcrumb({ items, className = "" }: Props) {
                 <button
                   type="button"
                   onClick={item.onClick}
-                  className="hover:text-primary transition-colors whitespace-nowrap underline-offset-2 hover:underline cursor-pointer bg-transparent border-0 p-0 text-xs text-muted-foreground"
+                  className="hover:text-primary transition-colors whitespace-nowrap underline-offset-2 hover:underline cursor-pointer bg-transparent border-0 p-0 text-xs text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                 >
                   {isFirst && <Home className="w-3 h-3 shrink-0 inline mr-1" />}
                   {item.label}

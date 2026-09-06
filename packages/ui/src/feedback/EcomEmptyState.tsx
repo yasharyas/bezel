@@ -69,7 +69,7 @@ export function EcomEmptyState({ type, query, onCTA }: Props) {
       {onCTA && (
         <button
           onClick={onCTA}
-          className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150"
+          className="mt-4 px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium hover:opacity-90 active:scale-[0.97] transition-[opacity,transform] duration-150 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           {c.cta}
         </button>

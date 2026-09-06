@@ -37,7 +37,8 @@ export function SidePanel({ title, headerLeft, onClose, footer, children }: Side
         </div>
         <button
           onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
+          aria-label="Close panel"
+          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <X size={16} />
         </button>
@@ -104,7 +105,7 @@ export function PanelDeleteButton({ onClick, label = 'Delete' }: { onClick: () =
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+      className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
     >
       {label}
     </button>

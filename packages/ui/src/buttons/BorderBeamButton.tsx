@@ -10,6 +10,7 @@ type Props = {
 const beamStyle = `
   @keyframes border-beam-travel { to { offset-distance: 100%; } }
   .beam-btn { position: relative; isolation: isolate; overflow: hidden; }
+  .beam-btn:focus-visible { outline: 2px solid #912c22; outline-offset: 2px; }
   .beam-border {
     position: absolute; inset: 0; border-radius: inherit;
     pointer-events: none; z-index: 1; padding: 1px;

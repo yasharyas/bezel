@@ -213,7 +213,7 @@ export function CelebrationOverlay({
           <p className="mt-3 text-sm leading-relaxed text-neutral-600 sm:text-base">{description}</p>
           <button
             type="button"
-            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#912c22] px-5 py-2.5 text-sm font-semibold text-[#f7f3ee] disabled:opacity-50 sm:mt-8 sm:w-auto"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-[#912c22] px-5 py-2.5 text-sm font-semibold text-[#f7f3ee] disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] sm:mt-8 sm:w-auto"
             disabled={exiting}
             onClick={handleContinue}
           >

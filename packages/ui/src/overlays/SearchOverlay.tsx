@@ -95,16 +95,16 @@ export function SearchOverlay({
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={handleKey}
                 placeholder="Search…"
-                className="flex-1 text-base outline-none bg-transparent placeholder:text-muted-foreground"
+                className="flex-1 text-base outline-none bg-transparent placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               />
               {value && (
-                <button onClick={() => setValue("")} className="p-1 hover:bg-muted rounded-full transition-colors">
+                <button onClick={() => setValue("")} className="p-1 hover:bg-muted rounded-full transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="text-primary font-medium text-sm shrink-0 hover:opacity-70 transition-opacity"
+                className="text-primary font-medium text-sm shrink-0 hover:opacity-70 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               >
                 Cancel
               </button>
@@ -118,7 +118,7 @@ export function SearchOverlay({
                     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" /> Recent
                     </span>
-                    <button onClick={handleClearRecent} className="text-xs text-primary hover:underline">
+                    <button onClick={handleClearRecent} className="text-xs text-primary hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]">
                       Clear
                     </button>
                   </div>
@@ -127,7 +127,7 @@ export function SearchOverlay({
                       <button
                         key={r}
                         onClick={() => commit(r)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full text-sm hover:bg-primary/10 hover:text-primary transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full text-sm hover:bg-primary/10 hover:text-primary transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                       >
                         <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                         {r}
@@ -151,7 +151,7 @@ export function SearchOverlay({
                       <button
                         key={s}
                         onClick={() => commit(s)}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium hover:bg-primary/20 transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-medium hover:bg-primary/20 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                       >
                         {s}
                         <ChevronRight className="w-3 h-3" />
@@ -167,7 +167,7 @@ export function SearchOverlay({
               <div className="p-4 border-t border-border">
                 <button
                   onClick={() => commit(value)}
-                  className="w-full bg-primary text-primary-foreground py-3 rounded-xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity active:scale-[0.98]"
+                  className="w-full bg-primary text-primary-foreground py-3 rounded-xl flex items-center justify-center gap-2 font-medium hover:opacity-90 transition-opacity active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                 >
                   <Search className="w-4 h-4" />
                   Search for &ldquo;{value}&rdquo;

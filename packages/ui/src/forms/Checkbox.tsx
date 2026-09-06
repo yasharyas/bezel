@@ -21,7 +21,7 @@ export function Checkbox({
     <div className="flex flex-col gap-1">
       <label
         htmlFor={name}
-        className="flex items-center gap-3 cursor-pointer min-h-[48px] select-none"
+        className="flex items-center gap-3 cursor-pointer min-h-[48px] select-none has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[#912c22]"
       >
         <div
           className={[

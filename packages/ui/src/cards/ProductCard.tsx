@@ -51,7 +51,7 @@ export function ProductCard({ product, quantity, onAdd, onDecrease, onNotify, on
       {/* Image */}
       <button
         onClick={onCardClick}
-        className="block w-full relative aspect-square bg-muted overflow-hidden focus:outline-none"
+        className="block w-full relative aspect-square bg-muted overflow-hidden focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         aria-label={`View details for ${product.name}`}
         tabIndex={onCardClick ? 0 : -1}
       >
@@ -126,7 +126,7 @@ export function ProductCard({ product, quantity, onAdd, onDecrease, onNotify, on
       <div className="p-3">
         <button
           onClick={onCardClick}
-          className="text-left w-full no-underline text-inherit hover:text-primary transition-colors focus:outline-none"
+          className="text-left w-full no-underline text-inherit hover:text-primary transition-colors focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <h3 className="line-clamp-2 m-0 mb-0.5 text-sm font-semibold leading-tight">{product.name}</h3>
         </button>

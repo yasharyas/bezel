@@ -45,7 +45,8 @@ export function CollapsibleSidebar({
       <div className="w-12 bg-white border-r border-neutral-200 flex flex-col items-center pt-3">
         <button
           onClick={() => setCollapsed(false)}
-          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 transition-colors cursor-pointer"
+          aria-label="Expand sidebar"
+          className="p-2 rounded-lg hover:bg-neutral-100 text-neutral-500 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <PanelLeft size={18} />
         </button>
@@ -60,7 +61,8 @@ export function CollapsibleSidebar({
         <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">{title}</h2>
         <button
           onClick={() => setCollapsed(true)}
-          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer"
+          aria-label="Collapse sidebar"
+          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <PanelLeftClose size={16} />
         </button>

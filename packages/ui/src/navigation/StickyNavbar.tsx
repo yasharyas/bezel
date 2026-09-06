@@ -76,7 +76,7 @@ export function StickyNavbar({
                 <a
                   key={link.href}
                   href={link.href}
-                  className={`text-sm font-medium transition-colors duration-200 hover:text-neutral-900 ${
+                  className={`text-sm font-medium transition-colors duration-200 hover:text-neutral-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] ${
                     activePath === link.href
                       ? "text-neutral-900 border-b-2 border-neutral-900 pb-0.5"
                       : "text-neutral-500"
@@ -90,17 +90,17 @@ export function StickyNavbar({
             {/* Desktop actions */}
             <div className="hidden lg:flex items-center gap-4">
               {onSearchClick && (
-                <button onClick={onSearchClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Search">
+                <button onClick={onSearchClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]" aria-label="Search">
                   <Search size={20} />
                 </button>
               )}
               {onAccountClick && (
-                <button onClick={onAccountClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label="Account">
+                <button onClick={onAccountClick} className="p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]" aria-label="Account">
                   <User size={20} />
                 </button>
               )}
               {onCartClick && (
-                <button onClick={onCartClick} className="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer" aria-label={`Cart, ${cartCount} items`}>
+                <button onClick={onCartClick} className="relative p-2 text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]" aria-label={`Cart, ${cartCount} items`}>
                   <ShoppingBag size={20} />
                   {cartCount > 0 && (
                     <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full">
@@ -113,7 +113,7 @@ export function StickyNavbar({
 
             {/* Mobile toggle */}
             <button
-              className="lg:hidden p-2 text-neutral-900 cursor-pointer"
+              className="lg:hidden p-2 text-neutral-900 cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? "Close menu" : "Open menu"}
               aria-expanded={isOpen}
@@ -139,7 +139,7 @@ export function StickyNavbar({
                     key={link.href}
                     href={link.href}
                     onClick={() => setIsOpen(false)}
-                    className={`block py-3 px-4 rounded-lg text-sm font-medium transition-colors ${
+                    className={`block py-3 px-4 rounded-lg text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22] ${
                       activePath === link.href
                         ? "bg-neutral-900 text-white"
                         : "text-neutral-700 hover:bg-neutral-50"

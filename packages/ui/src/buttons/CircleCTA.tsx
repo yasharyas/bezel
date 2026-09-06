@@ -46,6 +46,7 @@ export function CircleCTA({ href, label = "view\nmore", size = 10, strokeColor =
       <style>{`
         .yui-circle-cta { position: relative; display: inline-block; }
         .yui-circle-cta a { display: flex; align-items: center; justify-content: center; position: relative; width: 100%; height: 100%; }
+        .yui-circle-cta a:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
         .yui-circle-cta svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
         .yui-circle-draw { fill: none; stroke-width: 1; }
         .yui-circle-label {

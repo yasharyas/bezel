@@ -46,7 +46,7 @@ export function SiteFooter({
                 <li key={l.href} className="mb-2">
                   <a
                     href={l.href}
-                    className="text-[#4a4a4c] text-sm hover:text-[#0a0a0a] transition-colors no-underline"
+                    className="text-[#4a4a4c] text-sm hover:text-[#0a0a0a] transition-colors no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
                   >
                     {l.label}
                   </a>
@@ -65,7 +65,7 @@ export function SiteFooter({
             Published by{" "}
             <a
               href={publishedBy.href}
-              className="text-[#4a4a4c] hover:text-[#0a0a0a] no-underline"
+              className="text-[#4a4a4c] hover:text-[#0a0a0a] no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
             >
               {publishedBy.label}
             </a>

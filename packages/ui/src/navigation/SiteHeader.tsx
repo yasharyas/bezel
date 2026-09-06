@@ -51,6 +51,8 @@ export function SiteHeader({
         }
         .yui-nav-item:hover .link-outer { transform: translateY(-100%); }
         .yui-nav-item:hover .link-inner { transform: translateY(0); }
+        /* Outline goes on the item, not the link: the item clips its children */
+        .yui-nav-item:has(:focus-visible) { outline: 2px solid #fff; outline-offset: 2px; }
         .yui-nav-bubble {
           position: absolute; inset: 0; overflow: hidden; border-radius: 999px; pointer-events: none;
         }
@@ -81,6 +83,7 @@ export function SiteHeader({
         }
         .yui-site-cta:hover .yui-site-cta-bubble::before { top: -25%; }
         .yui-site-cta:hover .link-outer { color: #000; }
+        .yui-site-cta:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
       `}</style>
       <header className={`yui-site-header${visible ? " visible" : ""}`}>
         <a href={logoHref} className="yui-site-header-logo">{logo}</a>
