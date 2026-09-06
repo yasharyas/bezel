@@ -36,7 +36,7 @@
     "build": "echo 'cli ready'"
   },
   "peerDependencies": {
-    "bezel-ui": "^0.0.1"
+    "bezel-ui": ">=0.0.2"
   },
   "peerDependenciesMeta": {
     "bezel-ui": {
