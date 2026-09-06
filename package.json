@@ -1,5 +1,5 @@
 {
-  "name": "yash-ui-system",
+  "name": "bezel",
   "private": true,
   "workspaces": [
     "apps/*",

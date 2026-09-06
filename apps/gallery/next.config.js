@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@repo/ui", "@repo/registry"],
+  transpilePackages: ["bezel-ui", "@bezel/registry"],
 };
 
 module.exports = nextConfig;

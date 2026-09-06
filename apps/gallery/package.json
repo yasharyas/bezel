@@ -10,8 +10,8 @@
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@radix-ui/react-select": "^2.0.0",
-    "@repo/registry": "*",
-    "@repo/ui": "*",
+    "@bezel/registry": "*",
+    "bezel-ui": "*",
     "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

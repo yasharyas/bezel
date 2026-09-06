@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { registry } from "@repo/registry";
+import { registry } from "@bezel/registry";
 import {
   GlassButton,
   Card,
@@ -55,7 +55,7 @@ import {
   Marquee,
   ContactSection,
   TextDisperseLink,
-} from "@repo/ui";
+} from "bezel-ui";
 
 /* ── interactive preview wrappers ── */
 function ToastPreview() {
@@ -664,7 +664,7 @@ export default function ComponentDetailPage({
       {/* Install hint */}
       <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4">
         <p className="text-xs text-neutral-500 font-mono">
-          npx yash-ui add {entry.slug}
+          npx bezel add {entry.slug}
         </p>
       </div>
     </main>

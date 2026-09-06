@@ -123,10 +123,10 @@ const COMPONENT_MAP = {
 
 function showHelp() {
   console.log(`
-  yash-ui - Add UI components to your project
+  bezel - Add UI components to your project
 
   Usage:
-    yash-ui add <component>
+    bezel add <component>
 
   Components:
     glass-button         Glassmorphism button
@@ -237,7 +237,7 @@ function showHelp() {
     damask-tile-backdrop    Fixed repeating ornamental pattern backdrop
 
   Example:
-    npx yash-ui add glass-button
+    npx bezel add glass-button
   `);
 }
 
