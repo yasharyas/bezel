@@ -1,9 +1,15 @@
 {
-  "name": "yash-ui",
-  "version": "0.1.0",
+  "name": "bezel-cli",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Bezel CLI - copies a component's source file into your project.",
+  "license": "MIT",
   "bin": {
-    "yash-ui": "./bin/index.js"
+    "bezel": "./bin/index.js"
   },
+  "files": [
+    "bin"
+  ],
   "scripts": {
     "build": "echo 'cli ready'"
   },

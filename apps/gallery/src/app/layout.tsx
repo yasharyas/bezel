@@ -1,9 +1,27 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const SITE_URL = "https://yash-ui-system-gallery.vercel.app";
+const TITLE = "Bezel — Component Gallery";
+const DESCRIPTION =
+  "Bezel is a React component library for interface work that needs motion and craft. Preview every component, then copy the source.";
+
 export const metadata: Metadata = {
-  title: "Yash UI - Component Gallery",
-  description: "Open-source UI components. Preview, copy, and use.",
+  metadataBase: new URL(SITE_URL),
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    url: SITE_URL,
+    siteName: "Bezel",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

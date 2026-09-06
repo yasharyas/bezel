@@ -126,8 +126,8 @@ import {
   TextType,
   CelebrationOverlay,
   TiledGlassSurface,
-} from "@repo/ui";
-import { registry } from "@repo/registry";
+} from "bezel-ui";
+import { registry } from "@bezel/registry";
 
 /* ── Stateful preview wrappers ── */
 function TextInputPreview() {
@@ -1523,9 +1523,9 @@ export default function GalleryPage() {
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-              <span className="text-white font-bold text-sm">Y</span>
+              <span className="text-white font-bold text-sm">B</span>
             </div>
-            <span className="text-white font-semibold text-lg tracking-tight">Yash UI</span>
+            <span className="text-white font-semibold text-lg tracking-tight">Bezel</span>
           </Link>
 
           {/* Search */}
