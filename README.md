@@ -268,14 +268,23 @@ Bezel ships TypeScript source rather than compiled JavaScript, so your bundler h
 
 ## CLI
 
-`packages/cli` provides a `bezel` binary that copies a component's source file straight into `<your-project>/components/ui/`:
+`bezel-cli` provides a `bezel` binary that copies a component's source file straight into `<your-project>/components/ui/`:
 
 ```bash
+npm install -D bezel-cli
 bezel add glass-button
 bezel help   # list all available components
 ```
 
-**Status: repo-local only, not published.** The CLI resolves components through a path relative to this monorepo (`packages/cli/bin/index.js` → `../../ui/src`), so it only works when run from inside this checkout. It would need to resolve component source from its own package — or from the published `bezel-ui` — before it can ship. The package is marked `private` until then. Note also that the bare name `bezel` is already taken on npm by an unrelated package, so the published package name will have to differ from the binary name.
+It resolves component source from the installed `bezel-ui` package, so `bezel-ui`
+has to be installed too. Without it the CLI exits with a message saying so
+rather than failing obscurely.
+
+**Do not run `npx bezel`.** The bare name `bezel` belongs to an unrelated
+package on npm, so `npx bezel` will download and run someone else's code. The
+package here is `bezel-cli`; the `bezel` binary only exists once you have
+installed it. If you want a one-off invocation, use `npx bezel-cli add
+glass-button`, which resolves unambiguously.
 
 `COMPONENT_MAP` in `packages/cli/bin/index.js` stays in sync with `packages/registry/src/index.ts`.
 
