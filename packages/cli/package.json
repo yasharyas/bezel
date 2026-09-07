@@ -24,7 +24,7 @@
     "url": "https://github.com/yasharyas/bezel/issues"
   },
   "bin": {
-    "bezel": "./bin/index.js"
+    "bezel": "bin/index.js"
   },
   "files": [
     "bin"
