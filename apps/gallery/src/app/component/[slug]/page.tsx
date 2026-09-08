@@ -661,10 +661,12 @@ export default function ComponentDetailPage({
         </pre>
       </section>
 
-      {/* Install hint */}
+      {/* Install hint. The package is `bezel-add`, never bare `bezel`: that name
+          belongs to an unrelated package on npm, so `npx bezel` would fetch and
+          run a stranger's code. `npx bezel-add` resolves to this project. */}
       <div className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] px-5 py-4">
-        <p className="text-xs text-neutral-500 font-mono">
-          npx bezel add {entry.slug}
+        <p className="text-xs text-neutral-400 font-mono">
+          npx bezel-add add {entry.slug}
         </p>
       </div>
     </main>
