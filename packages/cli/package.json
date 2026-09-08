@@ -1,5 +1,5 @@
 {
-  "name": "bezel-cli",
+  "name": "bezel-add",
   "version": "0.0.1",
   "description": "Copy a Bezel component's source file into your project, shadcn-style. Requires bezel-ui to be installed.",
   "keywords": [
