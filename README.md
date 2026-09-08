@@ -13,7 +13,7 @@ root/
   apps/gallery        → Next.js gallery app (browse, preview, and copy component code)
   packages/ui          → `bezel-ui` — the component source (packages/ui/src/<category>/Component.tsx)
   packages/registry    → `@bezel/registry` — metadata consumed by the gallery + CLI
-  packages/cli         → `bezel-cli` — copies a component's source into a target project
+  packages/cli         → `bezel-add` — copies a component's source into a target project
 ```
 
 ## Tech Stack
@@ -268,10 +268,10 @@ Bezel ships TypeScript source rather than compiled JavaScript, so your bundler h
 
 ## CLI
 
-`bezel-cli` provides a `bezel` binary that copies a component's source file straight into `<your-project>/components/ui/`:
+`bezel-add` provides a `bezel` binary that copies a component's source file straight into `<your-project>/components/ui/`:
 
 ```bash
-npm install -D bezel-cli
+npm install -D bezel-add
 bezel add glass-button
 bezel help   # list all available components
 ```
@@ -282,8 +282,8 @@ rather than failing obscurely.
 
 **Do not run `npx bezel`.** The bare name `bezel` belongs to an unrelated
 package on npm, so `npx bezel` will download and run someone else's code. The
-package here is `bezel-cli`; the `bezel` binary only exists once you have
-installed it. If you want a one-off invocation, use `npx bezel-cli add
+package here is `bezel-add`; the `bezel` binary only exists once you have
+installed it. If you want a one-off invocation, use `npx bezel-add add
 glass-button`, which resolves unambiguously.
 
 `COMPONENT_MAP` in `packages/cli/bin/index.js` stays in sync with `packages/registry/src/index.ts`.
