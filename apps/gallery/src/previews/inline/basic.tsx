@@ -1130,25 +1130,24 @@ function CanvasPetalFieldPreview() {
 }
 
 function FilmGrainOverlayPreview() {
-  // The grain is deliberately faint (4% alpha). The right half shows the same
-  // layer with contrast raised, so the texture can be seen at card size.
-  const surface = "absolute inset-0 bg-[linear-gradient(135deg,#4a3a30,#15110f)]";
+  // The grain is deliberately faint (4% alpha). The right half lays the same
+  // canvas over mid-grey and raises contrast, so the texture can be seen.
   const grain = (
     <FilmGrainOverlay opacity={1} resolution={140} className="pointer-events-none absolute inset-0 h-full w-full mix-blend-overlay" />
   );
   return (
     <div className="relative grid h-full w-full grid-cols-2 text-white">
       <div className="relative overflow-hidden">
-        <div className={surface} />
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,#4a3a30,#15110f)]" />
         {grain}
         <Caption className="absolute bottom-4 left-4">As shipped</Caption>
       </div>
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0" style={{ filter: "contrast(7)" }}>
-          <div className={surface} />
+      <div className="relative overflow-hidden bg-[#15110f]">
+        <div className="absolute inset-0" style={{ filter: "contrast(9) brightness(0.55)" }}>
+          <div className="absolute inset-0 bg-[#808080]" />
           {grain}
         </div>
-        <Caption className="absolute bottom-4 right-4">Contrast raised</Caption>
+        <Caption className="absolute bottom-4 right-4">Grain, magnified</Caption>
       </div>
       <div aria-hidden className="absolute inset-y-0 left-1/2 w-px bg-white/25" />
     </div>
