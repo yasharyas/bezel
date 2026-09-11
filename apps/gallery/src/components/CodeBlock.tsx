@@ -3,7 +3,7 @@ import { CopyButton } from "./CopyButton";
 export function CodeBlock({ code, filename }: { code: string; filename: string }) {
   const lines = code.split("\n").length;
   return (
-    <section aria-label={`Source of ${filename}`} className="overflow-hidden rounded-2xl border border-void-line bg-[#0a0a0c]">
+    <section aria-label={`Source of ${filename}`} className="overflow-hidden rounded-2xl border border-void-line bg-void-raised">
       <div className="flex items-center justify-between gap-4 border-b border-void-line py-1.5 pl-4 pr-1.5">
         <p className="min-w-0 truncate font-mono text-xs text-void-muted">
           {filename} · {lines} lines

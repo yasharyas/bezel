@@ -1,6 +1,6 @@
 # Principles
 
-How Bezel decides things. These are read off the components, not aspired to — so
+How Bezel decides things. These are read off the components, not aspired to, so
 each one says where it currently holds and where it does not. A principle with a
 known violation list is a standard; a principle without one is decoration.
 
@@ -9,14 +9,14 @@ known violation list is a standard; a principle without one is decoration.
 ## 1. The file is the interface
 
 A component is distributed as readable source and copied into your project one
-file at a time (`bezel add <slug>`). The package `main` points at
+file at a time (`npx bezel-add add <slug>`). The package `main` points at
 `src/index.ts`, not a bundle. Once you take a file, you own it.
 
 Three things follow, and the library already obeys all three:
 
 - **No component imports another component.** The single file that broke this
-  rule — `loaders/MultiStepLoader.tsx`, which reaches for `MagicRings` and
-  `ShinyText` by relative path — had to be excluded from the CLI, because a flat
+  rule (`loaders/MultiStepLoader.tsx`, which reaches for `MagicRings` and
+  `ShinyText` by relative path) had to be excluded from the CLI, because a flat
   single-file copy cannot carry its dependencies. That exclusion is the rule
   proving itself.
 - **Shared helpers are duplicated on purpose.** The three-line `cn()` is
@@ -44,7 +44,7 @@ branch; `display/DepthText.tsx` bails out of its rAF loop entirely.
 **Where it holds:** 36 of the 90 files that animate.
 **Where it does not:** the other 54. `animation/Marquee.tsx`,
 `badges/ShinyBadge.tsx` and `sections/ContactSection.tsx` run infinite loops with
-no guard at all — those are the worst of them, because an ambient loop is exactly
+no guard at all. Those are the worst of them, because an ambient loop is exactly
 what the media query exists to stop.
 
 ## 3. Keyboard focus is not a style choice
@@ -54,13 +54,13 @@ offset, clearing 3:1 against its own ground. `outline-none` without a replacemen
 is a defect, not a preference. `:focus-visible` is used rather than `:focus`, so
 the ring appears for keyboard users and not on mouse click.
 
-`buttons/PinchedButton.tsx` and `buttons/StarBorder.tsx` are the reference — both
+`buttons/PinchedButton.tsx` and `buttons/StarBorder.tsx` are the reference: both
 were written with `:focus-visible` outlines from the start.
 
 **Where it did not hold:** at the start of this pass, 15 of 43 interactive files
 had any focus handling, and three of those had removed the default with
-`outline-none` and put nothing back. The base `GlassButton` — the first component
-in the library — had no focus ring at all.
+`outline-none` and put nothing back. The base `GlassButton`, the first component
+in the library, had no focus ring at all.
 
 Two related rules the forms already keep and the rest of the library does not:
 controls are at least 48px on their smallest axis (`min-h-[48px]` appears in four
@@ -87,13 +87,13 @@ so the two token surfaces cannot drift apart without the gate noticing.
 
 ## 5. One curve, one ladder
 
-The library shipped five near-identical editorial ease-out curves —
-`(.23,1,.32,1)`, `(.22,1,.36,1)`, `(.16,1,.3,1)`, `(.25,1,.5,1)` — plus four
+The library shipped five near-identical editorial ease-out curves
+(`(.23,1,.32,1)`, `(.22,1,.36,1)`, `(.16,1,.3,1)`, `(.25,1,.5,1)`) plus four
 separate spring tunings for the same class of motion. Nobody can tell them apart
 in a side-by-side. A system that ships all five has not made a decision.
 
 There is one ease-out (`--bz-ease-out`), one in-out, one overshoot, and `linear`
-for loops. Durations are a four-rung ladder — 150 / 300 / 500 / 800ms — with 300
+for loops. Durations are a four-rung ladder (150 / 300 / 500 / 800ms) with 300
 as the default, because it was already the most common single duration in the
 library. Ambient loops are a separate set and are always reduced-motion gated.
 
@@ -102,7 +102,7 @@ library. Ambient loops are a separate set and are always reduced-motion gated.
 The shape language is not up for negotiation per component. `rounded-full` is the
 most common shape in the library by a wide margin (32 uses counting both
 spellings), so controls are pills. Surfaces are paper: near-white, separated by a
-`rgba(10,10,10,0.06)` hairline rather than a shadow — the pattern in every card
+`rgba(10,10,10,0.06)` hairline rather than a shadow, the pattern in every card
 grid in the library.
 
 The one deliberate exception is `PinchedButton`'s asymmetric `0 40px 0 40px`.
