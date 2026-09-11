@@ -17,7 +17,7 @@ export function GalleryHeader() {
     <>
       <a
         href="#main"
-        className="focus-ring fixed left-3 top-3 z-50 -translate-y-20 rounded-lg bg-paper px-3 py-2 text-sm font-medium text-[#0a0a0a] focus:translate-y-0"
+        className="focus-ring fixed left-3 top-3 z-50 -translate-y-20 rounded-lg bg-paper px-3 py-2 text-sm font-medium text-ink focus:translate-y-0"
       >
         Skip to content
       </a>

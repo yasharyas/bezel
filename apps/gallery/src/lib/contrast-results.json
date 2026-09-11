@@ -1,0 +1,254 @@
+[
+  {
+    "group": "Text",
+    "where": "Headings, names, body copy",
+    "fg": "#ffffff",
+    "bg": "#0c0c0f",
+    "ratio": 19.53,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Text",
+    "where": "Descriptions, counts, footer, inactive nav",
+    "fg": "#cececf",
+    "bg": "#0c0c0f",
+    "ratio": 12.42,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Text",
+    "where": "Install command, code block, search field",
+    "fg": "#ffffff",
+    "bg": "#1a1a1a",
+    "ratio": 17.4,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Text",
+    "where": "Search placeholder, prompt symbol",
+    "fg": "#d1d1d1",
+    "bg": "#1a1a1a",
+    "ratio": 11.4,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Text",
+    "where": "Active category chip",
+    "fg": "#0a0a0a",
+    "bg": "#f7f3ee",
+    "ratio": 17.92,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Text",
+    "where": "Active category chip count",
+    "fg": "#4a4a4c",
+    "bg": "#f7f3ee",
+    "ratio": 8,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Text",
+    "where": "Skip link",
+    "fg": "#0a0a0a",
+    "bg": "#ffffff",
+    "ratio": 19.8,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Text",
+    "where": "Stage hint on a void stage",
+    "fg": "#d6d6d6",
+    "bg": "#313131",
+    "ratio": 8.95,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Text",
+    "where": "Stage hint on a paper stage",
+    "fg": "#4a4a4c",
+    "bg": "#fefefe",
+    "ratio": 8.77,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Text",
+    "where": "Stage hint on a cream stage",
+    "fg": "#4a4a4c",
+    "bg": "#fefdfc",
+    "ratio": 8.7,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Controls",
+    "where": "Focus outline on the page",
+    "fg": "#ffffff",
+    "bg": "#0c0c0f",
+    "ratio": 19.53,
+    "min": 3,
+    "pass": true
+  },
+  {
+    "group": "Controls",
+    "where": "Focus outline on raised surfaces",
+    "fg": "#ffffff",
+    "bg": "#1a1a1a",
+    "ratio": 17.4,
+    "min": 3,
+    "pass": true
+  },
+  {
+    "group": "Controls",
+    "where": "Icon buttons (expand, copy, close, clear)",
+    "fg": "#ffffff",
+    "bg": "#0c0c0f",
+    "ratio": 19.53,
+    "min": 3,
+    "pass": true
+  },
+  {
+    "group": "Controls",
+    "where": "Search field border against the page",
+    "fg": "#6c6c6c",
+    "bg": "#0c0c0f",
+    "ratio": 3.72,
+    "min": 3,
+    "pass": true
+  },
+  {
+    "group": "Stage: paper",
+    "where": "Muted text on the stage",
+    "fg": "#6b6b70",
+    "bg": "#fafafa",
+    "ratio": 5.08,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: paper",
+    "where": "Muted text on a muted surface",
+    "fg": "#6b6b70",
+    "bg": "#f0f0f0",
+    "ratio": 4.65,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: paper",
+    "where": "Primary button label",
+    "fg": "#ffffff",
+    "bg": "#912c22",
+    "ratio": 8.12,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: paper",
+    "where": "Destructive button label",
+    "fg": "#ffffff",
+    "bg": "#b91c1c",
+    "ratio": 6.47,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: paper",
+    "where": "Primary as text",
+    "fg": "#912c22",
+    "bg": "#ffffff",
+    "ratio": 8.12,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: cream",
+    "where": "Muted text on the stage",
+    "fg": "#6b6b70",
+    "bg": "#f7f3ee",
+    "ratio": 4.8,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: cream",
+    "where": "Muted text on a muted surface",
+    "fg": "#6b6b70",
+    "bg": "#f0f0f0",
+    "ratio": 4.65,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: cream",
+    "where": "Primary button label",
+    "fg": "#ffffff",
+    "bg": "#912c22",
+    "ratio": 8.12,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: cream",
+    "where": "Destructive button label",
+    "fg": "#ffffff",
+    "bg": "#b91c1c",
+    "ratio": 6.47,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: cream",
+    "where": "Primary as text",
+    "fg": "#912c22",
+    "bg": "#ffffff",
+    "ratio": 8.12,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: void",
+    "where": "Muted text on the stage",
+    "fg": "#d1d1d1",
+    "bg": "#1a1a1a",
+    "ratio": 11.4,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: void",
+    "where": "Muted text on a muted surface",
+    "fg": "#d1d1d1",
+    "bg": "#252525",
+    "ratio": 10.04,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: void",
+    "where": "Primary button label",
+    "fg": "#0a0a0a",
+    "bg": "#f7f3ee",
+    "ratio": 17.92,
+    "min": 4.5,
+    "pass": true
+  },
+  {
+    "group": "Stage: void",
+    "where": "Primary as text",
+    "fg": "#f7f3ee",
+    "bg": "#1a1a1a",
+    "ratio": 15.75,
+    "min": 4.5,
+    "pass": true
+  }
+]

@@ -132,7 +132,7 @@ export function ComponentIndexView({ entries, categories, featured, initialQuery
               placeholder="Search by name, purpose or tag"
               autoComplete="off"
               spellCheck={false}
-              className="h-11 w-full rounded-xl border border-[rgba(255,255,255,0.18)] bg-void-raised pl-10 pr-10 text-[15px] text-void-ink placeholder:text-void-muted focus-visible:border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white [&::-webkit-search-cancel-button]:appearance-none"
+              className="h-11 w-full rounded-xl border border-[rgba(255,255,255,0.36)] bg-void-raised pl-10 pr-10 text-[15px] text-void-ink placeholder:text-void-muted focus-visible:border-transparent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white [&::-webkit-search-cancel-button]:appearance-none"
             />
             {query ? (
               <button
@@ -164,12 +164,12 @@ export function ComponentIndexView({ entries, categories, featured, initialQuery
                   onClick={() => setCategory(option.id)}
                   className={`focus-ring inline-flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3.5 text-sm transition-colors ${
                     active
-                      ? "border-transparent bg-paper-raised text-[#0a0a0a]"
+                      ? "border-transparent bg-paper-raised text-ink"
                       : "border-[rgba(255,255,255,0.18)] text-void-ink hover:border-[rgba(255,255,255,0.4)]"
                   }`}
                 >
                   {option.label}
-                  <span className={`tabular-nums ${active ? "text-[#4a4a4c]" : "text-void-muted"}`}>{option.count}</span>
+                  <span className={`tabular-nums ${active ? "text-ink-muted" : "text-void-muted"}`}>{option.count}</span>
                 </button>
               );
             })}

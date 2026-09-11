@@ -27,7 +27,7 @@ Three rules cut across all eight:
    needs a `:focus-visible` counterpart, or keyboard users get a different
    product.
 2. **A state that is only a colour is not a state.** Selected, active-route and
-   error all need a second signal — a mark, a label, or an ARIA attribute.
+   error all need a second signal: a mark, a label, or an ARIA attribute.
 3. **Loading, error and empty are announcements.** If a screen reader user
    cannot tell the state changed, the state was not implemented.
 
@@ -55,7 +55,7 @@ Three rules cut across all eight:
 `TextInput`, `DOBPicker`, `SelectInput` and `Checkbox` render an error but none
 of them set `aria-invalid` or link the message with `aria-describedby`, so the
 error is visual only. `BlenderUpload` reports errors through a callback and
-renders nothing — marked `!`.
+renders nothing, so it is marked `!`.
 
 ### Buttons and links
 
@@ -94,7 +94,7 @@ pass, and they are the reference for the rest.
 | `navigation/CollapsibleSidebar` | + | + | + | – | – |
 
 `Pagination` marks disabled with `disabled:pointer-events-none` on an `<a>`.
-Anchors are never `:disabled`, so those classes are dead — marked `!`.
+Anchors are never `:disabled`, so those classes are dead, and it is marked `!`.
 
 Active/current is a colour change in most of these and carries no `aria-current`
 or `aria-selected`, which breaks cross-cutting rule 2 above.
@@ -117,8 +117,8 @@ or `aria-selected`, which breaks cross-cutting rule 2 above.
 | `panels/StickyCartBar` | + | + | + | – | – | n/a | n/a | n/a |
 
 `LoadingSpinner` renders a spinner with no `role="status"` and no accessible
-label, so the loading state exists visually and not at all for assistive tech —
-marked `!`. `ToastContainer` has the same gap: no `role="status"`, no
+label, so the loading state exists visually and not at all for assistive tech,
+so it is marked `!`. `ToastContainer` has the same gap: no `role="status"`, no
 `aria-live`, so nothing it says is ever announced.
 
 ---
@@ -136,7 +136,7 @@ than being quietly dropped:
   `loaders/MultiStepLoader` and nowhere else.
 - **Error is visual only in every form component.** None set `aria-invalid` or
   `aria-describedby`.
-- **Two labels are not associated with their inputs** — `Input.tsx` and
+- **Two labels are not associated with their inputs.** `Input.tsx` and
   `SidePanel`'s `PanelField` both render a `<label>` that neither wraps its
   control nor carries `htmlFor`.
 - **`forms/CheckboxVariants`' four exports have no accessible name at all.**
