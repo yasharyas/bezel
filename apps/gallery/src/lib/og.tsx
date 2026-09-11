@@ -81,7 +81,7 @@ export function siteCard({ count }: { count: number }) {
             </div>
             <div style={{ fontSize: 132, fontWeight: 700, letterSpacing: -4, lineHeight: 1, marginTop: 12 }}>Bezel</div>
             <div style={{ fontSize: 32, lineHeight: 1.35, color: MUTED, marginTop: 20, maxWidth: 560 }}>
-              {count} components for interfaces that need motion and craft, behind a WCAG AA contrast gate.
+              {`${count} components for interfaces that need motion and craft, behind a WCAG AA contrast gate.`}
             </div>
           </div>
           <div style={{ fontSize: 24, color: MUTED }}>npm i bezel-ui · bezel-ui.vercel.app</div>
@@ -121,7 +121,7 @@ export function componentCard({
           <div style={{ fontSize: 36, lineHeight: 1.35, color: MUTED, marginTop: 22, maxWidth: 980 }}>{description}</div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 24, color: MUTED }}>
-          <div>npx bezel-add add {slug}</div>
+          <div>{`npx bezel-add add ${slug}`}</div>
           <div>bezel-ui.vercel.app</div>
         </div>
       </div>
