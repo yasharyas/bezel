@@ -23,7 +23,6 @@ root/
 - **Next.js 14** (gallery app, `apps/gallery`)
 - **Turborepo** + npm workspaces for the monorepo
 - **GSAP** and **Framer Motion** for animation-heavy components
-- **Radix UI** (`react-select`) for accessible primitives
 - **lucide-react** for icons
 
 ## Quick Start
@@ -58,18 +57,12 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 |---|---|---|
 | GlassButton | `glass-button` | A glassmorphism-styled button with blur and transparency effects. |
 | Card | `card` | A translucent card component with optional title. |
-| Input | `input` | A styled input field with optional label. |
 
 ### Forms & Inputs
 
 | Component | Slug | Description |
 |---|---|---|
 | TextInput | `text-input` | A reusable pill-shaped text input with label, validation error, mandatory asterisk, uppercase mode, and disabled state. |
-| RadioGroup | `radio-group` | Pill-shaped radio chip group with indigo selected state, custom dot indicator, and visually hidden native inputs. |
-| Checkbox | `checkbox` | Custom circular checkbox with indigo fill, SVG checkmark, sr-only native input, and error support. |
-| DOBPicker | `dob-picker` | Date of birth picker with DD/MM/YYYY masked input, auto-slashes, ISO conversion, numeric mobile keyboard. |
-| SelectInput | `select-input` | Radix UI Select with pill-shaped trigger, portal dropdown, keyboard navigation, chevron and check icons. |
-| FileUpload | `file-upload` | File upload with dashed drop zone, filename display, image preview modal with backdrop blur, and remove button. |
 | MD3Switch | `md3-switch` | Material Design 3 toggle switch with spring-easing physics, a hover/press halo, rotating check/X icons, two sizes, and optional haptic click sound. |
 | BlenderUpload | `blender-upload` | Drag-and-drop upload with a playful blender animation — fruits fall in, liquid blends while uploading, then it becomes a smoothie glass. |
 | CheckboxVariants | `checkbox-variants` | Four stylized Tailwind-only checkbox variants: ripple, rainbow glow, morphing border, and pulsing circle. |

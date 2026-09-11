@@ -48,13 +48,7 @@ const componentName = args[1];
 const COMPONENT_MAP = {
   "glass-button": "GlassButton.tsx",
   card: "Card.tsx",
-  input: "Input.tsx",
   "text-input": "forms/TextInput.tsx",
-  "radio-group": "forms/RadioGroup.tsx",
-  checkbox: "forms/Checkbox.tsx",
-  "dob-picker": "forms/DOBPicker.tsx",
-  "select-input": "forms/SelectInput.tsx",
-  "file-upload": "forms/FileUpload.tsx",
   stepper: "navigation/Stepper.tsx",
   "stepper-navigation": "navigation/StepperNavigation.tsx",
   "submission-loader": "feedback/SubmissionLoader.tsx",
@@ -134,7 +128,6 @@ const COMPONENT_MAP = {
   "animated-gradient-rule": "dividers/AnimatedGradientRule.tsx",
   "jewelry-cursor": "interaction/JewelryCursor.tsx",
   "scroll-unfurl-preloader": "loaders/ScrollUnfurlPreloader.tsx",
-  "foil-specular-card": "cards/FoilSpecularCard.tsx",
   "wax-seal-button": "buttons/WaxSealButton.tsx",
   "canvas-petal-field": "animation/CanvasPetalField.tsx",
   "film-grain-overlay": "overlays/FilmGrainOverlay.tsx",
@@ -170,13 +163,7 @@ function showHelp() {
   Components:
     glass-button         Glassmorphism button
     card                 Translucent card
-    input                Styled input field
     text-input           Pill-shaped text input with validation
-    radio-group          Pill chip radio selector
-    checkbox             Circular custom checkbox
-    dob-picker           DD/MM/YYYY date input
-    select-input         Radix UI select dropdown
-    file-upload          File upload with preview
     stepper              Multi-step progress indicator
     stepper-navigation   Previous/Next/Submit buttons
     submission-loader    Full-screen loading overlay
@@ -256,7 +243,6 @@ function showHelp() {
     animated-gradient-rule  Sliding gradient divider line
     jewelry-cursor        GSAP gold dot + lagging ring custom cursor
     scroll-unfurl-preloader  Parchment scroll-unfurl fullscreen preloader
-    foil-specular-card    Invitation card with pointer-tracked foil sheen
     wax-seal-button       Press-in CTA with a radiating SVG ring on hover
     canvas-petal-field    Ambient falling marigold/jasmine canvas particles
     film-grain-overlay    Fixed full-viewport animated film-grain noise

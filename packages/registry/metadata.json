@@ -17,15 +17,6 @@
       "glass"
     ]
   },
-  "input": {
-    "name": "Input",
-    "description": "Minimal dark text field with an optional label, styled for glass surfaces.",
-    "tags": [
-      "input",
-      "form",
-      "ui"
-    ]
-  },
   "text-input": {
     "name": "TextInput",
     "category": "forms",
@@ -37,70 +28,6 @@
       "accessible",
       "controlled",
       "validation"
-    ]
-  },
-  "radio-group": {
-    "name": "RadioGroup",
-    "category": "forms",
-    "description": "Radio options rendered as pill chips inside a fieldset, keeping the native inputs.",
-    "tags": [
-      "radio",
-      "chip",
-      "pill",
-      "selection",
-      "accessible",
-      "fieldset"
-    ]
-  },
-  "checkbox": {
-    "name": "Checkbox",
-    "category": "forms",
-    "description": "Round checkbox with a drawn tick, a hidden native input and an error message.",
-    "tags": [
-      "checkbox",
-      "toggle",
-      "circular",
-      "accessible",
-      "custom"
-    ]
-  },
-  "dob-picker": {
-    "name": "DOBPicker",
-    "category": "forms",
-    "description": "Date of birth field that masks DD/MM/YYYY while typing and returns an ISO date.",
-    "tags": [
-      "date",
-      "dob",
-      "masked-input",
-      "dd-mm-yyyy",
-      "accessible",
-      "numeric"
-    ]
-  },
-  "select-input": {
-    "name": "SelectInput",
-    "category": "forms",
-    "description": "Pill-shaped select built on Radix, with typeahead, keyboard support and an animated menu.",
-    "tags": [
-      "select",
-      "dropdown",
-      "radix-ui",
-      "accessible",
-      "pill",
-      "portal"
-    ]
-  },
-  "file-upload": {
-    "name": "FileUpload",
-    "category": "forms",
-    "description": "Dashed upload field that shows the chosen file, with image preview and remove.",
-    "tags": [
-      "file",
-      "upload",
-      "preview",
-      "modal",
-      "drag-drop",
-      "image"
     ]
   },
   "stepper": {
@@ -1117,18 +1044,6 @@
       "gsap",
       "parchment",
       "scroll-unfurl"
-    ]
-  },
-  "foil-specular-card": {
-    "name": "FoilSpecularCard",
-    "category": "cards",
-    "description": "Invitation card with a pointer-tracked foil sheen and shimmering gold script names.",
-    "tags": [
-      "foil",
-      "specular",
-      "shimmer",
-      "invitation",
-      "background-clip"
     ]
   },
   "wax-seal-button": {

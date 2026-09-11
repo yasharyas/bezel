@@ -20,15 +20,14 @@ Three things follow, and the library already obeys all three:
   single-file copy cannot carry its dependencies. That exclusion is the rule
   proving itself.
 - **Shared helpers are duplicated on purpose.** The three-line `cn()` is
-  redefined in five files rather than imported from one. A shared util would be
+  redefined in seven files rather than imported from one. A shared util would be
   a fourth file the consumer did not ask for.
 - **Tokens are a theming surface, not a required import.** Every component
   carries its own literal values and works standalone. `tokens.css` lets you
   re-theme what you have taken; it is never a prerequisite for taking it.
 
-The cost is real: the same input class string appears verbatim in `TextInput`,
-`DOBPicker`, `SelectInput` and `DualConfirmDialog`. That is the price of the
-copy model, and it is paid deliberately.
+The cost is real: a fix to one copy of a helper does not reach the other six.
+That is the price of the copy model, and it is paid deliberately.
 
 ## 2. Motion is the point, and it must be refusable
 
@@ -119,9 +118,12 @@ radii for the same primary CTA.
 
 | Principle | Holds | Does not yet |
 |---|---|---|
-| 1. The file is the interface | 106 of 107 files are standalone | `MultiStepLoader` (excluded from the CLI) |
+| 1. The file is the interface | 99 of 100 files are standalone | `MultiStepLoader` (excluded from the CLI) |
 | 2. Motion is refusable | 36 of 90 animated files | 54 files, 3 of them infinite loops |
 | 3. Focus is visible | every interactive file, after this pass | maintain it; `:focus` should become `:focus-visible` in 6 older files |
 | 4. Contrast is a gate | all tokens | components still carry pre-token literals |
 | 5. One curve, one ladder | the token set | components carry 5 curves and 4 springs |
 | 6. Pills on paper | the token set | 6 card radii, 3 CTA radii in components |
+
+The motion and radius counts were measured before seven components were removed
+in September 2026 and have not been re-measured since.
