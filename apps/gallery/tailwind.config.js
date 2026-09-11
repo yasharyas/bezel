@@ -27,6 +27,10 @@ module.exports = {
           line: "var(--bz-void-line)",
           fill: "var(--bz-void-fill)",
         },
+        ink: {
+          DEFAULT: "var(--bz-ink)",
+          muted: "var(--bz-ink-muted)",
+        },
         paper: {
           DEFAULT: "var(--bz-paper)",
           sunken: "var(--bz-paper-sunken)",

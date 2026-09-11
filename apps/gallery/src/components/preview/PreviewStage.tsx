@@ -123,8 +123,8 @@ export function PreviewStage({ slug, name, size = "card", eager = false, classNa
           aria-hidden
           className={`pointer-events-none absolute bottom-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium leading-none transition-opacity duration-300 motion-safe-transition ${
             spec.tone === "void"
-              ? "bg-white/10 text-white/80 ring-1 ring-inset ring-white/10"
-              : "bg-white/85 text-[#4a4a4c] ring-1 ring-inset ring-black/[0.08]"
+              ? "bg-white/10 text-void-muted ring-1 ring-inset ring-white/10"
+              : "bg-white/85 text-ink-muted ring-1 ring-inset ring-black/[0.08]"
           } ${engaged ? "opacity-0" : "opacity-100"}`}
         >
           <MousePointer2 aria-hidden size={11} strokeWidth={2.25} />
@@ -141,8 +141,8 @@ export function PreviewStage({ slug, name, size = "card", eager = false, classNa
           title="Replay"
           className={`focus-ring absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-full transition-opacity duration-200 motion-safe-transition ${
             spec.tone === "void"
-              ? "bg-white/10 text-white hover:bg-white/20"
-              : "bg-white/85 text-[#4a4a4c] ring-1 ring-inset ring-black/[0.08] hover:bg-white"
+              ? "bg-white/10 text-void-ink hover:bg-white/20"
+              : "bg-white/85 text-ink-muted ring-1 ring-inset ring-black/[0.08] hover:bg-white"
           } ${size === "card" && !engaged ? "pointer-events-none opacity-0" : "opacity-100"}`}
         >
           <RotateCcw aria-hidden size={14} strokeWidth={2.25} />

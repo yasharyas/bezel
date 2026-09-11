@@ -14,7 +14,7 @@ export default function NotFound() {
         </p>
         <Link
           href="/#components"
-          className="focus-ring mt-8 inline-flex w-fit items-center rounded-xl bg-paper-raised px-4 py-2.5 text-sm font-medium text-[#0a0a0a]"
+          className="focus-ring mt-8 inline-flex w-fit items-center rounded-xl bg-paper-raised px-4 py-2.5 text-sm font-medium text-ink"
         >
           Browse all components
         </Link>
