@@ -7,7 +7,8 @@ export interface ComponentEntry {
   slug: string;
   path: string;
   code: string;
-  prompt: string;
+  /** One sentence, 8 to 14 words: what the component is and what sets it apart. */
+  description: string;
   tags: string[];
   category?: string;
 }
@@ -33,7 +34,7 @@ export function GlassButton({ children, className = "", ...props }: GlassButtonP
     </button>
   );
 }`,
-    prompt: "A glassmorphism-styled button with blur and transparency effects.",
+    description: "Frosted translucent button for dark surfaces, with press scale and a focus ring.",
     tags: ["button", "glass", "ui"],
   },
   {
@@ -58,7 +59,7 @@ export function Card({ title, children, className = "" }: CardProps) {
     </div>
   );
 }`,
-    prompt: "A translucent card component with optional title.",
+    description: "Translucent dark panel with an optional title, blurred over whatever sits behind it.",
     tags: ["card", "layout", "glass"],
   },
   {
@@ -82,7 +83,7 @@ export function Input({ label, className = "", ...props }: InputProps) {
     </div>
   );
 }`,
-    prompt: "A styled input field with optional label.",
+    description: "Minimal dark text field with an optional label, styled for glass surfaces.",
     tags: ["input", "form", "ui"],
   },
   {
@@ -152,7 +153,7 @@ export function TextInput({
     </div>
   );
 }`,
-    prompt: "A reusable pill-shaped text input with label, validation error, mandatory asterisk, uppercase mode, and disabled state.",
+    description: "Pill text field with label, required marker, error message and uppercase mode.",
     tags: ["input", "text", "pill", "accessible", "controlled", "validation"],
   },
   {
@@ -226,7 +227,7 @@ export function RadioGroup({
     </fieldset>
   );
 }`,
-    prompt: "Pill-shaped radio chip group with indigo selected state, custom dot indicator, and visually hidden native inputs.",
+    description: "Radio options rendered as pill chips inside a fieldset, keeping the native inputs.",
     tags: ["radio", "chip", "pill", "selection", "accessible", "fieldset"],
   },
   {
@@ -289,7 +290,7 @@ export function Checkbox({
     </div>
   );
 }`,
-    prompt: "Custom circular checkbox with indigo fill, SVG checkmark, sr-only native input, and error support.",
+    description: "Round checkbox with a drawn tick, a hidden native input and an error message.",
     tags: ["checkbox", "toggle", "circular", "accessible", "custom"],
   },
   {
@@ -393,7 +394,7 @@ export function DOBPicker({ name, label, value, onChange, error, mandatory }: DO
     </div>
   );
 }`,
-    prompt: "Date of birth picker with DD/MM/YYYY masked input, auto-slashes, ISO conversion, numeric mobile keyboard.",
+    description: "Date of birth field that masks DD/MM/YYYY while typing and returns an ISO date.",
     tags: ["date", "dob", "masked-input", "dd-mm-yyyy", "accessible", "numeric"],
   },
   {
@@ -494,7 +495,7 @@ export function SelectInput({
     </div>
   );
 }`,
-    prompt: "Radix UI Select with pill-shaped trigger, portal dropdown, keyboard navigation, chevron and check icons.",
+    description: "Pill-shaped select built on Radix, with typeahead, keyboard support and an animated menu.",
     tags: ["select", "dropdown", "radix-ui", "accessible", "pill", "portal"],
   },
   {
@@ -639,7 +640,7 @@ export function FileUpload({
     </div>
   );
 }`,
-    prompt: "File upload with dashed drop zone, filename display, image preview modal with backdrop blur, and remove button.",
+    description: "Dashed upload field that shows the chosen file, with image preview and remove.",
     tags: ["file", "upload", "preview", "modal", "drag-drop", "image"],
   },
   {
@@ -752,7 +753,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
     </div>
   );
 }`,
-    prompt: "Responsive stepper with mobile progress bar and desktop numbered bubbles. Green checkmarks for completed, indigo highlight for current.",
+    description: "Wizard progress: numbered steps on desktop, a progress bar with dots on mobile.",
     tags: ["stepper", "progress", "wizard", "multi-step", "responsive", "accessible"],
   },
   {
@@ -859,7 +860,7 @@ export function StepperNavigation({
     </div>
   );
 }`,
-    prompt: "Multi-step form navigation with Previous/Next/Submit buttons, loading spinner, pill shape, flex-1 equal width.",
+    description: "Previous, Next and Submit buttons for multi-step forms, with a loading state.",
     tags: ["stepper", "navigation", "previous", "next", "submit", "loading", "wizard"],
   },
   {
@@ -945,7 +946,7 @@ export function SubmissionLoader({ phase, phases = DEFAULT_PHASES, phaseConfig =
     </div>
   );
 }`,
-    prompt: "Full-screen overlay with phased loading states (verifying, validating, submitting, complete), spinner, and success checkmark.",
+    description: "Blocking overlay that walks through verifying, validating, submitting and done.",
     tags: ["loader", "overlay", "spinner", "success", "modal", "multi-phase", "progress"],
   },
   {
@@ -1007,7 +1008,7 @@ export function ScreenLayout({
     </div>
   );
 }`,
-    prompt: "Multi-step form layout shell with brand header, optional stepper slot, content card with title/subtitle, and navigation slot.",
+    description: "Form wizard page shell with a brand header, stepper slot and raised content card.",
     tags: ["layout", "shell", "header", "card", "wizard", "container"],
   },
   {
@@ -1034,7 +1035,7 @@ export function TypewriterLoader({ size = 1 }: Props) {
     </div>
   );
 }`,
-    prompt: "Pure CSS animated typewriter loader with sliding carriage, scrolling paper, and keyboard key-press animations.",
+    description: "Pure CSS loader of a little typewriter whose carriage slides as keys press.",
     tags: ["loader", "spinner", "animation", "typewriter", "css", "pure-css", "decorative"],
   },
   {
@@ -1136,7 +1137,7 @@ export function ToastContainer({ toasts }: { toasts: Toast[] }) {
     document.body
   );
 }`,
-    prompt: "React toast notification system with useToast hook. Toasts auto-dismiss, stack in bottom-right via a portal, and animate in with slide-up.",
+    description: "Toast stack with a useToast hook, portalled to the body, sliding in and out.",
     tags: ["toast", "notification", "portal", "hook", "auto-dismiss", "animated"],
   },
   {
@@ -1165,7 +1166,7 @@ export function ToolbarButton({ icon, onClick, disabled, title }: ToolbarButtonP
     </button>
   );
 }`,
-    prompt: "Compact icon-only toolbar button with hover/disabled states, optional tooltip, neutral colour scheme.",
+    description: "Compact icon button for toolbars, with hover, disabled and keyboard focus states.",
     tags: ["icon-button", "toolbar", "disabled-state", "tooltip", "neutral"],
   },
   {
@@ -1297,7 +1298,7 @@ export function CollapsibleSidebar({
     </div>
   );
 }`,
-    prompt: "Collapsible left sidebar with search, categorised draggable items, coloured icon badges, and toggle to icon-only mode.",
+    description: "Collapsible node palette with search and categorised items you can drag out.",
     tags: ["sidebar", "collapsible", "draggable", "searchable", "categorised", "panel"],
   },
   {
@@ -1418,7 +1419,7 @@ export function PanelDeleteButton({ onClick, label = 'Delete' }: { onClick: () =
     </button>
   );
 }`,
-    prompt: "Right-side sliding panel with header, scrollable body, optional footer, and convenience sub-components: PanelField, PanelInput, PanelTextarea, PanelDeleteButton.",
+    description: "Inspector side panel with header, scrolling body, footer slot and field helpers.",
     tags: ["side-panel", "drawer", "form", "editor", "slide-in", "animated"],
   },
   {
@@ -1503,7 +1504,7 @@ export function NodeCard({
     </div>
   );
 }`,
-    prompt: "Node card for visual workflow builders. Coloured accent bar, tinted icon badge, label, optional description, selected ring state, React Flow handle slots.",
+    description: "Workflow editor node with a coloured accent bar, icon, label and selected ring.",
     tags: ["node", "card", "workflow", "react-flow", "accent-color", "selectable", "draggable"],
   },
   {
@@ -1606,7 +1607,7 @@ export function TubelightNavBar({ items, activeItem, className, onNavigate }: Na
     </div>
   )
 }`,
-    prompt: "Create a floating pill-shaped navigation bar fixed to the bottom on mobile and top on desktop. Each nav item shows the icon on mobile and text label on desktop. The active item has a glowing tubelight/lamp effect above it, animated with framer-motion spring.",
+    description: "Floating pill navigation with a spring-animated lamp glow above the active item.",
     tags: ["navbar", "floating", "animated", "tubelight", "pill", "framer-motion", "responsive"],
   },
   {
@@ -1828,7 +1829,7 @@ export const MD3Switch = React.forwardRef<HTMLInputElement, MD3SwitchProps>(
   }
 )
 MD3Switch.displayName = "MD3Switch"`,
-    prompt: "Build a Material Design 3 toggle switch in React with spring-easing physics for the handle, a hover/press halo effect, optional check/X icons that rotate in/out, two sizes (default and sm), primary and destructive color variants, and an optional Web Audio API haptic feedback click sound.",
+    description: "Material 3 style switch whose handle grows when pressed, with optional icons.",
     tags: ["switch", "toggle", "material-design", "md3", "animated", "haptic", "physics"],
   },
   {
@@ -2050,7 +2051,7 @@ export function DualConfirmDialog({
     </div>
   )
 }`,
-    prompt: "Create a two-step destructive confirmation dialog. Step 1 shows a warning with item count. Step 2 requires the user to type a specific phrase (e.g. DELETE) to enable the final button. Include a loading state with an animated progress bar. Clicking outside is blocked while loading.",
+    description: "Two-step delete dialog that asks you to type a phrase before it confirms.",
     tags: ["confirmation", "destructive", "two-step", "modal", "bulk-delete", "loading", "progress"],
   },
   {
@@ -2351,7 +2352,7 @@ export function BlenderUpload({
     </div>
   )
 }`,
-    prompt: "Create a drag-and-drop file upload component with a playful blender animation. Show fruits falling in on drag. When uploading, animate liquid blending inside the jar. On completion transform to a smoothie glass with a cherry on top. Show a preview of the uploaded image below with a 'Change image' button. Use inline SVG — no external images.",
+    description: "Image drop zone illustrated as a blender, with fruit that bounces while dragging.",
     tags: ["upload", "drag-drop", "animated", "file-input", "svg", "playful", "image-preview"],
   },
   {
@@ -2399,7 +2400,7 @@ export function EmptyState({
     </div>
   )
 }`,
-    prompt: "Create a centered empty state component with an optional icon slot, a heading, description text, and an optional primary CTA button with a plus icon. Use Tailwind CSS with theme tokens.",
+    description: "Centred empty state with an optional icon, a short explanation and one action.",
     tags: ["empty", "placeholder", "no-data", "cta", "illustration-slot"],
   },
   {
@@ -2498,7 +2499,7 @@ const AnimatedCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttri
 AnimatedCheckbox.displayName = "AnimatedCheckbox"
 
 export { CustomCheckbox, GradientCheckbox, TransformerCheckbox, AnimatedCheckbox }`,
-    prompt: "Create four stylized checkbox variants using only Tailwind CSS and pseudo-elements — no SVGs. Include: (1) Ant Design style with blue ripple, (2) rainbow gradient glow, (3) border morphs into a checkmark, (4) circular checkbox that pulses green when checked.",
+    description: "Four decorative checkbox styles: tick pop, gradient glow, morph and pulse.",
     tags: ["checkbox", "animated", "variants", "gradient", "morphing", "tailwind", "custom"],
   },
   {
@@ -2522,7 +2523,7 @@ export const LoadingSpinner = ({ size = "md", className }: LoadingSpinnerProps) 
     <div className={\`animate-spin rounded-full border-primary border-t-transparent \${sizes[size]}\`} />
   </div>
 )`,
-    prompt: "Create a minimal centered loading spinner with three sizes (sm/md/lg) using Tailwind's animate-spin and a colored border with a transparent top to create the spinning arc effect.",
+    description: "Border spinner in three sizes that takes its colour from the primary token.",
     tags: ["loading", "spinner", "animation", "minimal"],
   },
   {
@@ -2593,7 +2594,7 @@ export function PriceBreakdown({
     </div>
   )
 }`,
-    prompt: "Create a read-only price breakdown card showing base price, tax amount, a divider, and total. Accept base price, tax percentage, and custom labels as props. Render nothing when price is zero or invalid. Use lucide-react icons and Tailwind CSS.",
+    description: "Read-only price card that adds GST to a base price in rupees.",
     tags: ["pricing", "tax", "breakdown", "receipt", "finance", "display"],
   },
   {
@@ -2697,7 +2698,7 @@ export {
   PaginationPrevious,
   PaginationEllipsis,
 }`,
-    prompt: "Create an accessible, composable pagination component. Include Pagination, PaginationContent, PaginationItem, PaginationLink (with isActive), PaginationPrevious, PaginationNext, and PaginationEllipsis. Use lucide-react for chevron and ellipsis icons. Keep it fully keyboard and screen-reader accessible.",
+    description: "Composable pagination with labelled previous and next links and a current page marker.",
     tags: ["pagination", "composable", "accessible", "aria"],
   },
   {
@@ -2799,7 +2800,7 @@ export function CustomCursor() {
     </>
   );
 }`,
-    prompt: "Create a minimal cross-hair custom cursor using CSS that replaces the browser cursor. The cursor has four short white bars forming a plus/crosshair. It follows the mouse smoothly with GSAP lag. On hover over [data-cursor-grow] elements it scales up to 2.5x. Uses mix-blend-mode: difference.",
+    description: "Crosshair cursor that eases after the pointer and grows over marked targets.",
     tags: ["cursor", "gsap", "crosshair", "mix-blend-mode", "interactive"],
   },
   {
@@ -2890,7 +2891,7 @@ export function Preloader({ name = "LOADING", onComplete }: Props) {
     </>
   );
 }`,
-    prompt: "Create a fullscreen white preloader that animates each letter of a name into view sliding up from below. A percentage counter in the bottom-right corner counts from 0% to 100%. When complete, non-key letters fade out, then the whole panel slides upward off screen revealing the page.",
+    description: "Full-screen intro that counts to 100 while the name rises, then wipes upward.",
     tags: ["preloader", "gsap", "letter-reveal", "counter", "entrance"],
   },
   {
@@ -3008,7 +3009,7 @@ export function SiteHeader({
     </>
   );
 }`,
-    prompt: "Design a fixed top navigation bar for a dark portfolio site. Logo text on the left, navigation links in the center, and a contact CTA button on the right. Each nav link has a dual-text slide-up effect on hover. The CTA button has an expanding white circle bubble that fills from below on hover.",
+    description: "Fixed portfolio header with rolling link text and a bubble fill on hover.",
     tags: ["header", "navbar", "hover-fill", "slide-reveal", "fixed"],
   },
   {
@@ -3095,7 +3096,7 @@ export function MobileMenu({ logo = "YASH", logoHref = "/", links = [] }: Props)
     </>
   );
 }`,
-    prompt: "Build a mobile navigation header with a compact logo on the left and a hamburger icon on the right. Clicking the hamburger animates it into an X. It opens a fullscreen black overlay menu with centered uppercase links in pill-shaped borders.",
+    description: "Blend-mode mobile header with an animated burger and a full-screen link overlay.",
     tags: ["mobile", "hamburger", "overlay", "fullscreen-menu", "responsive"],
   },
   {
@@ -3214,7 +3215,7 @@ export function ElasticLineDivider({ label = "", index = "01/", total = "/04" }:
     </>
   );
 }`,
-    prompt: "Create an interactive SVG horizontal divider line that reacts to mouse movement like an elastic thread with spring physics. When the cursor hovers and moves vertically over the line, it deflects the nearest points up or down. A wave propagates outward to neighboring points, damped like a guitar string.",
+    description: "Section divider whose SVG line bends toward the cursor and springs back.",
     tags: ["svg", "physics", "spring", "interactive", "wave", "divider"],
   },
   {
@@ -3299,7 +3300,7 @@ export function CircleCTA({ href, label = "view\\nmore", size = 10, strokeColor 
     </>
   );
 }`,
-    prompt: "Create a circular call-to-action button that draws an SVG circle stroke around itself on hover using GSAP strokeDashoffset animation. The circle starts invisible and animates to fully drawn on mouseenter, then retracts on mouseleave. Centered label text inside the circle.",
+    description: "Circular link whose outline draws itself around the label on hover.",
     tags: ["cta", "svg", "stroke-draw", "hover", "circular", "gsap", "animated"],
   },
   {
@@ -3374,7 +3375,7 @@ export function ImageReveal({
     </div>
   );
 }`,
-    prompt: "Create an image component that reveals itself on scroll using GSAP clipPath animation. The image starts hidden (clipPath inset 100% from top), and on entering the viewport it clips open downward with a power3 ease. Simultaneously the image scales down from 1.4 to 1 for a cinematic parallax feel.",
+    description: "Image that unmasks upward on scroll while settling from a 1.4x zoom.",
     tags: ["image", "scroll-reveal", "gsap", "clip-path", "parallax", "cinema"],
   },
   {
@@ -3455,7 +3456,7 @@ export function FeaturedProjectCard({
     </>
   );
 }`,
-    prompt: "Create a large full-width project card for a portfolio showcase. It has a tall rounded image on top, followed by a small eyebrow label, a large bold title in uppercase, and meta tags below. Every other card shifts the image to the right 70% and right-aligns the text for visual rhythm.",
+    description: "Large portfolio card with a slow image zoom, eyebrow, oversized title and tags.",
     tags: ["project-card", "portfolio", "editorial", "dark", "alternating-layout"],
   },
   {
@@ -3516,7 +3517,7 @@ export function ProjectCard({ title, subtitle = "", imageSrc, imageAlt = "", hre
     </>
   );
 }`,
-    prompt: "Create a masonry-style project card for a photography portfolio grid. It has a rounded image that scales slightly on hover, a title in large uppercase text, and a small subtitle below. Two-column CSS masonry layout, single column on mobile.",
+    description: "Portfolio grid card with a rounded image that zooms slowly on hover.",
     tags: ["masonry", "project-card", "grid", "hover-zoom", "portfolio"],
   },
   {
@@ -3594,7 +3595,7 @@ export function Marquee({ text, speed = 20, fontSize = "21rem", opacity = 0.08, 
     </>
   );
 }`,
-    prompt: "Create an infinite horizontal scrolling marquee of repeated text using GSAP. The text is oversized (20+ rem), uppercase, white, and semi-transparent (~8% opacity) for a background watermark effect. It scrolls left endlessly at a constant speed.",
+    description: "Infinite GSAP text marquee that clones itself to cover three screen widths.",
     tags: ["marquee", "scroll", "gsap", "infinite", "text", "watermark"],
   },
   {
@@ -3747,7 +3748,7 @@ export function ContactSection({
     </>
   );
 }`,
-    prompt: "Create a dark contact section card with a rotating conic-gradient border animated via CSS custom property. A large glowing spotlight follows the cursor inside the card. The card contains a small eyebrow label, a massive two-word heading, and a circular CTA button.",
+    description: "Dark contact panel with a spinning conic border, cursor spotlight and image-filled type.",
     tags: ["contact", "conic-gradient", "animated-border", "spotlight", "dark-card"],
   },
   {
@@ -3829,7 +3830,7 @@ export function TextDisperseLink({ label, href, target, rel, className = "" }: P
     </>
   );
 }`,
-    prompt: "Create a text link where each character scatters to a pre-defined offset (translates + rotates) on hover, then snaps back to their resting positions on mouse leave. Offsets are proportional to the current font-size in em. Animation is handled by GSAP with power3 easing.",
+    description: "Link whose letters scatter to preset offsets on hover and regroup in sequence.",
     tags: ["text", "hover", "scatter", "gsap", "character-animation", "social", "link"],
   },
   {
@@ -3867,7 +3868,7 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
     />
   );
 }`,
-    prompt: "Create a React image component that renders a standard <img> tag but gracefully falls back to a built-in SVG placeholder when the image fails to load. Accept all standard HTML img attributes as props. Show a gray container with a centered broken-image SVG icon as the fallback.",
+    description: "Image element that swaps in a neutral placeholder graphic when the source fails.",
     tags: ["image", "fallback", "graceful-degradation", "utility", "media"],
   },
   {
@@ -3903,7 +3904,7 @@ export function SkeletonRow() {
     </div>
   );
 }`,
-    prompt: "Create two React skeleton loading components using Tailwind CSS animate-pulse. SkeletonCard should mimic a product card with a square image placeholder, two text lines and a price+button row. SkeletonRow should mimic a horizontal list item with a square thumbnail and three text lines. Use shadcn/ui Tailwind tokens.",
+    description: "Pulsing product card and list row skeletons that follow the theme's muted colour.",
     tags: ["skeleton", "loading", "placeholder", "pulse", "shimmer"],
   },
   {
@@ -3990,7 +3991,7 @@ export function EcomEmptyState({ type, query, onCTA }: Props) {
     </motion.div>
   );
 }`,
-    prompt: "Build a reusable React EmptyState component with Framer Motion fade-in animation. Support four preset types: cart, search, category, and network — each with a different lucide-react icon, title, description, and CTA label. Accept an optional query string and an optional onCTA callback. Use shadcn/ui Tailwind design tokens.",
+    description: "Shop empty states with presets for cart, search, category and network errors.",
     tags: ["empty", "placeholder", "no-results", "animated", "preset", "ecommerce"],
   },
   {
@@ -4062,7 +4063,7 @@ export function Breadcrumb({ items, className = "" }: Props) {
     </nav>
   );
 }`,
-    prompt: "Create a generic React breadcrumb navigation component. Each item in the items array should have a label, optional href (renders as link), and optional onClick (renders as button). The first item should display a Home icon from lucide-react. Separate items with a ChevronRight icon. The last item is non-interactive and shown in foreground color. Use Tailwind CSS with shadcn/ui tokens.",
+    description: "Breadcrumb trail with a home icon, truncated current page and aria-current.",
     tags: ["breadcrumb", "navigation", "accessible", "semantic"],
   },
   {
@@ -4121,7 +4122,7 @@ export function CategoryChips({ categories, activeCategory, onCategoryChange }: 
     </div>
   );
 }`,
-    prompt: "Build a horizontally scrollable category filter chip bar in React using Framer Motion. Accept a categories array (each with id, name, icon component, and color), activeCategory string, and onCategoryChange callback. Active chip uses filled primary color; inactive uses white with border. Hide the scrollbar. Add tap scale animation.",
+    description: "Horizontally scrolling category chips with icons and a filled active state.",
     tags: ["filter", "chips", "pills", "horizontal-scroll", "tabs", "categories"],
   },
   {
@@ -4172,7 +4173,7 @@ export function CategoryGrid({ categories, onCategoryClick }: Props) {
     </div>
   );
 }`,
-    prompt: "Create a responsive React category grid component using Framer Motion. Display 4 columns on mobile and 8 on desktop. Each item shows a circular colored icon and a label below. Add staggered fade+slide-up entrance animation. Accept a categories array (id, name, icon, color) and optional onCategoryClick callback.",
+    description: "Grid of round category icons that staggers in, four columns wide on phones.",
     tags: ["grid", "categories", "icon-grid", "animated", "responsive"],
   },
   {
@@ -4362,7 +4363,7 @@ export function SearchOverlay({
     </AnimatePresence>
   );
 }`,
-    prompt: "Build a full-screen search overlay in React with Framer Motion. It slides down from the top with a spring animation and a blurred backdrop. Include an input with clear button and cancel action; a Recent searches section (persisted in localStorage); a Popular searches section with pill buttons. Show a search CTA when there is text.",
+    description: "Search sheet that drops from the top with recent and popular searches.",
     tags: ["search", "overlay", "modal", "animated", "recent-searches", "popular"],
   },
   {
@@ -4453,7 +4454,7 @@ export function MobileBottomNav({ tabs, activeTab, onTabChange }: Props) {
     </motion.nav>
   );
 }`,
-    prompt: "Build a mobile bottom navigation bar in React with Framer Motion that slides up on mount. Support N tabs from a tabs prop array (id, icon, label, optional badge count, optional custom action, optional accent color). Show an animated active indicator bar using Framer Motion layoutId. Show a red badge count when badge > 0. Hide on md+ screens.",
+    description: "Phone tab bar with a sliding active indicator, count badges and accent tabs.",
     tags: ["mobile", "bottom-nav", "tabs", "badge", "animated", "ios-safe-area"],
   },
   {
@@ -4648,7 +4649,7 @@ export function ProductCard({ product, quantity, onAdd, onDecrease, onNotify, on
     </motion.div>
   );
 }`,
-    prompt: "Design a React product card for an e-commerce grocery app using Framer Motion. Show a square product image with discount badge (top-left) and quantity counter bubble (top-right). Show an out-of-stock overlay with Notify me button. Display product name, unit weight, current price, and strikethrough original price when discounted. Toggle between an ADD button and inline stepper with animated transitions. Flash a success overlay when first added.",
+    description: "Grocery product card with discount badge, quantity stepper and out-of-stock overlay.",
     tags: ["product", "ecommerce", "add-to-cart", "stepper", "animated", "discount", "out-of-stock"],
   },
   {
@@ -4734,7 +4735,7 @@ export function StickyCartBar({ itemCount, totalPrice, onViewCart, primaryAction
     </AnimatePresence>
   );
 }`,
-    prompt: "Build a sticky cart summary bar for mobile in React with Framer Motion. It should spring-animate up from the bottom when cart has items and disappear when empty. Show item count and total price in a dark rounded card. Include a View Cart button and a customizable primary action button. Position it above a bottom navigation bar (bottom-16).",
+    description: "Mobile cart summary that springs up above the tab bar once items are added.",
     tags: ["cart", "sticky", "mobile", "animated", "summary-bar", "cta", "ecommerce"],
   },
   {
@@ -4892,7 +4893,7 @@ export function AppHeader({
     </motion.header>
   );
 }`,
-    prompt: "Build a sticky responsive app header in React with Framer Motion. Include: a top info banner with a live open/closed indicator dot, optional info text, and optional CTA button. A main row with a logo/wordmark, a desktop inline search bar, a mobile search icon, an optional secondary CTA button, and a cart button with an animated badge count. Slide down from top on mount. Use shadcn/ui Tailwind tokens.",
+    description: "Sticky shop header with an open-now bar, inline search and animated cart badge.",
     tags: ["header", "navbar", "sticky", "responsive", "cart-badge", "animated", "ecommerce"],
   },
   {
@@ -5001,7 +5002,7 @@ export function BakeryProductCard({ product, href, currencySymbol = "₹", unitL
     </a>
   );
 }`,
-    prompt: "Create a React product card component with Tailwind CSS. It should show a product image (with a shimmer skeleton placeholder fallback using animate-pulse), an optional top-left badge and top-right tag as pill labels, product name with line-clamp, optional strikethrough original price, a price display with unit label, and a full-width CTA button at the bottom. On hover the card should lift (shadow increase) and the image should zoom slightly. Make it fully responsive and accept all values as props.",
+    description: "Product card with corner badges, struck-through price, hover zoom and image placeholder.",
     tags: ["ecommerce", "product", "hover-zoom", "skeleton", "badge", "responsive", "bakery"],
   },
   {
@@ -5047,7 +5048,7 @@ export function TestimonialCard({ testimonial }: Props) {
     </div>
   );
 }`,
-    prompt: "Build a React testimonial card with Tailwind CSS. Show filled star icons driven by a numeric rating prop, an italic quoted review text, and an author row with an auto-generated avatar (first letter of name on a neutral circle), author name, and role. Subtle box shadow that deepens on hover.",
+    description: "Review card with star rating, quoted text and an initial-letter avatar.",
     tags: ["testimonial", "review", "stars", "avatar", "social-proof"],
   },
   {
@@ -5126,7 +5127,7 @@ export function FAQAccordion({ items, title = "Frequently Asked Questions", subt
     </section>
   );
 }`,
-    prompt: "Create a React FAQ accordion section component with Tailwind CSS. It should accept an array of {q, a} items and render them as an accordion — one item open at a time (click to toggle, click again to close all). Animate open/close with a CSS max-height transition. Include a section heading and optional subtitle. Use a ChevronDown icon that rotates 180° when open. Keep it accessible with aria-expanded.",
+    description: "FAQ section where one answer opens at a time on an eased height transition.",
     tags: ["faq", "accordion", "animated", "accessible", "chevron", "sections"],
   },
   {
@@ -5164,7 +5165,7 @@ export function WhatsAppFAB({ phoneNumber, message = "Hello! I have a question."
     </a>
   );
 }`,
-    prompt: "Create a floating WhatsApp chat button (FAB) component in React with Tailwind CSS. It should be fixed to the bottom-right corner of the screen, show a filled MessageCircle icon, and open a wa.me deep link with a pre-encoded message in a new tab. On hover, show a small tooltip to the left and scale up the button. Accept phone number, message, and tooltip text as props.",
+    description: "Floating WhatsApp chat button with a prefilled message and hover tooltip.",
     tags: ["whatsapp", "fab", "floating", "chat", "fixed", "tooltip"],
   },
   {
@@ -5197,7 +5198,7 @@ export function ImagePlaceholder({ aspectRatio = "4/3", label = "", rounded = "r
     </div>
   );
 }`,
-    prompt: "Build a React image skeleton/placeholder component with Tailwind. It should accept an aspect-ratio prop (CSS string), a label for accessibility, a Tailwind rounded class, and extra className. Show an animate-pulse shimmer overlay and a centered image SVG icon with optional text label inside.",
+    description: "Pulsing image placeholder that holds an aspect ratio and shows an optional label.",
     tags: ["skeleton", "shimmer", "placeholder", "loading", "image", "accessible"],
   },
   {
@@ -5363,7 +5364,7 @@ export function StickyNavbar({
     </>
   );
 }`,
-    prompt: "Build a sticky responsive navbar in React with Tailwind CSS and Framer Motion. Include an optional announcement bar above it. On scroll, apply a frosted-glass effect (backdrop-blur + shadow). Desktop: logo left, nav links center, icon actions right (search, account, cart with badge). Mobile: hamburger that toggles an animated slide-down drawer with full-width links. Lock body scroll when drawer is open. Accept all nav links, brand, cart count, and action handlers as props. No router dependency.",
+    description: "Shop navbar that frosts on scroll, with icon actions and a mobile drawer.",
     tags: ["navbar", "sticky", "responsive", "mobile-drawer", "blur", "announcement-bar", "cart-badge"],
   },
   {
@@ -5420,7 +5421,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }`,
-    prompt: "Create a React class-based ErrorBoundary component with Tailwind CSS fallback UI. Show a full-screen centered error state with a large emoji icon, heading, description, and a reload button. Accept icon, title, description, and button label as props with sensible defaults. Wrap children normally when no error.",
+    description: "Class error boundary that swaps a crashed tree for a full-page refresh screen.",
     tags: ["error-boundary", "fallback", "crash", "full-screen", "class-component"],
   },
   {
@@ -5503,7 +5504,7 @@ export function StickyNav({
     </header>
   );
 }`,
-    prompt: "Create a sticky glassmorphism navigation bar in React with a brand logo dot + name on the left, nav links in the center-right, and a circular moon/sun theme-toggle icon button on the far right. Use backdrop blur and a subtle bottom border. Hide nav links on mobile. Support dark mode via a prop.",
+    description: "Frosted sticky header with a glowing brand dot, text links and a theme button.",
     tags: ["navbar", "glassmorphism", "sticky", "dark-mode", "responsive"],
   },
   {
@@ -5559,7 +5560,7 @@ export function useThemeRipple({ isDark, onToggle, storageKey = "theme" }: Props
 
   return { toggle };
 }`,
-    prompt: "Write a React hook that toggles dark/light mode with a circular ripple/clip-path animation that expands outward from the click point, revealing the new theme. Persist choice to localStorage. Use the Web Animations API with clip-path circle transition.",
+    description: "Hook that switches light and dark themes behind a circular wipe from the click.",
     tags: ["dark-mode", "theme", "ripple", "animation", "clip-path", "hook"],
   },
   {
@@ -5597,7 +5598,7 @@ export function ShinyBadge({ spark = "✦", text }: Props) {
     </>
   );
 }`,
-    prompt: "Create a pill-shaped badge component in React with a left icon/spark character and a shiny shimmer text animation using CSS background-clip and an infinite linear gradient sweep animation.",
+    description: "Pill badge with a spark glyph and a light that sweeps across its text.",
     tags: ["badge", "pill", "shiny", "animated", "gradient", "text-effect"],
   },
   {
@@ -5674,7 +5675,7 @@ export function BorderBeamButton({ label, variant = "primary", onClick, href }: 
     </>
   );
 }`,
-    prompt: "Create a React button component with an animated border-beam effect using CSS offset-path and offset-distance. A gradient dot should travel continuously around the button border. Support primary and ghost variants, and render as either a button or anchor based on an href prop.",
+    description: "Button with a gradient beam that circles its border along a CSS offset path.",
     tags: ["button", "border-beam", "animated", "gradient", "offset-path"],
   },
   {
@@ -5775,7 +5776,7 @@ export function TypingHero({
     </>
   );
 }`,
-    prompt: "Create a React hero section with a large serif/sans-serif headline, a typewriter animated subtitle that types character by character with a blinking cursor, and a CTA slot that fades in only after typing completes. Respect prefers-reduced-motion.",
+    description: "Serif hero whose subtitle types itself out before the call-to-action buttons fade in.",
     tags: ["hero", "typewriter", "animation", "typing", "serif", "headline"],
   },
   {
@@ -5809,7 +5810,7 @@ export function FeatureCardGrid({ cards }: Props) {
     </div>
   );
 }`,
-    prompt: "Create a responsive 3-column card grid in React where each card has a small monospace category label and a larger title. Cards should have a hover effect with accent border and slight lift. Collapse to single column on mobile.",
+    description: "Three-column grid of feature cards with mono labels and an emerald hover border.",
     tags: ["cards", "grid", "feature", "hover", "responsive", "3-col"],
   },
   {
@@ -5850,7 +5851,7 @@ export function NumberedStepsList({ steps }: Props) {
     </ol>
   );
 }`,
-    prompt: "Create a React ordered list component where each step has a left-aligned monospace step number and a right-hand side with a serif title and body text. Items are separated by a top border. Collapse the two-column layout to a single column on mobile.",
+    description: "Ordered list of process steps with a mono number column and serif titles.",
     tags: ["steps", "process", "numbered", "serif", "mono", "timeline"],
   },
   {
@@ -5875,7 +5876,7 @@ export function FormulaBlock({ formula, caption }: Props) {
     </div>
   );
 }`,
-    prompt: "Create a React formula display component that renders a monospace code string centered in an accent-colored bordered box with optional caption text below. Should overflow-scroll horizontally on small screens.",
+    description: "Centred monospace formula on an emerald tint, with an optional spaced caption.",
     tags: ["formula", "code", "equation", "monospace", "accent", "callout"],
   },
   {
@@ -5918,7 +5919,7 @@ export function SignalCardGrid({ cards }: Props) {
     </div>
   );
 }`,
-    prompt: "Create a React 5-column card grid component where each card features a large italic serif display letter in accent color, a card title, a muted subtitle, and a description. Should responsively collapse to 2 columns then 1 column on smaller screens.",
+    description: "Up to five definition cards, each headed by a large italic serif letter.",
     tags: ["cards", "grid", "letter", "serif", "5-col", "responsive", "acronym"],
   },
   {
@@ -5956,7 +5957,7 @@ export function PrincipleCardGrid({ principles }: Props) {
     </div>
   );
 }`,
-    prompt: "Create a React 4-column responsive card grid where each card shows a monospace number label, a serif title, an accent-colored sub-label, and a description paragraph. Collapse to 2 columns on tablet and 1 on mobile.",
+    description: "Four-column principle cards with mono numbers, serif titles and emerald subtitles.",
     tags: ["cards", "grid", "4-col", "numbered", "serif", "principles", "pillars"],
   },
   {
@@ -5994,7 +5995,7 @@ export function DiagnosticGrid({ items }: Props) {
     </div>
   );
 }`,
-    prompt: "Create a React 2-column diagnostic card grid. Each card has a small warning-colored monospace pill tag at the top, a serif title, and a muted description. Collapse to single column on mobile. Use an amber/warning color palette for the tags.",
+    description: "Two-column diagnosis cards, each tagged with a small amber monospace pill.",
     tags: ["cards", "grid", "diagnostic", "warning", "2-col", "tag", "status"],
   },
   {
@@ -6052,7 +6053,7 @@ export function CalloutBox({ title, intro, label, items = [], footer }: Props) {
     </div>
   );
 }`,
-    prompt: "Create a React callout/alert box component with an amber warning border gradient background, a serif title, optional intro paragraph, a monospace section label, a symbol checklist, and an optional footer.",
+    description: "Amber callout with a serif title, labelled symbol list and closing line.",
     tags: ["callout", "warning", "alert", "checklist", "amber", "gradient", "diagnosis"],
   },
   {
@@ -6088,7 +6089,7 @@ export function Checklist({ items }: Props) {
     </ul>
   );
 }`,
-    prompt: "Create a React checklist component where each item is a card-like row with a circular accent badge showing a symbol on the left and text content on the right. Support JSX content in the text slot for rich formatting.",
+    description: "Checklist of hairline cards, each led by a round emerald marker.",
     tags: ["checklist", "list", "badge", "check", "accent", "card-row"],
   },
   {
@@ -6169,7 +6170,7 @@ export function ScrollReveal({ children, variant = "up", delay = 0, className = 
     </>
   );
 }`,
-    prompt: "Create a React scroll-reveal wrapper component that uses IntersectionObserver to add an .in class when the element enters the viewport, triggering CSS transitions. Support four animation variants: fade-up, slide-from-left, slide-from-right, and scale-up. Include stagger delay support and respect prefers-reduced-motion.",
+    description: "Wrapper that fades children up, in from a side, or scales them on entry.",
     tags: ["scroll", "reveal", "animation", "intersection-observer", "fade", "wrapper", "motion"],
   },
   {
@@ -6254,7 +6255,7 @@ export function SiteFooter({
     </footer>
   );
 }`,
-    prompt: "Create a React site footer with a 4-column responsive grid: brand column with dot logo + tagline on the left, then 3 link columns with monospace headings. Include a bottom bar with copyright text and a Published by attribution. Collapse to 2 columns on tablet and 1 on mobile.",
+    description: "Site footer with a glowing brand dot, mono column headings and a legal row.",
     tags: ["footer", "grid", "links", "responsive", "brand", "copyright"],
   },
   {
@@ -6535,7 +6536,7 @@ export function DepthText({
     </>
   );
 }`,
-    prompt: "Build a React TypeScript component that renders extruded 3D display text by stacking dozens of absolute layers along translateZ, each color-mixed between a face color and a depth color with quadratic easing. Wrap layers in a preserve-3d stage under CSS perspective. Drive rotateX/rotateY with requestAnimationFrame lerp toward pointer-relative tilt when a fine pointer is available, and fall back to a gentle auto-orbit sine/cosine idle motion; freeze transforms under prefers-reduced-motion.",
+    description: "Extruded 3D type made of stacked layers that tilts to follow the pointer.",
     tags: ["3d-text", "extruded", "pointer-tilt", "auto-orbit", "preserve-3d", "typography"],
   },
   {
@@ -6627,7 +6628,7 @@ export function Magnet({
     </div>
   );
 }`,
-    prompt: "Create a magnetic hover wrapper: on fine-pointer mousemove within the element plus a padding radius, translate the inner child toward the cursor by delta/magnetStrength using rAF, with a snappy 140ms ease while active and a 420ms settle on leave; disable on coarse pointers and prefers-reduced-motion.",
+    description: "Wrapper that pulls its child toward a nearby pointer, then springs back.",
     tags: ["magnetic", "pointer", "hover", "physics", "cta", "raf"],
   },
   {
@@ -6728,7 +6729,7 @@ export function GlareHover({
     </>
   );
 }`,
-    prompt: "Build a pointer-following specular glare wrapper: an absolutely positioned soft-light radial-gradient shine whose center is driven by CSS custom properties updated from pointer coordinates as percentages of the element box, fading opacity on enter/leave and disabled under prefers-reduced-motion.",
+    description: "Soft-light glare that follows the pointer across any surface it wraps.",
     tags: ["glare", "specular", "pointer", "soft-light", "card", "shine"],
   },
   {
@@ -7045,7 +7046,7 @@ export function CinematicWaterBackground({
     </>
   );
 }`,
-    prompt: "Build a fixed cinematic underwater background: four crossfading teal-to-violet scene gradients, two screen-blended SVG stroke layers warped by fractalNoise displacement filters and slowly drifting via CSS keyframes, vertical light-shaft polygons that skew/sway, a top surface shimmer also displacement-filtered, seeded rising bubble spans, and a vignette — with opacity stepping down by a scene prop and all motion killed under prefers-reduced-motion.",
+    description: "Underwater backdrop of turbulent waves, drifting light shafts and rising bubbles.",
     tags: ["svg-filters", "turbulence", "displacement", "parallax-bg", "bubbles", "cinematic"],
   },
   {
@@ -7167,7 +7168,7 @@ export function ConicBorderButton({
     </>
   );
 }`,
-    prompt: "Create a pill CTA whose border is a continuously spinning conic-gradient ring implemented with CSS @property --btn-ang, a masked ::after using mask-composite exclude, optional soft-light fractalNoise texture overlay, and reduced-motion freeze.",
+    description: "Uppercase pill button ringed by a spinning conic-gradient border over grain.",
     tags: ["conic-gradient", "spinning-border", "mask-composite", "noise-texture", "cta"],
   },
   {
@@ -7276,7 +7277,7 @@ export function PointerGlowCard({
     </>
   );
 }`,
-    prompt: "Build a card with a pointer-following glowing border: a masked ::before ring using mask-composite exclude, filled by a radial-gradient centered on CSS vars --gx/--gy updated from pointermove, fading in on hover/focus-within.",
+    description: "Card whose border lights up in a gradient under the pointer or keyboard focus.",
     tags: ["glow-border", "pointer", "mask-composite", "radial-gradient", "hover"],
   },
   {
@@ -7340,7 +7341,7 @@ export function ShinyGradientText({
     </>
   );
 }`,
-    prompt: "Make an animated shiny text span using a multi-stop linear gradient clipped to glyphs via background-clip:text, continuously sweeping background-position; pause the sweep under prefers-reduced-motion.",
+    description: "Inline text filled with a sliding gradient that holds still under reduced motion.",
     tags: ["shiny-text", "gradient", "background-clip", "kinetic", "typography"],
   },
   {
@@ -7438,7 +7439,7 @@ export function BlurInReveal({
     </>
   );
 }`,
-    prompt: "Create a scroll-triggered reveal that starts blurred, offset downward, and transparent, then transitions to clear via IntersectionObserver once, with optional delay steps and full reduced-motion bypass.",
+    description: "Scroll reveal that lifts content into place out of a 7px blur.",
     tags: ["scroll-reveal", "blur", "intersection-observer", "stagger", "entrance"],
   },
   {
@@ -7523,7 +7524,7 @@ export function SectionProgressRail({
     </>
   );
 }`,
-    prompt: "Build a fixed right-edge section progress nav of small dots that morph into a taller pill with a soft colored glow ring when active, visible only on wide screens, with accessible labels.",
+    description: "Fixed rail of section dots where the current dot stretches into a pill.",
     tags: ["progress-dots", "pill-morph", "section-nav", "fixed", "scroll-indicator"],
   },
   {
@@ -7637,7 +7638,7 @@ export function EdgeFadeMarquee({
     </>
   );
 }`,
-    prompt: "Implement an infinite horizontal marquee that duplicates its children, animates translate3d to -50%, soft-fades both edges with background-matching gradients, pauses on hover, and collapses to a static row under prefers-reduced-motion.",
+    description: "CSS marquee with faded edges that pauses on hover and stops for reduced motion.",
     tags: ["marquee", "ticker", "edge-fade", "infinite-loop", "pause-on-hover"],
   },
   {
@@ -7938,7 +7939,7 @@ export function ParallaxProductStage({
     </>
   );
 }`,
-    prompt: "Build a hero product theatre: three bottles on a lit shelf with a copper scaleX wipe path, GSAP staggered entrance (y/opacity/rotate), then per-item depth parallax via gsap.quickTo on pointermove over the stage; respect fine-pointer and prefers-reduced-motion.",
+    description: "Lit product shelf where three items settle in and drift at different depths.",
     tags: ["gsap", "parallax", "product-theatre", "hero", "quickto", "entrance"],
   },
   {
@@ -8024,7 +8025,7 @@ export function StaggerBlurText({
     </>
   );
 }`,
-    prompt: "Create a word-by-word text generate effect: split a string into spans that start blurred and transparent, then cascade to sharp opacity via staggered transition-delay after a startDelay timeout; skip animation under prefers-reduced-motion.",
+    description: "Paragraph that resolves word by word out of a soft blur.",
     tags: ["text-generate", "stagger", "blur", "kinetic-type", "entrance"],
   },
   {
@@ -8088,7 +8089,7 @@ export function AnimatedGradientRule({
     </>
   );
 }`,
-    prompt: "Make a 2px full-width decorative divider whose multi-stop horizontal gradient continuously slides by animating background-position on a 200% background-size, with prefers-reduced-motion freeze.",
+    description: "Two-pixel divider with a slow three-colour gradient sliding along it.",
     tags: ["gradient", "divider", "marquee-line", "accent", "separator"],
   },
   {
@@ -8191,7 +8192,7 @@ export function JewelryCursor({
     </>
   );
 }`,
-    prompt: "Build a jewelry-style custom cursor for fine-pointer desktops: a 3px gold dot that snaps instantly to the pointer via GSAP quickSetter, plus a 24px ring that lags with quickTo (0.12s power2.out) and scales to 1.9 when hovering links/buttons/[data-cursor-hover]. Hide the native cursor only after mount via a scope class. Skip entirely under prefers-reduced-motion or coarse pointers.",
+    description: "Gold dot cursor with a lagging ring that swells over links and buttons.",
     tags: ["custom-cursor", "gsap", "magnetic-hover", "gold", "pointer"],
   },
   {
@@ -8508,7 +8509,7 @@ export function ScrollUnfurlPreloader({
     </div>
   );
 }`,
-    prompt: "Create a full-screen royal-decree preloader: dark ink vignette, warm gold radial glow, drifting dust specks, and a parchment panel that unfurls from the centre by animating a CSS --reveal variable on clip-path inset while two brass gradient rods travel from centre to the parchment edges in sync (GSAP expo.out). Stagger-fade a lotus SVG, brand wordmark, and filigree divider, then lift/scale/blur the stage away. Honour prefers-reduced-motion with a short fade; optional sessionStorage once-per-tab gate; lock body scroll during play.",
+    description: "Parchment preloader where brass rods roll apart to unfurl the brand, then lift away.",
     tags: ["preloader", "clip-path", "gsap", "parchment", "scroll-unfurl"],
   },
   {
@@ -8687,7 +8688,7 @@ export function FoilSpecularCard({
     </div>
   );
 }`,
-    prompt: "Build a parchment invitation card with ornate SVG corners and a filigree divider. Track the pointer to update CSS vars --mx/--my driving a soft-light radial specular foil sheen across the paper (no 3D tilt). Render couple names in script type with an animated gold foil gradient via background-clip:text (220% background-size sweeping over 6s), padded so swashes don't clip. Honour prefers-reduced-motion by freezing the shimmer.",
+    description: "Invitation card with a pointer-tracked foil sheen and shimmering gold script names.",
     tags: ["foil", "specular", "shimmer", "invitation", "background-clip"],
   },
   {
@@ -8807,7 +8808,7 @@ export function WaxSealButton({
     </button>
   );
 }`,
-    prompt: "Design a wax-seal CTA (not a rounded pill): sharp 2px corners, gold fill, light text shadow. On hover, GSAP scales the control to 0.96 and radiates an SVG circle from r=18 to r=58 while opacity falls to 0. Include a ghost variant with an underline that scales from centre. Honour prefers-reduced-motion by skipping the press/ring.",
+    description: "Gold block button that presses in and radiates a ring, with a ghost variant.",
     tags: ["wax-seal", "gsap", "radiating-ring", "cta", "hover"],
   },
   {
@@ -8949,7 +8950,7 @@ export function CanvasPetalField({
 
   return <canvas ref={canvasRef} aria-hidden className={className} />;
 }`,
-    prompt: "Implement an ambient canvas petal field: ~16 procedurally drawn marigold (8 ellipses + centre) and jasmine (5 ellipses) shapes falling with sway, rotation, and low alpha. Track mouse X as a soft lateral gust. Cap DPR at 2, resize with the element, skip entirely under prefers-reduced-motion. No image assets.",
+    description: "Canvas of marigold and jasmine petals drifting down, nudged by the cursor.",
     tags: ["canvas", "particles", "petals", "ambient", "mouse-gust"],
   },
   {
@@ -9023,7 +9024,7 @@ export function FilmGrainOverlay({
     />
   );
 }`,
-    prompt: "Add a fixed full-viewport film-grain overlay: render random grayscale noise into a ~220x220 canvas at ~20fps (every 3rd rAF), stretch with CSS, blend with mix-blend-overlay at ~5% opacity. Skip under prefers-reduced-motion. Keep pointer-events none and a high z-index.",
+    description: "Faint animated film grain drawn on a low-resolution canvas and blended over surfaces.",
     tags: ["film-grain", "canvas", "noise", "overlay-blend", "atmosphere"],
   },
   {
@@ -9220,7 +9221,7 @@ export function ScratchFoilReveal({
     </div>
   );
 }`,
-    prompt: "Build a scratch-to-reveal foil: children sit under a canvas painted with a gold linear gradient, speck noise, and a centred label. Pointer strokes erase via destination-out. Track progress with a 22x28 Uint8 coverage grid marked geometrically (never getImageData). Auto-fade the canvas past ~55% cleared. Use coalesced pointer events, lower DPR on coarse pointers, ResizeObserver to refit, and instant reveal under prefers-reduced-motion.",
+    description: "Gold foil you scratch away with the pointer, clearing itself past a threshold.",
     tags: ["scratch-off", "canvas", "foil", "pointer", "reveal"],
   },
   {
@@ -9381,7 +9382,7 @@ export function PixelDemorphImage({
     </div>
   );
 }`,
-    prompt: "Create a pixel-demorph image reveal: on IntersectionObserver entry, animate from ~6-block nearest-neighbour upscaling to full resolution over ~1.1s with cubic ease-out. Downsample into an offscreen canvas then drawImage upscale with imageSmoothingEnabled=false (never getImageData). Keep a real img underneath for accessibility. Skip animation under prefers-reduced-motion.",
+    description: "Image that resolves from coarse pixel blocks to sharp as it scrolls into view.",
     tags: ["pixelate", "demorph", "canvas", "scroll-reveal", "image"],
   },
   {
@@ -9543,7 +9544,7 @@ export function FallingPetalField({
     </div>
   );
 }`,
-    prompt: "Ship a GSAP ScrollTrigger parallax wrapper: scrub y by speed*100px and optional rotation across top-bottom to bottom-top, gated with gsap.matchMedia for prefers-reduced-motion. Pair it with a deterministic CSS falling-petal field of SVG silhouettes (no Math.random), driven by custom properties for drift/spin/opacity and infinite linear keyframes that travel 112vh. Collapse petals under reduced motion.",
+    description: "Scroll-scrubbed parallax wrapper that drifts and rotates children, with a petal field.",
     tags: ["parallax", "scrolltrigger", "petals", "gsap", "ambient"],
   },
   {
@@ -9739,7 +9740,7 @@ export function TillReceiptPrint({
     </div>
   );
 }`,
-    prompt: "Build a till-receipt UI that prints from a dark slot via clip-path inset animating from 100% bottom crop to -8% over 1.4s. Add zigzag perforated edges (polygon clip-paths), dashed separators, staggered line-item fades (delay via --i), and a PAID stamp that scales from 2.2 to 1 with a slight overshoot while masked by an inline feTurbulence noise SVG. Drive the print with a single React state flip on mount. Honour prefers-reduced-motion by showing the final state immediately.",
+    description: "Payment receipt that prints out of a till slot and stamps itself PAID.",
     tags: ["receipt", "clip-path", "stamp", "print-out", "checkout"],
   },
   {
@@ -10131,7 +10132,7 @@ export const LOADER_MAGIC_RINGS = {
   hoverScale: 1,
   clickBurst: false,
 } as const;`,
-    prompt: "Build a React + Three.js fullscreen shader backdrop named MagicRings: an orthographic full-bleed quad with a custom GLSL fragment shader that draws expanding concentric rings with dual-color mix, soft exponential glow attenuation, angular thickness falloff, procedural noise, and a cyclic fade-in/fade-out. Smooth the mouse with lerp for optional center parallax and hover scale, and decay a click burst uniform. Respect prefers-reduced-motion by skipping the renderer. Mount the canvas absolutely inset-0 with pointer-events none unless interactive.",
+    description: "WebGL rings that expand in two colours, with optional mouse parallax and click burst.",
     tags: ["webgl", "three", "shader", "rings", "parallax", "loader-backdrop"],
   },
   {
@@ -10347,7 +10348,7 @@ export function StarBorder<T extends ElementType = "button">({
     </>
   );
 }`,
-    prompt: "Create a polymorphic React button wrapper called StarBorder: overflow-hidden rounded shell with two absolute 300%-wide radial-gradient ellipses that alternate-slide along the top and bottom edges (CSS keyframes translating +-100% with opacity fade). Inner chip sits above with tone variants (outline/primary/gold), hover translateY(-3px) + deeper shadow, active scale 0.97, and reduced-motion disables both lift and beam animation.",
+    description: "Button with light glints sweeping its top and bottom edges, in three tones.",
     tags: ["border-beam", "radial-gradient", "cta", "hover-lift", "css-keyframes"],
   },
   {
@@ -10490,7 +10491,7 @@ export function ShinyText({
     </motion.span>
   );
 }`,
-    prompt: "Build ShinyText: a React span that clips a multi-stop linear gradient to text glyphs (background-clip: text) and animates backgroundPosition via Motion's useAnimationFrame + useMotionValue/useTransform, supporting yoyo loops, delay gaps, direction, and pauseOnHover. Disable animation when prefers-reduced-motion matches.",
+    description: "Text with a sweeping gradient shine that renders plain when motion is reduced.",
     tags: ["text-shine", "gradient-clip", "motion", "yoyo", "editorial"],
   },
   {
@@ -10701,7 +10702,7 @@ export function CircularText({
     </>
   );
 }`,
-    prompt: "Create CircularText: distribute each character around a circle using CSS transforms (rotate N deg, translateY(-radius), counter-rotate), spin the ring infinitely with Motion useAnimation linear tweens, and on hover switch duration (speedUp/slowDown), spring-pause, or goBonkers (very fast + slight scale). Measure radius with ResizeObserver from host size. Respect useReducedMotion.",
+    description: "Letters set around a spinning ring that speeds up, slows or pauses on hover.",
     tags: ["circular-text", "orbit", "motion", "hover-speed", "brand-lockup"],
   },
   {
@@ -10904,7 +10905,7 @@ export function PinchedButton(props: PinchedButtonProps) {
     </>
   );
 }`,
-    prompt: "Design PinchedButton: uppercase editorial CTA with thick brick border and asymmetric radii (0 40px 0 40px), solid/ghost tones via CSS variables, hover translateY(-3px) + arrow nudge, press scale 0.97. Include optional portal pair CSS using :has() so hovering the ghost button fills it dark while the solid sibling flips to outline. Honor prefers-reduced-motion.",
+    description: "Asymmetric brick button with a pinched corner radius, hover lift and arrow nudge.",
     tags: ["asymmetric-radius", "cta", "hover-lift", "has-selector", "editorial"],
   },
   {
@@ -11104,7 +11105,7 @@ export function MultiStepLoader({
     </>
   );
 }`,
-    prompt: "Compose MultiStepLoader: a fixed fullscreen overlay with soft MagicRings WebGL backdrop, frosted title card, and a scrolling checklist viewport. Advance steps on an interval; animate the list with Motion translateY; render the active row with ShinyText gradient shine and check icons for completed rows. Support loop/onComplete and AnimatePresence fade in/out.",
+    description: "Full-screen step loader with ticked stages, a shining active label and WebGL rings.",
     tags: ["multi-step", "overlay", "webgl", "shiny-text", "checklist", "fullscreen"],
   },
   {
@@ -11268,7 +11269,7 @@ export function MetallicLogoShimmer({
     </>
   );
 }`,
-    prompt: "Build MetallicLogoShimmer: wrap a consumer-supplied logo image with a blurred white radial plate, a slowly pulsing champagne bloom, and two layers masked to the logo silhouette - a static soft-light catch-light and a 24s ease-in-out metallic gradient sweep that translates across the mark. Disable animations under prefers-reduced-motion.",
+    description: "Logo on a soft plate with a champagne bloom and a slow metallic sweep.",
     tags: ["logo", "mask-image", "metallic-shimmer", "ambient-glow", "brand"],
   },
   {
@@ -11363,7 +11364,7 @@ export function Highlighter({
     </span>
   );
 }`,
-    prompt: "Create Highlighter: a React span that wraps children and uses rough-notation's annotate().show() to draw a hand-sketched highlight/underline/box/circle when mounted, optionally deferred until useInView. Re-show on ResizeObserver. Under prefers-reduced-motion, set animationDuration to 0.",
+    description: "Hand-drawn highlight, underline, box or circle marks that draw on mount or scroll.",
     tags: ["rough-notation", "underline", "scroll-reveal", "hand-drawn", "annotation"],
   },
   {
@@ -11598,7 +11599,7 @@ export function TextType({
     </>
   );
 }`,
-    prompt: "Implement TextType: a polymorphic typewriter that types/deletes through a string array with timeouts, optional variable per-character speed, IntersectionObserver startOnVisible, and a GSAP-powered blinking cursor. Under prefers-reduced-motion, dump the first sentence instantly with no cursor animation.",
+    description: "Typewriter that types, pauses and deletes a list of lines with a blinking cursor.",
     tags: ["typewriter", "gsap", "cursor-blink", "intersection-observer", "kinetic-text"],
   },
   {
@@ -11832,7 +11833,7 @@ export function CelebrationOverlay({
     </div>
   );
 }`,
-    prompt: "Build CelebrationOverlay: a fullscreen dialog with backdrop blur, an imperative canvas-confetti helper that fires a center burst plus delayed left/right angled bursts on a replay interval, and a GSAP card entrance (fade/y/scale) with check-icon pop. Fade the root out on CTA. Honor prefers-reduced-motion by skipping particles and entrance tweens. Keep ConfettiCanvas + overlay in one file.",
+    description: "Blurred success dialog with three timed confetti bursts and a card that pops in.",
     tags: ["confetti", "gsap", "success", "overlay", "celebration", "canvas"],
   },
   {
@@ -11996,7 +11997,7 @@ export function TiledGlassSurface({
     </>
   );
 }`,
-    prompt: "Create DamaskTileBackdrop: a fixed inset-0 layer with a repeating ornamental tile (consumer tileSrc or multi-layer CSS radial lattice), opacity knob, and a translucent cream veil. Ship a sibling TiledGlassSurface card that reuses the tile under frosted glass (backdrop-filter blur + inset highlight) for form panes.",
+    description: "Fixed ornamental tile lattice behind the page, plus a matching tiled glass pane.",
     tags: ["pattern", "damask", "atmosphere", "glassmorphism", "backdrop"],
   },
 ];
