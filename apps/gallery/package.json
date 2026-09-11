@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3333",
-    "build": "node scripts/check-previews.mjs && next build",
+    "build": "npm run check && next build",
     "start": "next start",
+    "check": "node ../../packages/ui/scripts/check-contrast.mjs && node scripts/check-contrast.mjs && node scripts/check-previews.mjs",
+    "check:contrast": "node scripts/check-contrast.mjs",
     "check:previews": "node scripts/check-previews.mjs",
-    "lint": "node scripts/check-previews.mjs && tsc --noEmit"
+    "lint": "npm run check && tsc --noEmit"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

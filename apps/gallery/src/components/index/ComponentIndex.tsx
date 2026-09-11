@@ -68,8 +68,14 @@ export function ComponentIndexView({ entries, categories, featured, initialQuery
     return () => window.clearTimeout(t);
   }, [query, normalized, category]);
 
-  // Announce the result count once typing settles, not on every keystroke.
+  // Announce the result count once typing settles, not on every keystroke,
+  // and not on first load, when nothing has changed yet.
+  const firstCount = useRef(true);
   useEffect(() => {
+    if (firstCount.current) {
+      firstCount.current = false;
+      return;
+    }
     const t = window.setTimeout(() => {
       setAnnouncement(
         filtered.length === 0

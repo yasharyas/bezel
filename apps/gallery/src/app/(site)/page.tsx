@@ -69,7 +69,7 @@ export default function GalleryPage() {
                   <ArrowUpRight
                     aria-hidden
                     size={15}
-                    className="text-void-muted transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                    className="text-void-muted transition-transform duration-200 motion-safe:group-hover:-translate-y-0.5 motion-safe:group-hover:translate-x-0.5"
                   />
                 </span>
                 <span className="mt-1 block text-sm leading-relaxed text-void-muted">{item.body}</span>
