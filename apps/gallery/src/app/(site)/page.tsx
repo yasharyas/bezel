@@ -29,10 +29,10 @@ export default function GalleryPage() {
   const indexProps = { entries: catalog, categories, featured: FEATURED };
   return (
     <main id="main">
-      <section className="mx-auto grid max-w-7xl gap-12 px-4 pb-14 pt-14 sm:px-6 sm:pt-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-end">
+      <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-10 sm:gap-12 sm:px-6 sm:pb-14 sm:pt-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-end">
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-void-muted">
-            React component library · {catalog.length} components
+            React component library<span className="hidden sm:inline"> · {catalog.length} components</span>
           </p>
           <h1 className="mt-4 font-serif text-6xl font-normal leading-[0.95] tracking-[-0.02em] text-void-ink sm:text-7xl">
             Bezel
@@ -41,18 +41,18 @@ export default function GalleryPage() {
             Components for interfaces that need motion and craft, shipped as readable TypeScript
             you copy into your project and own.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center gap-x-1 gap-y-3 sm:gap-3">
             <InstallCommand command="npm i bezel-ui" label="Copy install command" />
             <a
               href={NPM_URL}
-              className="focus-ring inline-flex h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-void-ink hover:bg-[rgba(255,255,255,0.08)]"
+              className="focus-ring inline-flex h-11 items-center gap-1.5 rounded-xl px-2.5 text-sm font-medium text-void-ink hover:bg-[rgba(255,255,255,0.08)] sm:px-3"
             >
               npm
               <ArrowUpRight aria-hidden size={15} />
             </a>
             <a
               href={GITHUB_URL}
-              className="focus-ring inline-flex h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-medium text-void-ink hover:bg-[rgba(255,255,255,0.08)]"
+              className="focus-ring inline-flex h-11 items-center gap-1.5 rounded-xl px-2.5 text-sm font-medium text-void-ink hover:bg-[rgba(255,255,255,0.08)] sm:px-3"
             >
               GitHub
               <ArrowUpRight aria-hidden size={15} />
