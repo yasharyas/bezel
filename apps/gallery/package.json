@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3333",
-    "build": "next build",
-    "start": "next start"
+    "build": "node scripts/check-previews.mjs && next build",
+    "start": "next start",
+    "check:previews": "node scripts/check-previews.mjs",
+    "lint": "node scripts/check-previews.mjs && tsc --noEmit"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

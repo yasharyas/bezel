@@ -2,34 +2,155 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg-primary: #0c0c0f;
-  --bg-card: rgba(255, 255, 255, 0.025);
-  --border: rgba(255, 255, 255, 0.08);
+/*
+ * The gallery consumes Bezel's own tokens (bezel-ui/tokens.css, imported in the
+ * root layout). Nothing here invents a colour: chrome uses the --bz-void-*
+ * family, and preview stages map the semantic names some components expect
+ * onto the paper and void families. scripts/check-contrast.mjs measures every
+ * pair declared below before a build is allowed to finish.
+ */
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    /* Defaults for anything rendered outside a stage: the paper tone. */
+    --background: 255 255 255;
+    --foreground: 10 10 10;
+  }
+
+  html {
+    background: var(--bz-void);
+    color: var(--bz-void-ink);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    font-family: var(--bz-font-sans);
+    min-height: 100vh;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--bz-paper-raised);
+    color: var(--bz-ink);
+  }
 }
 
-body {
-  background: var(--bg-primary);
-  min-height: 100vh;
+@layer components {
+  /* Visible keyboard focus for gallery chrome: 2px at 2px offset, white on void
+     (21:1 on --bz-void, 17.4:1 on --bz-void-raised). */
+  .focus-ring:focus-visible {
+    outline: var(--bz-focus-width) solid var(--bz-focus-ring-void);
+    outline-offset: var(--bz-focus-offset);
+  }
+
+  /* Stage content fades in once mounted, instead of popping. */
+  .stage-content {
+    animation: stage-in var(--bz-duration-base) var(--bz-ease-out) both;
+  }
+  @keyframes stage-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Horizontal scrollers without a visible scrollbar (chips row). */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }
 
-/* Smooth scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+/* Stage and tone classes live outside @layer: tone names are composed at
+   runtime (`tone-${spec.tone}`), so Tailwind cannot see them to keep them. */
+/* ----------------------------------------------------------------- stages
+ * A stage is a small viewport. The transform and containment make it the
+ * containing block for position: fixed descendants, so a component that pins
+ * itself to "the viewport" pins itself to the stage instead.
+ */
+.stage {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translateZ(0);
+  contain: layout paint;
+  background: var(--stage-bg);
+  color: rgb(var(--foreground));
 }
 
-/* Code block styling */
+.tone-paper,
+.tone-cream {
+  --background: 255 255 255;        /* --bz-paper */
+  --foreground: 10 10 10;           /* --bz-ink */
+  --card: 255 255 255;              /* --bz-paper */
+  --card-foreground: 10 10 10;      /* --bz-ink */
+  --popover: 255 255 255;
+  --popover-foreground: 10 10 10;
+  --primary: 145 44 34;             /* --bz-accent-fill */
+  --primary-foreground: 255 255 255;/* --bz-accent-on-fill */
+  --secondary: 247 243 238;         /* --bz-paper-raised */
+  --secondary-foreground: 10 10 10;
+  --muted: 240 240 240;             /* --bz-line-opaque */
+  --muted-foreground: 107 107 112;  /* --bz-ink-subtle */
+  --accent: 247 243 238;            /* --bz-paper-raised */
+  --accent-foreground: 10 10 10;
+  --destructive: 185 28 28;         /* --bz-danger-fill */
+  --destructive-foreground: 255 255 255;
+  --border: 222 222 222;            /* --bz-line-strong-opaque */
+  --input: 222 222 222;
+  --ring: 145 44 34;                /* --bz-focus-ring */
+  color-scheme: light;
+}
+.tone-paper { --stage-bg: var(--bz-paper-sunken); }
+.tone-cream { --stage-bg: var(--bz-paper-raised); }
+
+.tone-void {
+  --background: 12 12 15;           /* --bz-void */
+  --foreground: 255 255 255;        /* --bz-void-ink */
+  --card: 26 26 26;                 /* --bz-void-raised */
+  --card-foreground: 255 255 255;
+  --popover: 26 26 26;
+  --popover-foreground: 255 255 255;
+  --primary: 247 243 238;           /* --bz-paper-raised */
+  --primary-foreground: 10 10 10;   /* --bz-ink */
+  --secondary: 37 37 37;            /* --bz-void-fill over --bz-void-raised */
+  --secondary-foreground: 255 255 255;
+  --muted: 37 37 37;
+  --muted-foreground: 209 209 209;  /* --bz-void-ink-muted over --bz-void-raised */
+  --accent: 37 37 37;
+  --accent-foreground: 255 255 255;
+  --destructive: 185 28 28;         /* --bz-danger-fill */
+  --destructive-foreground: 255 255 255;
+  --border: 49 49 49;               /* --bz-void-line over --bz-void-raised */
+  --input: 49 49 49;
+  --ring: 255 255 255;              /* --bz-focus-ring-void */
+  --stage-bg: var(--bz-void-raised);
+  color-scheme: dark;
+}
+
+/* Iframe preview documents paint their tone edge to edge. */
+html.frame-doc,
+html.frame-doc body {
+  background: var(--stage-bg, var(--bz-paper-sunken));
+  min-height: 100%;
+}
+html.frame-doc body {
+  color: rgb(var(--foreground));
+}
+
 pre code {
   tab-size: 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-content {
+    animation: none;
+  }
+  .motion-safe-transition {
+    transition: none !important;
+  }
+  html:focus-within {
+    scroll-behavior: auto;
+  }
 }
