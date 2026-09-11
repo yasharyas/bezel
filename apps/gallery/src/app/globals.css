@@ -46,7 +46,7 @@
 
   /* Stage content fades in once mounted, instead of popping. */
   .stage-content {
-    animation: stage-in var(--bz-duration-base) var(--bz-ease-out) both;
+    animation: stage-in var(--bz-duration-base) var(--bz-ease-out) backwards;
   }
   @keyframes stage-in {
     from { opacity: 0; }
