@@ -121,7 +121,8 @@ export function PreviewStage({ slug, name, size = "card", eager = false, classNa
       {spec.hint && size === "card" ? (
         <span
           aria-hidden
-          className={`pointer-events-none absolute bottom-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium leading-none transition-opacity duration-300 motion-safe-transition ${
+          data-pointer-only={/^(Move|Hover|Move near)$/.test(spec.hint) || undefined}
+          className={`stage-hint pointer-events-none absolute bottom-2.5 left-2.5 z-10 inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium leading-none transition-opacity duration-300 motion-safe-transition ${
             spec.tone === "void"
               ? "bg-white/10 text-void-muted ring-1 ring-inset ring-white/10"
               : "bg-white/85 text-ink-muted ring-1 ring-inset ring-black/[0.08]"
