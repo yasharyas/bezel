@@ -27,7 +27,7 @@ function toCatalogEntry(entry: ComponentEntry): CatalogEntry {
     name: entry.name,
     path: entry.path,
     category: entry.category ?? "general",
-    description: entry.prompt,
+    description: entry.description,
     tags: entry.tags,
   };
 }

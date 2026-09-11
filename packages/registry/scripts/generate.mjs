@@ -8,9 +8,9 @@
  * registry kept serving the pre-focus-ring copies.
  *
  * So the source files are the single source of truth for `code` and `path`.
- * Everything a file cannot tell us — the prose `prompt`, the `tags`, the
- * `category`, and the exact `slug` spelling — lives in `metadata.json`, keyed
- * by slug. Slugs are deliberately not derived from names: `TubelightNavBar` is
+ * Everything a file cannot tell us — the one-sentence `description`, the
+ * `tags`, the `category`, and the exact `slug` spelling — lives in
+ * `metadata.json`, keyed by slug. Slugs are deliberately not derived from names: `TubelightNavBar` is
  * published at `tubelight-navbar`, not `tubelight-nav-bar`, and those URLs must
  * not move. Entry order follows `metadata.json` key order, which is the order
  * the gallery lists components in.
@@ -82,6 +82,23 @@ for (const [slug, meta] of Object.entries(metadata)) {
   }
   claimed.add(path);
   entries.push({ slug, meta, path });
+
+  // The description is product copy shown on every card, so its shape is
+  // enforced here rather than left to review. Unknown fields are rejected so
+  // a stale field cannot quietly sit next to the real one.
+  const allowed = new Set(["name", "category", "description", "tags"]);
+  for (const key of Object.keys(meta)) {
+    if (!allowed.has(key)) problems.push(`metadata.json entry "${slug}" has an unknown field "${key}".`);
+  }
+  const description = meta.description ?? "";
+  const words = description.trim().split(/\s+/).filter(Boolean).length;
+  if (!description) problems.push(`metadata.json entry "${slug}" has no description.`);
+  else if (description.length >= 90 || words < 8 || words > 14) {
+    problems.push(
+      `"${slug}" description should be one sentence of 8 to 14 words under 90 characters (has ${words} words, ${description.length} characters).`,
+    );
+  }
+  if (description.includes(String.fromCharCode(0x2014))) problems.push(`"${slug}" description contains an em dash.`);
 }
 
 for (const path of files) {
@@ -122,7 +139,7 @@ function renderEntry({ slug, meta, path }) {
   ];
   if (meta.category) lines.push(`    category: ${str(meta.category)},`);
   lines.push(`    code: \`${templateLiteral(readComponent(path))}\`,`);
-  lines.push(`    prompt: ${str(meta.prompt ?? "")},`);
+  lines.push(`    description: ${str(meta.description ?? "")},`);
   lines.push(`    tags: [${(meta.tags ?? []).map(str).join(", ")}],`);
   lines.push("  },");
   return lines.join("\n");
@@ -137,7 +154,8 @@ export interface ComponentEntry {
   slug: string;
   path: string;
   code: string;
-  prompt: string;
+  /** One sentence, 8 to 14 words: what the component is and what sets it apart. */
+  description: string;
   tags: string[];
   category?: string;
 }
