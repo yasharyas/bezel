@@ -129,6 +129,13 @@
   color-scheme: dark;
 }
 
+/* "Move" and "Hover" mean nothing without a hovering pointer. */
+@media (hover: none) {
+  .stage-hint[data-pointer-only] {
+    display: none;
+  }
+}
+
 /* Iframe preview documents paint their tone edge to edge. */
 html.frame-doc,
 html.frame-doc body {
