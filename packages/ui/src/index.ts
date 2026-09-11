@@ -20,15 +20,9 @@ export type { Tokens } from "./tokens";
 // Original components
 export { GlassButton } from "./GlassButton";
 export { Card } from "./Card";
-export { Input } from "./Input";
 
 // Forms
 export { TextInput } from "./forms/TextInput";
-export { RadioGroup } from "./forms/RadioGroup";
-export { Checkbox } from "./forms/Checkbox";
-export { DOBPicker } from "./forms/DOBPicker";
-export { SelectInput } from "./forms/SelectInput";
-export { FileUpload } from "./forms/FileUpload";
 export { MD3Switch } from "./forms/MD3Switch";
 export { BlenderUpload } from "./forms/BlenderUpload";
 export { CustomCheckbox, GradientCheckbox, TransformerCheckbox, AnimatedCheckbox } from "./forms/CheckboxVariants";
@@ -148,7 +142,6 @@ export { AnimatedGradientRule } from "./dividers/AnimatedGradientRule";
 // Paigam extraction — ceremonial invitation motion components
 export { JewelryCursor } from "./interaction/JewelryCursor";
 export { ScrollUnfurlPreloader } from "./loaders/ScrollUnfurlPreloader";
-export { FoilSpecularCard } from "./cards/FoilSpecularCard";
 export { WaxSealButton } from "./buttons/WaxSealButton";
 export { CanvasPetalField } from "./animation/CanvasPetalField";
 export { FilmGrainOverlay } from "./overlays/FilmGrainOverlay";

@@ -43,18 +43,12 @@ Three rules cut across all eight:
 | Component | default | hover | focus | active | disabled | loading | error | empty |
 |---|---|---|---|---|---|---|---|---|
 | `forms/TextInput` | + | – | + | – | + | – | + | n/a |
-| `forms/DOBPicker` | + | – | + | – | – | n/a | + | n/a |
-| `forms/SelectInput` | + | – | + | + | – | – | + | + |
-| `forms/Checkbox` | + | – | + | – | – | n/a | + | n/a |
 | `forms/CheckboxVariants` (×4) | + | + | + | + | – | n/a | – | n/a |
-| `forms/RadioGroup` | + | + | + | – | – | n/a | + | n/a |
 | `forms/MD3Switch` | + | + | + | + | + | – | – | n/a |
-| `forms/FileUpload` | + | + | + | – | – | – | + | + |
 | `forms/BlenderUpload` | + | + | + | + | + | + | ! | + |
 
-`TextInput`, `DOBPicker`, `SelectInput` and `Checkbox` render an error but none
-of them set `aria-invalid` or link the message with `aria-describedby`, so the
-error is visual only. `BlenderUpload` reports errors through a callback and
+`TextInput` renders an error but does not set `aria-invalid` or link the message
+with `aria-describedby`, so the error is visual only. `BlenderUpload` reports errors through a callback and
 renders nothing, so it is marked `!`.
 
 ### Buttons and links
@@ -136,7 +130,6 @@ than being quietly dropped:
   `loaders/MultiStepLoader` and nowhere else.
 - **Error is visual only in every form component.** None set `aria-invalid` or
   `aria-describedby`.
-- **Two labels are not associated with their inputs.** `Input.tsx` and
-  `SidePanel`'s `PanelField` both render a `<label>` that neither wraps its
-  control nor carries `htmlFor`.
+- **A label is not associated with its input.** `SidePanel`'s `PanelField`
+  renders a `<label>` that neither wraps its control nor carries `htmlFor`.
 - **`forms/CheckboxVariants`' four exports have no accessible name at all.**

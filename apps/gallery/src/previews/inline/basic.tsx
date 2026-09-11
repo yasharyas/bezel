@@ -18,12 +18,7 @@ import {
 
 import { GlassButton } from "bezel-ui/GlassButton";
 import { Card } from "bezel-ui/Card";
-import { Input } from "bezel-ui/Input";
 import { TextInput } from "bezel-ui/forms/TextInput";
-import { RadioGroup } from "bezel-ui/forms/RadioGroup";
-import { Checkbox } from "bezel-ui/forms/Checkbox";
-import { DOBPicker } from "bezel-ui/forms/DOBPicker";
-import { FileUpload } from "bezel-ui/forms/FileUpload";
 import { MD3Switch } from "bezel-ui/forms/MD3Switch";
 import { BlenderUpload } from "bezel-ui/forms/BlenderUpload";
 import {
@@ -84,7 +79,6 @@ import { SectionProgressRail } from "bezel-ui/navigation/SectionProgressRail";
 import { EdgeFadeMarquee } from "bezel-ui/animation/EdgeFadeMarquee";
 import { StaggerBlurText } from "bezel-ui/animation/StaggerBlurText";
 import { AnimatedGradientRule } from "bezel-ui/dividers/AnimatedGradientRule";
-import { FoilSpecularCard } from "bezel-ui/cards/FoilSpecularCard";
 import { CanvasPetalField } from "bezel-ui/animation/CanvasPetalField";
 import { FilmGrainOverlay } from "bezel-ui/overlays/FilmGrainOverlay";
 import { ScratchFoilReveal } from "bezel-ui/interaction/ScratchFoilReveal";
@@ -146,16 +140,6 @@ function CardPreview() {
   );
 }
 
-function InputPreview() {
-  return (
-    <Center>
-      <div className="w-64">
-        <Input label="Workspace name" placeholder="acme-studio" defaultValue="" />
-      </div>
-    </Center>
-  );
-}
-
 /* ----------------------------------------------------------------- forms */
 
 function TextInputPreview() {
@@ -174,73 +158,6 @@ function TextInputPreview() {
           onChange={setEmail}
           error={/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) ? undefined : "Enter a valid email address"}
         />
-      </div>
-    </Center>
-  );
-}
-
-function RadioGroupPreview() {
-  const [value, setValue] = useState("Yearly");
-  const id = useId();
-  return (
-    <Center>
-      <RadioGroup
-        name={`${id}-billing`}
-        label="Billing period"
-        value={value}
-        onChange={setValue}
-        options={["Monthly", "Yearly"]}
-        mandatory
-      />
-    </Center>
-  );
-}
-
-function CheckboxPreview() {
-  const [receipt, setReceipt] = useState(true);
-  const [terms, setTerms] = useState(false);
-  const id = useId();
-  return (
-    <Center>
-      <div className="flex w-[260px] flex-col">
-        <Checkbox name={`${id}-receipt`} label="Email me a copy of the receipt" checked={receipt} onChange={setReceipt} />
-        <Checkbox
-          name={`${id}-terms`}
-          label="I accept the terms"
-          checked={terms}
-          onChange={setTerms}
-          mandatory
-          error={terms ? undefined : "Required to continue"}
-        />
-      </div>
-    </Center>
-  );
-}
-
-function DOBPickerPreview() {
-  const [value, setValue] = useState("1996-04-12");
-  const id = useId();
-  return (
-    <Center>
-      <div className="w-[260px]">
-        <DOBPicker name={`${id}-dob`} label="Date of birth" value={value} onChange={setValue} mandatory />
-        <p className="mt-3 font-mono text-xs text-[#4a4a4c]">
-          value: {value ? value : <span className="text-[#6b6b70]">incomplete</span>}
-        </p>
-      </div>
-    </Center>
-  );
-}
-
-function FileUploadPreview() {
-  const [passport, setPassport] = useState("");
-  const [address, setAddress] = useState("utility-bill-june.pdf");
-  const id = useId();
-  return (
-    <Center>
-      <div className="flex w-[290px] flex-col gap-3">
-        <FileUpload name={`${id}-passport`} label="Passport scan" value={passport} onChange={setPassport} />
-        <FileUpload name={`${id}-address`} label="Proof of address" value={address} onChange={setAddress} />
       </div>
     </Center>
   );
@@ -896,19 +813,6 @@ function PointerGlowCardPreview() {
   );
 }
 
-function FoilSpecularCardPreview() {
-  const ref = useRef<HTMLDivElement>(null);
-  useIdleInterval(() => {
-    const card = ref.current?.firstElementChild ?? null;
-    sweep(card, { duration: 2200, enterLeave: false, path: (t) => [0.1 + 0.8 * t, 0.2 + 0.5 * t] });
-  }, 3600);
-  return (
-    <div ref={ref} className="py-6">
-      <FoilSpecularCard />
-    </div>
-  );
-}
-
 /* ----------------------------------------------------------------- motion */
 
 function ElasticLineDividerPreview() {
@@ -1214,12 +1118,7 @@ function MetallicLogoShimmerPreview() {
 export const previews: PreviewModule = {
   "glass-button": GlassButtonPreview,
   card: CardPreview,
-  input: InputPreview,
   "text-input": TextInputPreview,
-  "radio-group": RadioGroupPreview,
-  checkbox: CheckboxPreview,
-  "dob-picker": DOBPickerPreview,
-  "file-upload": FileUploadPreview,
   stepper: StepperPreview,
   "stepper-navigation": StepperNavigationPreview,
   "typewriter-loader": TypewriterLoaderPreview,
@@ -1267,7 +1166,6 @@ export const previews: PreviewModule = {
   "edge-fade-marquee": EdgeFadeMarqueePreview,
   "stagger-blur-text": StaggerBlurTextPreview,
   "animated-gradient-rule": AnimatedGradientRulePreview,
-  "foil-specular-card": FoilSpecularCardPreview,
   "canvas-petal-field": CanvasPetalFieldPreview,
   "film-grain-overlay": FilmGrainOverlayPreview,
   "scratch-foil-reveal": ScratchFoilRevealPreview,

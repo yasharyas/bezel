@@ -15,7 +15,6 @@ const inlineGroups: Record<string, () => Promise<{ previews: PreviewModule }>> =
 };
 
 const frames: Record<string, () => Promise<{ default: PreviewComponent }>> = {
-  "select-input": () => import("./frames/select-input"),
   "submission-loader": () => import("./frames/submission-loader"),
   "screen-layout": () => import("./frames/screen-layout"),
   "toast-container": () => import("./frames/toast-container"),

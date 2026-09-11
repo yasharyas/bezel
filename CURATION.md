@@ -1,15 +1,15 @@
 # Curation proposal
 
-**This is a proposal. Nothing has been deleted, moved or renamed.** Every one of
-the 107 components is still exactly where it was. The calls below are a
-recommendation for the owner to accept, reject or revise.
+**This is a proposal.** The calls below are a recommendation for the owner to
+accept, reject or revise. Since it was written the owner has removed seven
+components; their rows are gone, and the counts describe the 100 that remain.
 
-- **KEEP — 42** clear the quality bar
-- **MERGE — 28** fold into a component that is kept, as a variant or prop
-- **CUT — 37** remove from the library
+- **KEEP: 38** clear the quality bar
+- **MERGE: 27** fold into a component that is kept, as a variant or prop
+- **CUT: 35** remove from the library
 
-Of the 42 that clear the bar, **30 are proposed for the shipping core** and 13
-are held back — named at the end, with why. That last selection is the one place
+Of the 38 that clear the bar, **25 are proposed for the shipping core** (with a
+merged `CardGrid`, 26) and 13 are held back, named at the end, with why. That last selection is the one place
 this document stops being a quality judgement and starts being a taste call, so
 it is left visible rather than buried in the table.
 
@@ -51,7 +51,6 @@ in the library now has a visible focus indicator, so it no longer separates them
 |---|---|---|
 | `Card.tsx` | MERGE | 18 lines, dark-only, hardcoded `text-white`. Fold into one `Surface` primitive with paper/void variants. |
 | `GlassButton.tsx` | MERGE | The system's first button, but trivial and dark-only. Fold into `PinchedButton` as a `glass` variant. |
-| `Input.tsx` | CUT | `[dup]` `forms/TextInput` does the same job better, and this one's `<label>` is not associated with its input. |
 
 ## animation/
 
@@ -103,7 +102,6 @@ in the library now has a visible focus indicator, so it no longer separates them
 | `DiagnosticGrid.tsx` | MERGE | `[dup]` One of four identical `p-[22px]` / `border-black/[0.06]` card grids. Differs only in the eyebrow. |
 | `FeatureCardGrid.tsx` | MERGE | `[dup]` Same grid. Also applies a hover lift to a non-interactive div, so it reads as clickable and is not. |
 | `FeaturedProjectCard.tsx` | MERGE | `[dup]` `ProjectCard` with an eyebrow, tags and an `alignRight` flag. A variant. |
-| `FoilSpecularCard.tsx` | CUT | Wedding invitation. The pointer-specular technique is worth keeping — it survives in `PointerGlowCard`. |
 | `NodeCard.tsx` | CUT | Flow-graph node for one app. Was a `div onClick` with no keyboard path at all. |
 | `PointerGlowCard.tsx` | KEEP | The pointer-tracking primitive, and the only card in the library that mirrors its hover effect on `:focus-within`. |
 | `PriceBreakdown.tsx` | CUT | A tax/GST calculator card. Application logic, not a design system component. |
@@ -157,15 +155,10 @@ system at all.
 
 | Component | Call | Reasoning |
 |---|---|---|
-| `BlenderUpload.tsx` | CUT | `[a11y]` A novelty uploader whose 2000ms "progress" is fabricated. Had no keyboard path to upload at all. `FileUpload` does the job. |
-| `Checkbox.tsx` | KEEP | The labelled checkbox, with error and mandatory handling. |
+| `BlenderUpload.tsx` | CUT | `[a11y]` A novelty uploader whose 2000ms "progress" is fabricated. Had no keyboard path to upload at all. |
 | `CheckboxVariants.tsx` | CUT | `[a11y]` Four decorative treatments, none of which has an accessible name. Demos, not components. |
-| `DOBPicker.tsx` | MERGE | `[dup]` `TextInput` plus a DD/MM/YYYY mask — the input class string is byte-identical. Becomes a `mask` prop. |
-| `FileUpload.tsx` | KEEP | The upload primitive, and the one that already got `role="button"` + `onKeyDown` right. Should absorb `BlenderUpload`'s drag-drop and validation. |
 | `MD3Switch.tsx` | KEEP | The switch primitive. Drop the per-toggle `AudioContext` (it is never closed) and the `class-variance-authority` dependency it alone pulls. |
-| `RadioGroup.tsx` | KEEP | Correct `fieldset`/`legend` semantics — the best-structured form component here. |
-| `SelectInput.tsx` | KEEP | Radix-backed, so roles, typeahead and focus management come for free. The reference for how to wrap a headless primitive. |
-| `TextInput.tsx` | KEEP | The input primitive. Absorbs `DOBPicker` and the root `Input`. |
+| `TextInput.tsx` | KEEP | The input primitive. |
 
 ## hooks/
 
@@ -265,13 +258,12 @@ themselves duplicate pairs.
 
 ---
 
-## The proposed core — 30 components
+## The proposed core: 26 components
 
-**Controls (9)**
+**Controls (5)**
 `PinchedButton` (Button, absorbing GlassButton) · `StarBorder` (absorbing
 BorderBeamButton, ConicBorderButton) · `ToolbarButton` (IconButton) ·
-`TextInput` (absorbing DOBPicker, Input) · `SelectInput` · `Checkbox` ·
-`RadioGroup` · `MD3Switch` · `FileUpload` (absorbing BlenderUpload's drag-drop)
+`TextInput` · `MD3Switch`
 
 **Feedback (6)**
 `ToastContainer` · `EmptyState` (absorbing EcomEmptyState) · `LoadingSpinner` ·
@@ -293,20 +285,20 @@ Checklist)
 `EdgeFadeMarquee` (absorbing Marquee) · `ShinyText` (absorbing ShinyBadge,
 ShinyGradientText)
 
-Bringing the total to 30 — 29 existing files plus `CardGrid`, which is new only
+Bringing the total to 26: 25 existing files plus `CardGrid`, which is new only
 in the sense that it is five existing components with one API.
 
 ### The 13 held back
 
 These are marked KEEP in the table because they clear the quality bar. They are
-outside the 30 because the core is already carrying something that does their
+outside the 26 because the core is already carrying something that does their
 job, or because they are craft pieces rather than system pieces:
 
 | Component | Why it is held back |
 |---|---|
 | `DepthText` | A showpiece, not a primitive. The strongest single argument for the library's craft — swap it in if the portfolio reading matters more than the systems reading. |
 | `ParallaxProductStage` | Same: the best-engineered file here, but it is a scene, not a component. |
-| `Magnet` | Excellent and tiny. First on the list if the core stretches to 32. |
+| `Magnet` | Excellent and tiny. First on the list if the core stretches to 28. |
 | `JewelryCursor` | A site-wide effect rather than a component; most consumers want at most one. |
 | `PixelDemorphImage` | Overlaps `ScrollReveal`'s job once `ImageReveal` merges in. |
 | `ImageWithFallback` | 30 lines of utility. Useful, but it is a helper, not a system component. |
@@ -334,6 +326,7 @@ The four to swap in first, if the core stretches: `DepthText`,
 | `canvas-confetti` | 108 KB | `CelebrationOverlay` alone |
 | `rough-notation` | 91 KB | `Highlighter` alone |
 | `class-variance-authority` | 35 KB | `MD3Switch` alone |
+| `@radix-ui/react-select` | peer | nothing: removed from the manifests along with `SelectInput` |
 
 **The biggest single drop is `three`.** It is 29 MB installed, it is a
 `dependencies` entry so every consumer of `bezel-ui` pays for it, and exactly one
@@ -352,10 +345,9 @@ confusion.
 | `gsap` + `@gsap/react` | `ParallaxProductStage`, and the parallax/preloader work generally. Justified. |
 | `motion` | The one animation library, replacing `framer-motion`. |
 | `lucide-react` | Icons across 16 components. Already a peer dependency, so consumers control the version. |
-| `@radix-ui/react-select` | `SelectInput`. Already a peer dependency. |
 
 So `dependencies` goes from six packages to three (`gsap`, `@gsap/react`,
-`motion`), with `lucide-react` and `@radix-ui/react-select` remaining peers.
+`motion`), with `lucide-react` remaining a peer.
 
 ---
 
