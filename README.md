@@ -291,8 +291,8 @@ glass-button`, which resolves unambiguously.
 ## Adding a New Component
 
 1. Add the component source under `packages/ui/src/<category>/YourComponent.tsx` and export it from `packages/ui/src/index.ts`.
-2. Add an entry to the `registry` array in `packages/registry/src/index.ts` with `name`, `slug`, `path`, `category`, the raw `code` string, a `prompt` description, and `tags`.
-3. Import and register a preview for it in `apps/gallery/src/app/page.tsx` (and `component/[slug]/page.tsx` if it needs a custom interactive preview).
+2. Add an entry to `packages/registry/metadata.json`, keyed by slug, with `name` (the file's base name), `category`, `tags` and a `description`: one sentence of 8 to 14 words, under 90 characters, saying what the component is and what sets it apart. Then run `npm run generate -w @bezel/registry`; the generator reads the source file for `code` and `path`, and rejects a description that breaks those rules.
+3. Add a preview: an entry in `apps/gallery/src/previews/specs.ts`, and a render in the matching `src/previews/inline/<group>.tsx` or `src/previews/frames/<slug>.tsx`. The same preview is used by the index, the expand dialog and the component page, and `npm run check:previews -w gallery` fails if one is missing.
 4. Add it to `COMPONENT_MAP` (and the help text) in `packages/cli/bin/index.js` so it's installable via the CLI.
 
 ## Monorepo Scripts
