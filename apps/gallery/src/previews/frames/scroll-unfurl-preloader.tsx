@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ScrollUnfurlPreloader } from "bezel-ui/loaders/ScrollUnfurlPreloader";
 import { usePreviewEnv } from "../kit";
 
+/** Plays the preloader, rests briefly on the empty ground it hands off to, then replays. */
 export default function ScrollUnfurlPreloaderPreview() {
   const { engaged, reducedMotion } = usePreviewEnv();
   const [run, setRun] = useState(0);
@@ -15,14 +16,12 @@ export default function ScrollUnfurlPreloaderPreview() {
     const t = window.setTimeout(() => {
       setRun((r) => r + 1);
       setPlaying(true);
-    }, reducedMotion ? 4000 : 2400);
+    }, reducedMotion ? 4000 : 1200);
     return () => window.clearTimeout(t);
   }, [playing, engaged, reducedMotion]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(ellipse_at_50%_40%,#1a1310_0%,#0d0a09_70%)] text-center text-[#f5f0e8]">
-      <p className="font-mono text-xs uppercase tracking-[0.4em] text-[#e8d5a3]">You are invited</p>
-      <h1 className="mt-4 font-serif text-5xl">The wedding of Aarav &amp; Diya</h1>
+    <main className="min-h-screen bg-[radial-gradient(ellipse_at_50%_40%,#1a1310_0%,#0d0a09_70%)]">
       {playing ? <ScrollUnfurlPreloader key={run} brand="Bezel" onceKey={null} onComplete={done} /> : null}
     </main>
   );
