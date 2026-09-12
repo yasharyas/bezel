@@ -248,7 +248,11 @@ function EmptyStatePreview() {
   return (
     <div className="text-[#0a0a0a]">
       <EmptyState
-        icon={<FolderOpen size={44} strokeWidth={1.25} />}
+        icon={
+          <span className="preview-float block">
+            <FolderOpen size={44} strokeWidth={1.25} />
+          </span>
+        }
         title="No projects yet"
         description="Projects you create, or are invited to, will show up here."
         actionLabel="New project"
