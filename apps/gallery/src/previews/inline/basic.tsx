@@ -191,19 +191,38 @@ function BlenderUploadPreview() {
   return <BlenderUpload onFileSelect={noop} maxSizeMB={5} />;
 }
 
+const CHECKBOX_VARIANTS = [
+  { label: "Pop", Field: CustomCheckbox },
+  { label: "Glow", Field: GradientCheckbox },
+  { label: "Morph", Field: TransformerCheckbox },
+  { label: "Pulse", Field: AnimatedCheckbox },
+] as const;
+
 function CheckboxVariantsPreview() {
-  const items = [
-    { label: "Pop", node: <CustomCheckbox aria-label="Pop" defaultChecked /> },
-    { label: "Glow", node: <GradientCheckbox aria-label="Glow" defaultChecked /> },
-    { label: "Morph", node: <TransformerCheckbox aria-label="Morph" defaultChecked /> },
-    { label: "Pulse", node: <AnimatedCheckbox aria-label="Pulse" defaultChecked /> },
-  ];
+  // Each treatment only exists in the change between states, so while nobody is
+  // pointing at or focused inside the card the four boxes tick themselves in
+  // turn. useIdleInterval stops the loop on engagement and reduced motion.
+  const [checked, setChecked] = useState([true, false, true, false]);
+  const [turn, setTurn] = useState(0);
+  useIdleInterval(() => {
+    const at = turn % CHECKBOX_VARIANTS.length;
+    setChecked((prev) => prev.map((value, i) => (i === at ? !value : value)));
+    setTurn((t) => t + 1);
+  }, 800);
+  const set = (index: number, value: boolean) =>
+    setChecked((prev) => prev.map((was, i) => (i === index ? value : was)));
   return (
     <Center>
       <div className="flex items-end gap-9 text-[#4a4a4c]">
-        {items.map((item) => (
+        {CHECKBOX_VARIANTS.map((item, index) => (
           <div key={item.label} className="flex flex-col items-center gap-4">
-            <div className="grid h-10 place-items-center">{item.node}</div>
+            <div className="grid h-10 place-items-center">
+              <item.Field
+                aria-label={item.label}
+                checked={checked[index]}
+                onChange={(event) => set(index, event.target.checked)}
+              />
+            </div>
             <Caption>{item.label}</Caption>
           </div>
         ))}
