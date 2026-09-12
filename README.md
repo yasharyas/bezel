@@ -72,7 +72,6 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Component | Slug | Description |
 |---|---|---|
 | Stepper | `stepper` | Responsive stepper with mobile progress bar and desktop numbered bubbles. |
-| StepperNavigation | `stepper-navigation` | Multi-step form navigation with Previous/Next/Submit buttons, loading spinner, pill shape, flex-1 equal width. |
 | CollapsibleSidebar | `collapsible-sidebar` | Collapsible left sidebar with search, categorised draggable items, coloured icon badges, and toggle to icon-only mode. |
 | TubelightNavBar | `tubelight-navbar` | Floating pill-shaped nav bar with a glowing "tubelight" active-item indicator, animated with Framer Motion spring. |
 | Pagination | `pagination` | Accessible, composable pagination (`Pagination`, `PaginationItem`, `PaginationLink`, `PaginationEllipsis`, etc). |
@@ -128,7 +127,6 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 
 | Component | Slug | Description |
 |---|---|---|
-| ScreenLayout | `screen-layout` | Multi-step form shell with brand header, optional stepper slot, and content card. |
 | AppHeader | `app-header` | Sticky app header with info banner, logo, search bar, and animated cart badge. |
 | SiteFooter | `site-footer` | 4-column responsive footer with brand column and bottom copyright bar. |
 
