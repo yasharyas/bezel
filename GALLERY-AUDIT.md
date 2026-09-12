@@ -3,8 +3,8 @@
 A component-by-component review of the Bezel gallery, done first-hand in
 headless Chromium at 1440px desktop and 390px mobile, before and after the
 `gallery-overhaul` work. The gallery started with 107 components. During the
-audit the owner removed seven of them (recorded under
-[Owner decisions](#owner-decisions)), so the table covers the 100 that remain.
+audit the owner removed ten of them over two rounds (recorded under
+[Owner decisions](#owner-decisions)), so the table covers the 97 that remain.
 
 - [Summary](#summary)
 - [Owner decisions](#owner-decisions)
@@ -21,8 +21,8 @@ audit the owner removed seven of them (recorded under
 | Rating | Count | Components |
 |---|---:|---|
 | **Showcase** | 5 | DepthText, CinematicWaterBackground, ScrollUnfurlPreloader, ScratchFoilReveal, MagicRings |
-| **Solid** | 27 | ToastContainer, TubelightNavBar, MD3Switch, DualConfirmDialog, SiteHeader, ElasticLineDivider, TextDisperseLink, SearchOverlay, MobileBottomNav, ProductCard, useThemeRipple, ScrollReveal, Magnet, ConicBorderButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, WaxSealButton, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, StarBorder, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay |
-| **Ordinary** | 68 | Everything else. Each row says what would make it worth keeping. |
+| **Solid** | 26 | ToastContainer, TubelightNavBar, MD3Switch, DualConfirmDialog, SiteHeader, ElasticLineDivider, TextDisperseLink, SearchOverlay, MobileBottomNav, ProductCard, useThemeRipple, ScrollReveal, Magnet, ConicBorderButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, StarBorder, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay |
+| **Ordinary** | 66 | Everything else. Each row says what would make it worth keeping. |
 
 - **Showcase**: genuinely strong, the kind of thing that makes a reviewer stop.
 - **Solid**: well made, earns its place.
@@ -41,18 +41,18 @@ water with light in it) and commits to it.
 
 Measured on the landing page and every component page, dev server at the start
 and production build at the end. Before figures are for 107 components, after
-figures for the final 100.
+figures for the final 97.
 
 | Measure | Before | After |
 |---|---|---|
-| Component pages with a preview | 40 of 107 | 100 of 100 |
-| Index cards showing the real component | 89 of 107 (mocks, placeholder text, empty stages) | 100 of 100 |
+| Component pages with a preview | 40 of 107 | 97 of 97 |
+| Index cards showing the real component | 89 of 107 (mocks, placeholder text, empty stages) | 97 of 97 |
 | Errors and warnings on the landing page | 6 uncaught hydration errors, 5 React warnings, 1 failed request | 0 |
 | `h1` on the landing page | 2, both inside previews | 1, "Bezel" |
 | Invalid component URL | HTTP 200, "Component not found" | HTTP 404 |
-| DOM nodes at load | 3,739 | 2,053 (2,270 at peak while scrolling the whole index) |
-| Running animations at load | 60 | 19 (48 at peak; 1 with reduced motion) |
-| Tab stops on the landing page | 372 | 254 (last card reached in 248 presses) |
+| DOM nodes at load | 3,739 | 2,007 (2,209 at peak while scrolling the whole index) |
+| Running animations at load | 60 | 19 (34 at peak; 1 with reduced motion) |
+| Tab stops on the landing page | 372 | 248 (last card reached in 242 presses) |
 | `div role="button"` cards | 110 | 0 (real links and buttons) |
 | Card description contrast | 3.74:1 | 12.47:1 |
 | Search placeholder contrast | 3.98:1 | 11.42:1 |
@@ -61,15 +61,15 @@ figures for the final 100.
 | Search focus indicator | 1px ring at 1.42:1 | 2px outline at 19.53:1 |
 | Mobile search width | 108px | 358px |
 | Mobile category chips | 8 rows, most of the first screen | 1 scrolling row, 44px tall |
-| Card copy | 88 imperative generation prompts, 104 over 90 characters, 274 characters on average | 100 one-sentence descriptions, 10 to 14 words, 88 characters at most, 76 on average |
+| Card copy | 88 imperative generation prompts, 104 over 90 characters, 274 characters on average | 97 one-sentence descriptions, 10 to 14 words, 88 characters at most, 76 on average |
 
 **P1, previews.** One preview map (`apps/gallery/src/previews/specs.ts`) now
 drives the index card, the expand dialog, the component page and the iframe
 route, so a component cannot have a preview in one place and not another, and
 `scripts/check-previews.mjs` fails the build if any registry slug lacks one.
-74 components render inline inside a stage that contains fixed and sticky
+72 components render inline inside a stage that contains fixed and sticky
 descendants (`transform`, `contain: layout paint`, `overflow: hidden`,
-`isolation`). 26 that are full-viewport by nature (overlays, headers, cursors,
+`isolation`). 25 that are full-viewport by nature (overlays, headers, cursors,
 preloaders, floating buttons) render in an iframe at a virtual viewport scaled
 to fit the stage. Wide sections are laid out at their natural width and scaled
 down rather than cropped. Previews mount lazily as they approach the viewport,
@@ -120,11 +120,11 @@ scrolling row.
   Everything found is listed under
   [Library bugs](#library-bugs-found-along-the-way); several of them cap a
   rating.
-- **Removed components are still on npm.** The seven removed components remain
+- **Removed components are still on npm.** The ten removed components remain
   in the published `bezel-ui@0.0.2` tarball until the next release.
 - **Two tab stops per card.** The title link and the expand button are separate
   controls by design; merging them would hide the dialog from keyboard users.
-- **Frame previews are heavier.** Each of the 26 frame previews boots its own
+- **Frame previews are heavier.** Each of the 25 frame previews boots its own
   document, noticeably slower under `next dev` than in production. At most
   seven are mounted at once while scrolling.
 - **Hover effects are demonstrated, not felt, at card size.** The idle pointer
@@ -143,6 +143,8 @@ scrolling row.
 ---
 
 ## Owner decisions
+
+### Round 1
 
 After reviewing the fixed gallery, the owner asked for three changes. They are
 recorded here because they changed the component count and the ratings.
@@ -173,6 +175,32 @@ recorded here because they changed the component count and the ratings.
 kept inputs are the most distinctive of their kind, but only MD3Switch is
 distinctive enough to earn a place on its own merit.
 
+### Round 2
+
+A second review brought these changes.
+
+1. **WaxSealButton, ScreenLayout and StepperNavigation removed.** Their ratings
+   were Solid, Ordinary and Ordinary. No library component imported any of
+   them, and no dependency was left without a consumer.
+2. **Wedding copy removed from two more previews.** JewelryCursor now sits on a
+   neutral portfolio page. CanvasPetalField shows its petals alone on a white
+   ground, with the save-the-date text and its display type gone.
+3. **Cards that demonstrate themselves.** While nobody is pointing at or
+   focused inside the card, CheckboxVariants ticks its four boxes on and off in
+   turn and Stepper walks through its steps. Both pause on hover and keyboard
+   focus, resume on leave, and never loop under reduced motion. The EmptyState
+   and EcomEmptyState icons float. All four run only while the preview is
+   mounted, so animations running at load stayed at 19; the peak sampled while
+   scrolling the whole index was 34, against 48 before, and depends on which
+   cards happen to be on screen at each sample.
+4. **"Club all paginations together".** The library has one pagination
+   component. Its seven parts (`Pagination`, `PaginationContent`,
+   `PaginationItem`, `PaginationLink`, `PaginationPrevious`, `PaginationNext`,
+   `PaginationEllipsis`) already ship as one file, one registry entry, one CLI
+   slug and one preview. The only other paging control, StepperNavigation, was
+   removed in this round, so there was nothing left to merge.
+5. **SelectInput** had already been removed in round 1.
+
 ---
 
 ## Where this disagrees with CURATION.md
@@ -191,10 +219,9 @@ ways in four places.
 | ScrollUnfurlPreloader | CUT | Showcase | CURATION wants its logic harvested into `Preloader`. The audit would invert that: keep the unfurl, the better idea and the better implementation, and fold `Preloader`'s count-up in as a simpler variant. The wedding-specific copy is gone from the preview. |
 | CinematicWaterBackground | CUT | Showcase | CURATION cuts it as a performance liability (two always-on turbulence filters). The cost is real; pausing offscreen and under reduced motion would keep one of the few truly atmospheric pieces. |
 
-**CURATION cuts seven components rated Solid.** ElasticLineDivider (endless
-animation loop), TextDisperseLink (per-letter spans, mouse-only), WaxSealButton
-(wedding art direction, reduced motion checked on enter only), CanvasPetalField
-(one project's petals), TillReceiptPrint (2.4 s of choreography with no skip),
+**CURATION cuts six components rated Solid.** ElasticLineDivider (endless
+animation loop), TextDisperseLink (per-letter spans, mouse-only),
+CanvasPetalField (one project's petals), TillReceiptPrint (2.4 s of choreography with no skip),
 CelebrationOverlay (the only `canvas-confetti` consumer) and useThemeRipple
 (no reduced-motion check, keyboard wipe starts at the corner). Each reason is
 accurate, and each is a fixable defect in a component with a real idea. The
@@ -237,10 +264,8 @@ needs, and a rewritten description.
 | `glass-button` | Yes | Legible, but a flat dark stage gave the glass nothing to blur | Two blurred colour fields behind it; enabled and disabled side by side | Ordinary | A frosted pill; every glass kit has one.<br>**Worth keeping if** it had a tactile idea of its own, such as an edge highlight that follows the pointer. |
 | `card` | Yes | Legible, on the same flat stage, so the blur did nothing | The same colour-field backdrop and real content | Ordinary | The glass base container: correct and forgettable.<br>**Worth keeping if** it became the documented surface the glass pieces are built from, rather than a standalone component. |
 | `text-input` | Broken: label near invisible | White pill on the dark stage with a `neutral-700` label on near-black | Paper stage; two fields showing the required marker and a live email error | Ordinary | A clean pill field with its states done right, which is the job of a primitive, but nothing a reviewer recalls. Kept by the owner as the one text field.<br>**Worth keeping if** it gained one signature detail, such as an animated error entrance, shared across the forms family. |
-| `stepper` | Yes | Legible | A mid-flow state: two steps complete, the current one ringed | Ordinary | Standard wizard progress in hard-coded indigo.<br>**Worth keeping if** the connectors animated between steps and the accent came from the tokens. |
-| `stepper-navigation` | Yes | Oversized, with a stray rule across the card | Sized as a 320px form footer with a step counter; Submit runs the loading state and resets | Ordinary | Previous and Next buttons with a spinner.<br>**Worth keeping if** merged into `Stepper`, as CURATION proposes; alone it has no reason to exist. |
+| `stepper` | Yes | Legible | A four-step wizard that walks forward one step at a time while the card is idle, pausing on hover and focus | Ordinary | Standard wizard progress in hard-coded indigo.<br>**Worth keeping if** the connectors animated between steps and the accent came from the tokens. |
 | `submission-loader` | Broken: escaped the stage | Three tiny trigger buttons; the overlay covered the whole gallery | Frame preview over a sketched form, cycling verify, validate, submit and done on its own | Ordinary | A blocking modal with four labelled phases, generic in look.<br>**Worth keeping if** folded into `MultiStepLoader`, which shows stepped status better and already has live-region wiring. |
-| `screen-layout` | Broken: cropped | A cropped white bar with a logo and no visible layout | A 720px frame composing it with the real Stepper, StepperNavigation and TextInput | Ordinary | A page shell for one onboarding flow.<br>**Worth keeping if** generalised into a layout with named slots, not tied to a stepper form. |
 | `typewriter-loader` | Yes | Legible, but a lone illustration with no context | Paired with a status line so it reads as a loader in use | Ordinary | A charming pure-CSS typewriter that is remembered for about a second.<br>**Worth keeping if** its hard-coded blues came from the tokens and it held a still frame under reduced motion. |
 | `toast-container` | Broken: escaped the stage | A lone "Show Toast" button; toasts portalled onto the gallery | Contained frame with a Save button and an idle loop of three messages, so stacking and the interruptible slide are visible | Solid | The `useToast` hook and interruptible transitions are well built and hold up under rapid fire. Needs a live region to be complete. |
 | `toolbar-button` | Yes | A white slab with one icon | A real editor toolbar: a bold toggle, separators and a disabled redo | Ordinary | A correct icon button and nothing more.<br>**Worth keeping if** it shipped as a toolbar with roving focus and pressed state, which is where the real difficulty is. |
@@ -251,8 +276,8 @@ needs, and a rewritten description.
 | `md3-switch` | Broken: colourless | Track and handle colours undefined, so it read as two outlines | Tone colours defined; a settings list with icons, on and off states and a small destructive switch | Solid | Pressed-handle growth and the icon swap are faithful Material 3 motion and feel physical. Its per-toggle `AudioContext` is never closed. |
 | `dual-confirm-dialog` | No: a lone trigger | A lone red button and no dialog | Frame with three selected events; confirming strikes them through and Delete reopens it | Solid | Type-the-phrase confirmation is a real safety pattern, staged well in two steps. Needs dialog semantics, Escape and a focus trap. |
 | `blender-upload` | Broken: clipped | A white slab with its copy cut off at the bottom | Laid out at 340px and scaled to fit, so the whole illustration and copy show | Ordinary | The only uploader with a design idea, which is why the owner kept it, but at rest it is a static drawing; the fruit only bounces mid-drag.<br>**Worth keeping if** it responded to hover and focus and its progress were real rather than a fixed 2000 ms. |
-| `empty-state` | Broken: colourless | Scaled to 75%, top-aligned, with a colourless primary button | Centred on paper at a 420px layout with an icon, copy and a working action | Ordinary | A correct empty state: a heading and a button.<br>**Worth keeping if** it offered illustrated or animated variants. |
-| `checkbox-variants` | Yes | Legible, but its `dark:` styles followed the viewer's OS theme instead of the stage | Class-based dark mode; four variants labelled and spaced | Ordinary | The only checkbox with a visual idea, which is why the owner kept it, but none of the four has an accessible name of its own.<br>**Worth keeping if** it became one checkbox with a `variant` prop and a real label. |
+| `empty-state` | Broken: colourless | Scaled to 75%, top-aligned, with a colourless primary button | Centred on paper at a 420px layout with an icon, copy and a working action; the icon floats while motion is allowed | Ordinary | A correct empty state: a heading and a button. The floating icon is the gallery's, not the component's.<br>**Worth keeping if** it shipped that motion itself, or illustrated variants. |
+| `checkbox-variants` | Yes | Legible, but its `dark:` styles followed the viewer's OS theme instead of the stage | Class-based dark mode; four variants labelled and spaced; while idle the boxes tick on and off in turn, pausing on hover and focus | Ordinary | The only checkbox with a visual idea, which is why the owner kept it, but none of the four has an accessible name of its own.<br>**Worth keeping if** it became one checkbox with a `variant` prop and a real label. |
 | `loading-spinner` | Broken: medium size invisible | `border-3` is not a Tailwind class and `border-primary` was undefined, so md drew nothing and the others were grey | Fixed the class in the component (`border-[3px]`); tone colours; three sizes labelled | Ordinary | A border spinner.<br>**Worth keeping if** it had `role="status"` and a label; it is silent to assistive tech today. |
 | `price-breakdown` | Yes | Legible, with a stray white outline | Tone colours; a ticket price with 18% GST | Ordinary | A three-row receipt for one tax.<br>**Worth keeping if** it handled any list of line items and taxes, not one price plus GST. |
 | `pagination` | Yes | Legible | Working pages from 5 of 10 with ellipses, laid out at 460px | Ordinary | The shadcn pagination pattern, faithfully copied.<br>**Worth keeping if** it gained a compact mode for phones. |
@@ -270,7 +295,7 @@ needs, and a rewritten description.
 | `text-disperse-link` | Yes | Legible, but just a word on a stage | An idle hover scatters and regroups the letters on a loop | Solid | The scatter and sequenced regroup are playful and precise. Per-letter spans hurt screen-reader pronunciation, and it is mouse-only. |
 | `image-with-fallback` | Index only | Legible, but its demo image pointed at a host that does not exist and logged a failed request | The fallback is shown with an undecodable data URI, no network request, beside a loaded image | Ordinary | A utility, done correctly.<br>**Worth keeping if** the fallback matched the image's frame and brand rather than one grey icon. |
 | `skeleton-card` | Broken: empty outline, index only | Bar colours undefined, so only an outline drew | Tone colours give the bars their fill; two cards pulsing | Ordinary | A skeleton.<br>**Worth keeping if** it came with text and list variants and stopped pulsing under reduced motion. |
-| `ecom-empty-state` | Broken: colourless, index only | Oversized text and a colourless icon | Tone colours; the cart, search and network presets switchable in the preview | Ordinary | Preset copy for shop empty states.<br>**Worth keeping if** merged into `EmptyState` as presets. |
+| `ecom-empty-state` | Broken: colourless, index only | Oversized text and a colourless icon | Tone colours; the cart, search and network presets switchable in the preview; the preset icon floats while motion is allowed | Ordinary | Preset copy for shop empty states.<br>**Worth keeping if** merged into `EmptyState` as presets. |
 | `breadcrumb` | Index only | Legible but tiny | Shown above a product title, so the truncated last crumb has context | Ordinary | A breadcrumb with `aria-current`: correct and plain.<br>**Worth keeping if** it collapsed middle crumbs on narrow screens. |
 | `category-chips` | Broken: blank active chip, index only | A white slab; the active "All" chip rendered blank | Tone colours; six categories with a live item count | Ordinary | A filter chip row whose active state is colour only.<br>**Worth keeping if** it exposed `aria-pressed` and animated the selection. |
 | `category-grid` | Broken: overlapping, index only | A white slab with overlapping icon circles | A phone-width frame with eight categories in four columns | Ordinary | Round category icons, the grocery-app default.<br>**Worth keeping if** merged into `CategoryChips` as a grid layout. |
@@ -314,10 +339,9 @@ needs, and a rewritten description.
 | `parallax-product-stage` | Broken: a sliver, index only | Scaled to 42%, a green sliver | Laid out at 600px with illustrated bottles, replay and a "Move" hint | Solid | The best-engineered file in the library, re-running its GSAP context when the reduced-motion setting changes. A scene more than a component. |
 | `stagger-blur-text` | Broken: near invisible, index only | Dark text on the dark stage | Paper stage; one sentence resolving word by word | Ordinary | A word stagger.<br>**Worth keeping if** merged into `BlurInReveal`. |
 | `animated-gradient-rule` | Index only | A lone thin line | Placed between two chapter headings, where a rule belongs | Ordinary | A two-pixel gradient line on a loop.<br>**Worth keeping if** it tracked scroll progress instead of looping. |
-| `jewelry-cursor` | No: text mock | A sentence describing it | A cream frame where an idle pointer traces the links; a note appears when no fine pointer is present | Solid | The lagging ring that swells over links is refined, and it is gated on pointer type and reduced motion. |
+| `jewelry-cursor` | No: text mock | A sentence describing it | A cream portfolio page where an idle pointer traces the Work, Studio and Contact links; a note appears when no fine pointer is present. The wedding copy was replaced at the owner's request | Solid | The lagging ring that swells over links is refined, and it is gated on pointer type and reduced motion. |
 | `scroll-unfurl-preloader` | No: a lone trigger, index only | A lone button and no preloader | A contained frame that plays, rests and replays. The invitation text shown after it was removed at the owner's request | Showcase | Brass rods rolling apart to unfurl parchment is real art direction, with session-once, scroll-lock and reduced-motion handling built in. |
-| `wax-seal-button` | Broken: cramped, index only | Labels wrapped onto two lines | No-wrap layout on a warm ground; an idle hover presses the seal | Solid | The press and radiating ring feel tactile and specific. Reduced motion is checked on enter but not on leave. |
-| `canvas-petal-field` | Index only | Legible | A save-the-date card for context | Solid | Marigold petals drifting and nudged by the cursor, with zero dependencies and a reduced-motion check. Project-specific, but beautifully made. |
+| `canvas-petal-field` | Index only | Legible | Petals alone on white with a Move hint; the save-the-date card and its display type were removed at the owner's request | Solid | Marigold petals drifting and nudged by the cursor, with zero dependencies and a reduced-motion check. On white it reads as a field, not one project's art direction. |
 | `film-grain-overlay` | Broken: a black rectangle, index only | Grain at 4% alpha was invisible, leaving a black box | A split view: the grain as shipped, and the same canvas over mid-grey with contrast raised so the texture shows | Ordinary | Grain so faint it is invisible unless you know it is there.<br>**Worth keeping if** it shipped presets strong enough to see. |
 | `scratch-foil-reveal` | Index only | Legible and strong | A card underneath, replay and a "Scratch" hint | Showcase | Scratching gold foil away with the pointer is delightful and instantly understood. It has no keyboard path, which must be fixed before it ships. |
 | `pixel-demorph-image` | Broken: effect already played, index only | A flat orange rectangle | Replay on demand, resolving over 1.5 s from five blocks | Solid | A distinctive pixel-to-sharp reveal, built right: the canvas sits over a real `img` with alt text and reduced motion is respected. |
@@ -364,6 +388,8 @@ Not fixed, because they change component behaviour rather than the gallery.
 - **SidePanel**'s `PanelField` label is not associated with its input.
 - **TextInput** shows its error visually only.
 - **ErrorBoundary** has no `componentDidCatch`.
+- **CanvasPetalField** spawns every petal above the canvas, so each mount starts
+  blank for a few seconds, and its jasmine petals nearly vanish on white.
 - **Highlighter**, **MagicRings** and **CelebrationOverlay** each pull in a
   dependency (`rough-notation`, `three`, `canvas-confetti`) that nothing else
   uses.
