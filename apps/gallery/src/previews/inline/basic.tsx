@@ -312,20 +312,23 @@ function TillReceiptPrintPreview() {
 
 /* ------------------------------------------------------------ navigation */
 
+const WIZARD_STEPS = [
+  { id: "account", title: "Account" },
+  { id: "address", title: "Address" },
+  { id: "payment", title: "Payment" },
+  { id: "review", title: "Review" },
+];
+
 function StepperPreview() {
+  // Walks the wizard forward while the card is idle, so the completed, current
+  // and pending states are all visible without touching it.
+  const [index, setIndex] = useState(2);
+  useIdleInterval(() => setIndex((i) => (i + 1) % WIZARD_STEPS.length), 1600);
+  const completed = new Set(WIZARD_STEPS.slice(0, index).map((step) => step.id));
   return (
     <Center>
       <div className="w-[340px]">
-        <Stepper
-          steps={[
-            { id: "account", title: "Account" },
-            { id: "address", title: "Address" },
-            { id: "payment", title: "Payment" },
-            { id: "review", title: "Review" },
-          ]}
-          currentStepIndex={2}
-          completedStepIds={new Set(["account", "address"])}
-        />
+        <Stepper steps={WIZARD_STEPS} currentStepIndex={index} completedStepIds={completed} />
       </div>
     </Center>
   );
