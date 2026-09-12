@@ -989,13 +989,12 @@ function AnimatedGradientRulePreview() {
 }
 
 function CanvasPetalFieldPreview() {
+  // Petals only, on white: the field is the component, and anything set over it
+  // reads as art direction borrowed from one project. The count is high because
+  // the petals spawn above the canvas and the pale ones are faint on white.
   return (
-    <div className="relative h-full w-full bg-[radial-gradient(ellipse_at_50%_40%,#2a1d14_0%,#15100c_70%)]">
-      <div className="flex h-full flex-col items-center justify-center text-center text-[#f5f0e8]">
-        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[#e8d5a3]">Save the date</p>
-        <p className="mt-3 font-serif text-3xl">14 · 02 · 2027</p>
-      </div>
-      <CanvasPetalField count={18} />
+    <div className="relative h-full w-full bg-white [&_canvas]:saturate-[1.25]">
+      <CanvasPetalField count={54} />
     </div>
   );
 }

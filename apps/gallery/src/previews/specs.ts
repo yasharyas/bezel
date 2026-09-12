@@ -100,7 +100,7 @@ export const specs: Record<string, PreviewSpec> = {
   "animated-gradient-rule": inline("basic", "void"),
   "jewelry-cursor": frame("cream", 600, 400, { hint: "Move" }),
   "scroll-unfurl-preloader": frame("void", 720, 480),
-  "canvas-petal-field": inline("basic", "void"),
+  "canvas-petal-field": inline("basic", "paper", { hint: "Move" }),
   "film-grain-overlay": inline("basic", "void"),
   "scratch-foil-reveal": inline("basic", "void", { hint: "Scratch", replay: true }),
   "pixel-demorph-image": inline("basic", "void", { replay: true }),
