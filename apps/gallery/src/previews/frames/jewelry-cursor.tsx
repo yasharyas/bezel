@@ -46,12 +46,12 @@ export default function JewelryCursorPreview() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-[#f5f0e8] text-center text-[#3a2a1a]">
-      <p className="font-mono text-[11px] uppercase tracking-[0.4em] text-[#8b1a1a]">Together with their families</p>
-      <h1 className="mt-4 font-serif text-6xl">Aarav &amp; Diya</h1>
+      <p className="font-mono text-[11px] uppercase tracking-[0.4em] text-[#8b1a1a]">Selected work</p>
+      <h1 className="mt-4 font-serif text-6xl">Objects and interfaces</h1>
       <div ref={links} className="mt-10 flex gap-10 text-sm uppercase tracking-[0.25em]">
-        <a href="#rsvp">RSVP</a>
-        <a href="#venue">Venue</a>
-        <a href="#gallery">Gallery</a>
+        <a href="#work">Work</a>
+        <a href="#studio">Studio</a>
+        <a href="#contact">Contact</a>
       </div>
       {!finePointer ? (
         <p className="mt-8 text-xs text-[#4a4a4c]">This cursor only appears with a mouse or trackpad.</p>
