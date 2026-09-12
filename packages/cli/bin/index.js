@@ -50,9 +50,7 @@ const COMPONENT_MAP = {
   card: "Card.tsx",
   "text-input": "forms/TextInput.tsx",
   stepper: "navigation/Stepper.tsx",
-  "stepper-navigation": "navigation/StepperNavigation.tsx",
   "submission-loader": "feedback/SubmissionLoader.tsx",
-  "screen-layout": "layout/ScreenLayout.tsx",
   "typewriter-loader": "feedback/TypewriterLoader.tsx",
   "toast-container": "feedback/ToastContainer.tsx",
   "toolbar-button": "buttons/ToolbarButton.tsx",
@@ -128,7 +126,6 @@ const COMPONENT_MAP = {
   "animated-gradient-rule": "dividers/AnimatedGradientRule.tsx",
   "jewelry-cursor": "interaction/JewelryCursor.tsx",
   "scroll-unfurl-preloader": "loaders/ScrollUnfurlPreloader.tsx",
-  "wax-seal-button": "buttons/WaxSealButton.tsx",
   "canvas-petal-field": "animation/CanvasPetalField.tsx",
   "film-grain-overlay": "overlays/FilmGrainOverlay.tsx",
   "scratch-foil-reveal": "interaction/ScratchFoilReveal.tsx",
@@ -165,9 +162,7 @@ function showHelp() {
     card                 Translucent card
     text-input           Pill-shaped text input with validation
     stepper              Multi-step progress indicator
-    stepper-navigation   Previous/Next/Submit buttons
     submission-loader    Full-screen loading overlay
-    screen-layout        Form layout shell with header
     typewriter-loader    Pure CSS typewriter animation
     toast-container      Toast notifications with useToast hook
     toolbar-button       Icon-only toolbar button
@@ -243,7 +238,6 @@ function showHelp() {
     animated-gradient-rule  Sliding gradient divider line
     jewelry-cursor        GSAP gold dot + lagging ring custom cursor
     scroll-unfurl-preloader  Parchment scroll-unfurl fullscreen preloader
-    wax-seal-button       Press-in CTA with a radiating SVG ring on hover
     canvas-petal-field    Ambient falling marigold/jasmine canvas particles
     film-grain-overlay    Fixed full-viewport animated film-grain noise
     scratch-foil-reveal   Canvas scratch-off foil revealing content beneath

@@ -7,7 +7,6 @@ import { ImageReveal } from "bezel-ui/media/ImageReveal";
 import { Marquee } from "bezel-ui/animation/Marquee";
 import { TextDisperseLink } from "bezel-ui/buttons/TextDisperseLink";
 import { ParallaxProductStage } from "bezel-ui/sections/ParallaxProductStage";
-import { WaxSealButton } from "bezel-ui/buttons/WaxSealButton";
 import { FallingPetalField, ScrollParallaxLayer } from "bezel-ui/animation/ScrollParallaxLayer";
 import { TextType } from "bezel-ui/animation/TextType";
 
@@ -87,19 +86,6 @@ function ParallaxProductStagePreview() {
   );
 }
 
-function WaxSealButtonPreview() {
-  const ref = useRef<HTMLDivElement>(null);
-  useIdleInterval(() => pulseHover(ref.current?.querySelector("button") ?? null, 900), 3200);
-  return (
-    <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(ellipse_at_50%_45%,#2a1d14_0%,#15100c_75%)]">
-      <div ref={ref} className="flex items-center gap-8 whitespace-nowrap">
-        <WaxSealButton label="RSVP" />
-        <WaxSealButton label="View details" variant="ghost" />
-      </div>
-    </div>
-  );
-}
-
 function ScrollParallaxLayerPreview() {
   return (
     <div className="relative h-full w-full overflow-hidden bg-[linear-gradient(180deg,#221810,#0f0b08)] text-[#f5f0e8]">
@@ -139,7 +125,6 @@ export const previews: PreviewModule = {
   marquee: MarqueePreview,
   "text-disperse-link": TextDisperseLinkPreview,
   "parallax-product-stage": ParallaxProductStagePreview,
-  "wax-seal-button": WaxSealButtonPreview,
   "scroll-parallax-layer": ScrollParallaxLayerPreview,
   "text-type": TextTypePreview,
 };

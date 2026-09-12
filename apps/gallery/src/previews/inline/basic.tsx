@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   Bold,
   Clock,
@@ -28,7 +28,6 @@ import {
   TransformerCheckbox,
 } from "bezel-ui/forms/CheckboxVariants";
 import { Stepper } from "bezel-ui/navigation/Stepper";
-import { StepperNavigation } from "bezel-ui/navigation/StepperNavigation";
 import { TypewriterLoader } from "bezel-ui/feedback/TypewriterLoader";
 import { ToolbarButton } from "bezel-ui/buttons/ToolbarButton";
 import { CollapsibleSidebar } from "bezel-ui/navigation/CollapsibleSidebar";
@@ -303,38 +302,6 @@ function StepperPreview() {
           ]}
           currentStepIndex={2}
           completedStepIds={new Set(["account", "address"])}
-        />
-      </div>
-    </Center>
-  );
-}
-
-function StepperNavigationPreview() {
-  const total = 3;
-  const [index, setIndex] = useState(1);
-  const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    if (!loading) return;
-    const t = window.setTimeout(() => {
-      setLoading(false);
-      setIndex(0);
-    }, 1400);
-    return () => window.clearTimeout(t);
-  }, [loading]);
-  return (
-    <Center>
-      <div className="w-[320px]">
-        <p className="text-sm font-medium text-[#0a0a0a]">
-          Step {index + 1} of {total}
-        </p>
-        <StepperNavigation
-          currentStepIndex={index}
-          totalSteps={total}
-          isLastStep={index === total - 1}
-          isLoading={loading}
-          onPrevious={() => setIndex((i) => Math.max(0, i - 1))}
-          onNext={() => setIndex((i) => Math.min(total - 1, i + 1))}
-          onSubmit={() => setLoading(true)}
         />
       </div>
     </Center>
@@ -1120,7 +1087,6 @@ export const previews: PreviewModule = {
   card: CardPreview,
   "text-input": TextInputPreview,
   stepper: StepperPreview,
-  "stepper-navigation": StepperNavigationPreview,
   "typewriter-loader": TypewriterLoaderPreview,
   "toolbar-button": ToolbarButtonPreview,
   "collapsible-sidebar": CollapsibleSidebarPreview,

@@ -43,20 +43,6 @@
       "accessible"
     ]
   },
-  "stepper-navigation": {
-    "name": "StepperNavigation",
-    "category": "navigation",
-    "description": "Previous, Next and Submit buttons for multi-step forms, with a loading state.",
-    "tags": [
-      "stepper",
-      "navigation",
-      "previous",
-      "next",
-      "submit",
-      "loading",
-      "wizard"
-    ]
-  },
   "submission-loader": {
     "name": "SubmissionLoader",
     "category": "feedback",
@@ -69,19 +55,6 @@
       "modal",
       "multi-phase",
       "progress"
-    ]
-  },
-  "screen-layout": {
-    "name": "ScreenLayout",
-    "category": "layout",
-    "description": "Form wizard page shell with a brand header, stepper slot and raised content card.",
-    "tags": [
-      "layout",
-      "shell",
-      "header",
-      "card",
-      "wizard",
-      "container"
     ]
   },
   "typewriter-loader": {
@@ -1044,18 +1017,6 @@
       "gsap",
       "parchment",
       "scroll-unfurl"
-    ]
-  },
-  "wax-seal-button": {
-    "name": "WaxSealButton",
-    "category": "buttons",
-    "description": "Gold block button that presses in and radiates a ring, with a ghost variant.",
-    "tags": [
-      "wax-seal",
-      "gsap",
-      "radiating-ring",
-      "cta",
-      "hover"
     ]
   },
   "canvas-petal-field": {

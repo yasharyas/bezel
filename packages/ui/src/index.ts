@@ -39,7 +39,6 @@ export { ToolbarButton } from "./buttons/ToolbarButton";
 
 // Navigation
 export { Stepper } from "./navigation/Stepper";
-export { StepperNavigation } from "./navigation/StepperNavigation";
 export { CollapsibleSidebar } from "./navigation/CollapsibleSidebar";
 export { TubelightNavBar } from "./navigation/TubelightNavBar";
 export { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious, PaginationEllipsis } from "./navigation/Pagination";
@@ -55,7 +54,6 @@ export { PriceBreakdown } from "./cards/PriceBreakdown";
 export { DualConfirmDialog } from "./dialogs/DualConfirmDialog";
 
 // Layout
-export { ScreenLayout } from "./layout/ScreenLayout";
 
 // Interaction
 export { CustomCursor } from "./interaction/CustomCursor";
@@ -142,7 +140,6 @@ export { AnimatedGradientRule } from "./dividers/AnimatedGradientRule";
 // Paigam extraction — ceremonial invitation motion components
 export { JewelryCursor } from "./interaction/JewelryCursor";
 export { ScrollUnfurlPreloader } from "./loaders/ScrollUnfurlPreloader";
-export { WaxSealButton } from "./buttons/WaxSealButton";
 export { CanvasPetalField } from "./animation/CanvasPetalField";
 export { FilmGrainOverlay } from "./overlays/FilmGrainOverlay";
 export { ScratchFoilReveal } from "./interaction/ScratchFoilReveal";
