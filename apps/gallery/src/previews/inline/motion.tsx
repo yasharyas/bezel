@@ -85,7 +85,10 @@ function EcomEmptyStatePreview() {
           </button>
         ))}
       </div>
-      <EcomEmptyState key={type} type={type} query="saffron" onCTA={noop} />
+      {/* preview-float-icon breathes the preset icon while motion is allowed. */}
+      <div className="preview-float-icon">
+        <EcomEmptyState key={type} type={type} query="saffron" onCTA={noop} />
+      </div>
     </div>
   );
 }

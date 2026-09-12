@@ -53,6 +53,17 @@
     to { opacity: 1; }
   }
 
+  /* Idle motion inside a preview: an empty state's icon breathing, so a card
+     that is otherwise a still picture shows something. Off for reduced motion. */
+  .preview-float,
+  .preview-float-icon svg {
+    animation: preview-float 2.8s var(--bz-ease-out) infinite;
+  }
+  @keyframes preview-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
   /* Horizontal scrollers without a visible scrollbar (chips row). */
   .no-scrollbar {
     scrollbar-width: none;
@@ -151,7 +162,9 @@ pre code {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stage-content {
+  .stage-content,
+  .preview-float,
+  .preview-float-icon svg {
     animation: none;
   }
   .motion-safe-transition {
