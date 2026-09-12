@@ -1,12 +1,12 @@
 # Curation proposal
 
 **This is a proposal.** The calls below are a recommendation for the owner to
-accept, reject or revise. Since it was written the owner has removed seven
-components; their rows are gone, and the counts describe the 100 that remain.
+accept, reject or revise. Since it was written the owner has removed ten
+components; their rows are gone, and the counts describe the 97 that remain.
 
 - **KEEP: 38** clear the quality bar
-- **MERGE: 27** fold into a component that is kept, as a variant or prop
-- **CUT: 35** remove from the library
+- **MERGE: 26** fold into a component that is kept, as a variant or prop
+- **CUT: 33** remove from the library
 
 Of the 38 that clear the bar, **25 are proposed for the shipping core** (with a
 merged `CardGrid`, 26) and 13 are held back, named at the end, with why. That last selection is the one place
@@ -85,7 +85,6 @@ in the library now has a visible focus indicator, so it no longer separates them
 | `StarBorder.tsx` | KEEP | The animated-border button, and the only one of the three with a proper focus ring. Absorbs the other two. |
 | `TextDisperseLink.tsx` | CUT | Lovely effect, but per-character `<span>` splitting wrecks screen-reader pronunciation and the scatter is `mouseenter`-only. |
 | `ToolbarButton.tsx` | KEEP | 21 lines and the closest thing the system has to an `IconButton`. Needs a required `aria-label`. |
-| `WaxSealButton.tsx` | CUT | Wedding-invitation art direction. Reduced motion is checked on enter but not on leave. |
 | `WhatsAppFAB.tsx` | CUT | A single vendor's brand button. `#25D366` is 1.98:1 against white and the tooltip is hover-only. |
 
 ## callouts/
@@ -182,7 +181,6 @@ system at all.
 |---|---|---|
 | `AppHeader.tsx` | MERGE | `[dup]` ~70% identical to `StickyNavbar`, down to a byte-identical `aria-label={\`Cart, ${n} items\`}`. |
 | `DamaskTileBackdrop.tsx` | CUT | An ornamental pattern for one project, emitting duplicate `<style>` blocks per instance. |
-| `ScreenLayout.tsx` | CUT | A form-wizard shell for one app. No `<main>` landmark. |
 | `SiteFooter.tsx` | KEEP | 77 lines, clean, and every site needs one. |
 
 ## lists/
@@ -227,8 +225,7 @@ themselves duplicate pairs.
 | `Pagination.tsx` | KEEP | The best accessibility in the library: `aria-current`, per-control labels, `sr-only` text. Fix the dead `disabled:` classes on an `<a>`. |
 | `SectionProgressRail.tsx` | CUT | Distinctive and reduced-motion aware, but an 8×8px hit target is a third of the minimum and the design does not survive fixing that. |
 | `SiteHeader.tsx` | KEEP | The editorial/portfolio nav. Absorbs `MobileMenu`. Stop rendering each label twice — screen readers announce every item twice today. |
-| `Stepper.tsx` | KEEP | The multi-step progress indicator. Absorbs `StepperNavigation`. Needs `role="progressbar"` and `aria-current="step"`. |
-| `StepperNavigation.tsx` | MERGE | The Previous/Next/Submit row belongs with `Stepper`. Its two branches are also duplicates of each other. |
+| `Stepper.tsx` | KEEP | The multi-step progress indicator. Needs `role="progressbar"` and `aria-current="step"`. |
 | `StickyNav.tsx` | CUT | Ships a dark-mode toggle that only swaps its own icon — the bar hardcodes a light palette and never changes. A broken premise. |
 | `StickyNavbar.tsx` | KEEP | The application/e-commerce nav. Absorbs `AppHeader`. Needs Escape and a focus trap on its drawer. |
 | `TubelightNavBar.tsx` | KEEP | The floating pill nav. Absorbs `MobileBottomNav`. Needs to become a real `<nav>`, and its mobile labels are `hidden`, leaving icon-only controls unnamed. |
@@ -270,7 +267,7 @@ BorderBeamButton, ConicBorderButton) · `ToolbarButton` (IconButton) ·
 `ErrorBoundary` · `SkeletonCard` (absorbing ImagePlaceholder) · `MultiStepLoader`
 
 **Structure (8)**
-`Pagination` · `Breadcrumb` · `Stepper` (absorbing StepperNavigation) ·
+`Pagination` · `Breadcrumb` · `Stepper` ·
 `StickyNavbar` (absorbing AppHeader) · `SiteHeader` (absorbing MobileMenu) ·
 `SidePanel` · `FAQAccordion` · `SiteFooter`
 

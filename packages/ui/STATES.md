@@ -63,7 +63,6 @@ renders nothing, so it is marked `!`.
 | `buttons/ConicBorderButton` | + | + | + | + | – | n/a | n/a | n/a |
 | `buttons/CircleCTA` | + | + | + | – | – | n/a | n/a | n/a |
 | `buttons/TextDisperseLink` | + | + | + | – | n/a | n/a | n/a | n/a |
-| `buttons/WaxSealButton` | + | + | + | + | – | n/a | n/a | n/a |
 | `buttons/WhatsAppFAB` | + | + | + | – | n/a | n/a | n/a | n/a |
 
 `PinchedButton` and `StarBorder` are the only two that were complete before this
@@ -74,7 +73,6 @@ pass, and they are the reference for the rest.
 | Component | default | hover | focus | active/current | disabled |
 |---|---|---|---|---|---|
 | `navigation/Pagination` | + | + | + | + | ! |
-| `navigation/StepperNavigation` | + | + | + | + | + |
 | `navigation/Breadcrumb` | + | + | + | + | n/a |
 | `navigation/CategoryChips` | + | + | + | + | – |
 | `navigation/CategoryGrid` | + | + | + | – | – |

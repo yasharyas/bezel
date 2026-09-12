@@ -170,7 +170,7 @@
    * counting the 999px spellings), so the system is pill-first.
    * ------------------------------------------------------------------- */
   --bz-radius-none: 0;
-  --bz-radius-xs: 2px;     /* WaxSealButton */
+  --bz-radius-xs: 2px;
   --bz-radius-sm: 6px;
   --bz-radius-md: 10px;    /* BorderBeamButton */
   --bz-radius-lg: 12px;    /* rounded-xl — 15 uses */
