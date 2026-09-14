@@ -123,8 +123,9 @@ scrolling row.
   Everything found is listed under
   [Library bugs](#library-bugs-found-along-the-way); several of them cap a
   rating.
-- **Removed components are still on npm.** The ten removed components remain
-  in the published `bezel-ui@0.0.2` tarball until the next release.
+- **Removed components left npm in 0.1.0.** They remain only in the older
+  `bezel-ui@0.0.2` tarball; `bezel-ui@0.1.0` and `bezel-add@0.1.0` match the
+  gallery.
 - **Two tab stops per card.** The title link and the expand button are separate
   controls by design; merging them would hide the dialog from keyboard users.
 - **Frame previews are heavier.** Each of the 25 frame previews boots its own
