@@ -4372,83 +4372,370 @@ export function TestimonialCard({ testimonial }: Props) {
     tags: ["testimonial", "review", "stars", "avatar", "social-proof"],
   },
   {
-    name: "FAQAccordion",
-    slug: "faq-accordion",
-    path: "sections/FAQAccordion.tsx",
+    name: "AccordionList",
+    slug: "accordion-list",
+    path: "sections/AccordionList.tsx",
     category: "sections",
     code: `"use client";
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
 
-export interface FAQItem {
-  q: string;
-  a: string;
-}
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 
-interface FAQItemProps {
-  faq: FAQItem;
-  isOpen: boolean;
-  onToggle: () => void;
-}
+/*
+ * AccordionList: questions and answers, or any titled rows, that open in place.
+ *
+ * Opening measures the answer and animates the panel's height to it, then hands
+ * the height back to \`auto\` so the content can reflow. Closing pins the current
+ * height and animates it to zero, and only then hides the panel and makes it
+ * inert, so a closed answer leaves both the tab order and the accessibility
+ * tree. A token per row lets a close interrupt an open cleanly.
+ *
+ * The whole row is the button. Its arrow disc tumbles and turns with a small
+ * overshoot, a hairline under the row fills on hover, keyboard focus and while
+ * open, and a plain-text answer rises into place line by line.
+ */
 
-function FAQItemRow({ faq, isOpen, onToggle }: FAQItemProps) {
-  return (
-    <div className="border-b border-neutral-100 last:border-b-0">
-      <button
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        className="w-full flex items-center justify-between gap-4 py-5 text-left cursor-pointer group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
-      >
-        <span className="text-neutral-900 text-sm sm:text-base font-medium group-hover:text-neutral-600 transition-colors">
-          {faq.q}
-        </span>
-        <ChevronDown
-          size={18}
-          className={\`shrink-0 text-neutral-400 transition-transform duration-300 \${isOpen ? "rotate-180" : ""}\`}
-        />
-      </button>
-      <div
-        className="overflow-hidden transition-[max-height,opacity] duration-300 ease-[cubic-bezier(0.77,0,0.175,1)]"
-        style={{ maxHeight: isOpen ? "200px" : "0", opacity: isOpen ? 1 : 0 }}
-      >
-        <p className="text-neutral-500 text-sm leading-relaxed pb-5">{faq.a}</p>
-      </div>
-    </div>
-  );
-}
+const CSS = \`
+.bz-al{color:var(--bz-ink,#0a0a0a);font-family:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif)}
+.bz-al *,.bz-al *::before,.bz-al *::after{box-sizing:border-box}
+.bz-al-head{margin:0 0 24px}
+.bz-al-title{margin:0;font-size:clamp(1.75rem,3.2vw,2.25rem);line-height:1.15;font-weight:600;letter-spacing:-0.02em}
+.bz-al-subtitle{margin:8px 0 0;font-size:1rem;line-height:1.55;color:var(--bz-ink-muted,#4a4a4c)}
+.bz-al-list{margin:0;padding:0;list-style:none;border-top:1px solid var(--bz-line-strong,rgba(10,10,10,0.13))}
+.bz-al-item{position:relative}
+.bz-al-heading{margin:0;font:inherit}
+.bz-al-trigger{display:grid;grid-template-columns:2.5rem minmax(0,1fr) auto 48px;align-items:center;gap:12px;width:100%;min-height:72px;margin:0;padding:12px 0;border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}
+.bz-al-trigger:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px}
+.bz-al-index{font:500 0.75rem/1 var(--bz-font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);letter-spacing:0.08em;color:var(--bz-ink-subtle,#6b6b70)}
+.bz-al-name{font-size:1.125rem;line-height:1.35;font-weight:600;letter-spacing:-0.01em}
+.bz-al-meta{font-size:0.875rem;white-space:nowrap;color:var(--bz-ink-muted,#4a4a4c)}
+.bz-al-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.bz-al-disc{position:relative;display:grid;justify-self:end;place-items:center;width:40px;height:40px;margin-right:4px;border-radius:999px;background:var(--bz-ink,#0a0a0a);color:#ffffff;transition:rotate 420ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-al-disc::after{content:"";position:absolute;inset:0;border:1.5px solid var(--bz-ink,#0a0a0a);border-radius:999px;opacity:0;pointer-events:none}
+.bz-al-clip{display:block;width:20px;height:20px;overflow:hidden}
+.bz-al-strip{display:block;transition:transform 280ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)) 200ms}
+.bz-al-strip svg{display:block;width:20px;height:20px}
+.bz-al-item[data-expanded="true"] .bz-al-disc{rotate:180deg;transition:rotate 500ms var(--bz-ease-spring,cubic-bezier(0.34,1.56,0.64,1)) 180ms}
+.bz-al-item[data-expanded="true"] .bz-al-strip{transform:translateY(-50%);transition-delay:0ms}
+.bz-al-item[data-expanded="true"] .bz-al-disc::after{animation:bz-al-pulse 700ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)) 140ms}
+@keyframes bz-al-pulse{from{opacity:0.45;transform:scale(1)}to{opacity:0;transform:scale(1.9)}}
+.bz-al-rule{position:relative;height:1px;background:var(--bz-line-strong,rgba(10,10,10,0.13))}
+.bz-al-fill{position:absolute;top:0;bottom:0;left:0;width:0;background:var(--bz-accent,#912c22);transition:width 500ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-al-item[data-expanded="true"] .bz-al-fill,.bz-al-item:has(.bz-al-trigger:focus-visible) .bz-al-fill{width:100%}
+@media (hover:hover){.bz-al-item:hover .bz-al-fill{width:100%}}
+.bz-al-panel{overflow:hidden}
+.bz-al-body{padding:0 64px 28px calc(2.5rem + 12px);font-size:1rem;line-height:1.6;color:var(--bz-ink-muted,#4a4a4c)}
+.bz-al-text{max-width:40rem;margin:0}
+.bz-al-line{display:block;overflow:hidden}
+.bz-al-line>span{display:block;transform:translateY(105%);transition:transform 450ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-al-item[data-expanded="true"] .bz-al-line>span{transform:none;transition-delay:var(--bz-al-delay,0ms)}
+.bz-al-empty{margin:0;padding:24px 0;font-size:0.9375rem;color:var(--bz-ink-muted,#4a4a4c)}
+@media (max-width:560px){.bz-al-trigger{grid-template-columns:2rem minmax(0,1fr) 48px}.bz-al-meta{display:none}.bz-al-body{padding:0 8px 24px 0}}
+@media (prefers-reduced-motion:reduce){.bz-al-disc,.bz-al-item[data-expanded="true"] .bz-al-disc,.bz-al-strip,.bz-al-item[data-expanded="true"] .bz-al-strip,.bz-al-fill,.bz-al-line>span,.bz-al-item[data-expanded="true"] .bz-al-line>span{transition:none}.bz-al-item[data-expanded="true"] .bz-al-disc::after{animation:none}}
+\`;
 
-type Props = {
-  items: FAQItem[];
-  title?: string;
-  subtitle?: string;
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(RM_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const readReducedMotion = () => window.matchMedia(RM_QUERY).matches;
+const serverReducedMotion = () => false;
+
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+const OPEN_MS = 500;
+
+export type AccordionItem = {
+  id?: string;
+  title: ReactNode;
+  /** Plain text rises line by line; anything else appears as a block. */
+  content: ReactNode;
+  /** A short second column, such as a date or a category. Hidden on narrow screens. */
+  meta?: ReactNode;
 };
 
-export function FAQAccordion({ items, title = "Frequently Asked Questions", subtitle = "" }: Props) {
-  const [openIndex, setOpenIndex] = useState(0);
+export type AccordionListProps = {
+  items: AccordionItem[];
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  /** Allow more than one row open at a time. */
+  multiple?: boolean;
+  /** Index or indexes open at first. \`null\` starts with everything closed. */
+  defaultOpen?: number | number[] | null;
+  /** Heading level for each row's title. The list title is always an h2. */
+  headingLevel?: 2 | 3 | 4;
+  emptyMessage?: string;
+  className?: string;
+};
+
+/** Splits plain text into its rendered lines, so each can rise on its own. */
+function Lines({ text }: { text: string }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const words = useMemo(() => text.split(/\\s+/).filter(Boolean), [text]);
+  const [lines, setLines] = useState<string[] | null>(null);
+  const measuredWidth = useRef(0);
+
+  useIsoLayoutEffect(() => {
+    setLines(null);
+  }, [text]);
+
+  useIsoLayoutEffect(() => {
+    if (lines !== null) return;
+    const el = ref.current;
+    if (!el) return;
+    const spans = Array.from(el.querySelectorAll<HTMLElement>(".bz-al-word"));
+    const groups: string[] = [];
+    let top = Number.NaN;
+    for (const span of spans) {
+      const word = span.textContent?.trim() ?? "";
+      if (!groups.length || Math.abs(span.offsetTop - top) > 2) {
+        groups.push(word);
+        top = span.offsetTop;
+      } else {
+        groups[groups.length - 1] += \` \${word}\`;
+      }
+    }
+    measuredWidth.current = el.clientWidth;
+    setLines(groups);
+  }, [lines, words]);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      if (el.clientWidth && Math.abs(el.clientWidth - measuredWidth.current) > 1) setLines(null);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  if (!lines) {
+    return (
+      <p ref={ref} className="bz-al-text">
+        {words.map((word, i) => (
+          <span key={i} className="bz-al-word">
+            {word}{" "}
+          </span>
+        ))}
+      </p>
+    );
+  }
+  const count = lines.length;
+  return (
+    <p ref={ref} className="bz-al-text">
+      {lines.map((line, i) => (
+        <span key={i} className="bz-al-line">
+          <span style={{ ["--bz-al-delay" as string]: \`\${(count > 1 ? Math.round((i * 300) / (count - 1)) : 0) + 120}ms\` } as CSSProperties}>
+            {line}
+          </span>
+        </span>
+      ))}
+    </p>
+  );
+}
+
+function Row({
+  item,
+  index,
+  open,
+  onToggle,
+  headingLevel,
+  reduced,
+  baseId,
+}: {
+  item: AccordionItem;
+  index: number;
+  open: boolean;
+  onToggle: (index: number) => void;
+  headingLevel: 2 | 3 | 4;
+  reduced: boolean;
+  baseId: string;
+}) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const token = useRef(0);
+  const firstRun = useRef(true);
+  // Set once, so React never fights the height the effect animates.
+  const [initialStyle] = useState<CSSProperties | undefined>(() => (open ? undefined : { height: 0, visibility: "hidden" }));
+
+  useIsoLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    if (firstRun.current) {
+      firstRun.current = false;
+      if (!open) panel.setAttribute("inert", "");
+      return;
+    }
+    const run = ++token.current;
+    const duration = reduced ? 0 : OPEN_MS;
+    panel.style.transition = duration ? \`height \${duration}ms var(--bz-ease-out, cubic-bezier(0.23, 1, 0.32, 1))\` : "none";
+    let raf = 0;
+    let timer = 0;
+    if (open) {
+      panel.removeAttribute("inert");
+      panel.style.visibility = "visible";
+      panel.style.height = \`\${panel.getBoundingClientRect().height}px\`;
+      const target = panel.scrollHeight;
+      if (!duration) {
+        panel.style.height = "auto";
+      } else {
+        raf = requestAnimationFrame(() => {
+          if (token.current === run) panel.style.height = \`\${target}px\`;
+        });
+        timer = window.setTimeout(() => {
+          if (token.current === run) panel.style.height = "auto";
+        }, duration + 30);
+      }
+    } else {
+      panel.style.height = \`\${panel.getBoundingClientRect().height}px\`;
+      void panel.offsetHeight;
+      panel.style.height = "0px";
+      const finish = () => {
+        if (token.current !== run) return;
+        panel.style.visibility = "hidden";
+        panel.setAttribute("inert", "");
+      };
+      if (!duration) finish();
+      else timer = window.setTimeout(finish, duration + 30);
+    }
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timer);
+    };
+  }, [open]);
+
+  const Heading = \`h\${headingLevel}\` as "h2" | "h3" | "h4";
+  const triggerId = \`\${baseId}-trigger-\${index}\`;
+  const panelId = \`\${baseId}-panel-\${index}\`;
 
   return (
-    <section className="py-16 lg:py-20 bg-white">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl lg:text-4xl font-bold text-neutral-900 mb-3">{title}</h2>
-          {subtitle && <p className="text-neutral-500 text-sm">{subtitle}</p>}
-        </div>
-        <div className="bg-neutral-50 rounded-2xl px-6 sm:px-8">
-          {items.map((faq, i) => (
-            <FAQItemRow
-              key={i}
-              faq={faq}
-              isOpen={openIndex === i}
-              onToggle={() => setOpenIndex(openIndex === i ? -1 : i)}
-            />
-          ))}
-        </div>
+    <li className="bz-al-item" data-expanded={open ? "true" : "false"}>
+      <Heading className="bz-al-heading">
+        <button
+          type="button"
+          id={triggerId}
+          className="bz-al-trigger"
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={() => onToggle(index)}
+        >
+          <span className="bz-al-index" aria-hidden="true">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span className="bz-al-name">{item.title}</span>
+          <span className="bz-al-meta">
+            {item.meta ? (
+              <>
+                <span className="bz-al-sr">, </span>
+                {item.meta}
+              </>
+            ) : null}
+          </span>
+          <span className="bz-al-disc" aria-hidden="true">
+            <span className="bz-al-clip">
+              <span className="bz-al-strip">
+                <svg viewBox="0 0 20 20" fill="none">
+                  <path d="M10 4.5v11m0 0 4.5-4.5M10 15.5 5.5 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <svg viewBox="0 0 20 20" fill="none">
+                  <path d="M10 4.5v11m0 0 4.5-4.5M10 15.5 5.5 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            </span>
+          </span>
+        </button>
+      </Heading>
+      <div ref={panelRef} id={panelId} role="region" aria-labelledby={triggerId} className="bz-al-panel" style={initialStyle}>
+        <div className="bz-al-body">{typeof item.content === "string" ? <Lines text={item.content} /> : item.content}</div>
       </div>
-    </section>
+      <div className="bz-al-rule" aria-hidden="true">
+        <span className="bz-al-fill" />
+      </div>
+    </li>
+  );
+}
+
+export function AccordionList({
+  items,
+  title,
+  subtitle,
+  multiple = false,
+  defaultOpen = 0,
+  headingLevel = 3,
+  emptyMessage = "Nothing here yet.",
+  className = "",
+}: AccordionListProps) {
+  const reduced = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion);
+  const baseId = useId().replace(/:/g, "");
+  const [open, setOpen] = useState<Set<number>>(
+    () => new Set(defaultOpen === null ? [] : Array.isArray(defaultOpen) ? defaultOpen : [defaultOpen]),
+  );
+
+  const toggle = useCallback(
+    (index: number) => {
+      setOpen((prev) => {
+        const next = multiple ? new Set(prev) : new Set<number>();
+        if (prev.has(index)) next.delete(index);
+        else next.add(index);
+        return next;
+      });
+    },
+    [multiple],
+  );
+
+  const titleId = \`\${baseId}-title\`;
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <section className={\`bz-al \${className}\`.trim()} aria-labelledby={title ? titleId : undefined}>
+        {title || subtitle ? (
+          <div className="bz-al-head">
+            {title ? (
+              <h2 id={titleId} className="bz-al-title">
+                {title}
+              </h2>
+            ) : null}
+            {subtitle ? <p className="bz-al-subtitle">{subtitle}</p> : null}
+          </div>
+        ) : null}
+        {items.length ? (
+          <ul className="bz-al-list">
+            {items.map((item, index) => (
+              <Row
+                key={item.id ?? index}
+                item={item}
+                index={index}
+                open={open.has(index)}
+                onToggle={toggle}
+                headingLevel={headingLevel}
+                reduced={reduced}
+                baseId={baseId}
+              />
+            ))}
+          </ul>
+        ) : (
+          <p className="bz-al-empty" role="status">
+            {emptyMessage}
+          </p>
+        )}
+      </section>
+    </>
   );
 }`,
-    description: "FAQ section where one answer opens at a time on an eased height transition.",
-    tags: ["faq", "accordion", "animated", "accessible", "chevron", "sections"],
+    description: "Accordion whose arrow tumbles open and whose answers rise into place line by line.",
+    tags: ["accordion", "faq", "disclosure", "accessible", "inert", "reduced-motion"],
   },
   {
     name: "WhatsAppFAB",
@@ -13783,6 +14070,504 @@ export function AutoplayCarousel({
 }`,
     description: "Photo carousel that never crops, with a progress-bar timer and a pause button.",
     tags: ["carousel", "autoplay", "images", "swipe", "accessible", "pause"],
+  },
+  {
+    name: "MessageForm",
+    slug: "message-form",
+    path: "forms/MessageForm.tsx",
+    category: "forms",
+    code: `"use client";
+
+import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+
+/*
+ * MessageForm: a complete form pattern, not just fields.
+ *
+ * - Validation runs on submit. Every invalid field gets \`aria-invalid\` and an
+ *   error message tied to it with \`aria-describedby\`, and focus moves to the
+ *   first one after the errors have rendered, so it is read out with its message.
+ * - One polite live region, always mounted, says what happened: how many fields
+ *   need attention, that details are being checked, that the message is being
+ *   sent, that it was sent, or that it was not.
+ * - A field can carry an asynchronous \`check\`, such as whether a link opens.
+ *   Checks are cancelled if the form is submitted again or unmounted, time out,
+ *   and let the message through when they cannot run at all.
+ * - Sending is honest: the form only says "sent" when \`onSend\` resolved. A
+ *   failure or a timeout keeps what was typed and can offer another way to reach
+ *   you. The submit button keeps its width while its label changes.
+ */
+
+const CSS = \`
+.bz-mf{container-type:inline-size;color:var(--bz-ink,#0a0a0a);font-family:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif)}
+.bz-mf *,.bz-mf *::before,.bz-mf *::after{box-sizing:border-box}
+.bz-mf-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@container (min-width:520px){.bz-mf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bz-mf-field[data-span="half"]{grid-column:span 1}}
+.bz-mf-field{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
+.bz-mf-label{font-size:0.875rem;font-weight:600;line-height:1.4}
+.bz-mf-req{margin-left:3px;color:var(--bz-danger,#b91c1c)}
+.bz-mf-control{width:100%;min-height:48px;margin:0;padding:11px 14px;border:1px solid var(--bz-ink-disabled,#8a8a8e);border-radius:12px;background:var(--bz-paper,#ffffff);color:inherit;font:inherit;font-size:1rem;line-height:1.5;transition:border-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),box-shadow 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+textarea.bz-mf-control{min-height:120px;resize:vertical}
+.bz-mf-control::placeholder{color:var(--bz-ink-subtle,#6b6b70)}
+@media (hover:hover){.bz-mf-control:hover{border-color:var(--bz-ink-muted,#4a4a4c)}}
+.bz-mf-control:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px;border-color:var(--bz-ink,#0a0a0a)}
+.bz-mf-control[aria-invalid="true"]{border-color:var(--bz-danger-decor,#ef4444);box-shadow:inset 0 0 0 1px var(--bz-danger-decor,#ef4444)}
+.bz-mf-hint{margin:0;font-size:0.8125rem;line-height:1.45;color:var(--bz-ink-subtle,#6b6b70)}
+.bz-mf-error{display:flex;align-items:flex-start;gap:6px;margin:0;font-size:0.8125rem;font-weight:500;line-height:1.45;color:var(--bz-danger,#b91c1c)}
+.bz-mf-error svg{flex:none;width:14px;height:14px;margin-top:2px}
+.bz-mf-check{display:flex;align-items:center;gap:6px;min-height:1.2em;margin:0;font-size:0.8125rem;font-weight:500;line-height:1.45;color:var(--bz-ink-muted,#4a4a4c)}
+.bz-mf-check:empty{display:none}
+.bz-mf-check[data-result="ok"]{color:var(--bz-emerald,#047857)}
+.bz-mf-check[data-result="blocked"]{color:var(--bz-danger,#b91c1c)}
+.bz-mf-check svg{flex:none;width:14px;height:14px}
+.bz-mf-spin{animation:bz-mf-turn 900ms linear infinite}
+@keyframes bz-mf-turn{to{transform:rotate(360deg)}}
+.bz-mf-skip{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+.bz-mf-alert{display:flex;gap:10px;margin:18px 0 0;padding:12px 14px;border:1px solid var(--bz-danger-decor,#ef4444);border-radius:12px;background:#fef2f2;color:var(--bz-danger,#b91c1c);font-size:0.875rem;line-height:1.5}
+.bz-mf-alert a{color:inherit;font-weight:600;text-underline-offset:3px}
+.bz-mf-alert a:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px;border-radius:2px}
+.bz-mf-alert svg{flex:none;width:16px;height:16px;margin-top:2px}
+.bz-mf-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin-top:22px}
+.bz-mf-submit{display:inline-grid;align-items:center;min-height:48px;padding:0 22px;border:0;border-radius:999px;background:var(--bz-ink,#0a0a0a);color:#ffffff;font:inherit;font-size:0.9375rem;font-weight:600;cursor:pointer;transition:background-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),transform 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-mf-submit>span{display:flex;grid-area:1/1;align-items:center;justify-content:center;gap:8px}
+.bz-mf-submit>span[aria-hidden="true"]{visibility:hidden}
+@media (hover:hover){.bz-mf-submit:hover{background:#2b2b2e}}
+.bz-mf-submit:focus-visible,.bz-mf-secondary:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px}
+.bz-mf-submit:active{transform:scale(0.97)}
+.bz-mf-submit[aria-disabled="true"]{cursor:progress;background:#3a3a3e}
+.bz-mf-submit svg{width:16px;height:16px}
+.bz-mf-note{margin:0;font-size:0.8125rem;line-height:1.45;color:var(--bz-ink-subtle,#6b6b70)}
+.bz-mf-done{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.bz-mf-mark{display:grid;place-items:center;width:44px;height:44px;border-radius:999px;background:#ecfdf5;color:var(--bz-emerald,#047857)}
+.bz-mf-mark svg{width:20px;height:20px}
+.bz-mf-done-title{margin:4px 0 0;font-size:1.25rem;font-weight:600;letter-spacing:-0.01em;outline:none}
+.bz-mf-done-body{margin:0;max-width:30rem;font-size:0.9375rem;line-height:1.55;color:var(--bz-ink-muted,#4a4a4c)}
+.bz-mf-secondary{min-height:48px;margin-top:6px;padding:0 18px;border:1px solid var(--bz-ink-disabled,#8a8a8e);border-radius:999px;background:transparent;color:inherit;font:inherit;font-size:0.9375rem;font-weight:600;cursor:pointer}
+@media (hover:hover){.bz-mf-secondary:hover{background:rgba(10,10,10,0.05)}}
+.bz-mf-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){.bz-mf-spin{animation:none}.bz-mf-control,.bz-mf-submit{transition:none}.bz-mf-submit:active{transform:none}}
+\`;
+
+export type MessageFormField = {
+  name: string;
+  label: string;
+  type?: "text" | "email" | "tel" | "url" | "textarea";
+  required?: boolean;
+  placeholder?: string;
+  hint?: string;
+  autoComplete?: string;
+  minLength?: number;
+  maxLength?: number;
+  /** Half width beside another half-width field when the form is wide enough. */
+  span?: "half" | "full";
+  /** Extra rule. Return a message to show, or null. */
+  validate?: (value: string, values: Record<string, string>) => string | null;
+  /**
+   * Asynchronous check run before sending, only when the field has a value.
+   * Resolve \`{ ok: false, message }\` to stop the send, \`{ ok: true, message }\`
+   * to confirm, or null when the check could not run.
+   */
+  check?: (value: string, signal: AbortSignal) => Promise<{ ok: boolean; message: string } | null>;
+};
+
+export type MessageFormResult = void | { fieldErrors?: Record<string, string>; error?: string };
+
+export type MessageFormProps = {
+  /** Send the message. Resolve when it arrived; reject or return \`error\` when it did not. */
+  onSend: (values: Record<string, string>, signal: AbortSignal) => Promise<MessageFormResult>;
+  fields?: MessageFormField[];
+  defaultValues?: Record<string, string>;
+  submitLabel?: string;
+  sendingLabel?: string;
+  checkingLabel?: string;
+  note?: ReactNode;
+  successTitle?: ReactNode;
+  successBody?: ReactNode | ((values: Record<string, string>) => ReactNode);
+  /** Another way to get in touch, offered when sending fails. */
+  fallback?: { href: string; label: string };
+  timeoutMs?: number;
+  checkTimeoutMs?: number;
+  /** Name of a hidden field that people leave empty and bots fill in. \`false\` turns it off. */
+  trapName?: string | false;
+  className?: string;
+};
+
+const DEFAULT_FIELDS: MessageFormField[] = [
+  { name: "name", label: "Name", required: true, autoComplete: "name", span: "half", minLength: 2 },
+  { name: "email", label: "Email", type: "email", required: true, autoComplete: "email", span: "half" },
+  { name: "message", label: "Message", type: "textarea", required: true, minLength: 20, hint: "A few sentences is plenty." },
+];
+
+const EMAIL = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/;
+const PHONE = /^\\+?[\\d\\s().-]{7,20}$/;
+const LINK = /^https?:\\/\\/[^\\s/.]+\\.[^\\s]{2,}/i;
+
+type Status = "idle" | "checking" | "sending" | "sent" | "failed";
+type CheckView = { result: "checking" | "ok" | "blocked" | "unavailable"; message: string };
+
+function validateField(field: MessageFormField, value: string, values: Record<string, string>) {
+  const trimmed = value.trim();
+  if (field.required && !trimmed) return \`\${field.label} is required.\`;
+  if (!trimmed) return null;
+  if (field.type === "email" && !EMAIL.test(trimmed)) return "Enter an email address like name@example.com.";
+  if (field.type === "tel" && !PHONE.test(trimmed)) return "Enter a phone number of 7 to 20 digits.";
+  if (field.type === "url" && !LINK.test(trimmed)) return "Enter a link that starts with https://";
+  if (field.minLength && trimmed.length < field.minLength) return \`Use at least \${field.minLength} characters.\`;
+  if (field.maxLength && value.length > field.maxLength) return \`Use \${field.maxLength} characters or fewer.\`;
+  return field.validate?.(value, values) ?? null;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, controller: AbortController) {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      controller.abort();
+      reject(new Error("timeout"));
+    }, ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
+}
+
+const Spinner = () => (
+  <svg className="bz-mf-spin" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <circle cx="8" cy="8" r="6" stroke="currentColor" strokeOpacity="0.3" strokeWidth="2" />
+    <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const Alert = () => (
+  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M8 1.8 15 14H1L8 1.8Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <path d="M8 6.2v3.4M8 11.8v.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+  </svg>
+);
+
+const Tick = () => (
+  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="m3.5 8.5 3 3 6-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export function MessageForm({
+  onSend,
+  fields = DEFAULT_FIELDS,
+  defaultValues = {},
+  submitLabel = "Send message",
+  sendingLabel = "Sending",
+  checkingLabel = "Checking",
+  note,
+  successTitle = "Message sent",
+  successBody = "Thanks for writing. You will hear back soon.",
+  fallback,
+  timeoutMs = 15000,
+  checkTimeoutMs = 6000,
+  trapName = "leave_this_empty",
+  className = "",
+}: MessageFormProps) {
+  const uid = useId().replace(/:/g, "");
+  const [status, setStatus] = useState<Status>("idle");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [checks, setChecks] = useState<Record<string, CheckView>>({});
+  const [failure, setFailure] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const [sentValues, setSentValues] = useState<Record<string, string>>({});
+  const [formKey, setFormKey] = useState(0);
+  const formRef = useRef<HTMLFormElement>(null);
+  const doneRef = useRef<HTMLHeadingElement>(null);
+  const busy = useRef(false);
+  const controllerRef = useRef<AbortController | null>(null);
+  const pendingFocus = useRef<string | null>(null);
+  const flip = useRef(false);
+
+  const announce = (message: string) => {
+    // A trailing zero-width space forces a repeat of the same words to be read again.
+    flip.current = !flip.current;
+    setAnnouncement(flip.current ? message : \`\${message}​\`);
+  };
+
+  useEffect(() => () => controllerRef.current?.abort(), []);
+
+  // Focus after the errors are in the DOM, so the field is read with its message.
+  useEffect(() => {
+    const name = pendingFocus.current;
+    if (!name) return;
+    pendingFocus.current = null;
+    const el = formRef.current?.elements.namedItem(name);
+    if (el instanceof HTMLElement) el.focus();
+  }, [errors]);
+
+  useEffect(() => {
+    if (status === "sent") doneRef.current?.focus();
+  }, [status]);
+
+  const report = (found: Record<string, string>) => {
+    const names = fields.map((f) => f.name).filter((name) => found[name]);
+    pendingFocus.current = names[0] ?? null;
+    setErrors(found);
+    setStatus("idle");
+    const labels = names.map((name) => fields.find((f) => f.name === name)?.label ?? name);
+    announce(\`\${names.length} \${names.length === 1 ? "field needs" : "fields need"} attention: \${labels.join(", ")}.\`);
+  };
+
+  const onFieldChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name } = event.currentTarget;
+    if (errors[name]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+    if (checks[name]) {
+      setChecks((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
+  };
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (busy.current) return;
+    const data = new FormData(event.currentTarget);
+
+    if (trapName && String(data.get(trapName) ?? "")) {
+      setSentValues({});
+      setStatus("sent");
+      return;
+    }
+
+    const values = Object.fromEntries(fields.map((f) => [f.name, String(data.get(f.name) ?? "")]));
+    const found: Record<string, string> = {};
+    for (const field of fields) {
+      const message = validateField(field, values[field.name], values);
+      if (message) found[field.name] = message;
+    }
+    if (Object.keys(found).length) {
+      report(found);
+      return;
+    }
+
+    busy.current = true;
+    setErrors({});
+    setFailure(null);
+    controllerRef.current?.abort();
+    const controller = new AbortController();
+    controllerRef.current = controller;
+
+    try {
+      const toCheck = fields.filter((f) => f.check && values[f.name].trim());
+      if (toCheck.length) {
+        setStatus("checking");
+        announce(\`\${checkingLabel} your details.\`);
+        const blocked: Record<string, string> = {};
+        await Promise.all(
+          toCheck.map(async (field) => {
+            setChecks((prev) => ({ ...prev, [field.name]: { result: "checking", message: \`\${checkingLabel}…\` } }));
+            const own = new AbortController();
+            const relay = () => own.abort();
+            controller.signal.addEventListener("abort", relay);
+            try {
+              const result = await withTimeout(field.check!(values[field.name], own.signal), checkTimeoutMs, own);
+              if (controller.signal.aborted) return;
+              if (!result) throw new Error("unavailable");
+              setChecks((prev) => ({ ...prev, [field.name]: { result: result.ok ? "ok" : "blocked", message: result.message } }));
+              if (!result.ok) blocked[field.name] = result.message;
+            } catch {
+              if (controller.signal.aborted) return;
+              setChecks((prev) => ({
+                ...prev,
+                [field.name]: { result: "unavailable", message: "This could not be checked, so it will be sent as it is." },
+              }));
+            } finally {
+              controller.signal.removeEventListener("abort", relay);
+            }
+          }),
+        );
+        if (controller.signal.aborted) return;
+        if (Object.keys(blocked).length) {
+          report(blocked);
+          return;
+        }
+      }
+
+      setStatus("sending");
+      announce(\`\${sendingLabel} your message.\`);
+      const result = await withTimeout(onSend(values, controller.signal), timeoutMs, controller);
+      if (result && result.fieldErrors && Object.keys(result.fieldErrors).length) {
+        report(result.fieldErrors);
+        return;
+      }
+      if (result && result.error) throw new Error(result.error);
+      setSentValues(values);
+      setStatus("sent");
+      announce(typeof successTitle === "string" ? successTitle : "Message sent.");
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message === "timeout"
+          ? "Sending took too long, so it was stopped. Nothing you typed was lost."
+          : error instanceof Error && error.message
+            ? error.message
+            : "The message could not be sent.";
+      setFailure(message);
+      setStatus("failed");
+      announce(\`Not sent. \${message}\`);
+    } finally {
+      busy.current = false;
+    }
+  };
+
+  const reset = () => {
+    setErrors({});
+    setChecks({});
+    setFailure(null);
+    setStatus("idle");
+    setFormKey((k) => k + 1);
+    announce("Form cleared.");
+  };
+
+  const working = status === "checking" || status === "sending";
+  const liveRegion = (
+    <p className="bz-mf-sr" aria-live="polite">
+      {announcement}
+    </p>
+  );
+
+  if (status === "sent") {
+    return (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: CSS }} />
+        <div className={\`bz-mf \${className}\`.trim()}>
+          <div className="bz-mf-done">
+            <span className="bz-mf-mark" aria-hidden="true">
+              <Tick />
+            </span>
+            <h3 ref={doneRef} tabIndex={-1} className="bz-mf-done-title">
+              {successTitle}
+            </h3>
+            <p className="bz-mf-done-body">{typeof successBody === "function" ? successBody(sentValues) : successBody}</p>
+            <button type="button" className="bz-mf-secondary" onClick={reset}>
+              Write another
+            </button>
+          </div>
+          {liveRegion}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <form key={formKey} ref={formRef} className={\`bz-mf \${className}\`.trim()} noValidate onSubmit={onSubmit} aria-busy={working || undefined}>
+        <div className="bz-mf-grid">
+          {fields.map((field) => {
+            const id = \`\${uid}-\${field.name}\`;
+            const error = errors[field.name];
+            const check = checks[field.name];
+            const describedBy = [field.hint ? \`\${id}-hint\` : null, error ? \`\${id}-error\` : null, field.check ? \`\${id}-check\` : null]
+              .filter(Boolean)
+              .join(" ");
+            const common = {
+              id,
+              name: field.name,
+              className: "bz-mf-control",
+              placeholder: field.placeholder,
+              autoComplete: field.autoComplete,
+              defaultValue: defaultValues[field.name],
+              "aria-invalid": error ? true : undefined,
+              "aria-required": field.required || undefined,
+              "aria-describedby": describedBy || undefined,
+              onChange: onFieldChange,
+            };
+            return (
+              <div key={field.name} className="bz-mf-field" data-span={field.span ?? "full"}>
+                <label htmlFor={id} className="bz-mf-label">
+                  {field.label}
+                  {field.required ? (
+                    <span className="bz-mf-req" aria-hidden="true">
+                      *
+                    </span>
+                  ) : null}
+                </label>
+                {field.type === "textarea" ? (
+                  <textarea {...common} rows={5} />
+                ) : (
+                  <input {...common} type={field.type ?? "text"} inputMode={field.type === "url" ? "url" : undefined} />
+                )}
+                {field.hint ? (
+                  <p id={\`\${id}-hint\`} className="bz-mf-hint">
+                    {field.hint}
+                  </p>
+                ) : null}
+                {error ? (
+                  <p id={\`\${id}-error\`} className="bz-mf-error">
+                    <Alert />
+                    {error}
+                  </p>
+                ) : null}
+                {field.check ? (
+                  <p id={\`\${id}-check\`} className="bz-mf-check" role="status" data-result={check?.result}>
+                    {check ? (
+                      <>
+                        {check.result === "checking" ? <Spinner /> : check.result === "ok" ? <Tick /> : check.result === "blocked" ? <Alert /> : null}
+                        {check.message}
+                      </>
+                    ) : null}
+                  </p>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+
+        {trapName ? (
+          <div className="bz-mf-skip" aria-hidden="true">
+            <label htmlFor={\`\${uid}-skip\`}>Leave this field empty</label>
+            <input id={\`\${uid}-skip\`} name={trapName} tabIndex={-1} autoComplete="off" defaultValue="" />
+          </div>
+        ) : null}
+
+        {status === "failed" && failure ? (
+          <div className="bz-mf-alert" role="alert">
+            <Alert />
+            <p style={{ margin: 0 }}>
+              {failure}
+              {fallback ? (
+                <>
+                  {" "}
+                  <a href={fallback.href}>{fallback.label}</a>
+                </>
+              ) : null}
+            </p>
+          </div>
+        ) : null}
+
+        <div className="bz-mf-actions">
+          <button type="submit" className="bz-mf-submit" aria-disabled={working || undefined}>
+            <span aria-hidden={working || undefined}>{submitLabel}</span>
+            <span aria-hidden={working ? undefined : true}>
+              <Spinner />
+              {status === "checking" ? checkingLabel : sendingLabel}
+            </span>
+          </button>
+          {note ? <p className="bz-mf-note">{note}</p> : null}
+        </div>
+        {liveRegion}
+      </form>
+    </>
+  );
+}`,
+    description: "Form with announced errors, focus to the first one and honest sending states.",
+    tags: ["form", "validation", "aria-invalid", "live-region", "async", "accessible"],
   },
 ];
 

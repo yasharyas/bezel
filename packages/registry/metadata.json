@@ -571,17 +571,17 @@
       "social-proof"
     ]
   },
-  "faq-accordion": {
-    "name": "FAQAccordion",
+  "accordion-list": {
+    "name": "AccordionList",
     "category": "sections",
-    "description": "FAQ section where one answer opens at a time on an eased height transition.",
+    "description": "Accordion whose arrow tumbles open and whose answers rise into place line by line.",
     "tags": [
-      "faq",
       "accordion",
-      "animated",
+      "faq",
+      "disclosure",
       "accessible",
-      "chevron",
-      "sections"
+      "inert",
+      "reduced-motion"
     ]
   },
   "whatsapp-fab": {
@@ -1313,6 +1313,19 @@
       "swipe",
       "accessible",
       "pause"
+    ]
+  },
+  "message-form": {
+    "name": "MessageForm",
+    "category": "forms",
+    "description": "Form with announced errors, focus to the first one and honest sending states.",
+    "tags": [
+      "form",
+      "validation",
+      "aria-invalid",
+      "live-region",
+      "async",
+      "accessible"
     ]
   }
 }

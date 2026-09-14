@@ -91,7 +91,7 @@ const COMPONENT_MAP = {
   "app-header": "layout/AppHeader.tsx",
   "bakery-product-card": "cards/BakeryProductCard.tsx",
   "testimonial-card": "cards/TestimonialCard.tsx",
-  "faq-accordion": "sections/FAQAccordion.tsx",
+  "accordion-list": "sections/AccordionList.tsx",
   "whatsapp-fab": "buttons/WhatsAppFAB.tsx",
   "image-placeholder": "feedback/ImagePlaceholder.tsx",
   "sticky-navbar": "navigation/StickyNavbar.tsx",
@@ -152,6 +152,7 @@ const COMPONENT_MAP = {
   "docking-card": "cards/DockingCard.tsx",
   "sideways-scroll": "sections/SidewaysScroll.tsx",
   "autoplay-carousel": "media/AutoplayCarousel.tsx",
+  "message-form": "forms/MessageForm.tsx",
 };
 
 function showHelp() {
@@ -210,7 +211,7 @@ function showHelp() {
     app-header           Sticky app header with search bar and cart badge
     bakery-product-card  Product card with shimmer placeholder and hover lift
     testimonial-card     Testimonial card with star rating and avatar
-    faq-accordion        Accessible FAQ accordion, one item open at a time
+    accordion-list       Accordion rows that open to their measured height
     whatsapp-fab         Floating WhatsApp chat button
     image-placeholder    Image skeleton placeholder with shimmer overlay
     sticky-navbar        Sticky navbar with frosted-glass scroll effect
@@ -268,6 +269,7 @@ function showHelp() {
     docking-card            Card whose picture flies into a header dock on hover
     sideways-scroll         Row of cards that pins and pans sideways on scroll
     autoplay-carousel       Never-cropping photo carousel with a pause button
+    message-form            Form with announced errors and honest sending states
 
   Example:
     npx bezel add glass-button

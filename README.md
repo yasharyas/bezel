@@ -185,7 +185,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Component | Slug | Description |
 |---|---|---|
 | ContactSection | `contact-section` | Dark contact card with a rotating conic-gradient border and cursor-following spotlight. |
-| FAQAccordion | `faq-accordion` | Accessible FAQ accordion, one item open at a time, animated max-height transitions. |
+| AccordionList | `accordion-list` | Accordion rows that open to their measured height, leave the tab order when closed and reveal plain-text answers line by line. |
 | TypingHero | `typing-hero` | Hero section with a typewriter-animated subtitle and CTA that fades in after typing completes. |
 
 ### Overlays
