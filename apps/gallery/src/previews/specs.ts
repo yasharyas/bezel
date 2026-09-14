@@ -117,6 +117,10 @@ export const specs: Record<string, PreviewSpec> = {
   "text-type": inline("gsap", "paper"),
   "celebration-overlay": frame("paper", 640, 427),
   "damask-tile-backdrop": frame("cream", 600, 400),
+  "morph-dialog": frame("paper", 720, 480, { hint: "Click" }),
+  "particle-qr-code": inline("basic", "paper", { replay: true }),
+  "timed-tabs": inline("basic", "paper", { fit: 640 }),
+  "glyph-field": inline("basic", "paper", { hint: "Move" }),
 };
 
 export const frameSlugs = Object.entries(specs)

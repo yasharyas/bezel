@@ -11021,6 +11021,1936 @@ export function TiledGlassSurface({
     description: "Fixed ornamental tile lattice behind the page, plus a matching tiled glass pane.",
     tags: ["pattern", "damask", "atmosphere", "glassmorphism", "backdrop"],
   },
+  {
+    name: "MorphDialog",
+    slug: "morph-dialog",
+    path: "dialogs/MorphDialog.tsx",
+    category: "dialogs",
+    code: `"use client";
+
+import {
+  cloneElement,
+  isValidElement,
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+  type MutableRefObject,
+  type ReactElement,
+  type ReactNode,
+  type Ref,
+  type RefObject,
+} from "react";
+import { createPortal } from "react-dom";
+
+/*
+ * MorphDialog: a modal that grows out of the control that opened it.
+ *
+ * The trigger's box is measured at the moment it is pressed. A fixed plate
+ * covering the viewport is clipped to that box, then its clip-path is
+ * transitioned to the panel's box, so the surface visibly travels from the
+ * button to the dialog and back. Clip-path, unlike a scale, never distorts the
+ * radius. The dialog content fades in over the plate once it is most of the
+ * way there.
+ *
+ * Around the motion it is a complete modal: every other child of <body> is made
+ * inert and hidden from assistive tech (and restored exactly as it was), focus
+ * moves into the dialog and Tab / Shift+Tab wrap inside it, Escape closes unless
+ * something inside owns that key, the page cannot scroll behind it, and focus
+ * returns to the trigger.
+ */
+
+const CSS = \`
+.bz-md{position:fixed;inset:0;z-index:90}
+.bz-md-backdrop{position:absolute;inset:0;background:rgba(12,12,15,0.44);opacity:0;transition:opacity var(--bz-md-dur,500ms) var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-md[data-phase="open"] .bz-md-backdrop{opacity:1}
+.bz-md[data-phase="closing"] .bz-md-backdrop{pointer-events:none;transition-duration:calc(var(--bz-md-dur,500ms) * 0.6)}
+.bz-md-plate{position:fixed;inset:0;pointer-events:none;background-color:var(--bz-paper,#ffffff);transition:clip-path var(--bz-md-dur,500ms) var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),background-color var(--bz-md-dur,500ms) var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1));will-change:clip-path}
+.bz-md-panel{position:fixed;left:50%;top:50%;box-sizing:border-box;display:flex;flex-direction:column;width:min(var(--bz-md-width,520px),calc(100vw - 32px));max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);transform:translate(-50%,-50%);border:1px solid var(--bz-line-strong,rgba(10,10,10,0.13));border-radius:24px;color:var(--bz-ink,#0a0a0a);font-family:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);opacity:0;pointer-events:none;outline:none;transition:opacity calc(var(--bz-md-dur,500ms) * 0.5) var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)) calc(var(--bz-md-dur,500ms) * 0.45)}
+.bz-md-panel *,.bz-md-panel *::before,.bz-md-panel *::after{box-sizing:border-box}
+.bz-md[data-phase="open"] .bz-md-panel{opacity:1;pointer-events:auto}
+.bz-md[data-phase="closing"] .bz-md-panel{transition-duration:calc(var(--bz-md-dur,500ms) * 0.3);transition-delay:0s}
+.bz-md-head{position:relative;padding:24px 72px 4px 24px}
+.bz-md-title{margin:0;font-size:1.25rem;line-height:1.3;font-weight:600;letter-spacing:-0.01em}
+.bz-md-desc{margin:6px 0 0;font-size:0.9375rem;line-height:1.55;color:var(--bz-ink-muted,#4a4a4c)}
+.bz-md-body{padding:16px 24px 24px;overflow:auto;overscroll-behavior:contain}
+.bz-md-close{position:absolute;top:12px;right:12px;display:grid;place-items:center;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;color:var(--bz-ink,#0a0a0a);cursor:pointer;transition:background-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),transform 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-md-close svg{width:20px;height:20px}
+.bz-md-close:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px}
+.bz-md-close:active{transform:scale(0.97)}
+@media (hover:hover){.bz-md-close:hover{background:rgba(10,10,10,0.06)}}
+@media (prefers-reduced-motion:reduce){
+.bz-md-plate{transition:opacity 150ms ease}
+.bz-md[data-phase="closing"] .bz-md-plate{opacity:0}
+.bz-md-panel,.bz-md[data-phase="closing"] .bz-md-panel{transition:opacity 150ms ease;transition-delay:0s}
+.bz-md-backdrop,.bz-md[data-phase="closing"] .bz-md-backdrop{transition-duration:150ms}
+.bz-md-close{transition:none}
+.bz-md-close:active{transform:none}
+}
+\`;
+
+type Box = { top: number; left: number; width: number; height: number };
+type Phase = "closed" | "opening" | "open" | "closing";
+type Origin = { box: Box; radius: number; paint: string | null };
+
+const PANEL_RADIUS = 24;
+
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(RM_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const readReducedMotion = () => window.matchMedia(RM_QUERY).matches;
+const serverReducedMotion = () => false;
+
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+const FOCUSABLE = [
+  "a[href]",
+  "area[href]",
+  "button:not([disabled])",
+  'input:not([disabled]):not([type="hidden"])',
+  "select:not([disabled])",
+  "textarea:not([disabled])",
+  "iframe",
+  "audio[controls]",
+  "video[controls]",
+  "summary",
+  '[contenteditable]:not([contenteditable="false"])',
+  '[tabindex]:not([tabindex^="-"])',
+].join(",");
+
+const PICKER_TYPES = new Set(["date", "datetime-local", "month", "week", "time", "color", "file"]);
+
+function boxOf(el: Element): Box {
+  const r = el.getBoundingClientRect();
+  return { top: r.top, left: r.left, width: r.width, height: r.height };
+}
+
+function visibleBox(box: Box | null, vw: number, vh: number) {
+  if (!box || box.width <= 0 || box.height <= 0) return null;
+  if (box.top > vh || box.left > vw || box.top + box.height < 0 || box.left + box.width < 0) return null;
+  return box;
+}
+
+function radiusOf(el: Element, box: Box) {
+  const r = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0;
+  return Math.min(r, box.width / 2, box.height / 2);
+}
+
+/** The trigger's own fill, so the plate leaves in the colour of the button. */
+function paintOf(el: Element) {
+  const bg = getComputedStyle(el).backgroundColor;
+  const match = bg.match(/rgba?\\(([^)]+)\\)/);
+  if (!match) return null;
+  const parts = match[1].split(/[\\s,/]+/).filter(Boolean);
+  const alpha = parts.length > 3 ? parseFloat(parts[3]) : 1;
+  return alpha > 0.05 ? bg : null;
+}
+
+function reachable(el: HTMLElement) {
+  if (el.closest("[inert]") || el.closest("fieldset[disabled]")) return false;
+  return el.getClientRects().length > 0 && getComputedStyle(el).visibility !== "hidden";
+}
+
+/** Escape belongs to the dialog unless something inside already claimed it. */
+function escapeIsOurs(event: KeyboardEvent) {
+  if (event.defaultPrevented || event.isComposing || event.keyCode === 229) return false;
+  const target = event.target;
+  if (target instanceof HTMLSelectElement) return false;
+  if (target instanceof HTMLInputElement && PICKER_TYPES.has(target.type)) return false;
+  return true;
+}
+
+function insetFor(box: Box, vw: number, vh: number, radius: number) {
+  const right = vw - box.left - box.width;
+  const bottom = vh - box.top - box.height;
+  return \`inset(\${box.top}px \${right}px \${bottom}px \${box.left}px round \${radius}px)\`;
+}
+
+function assignRef<T>(ref: Ref<T> | undefined, value: T) {
+  if (typeof ref === "function") ref(value);
+  else if (ref && typeof ref === "object") (ref as MutableRefObject<T>).current = value;
+}
+
+export type MorphDialogProps = {
+  /** The control that opens the dialog. It keeps its own click handler and gets \`aria-haspopup\` and \`aria-expanded\`. */
+  trigger: ReactElement;
+  title: ReactNode;
+  description?: ReactNode;
+  /** Dialog content, or a function that receives \`close\`. */
+  children?: ReactNode | ((close: () => void) => ReactNode);
+  open?: boolean;
+  defaultOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Where focus lands when the dialog opens. Defaults to the dialog itself, so its title is read first. */
+  initialFocus?: RefObject<HTMLElement>;
+  /** Panel width in CSS pixels. */
+  maxWidth?: number;
+  /** Morph duration in milliseconds. */
+  duration?: number;
+  closeLabel?: string;
+  className?: string;
+};
+
+export function MorphDialog({
+  trigger,
+  title,
+  description,
+  children,
+  open,
+  defaultOpen = false,
+  onOpenChange,
+  initialFocus,
+  maxWidth = 520,
+  duration = 500,
+  closeLabel = "Close",
+  className = "",
+}: MorphDialogProps) {
+  const reduced = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion);
+  const [innerOpen, setInnerOpen] = useState(defaultOpen);
+  const isOpen = open ?? innerOpen;
+  const [phase, setPhase] = useState<Phase>("closed");
+  const [origin, setOrigin] = useState<Origin | null>(null);
+  const [target, setTarget] = useState<Box | null>(null);
+  const [viewport, setViewport] = useState({ w: 0, h: 0 });
+  const [host, setHost] = useState<HTMLElement | null>(null);
+
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const pressedRef = useRef<HTMLElement | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const backdropPress = useRef(false);
+
+  const uid = useId().replace(/:/g, "");
+  const dialogId = \`\${uid}-dialog\`;
+  const titleId = \`\${uid}-title\`;
+  const descId = \`\${uid}-desc\`;
+
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (open === undefined) setInnerOpen(next);
+      onOpenChange?.(next);
+    },
+    [open, onOpenChange],
+  );
+  const close = useCallback(() => setOpen(false), [setOpen]);
+  const closeRef = useRef(close);
+  closeRef.current = close;
+  const focusRef = useRef(initialFocus);
+  focusRef.current = initialFocus;
+
+  // Derive the phase during render, so no frame paints in the wrong one.
+  if (isOpen && (phase === "closed" || phase === "closing")) setPhase("opening");
+  if (!isOpen && (phase === "opening" || phase === "open")) setPhase("closing");
+
+  const mounted = phase !== "closed";
+
+  useIsoLayoutEffect(() => {
+    if (!mounted) return;
+    const el = document.createElement("div");
+    document.body.appendChild(el);
+    setHost(el);
+    return () => {
+      el.remove();
+      setHost(null);
+    };
+  }, [mounted]);
+
+  // Measure where the surface leaves from: the pressed control, else the trigger.
+  useIsoLayoutEffect(() => {
+    if (phase !== "opening" && phase !== "closing") return;
+    const el = pressedRef.current ?? triggerRef.current;
+    if (!el || !el.isConnected) {
+      if (phase === "opening") setOrigin(null);
+      return;
+    }
+    const box = boxOf(el);
+    setOrigin((prev) => ({ box, radius: radiusOf(el, box), paint: phase === "closing" ? prev?.paint ?? paintOf(el) : paintOf(el) }));
+  }, [phase]);
+
+  // Measure where it lands: the panel, kept current while it is open.
+  useIsoLayoutEffect(() => {
+    const panel = panelRef.current;
+    if (!host || !panel) return;
+    const measure = () => {
+      setViewport({ w: document.documentElement.clientWidth, h: window.innerHeight });
+      setTarget(boxOf(panel));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(panel);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, [host]);
+
+  useEffect(() => {
+    if (phase !== "opening" || !target) return;
+    if (reduced) {
+      setPhase("open");
+      return;
+    }
+    // One committed frame at the trigger, so the clip has somewhere to travel from.
+    let raf = requestAnimationFrame(() => {
+      raf = requestAnimationFrame(() => setPhase("open"));
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [phase, target, reduced]);
+
+  useEffect(() => {
+    if (phase !== "closing") return;
+    const timer = window.setTimeout(() => {
+      setPhase("closed");
+      setTarget(null);
+    }, reduced ? 160 : duration);
+    return () => window.clearTimeout(timer);
+  }, [phase, reduced, duration]);
+
+  const active = host !== null && (phase === "opening" || phase === "open");
+
+  useEffect(() => {
+    if (!active || !host) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const saved = {
+      overflow: html.style.overflow,
+      gutter: html.style.scrollbarGutter,
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+    };
+    const scrollY = window.scrollY;
+    const hasScrollbar = window.innerWidth - html.clientWidth > 0;
+    const pinBody = window.matchMedia("(pointer: coarse)").matches;
+    if (hasScrollbar) html.style.scrollbarGutter = "stable";
+    html.style.overflow = "hidden";
+    if (pinBody) {
+      body.style.position = "fixed";
+      body.style.top = \`\${-scrollY}px\`;
+      body.style.left = "0";
+      body.style.right = "0";
+      body.style.width = "100%";
+    }
+
+    const touched: Array<{ el: Element; ariaHidden: string | null }> = [];
+    for (const el of Array.from(body.children)) {
+      if (el === host || el.hasAttribute("inert") || el.tagName === "SCRIPT" || el.tagName === "STYLE") continue;
+      touched.push({ el, ariaHidden: el.getAttribute("aria-hidden") });
+      el.setAttribute("inert", "");
+      el.setAttribute("aria-hidden", "true");
+    }
+
+    const returnTo = triggerRef.current ?? (document.activeElement as HTMLElement | null);
+    (focusRef.current?.current ?? panelRef.current)?.focus({ preventScroll: true });
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      const panel = panelRef.current;
+      if (!panel) return;
+      if (event.key === "Escape") {
+        if (escapeIsOurs(event)) {
+          event.preventDefault();
+          closeRef.current();
+        }
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(reachable);
+      if (!items.length) {
+        event.preventDefault();
+        panel.focus({ preventScroll: true });
+        return;
+      }
+      const first = items[0];
+      const last = items[items.length - 1];
+      const current = document.activeElement;
+      if (!current || !panel.contains(current)) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && (current === first || current === panel)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && current === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      // Inert first: focus inside an inert tree is ignored.
+      for (const { el, ariaHidden } of touched) {
+        el.removeAttribute("inert");
+        if (ariaHidden === null) el.removeAttribute("aria-hidden");
+        else el.setAttribute("aria-hidden", ariaHidden);
+      }
+      html.style.overflow = saved.overflow;
+      html.style.scrollbarGutter = saved.gutter;
+      if (pinBody) {
+        body.style.position = saved.position;
+        body.style.top = saved.top;
+        body.style.left = saved.left;
+        body.style.right = saved.right;
+        body.style.width = saved.width;
+        window.scrollTo({ top: scrollY, left: 0, behavior: "instant" as ScrollBehavior });
+      }
+      if (returnTo && returnTo.isConnected) returnTo.focus({ preventScroll: true });
+    };
+  }, [active, host]);
+
+  const triggerElement = trigger as ReactElement<Record<string, unknown>> & { ref?: Ref<HTMLElement> };
+  const ownClick = isValidElement(trigger)
+    ? (triggerElement.props.onClick as ((event: ReactMouseEvent<HTMLElement>) => void) | undefined)
+    : undefined;
+
+  const renderedTrigger = isValidElement(trigger)
+    ? cloneElement(triggerElement, {
+        ref: (node: HTMLElement | null) => {
+          triggerRef.current = node;
+          assignRef(triggerElement.ref, node);
+        },
+        onClick: (event: ReactMouseEvent<HTMLElement>) => {
+          ownClick?.(event);
+          if (event.defaultPrevented) return;
+          if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          pressedRef.current = event.currentTarget;
+          setOpen(true);
+        },
+        "aria-haspopup": "dialog",
+        "aria-expanded": isOpen,
+        "aria-controls": isOpen ? dialogId : undefined,
+      })
+    : trigger;
+
+  const { w: vw, h: vh } = viewport;
+  const settled = phase === "open" || reduced;
+  const from = visibleBox(origin?.box ?? null, vw, vh);
+  const centre = target
+    ? { top: target.top + target.height / 2, left: target.left + target.width / 2, width: 0, height: 0 }
+    : null;
+  const shown = settled ? target : from ?? centre;
+  const radius = settled || !from ? PANEL_RADIUS : origin?.radius ?? PANEL_RADIUS;
+  const plateStyle: CSSProperties =
+    shown && vw
+      ? {
+          clipPath: insetFor(shown, vw, vh, radius),
+          backgroundColor: settled ? undefined : origin?.paint ?? undefined,
+        }
+      : { visibility: "hidden" };
+
+  const content = typeof children === "function" ? (children as (close: () => void) => ReactNode)(close) : children;
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      {renderedTrigger}
+      {host && mounted
+        ? createPortal(
+            <div
+              className="bz-md"
+              data-phase={phase}
+              style={{ ["--bz-md-dur" as string]: \`\${duration}ms\` } as CSSProperties}
+            >
+              <div
+                className="bz-md-backdrop"
+                aria-hidden="true"
+                onPointerDown={(event) => {
+                  backdropPress.current = event.target === event.currentTarget;
+                }}
+                onClick={(event) => {
+                  if (backdropPress.current && event.target === event.currentTarget) close();
+                  backdropPress.current = false;
+                }}
+              />
+              <div className="bz-md-plate" aria-hidden="true" style={plateStyle} />
+              <div
+                ref={panelRef}
+                id={dialogId}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={titleId}
+                aria-describedby={description ? descId : undefined}
+                tabIndex={-1}
+                className={\`bz-md-panel \${className}\`.trim()}
+                style={{ ["--bz-md-width" as string]: \`\${maxWidth}px\` } as CSSProperties}
+              >
+                <div className="bz-md-head">
+                  <h2 id={titleId} className="bz-md-title">
+                    {title}
+                  </h2>
+                  {description ? (
+                    <p id={descId} className="bz-md-desc">
+                      {description}
+                    </p>
+                  ) : null}
+                  <button type="button" className="bz-md-close" aria-label={closeLabel} onClick={close}>
+                    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="bz-md-body">{content}</div>
+              </div>
+            </div>,
+            host,
+          )
+        : null}
+    </>
+  );
+}`,
+    description: "Modal that grows out of its trigger and traps focus until it closes.",
+    tags: ["dialog", "modal", "focus-trap", "morph", "accessible", "clip-path"],
+  },
+  {
+    name: "ParticleQrCode",
+    slug: "particle-qr-code",
+    path: "display/ParticleQrCode.tsx",
+    category: "display",
+    code: `"use client";
+
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+
+/*
+ * ParticleQrCode: a real, scannable QR code that assembles itself.
+ *
+ * The symbol is encoded here, with no dependency, so the code on screen always
+ * decodes to \`value\`. When it scrolls into view each dark module flies in from a
+ * point under the code as a small cloud of grains that tighten onto the grid as
+ * they land. Change \`value\` and the code dissolves back the way it came, swaps
+ * while nothing is on screen, and assembles again.
+ *
+ * The whole animation is one clock running forwards or backwards, so leaving is
+ * the arrival reversed and a change mid-flight retargets rather than restarts.
+ * A still SVG of the same code sits underneath for no-JS and for the moment
+ * before the canvas takes over. Reduced motion gets a short fade instead.
+ */
+
+const CSS = \`
+.bz-qr{position:relative;display:inline-block;vertical-align:middle;width:var(--bz-qr-size,240px);height:var(--bz-qr-size,240px);border-radius:var(--bz-radius-xl,16px);background:var(--bz-paper,#ffffff);color:var(--bz-ink,#0a0a0a)}
+.bz-qr-still,.bz-qr-canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
+.bz-qr[data-live] .bz-qr-still{visibility:hidden}
+.bz-qr-canvas{pointer-events:none}
+.bz-qr-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.bz-qr-error{margin:8px 0 0;font:500 0.875rem/1.5 var(--bz-font-sans,ui-sans-serif,system-ui,sans-serif);color:var(--bz-danger,#b91c1c)}
+\`;
+
+/* ---------------------------------------------------------- encoding */
+
+export type QrLevel = "L" | "M" | "Q" | "H";
+
+type QrMatrix = { modules: Uint8Array[]; size: number; version: number };
+
+const ALPHANUMERIC = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+
+/** [error-correction codewords per block, blocks, data codewords per block] for versions 1 to 4. */
+const BLOCKS: Record<QrLevel, ReadonlyArray<readonly [number, number, number]>> = {
+  L: [[7, 1, 19], [10, 1, 34], [15, 1, 55], [20, 1, 80]],
+  M: [[10, 1, 16], [16, 1, 28], [26, 1, 44], [18, 2, 32]],
+  Q: [[13, 1, 13], [22, 1, 22], [18, 2, 17], [26, 2, 24]],
+  H: [[17, 1, 9], [28, 1, 16], [22, 2, 13], [16, 4, 9]],
+};
+
+const LEVEL_BITS: Record<QrLevel, number> = { L: 1, M: 0, Q: 3, H: 2 };
+
+const GF_EXP = new Uint8Array(512);
+const GF_LOG = new Uint8Array(256);
+{
+  let x = 1;
+  for (let i = 0; i < 255; i++) {
+    GF_EXP[i] = x;
+    GF_LOG[x] = i;
+    x <<= 1;
+    if (x & 0x100) x ^= 0x11d;
+  }
+  for (let i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255];
+}
+
+const gfMultiply = (a: number, b: number) => (a && b ? GF_EXP[GF_LOG[a] + GF_LOG[b]] : 0);
+
+function errorCorrection(data: number[], degree: number) {
+  let generator = [1];
+  for (let i = 0; i < degree; i++) {
+    const next = new Array<number>(generator.length + 1).fill(0);
+    for (let j = 0; j < generator.length; j++) {
+      next[j] ^= generator[j];
+      next[j + 1] ^= gfMultiply(generator[j], GF_EXP[i]);
+    }
+    generator = next;
+  }
+  const out = new Array<number>(degree).fill(0);
+  for (const byte of data) {
+    const factor = byte ^ (out.shift() as number);
+    out.push(0);
+    for (let i = 0; i < degree; i++) out[i] ^= gfMultiply(generator[i + 1], factor);
+  }
+  return out;
+}
+
+const pushBits = (bits: number[], value: number, length: number) => {
+  for (let i = length - 1; i >= 0; i--) bits.push((value >>> i) & 1);
+};
+
+const MASKS: Array<(row: number, col: number) => boolean> = [
+  (r, c) => (r + c) % 2 === 0,
+  (r) => r % 2 === 0,
+  (_r, c) => c % 3 === 0,
+  (r, c) => (r + c) % 3 === 0,
+  (r, c) => (Math.floor(r / 2) + Math.floor(c / 3)) % 2 === 0,
+  (r, c) => ((r * c) % 2) + ((r * c) % 3) === 0,
+  (r, c) => (((r * c) % 2) + ((r * c) % 3)) % 2 === 0,
+  (r, c) => (((r + c) % 2) + ((r * c) % 3)) % 2 === 0,
+];
+
+function formatBits(level: QrLevel, mask: number) {
+  const data = (LEVEL_BITS[level] << 3) | mask;
+  let rem = data;
+  for (let i = 0; i < 10; i++) rem = (rem << 1) ^ ((rem >>> 9) * 0x537);
+  return ((data << 10) | rem) ^ 0x5412;
+}
+
+function penalty(m: Uint8Array[]) {
+  const n = m.length;
+  let score = 0;
+  for (let i = 0; i < n; i++) {
+    let row = 1;
+    let col = 1;
+    for (let j = 1; j < n; j++) {
+      if (m[i][j] === m[i][j - 1]) row++;
+      else {
+        if (row >= 5) score += row - 2;
+        row = 1;
+      }
+      if (m[j][i] === m[j - 1][i]) col++;
+      else {
+        if (col >= 5) score += col - 2;
+        col = 1;
+      }
+    }
+    if (row >= 5) score += row - 2;
+    if (col >= 5) score += col - 2;
+  }
+  for (let r = 0; r + 1 < n; r++) {
+    for (let c = 0; c + 1 < n; c++) {
+      const v = m[r][c];
+      if (v === m[r][c + 1] && v === m[r + 1][c] && v === m[r + 1][c + 1]) score += 3;
+    }
+  }
+  const finderA = [1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0];
+  const finderB = [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1];
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j + 11 <= n; j++) {
+      let ra = true;
+      let rb = true;
+      let ca = true;
+      let cb = true;
+      for (let k = 0; k < 11; k++) {
+        if (m[i][j + k] !== finderA[k]) ra = false;
+        if (m[i][j + k] !== finderB[k]) rb = false;
+        if (m[j + k][i] !== finderA[k]) ca = false;
+        if (m[j + k][i] !== finderB[k]) cb = false;
+      }
+      score += 40 * (Number(ra) + Number(rb) + Number(ca) + Number(cb));
+    }
+  }
+  let dark = 0;
+  for (const row of m) for (const v of row) dark += v;
+  score += Math.floor(Math.abs((dark * 100) / (n * n) - 50) / 5) * 10;
+  return score;
+}
+
+/** Encode \`text\` as a version 1 to 4 symbol. Throws when it does not fit. */
+export function buildQrSymbol(text: string, level: QrLevel = "M"): QrMatrix {
+  const alphanumeric = [...text].every((ch) => ALPHANUMERIC.includes(ch));
+  const bytes = alphanumeric ? null : new TextEncoder().encode(text);
+  const payload = bytes ? bytes.length * 8 : 11 * Math.floor(text.length / 2) + 6 * (text.length % 2);
+  const needed = 4 + (bytes ? 8 : 9) + payload;
+  let version = 0;
+  for (let v = 1; v <= 4; v++) {
+    const [, blocks, perBlock] = BLOCKS[level][v - 1];
+    if (needed <= blocks * perBlock * 8) {
+      version = v;
+      break;
+    }
+  }
+  if (!version) throw new Error(\`ParticleQrCode: the value does not fit a version 4 code at level \${level}.\`);
+
+  const [ecPerBlock, blockCount, dataPerBlock] = BLOCKS[level][version - 1];
+  const capacity = blockCount * dataPerBlock * 8;
+  const bits: number[] = [];
+  if (bytes) {
+    pushBits(bits, 0b0100, 4);
+    pushBits(bits, bytes.length, 8);
+    for (const b of bytes) pushBits(bits, b, 8);
+  } else {
+    pushBits(bits, 0b0010, 4);
+    pushBits(bits, text.length, 9);
+    for (let i = 0; i + 1 < text.length; i += 2) {
+      pushBits(bits, ALPHANUMERIC.indexOf(text[i]) * 45 + ALPHANUMERIC.indexOf(text[i + 1]), 11);
+    }
+    if (text.length % 2) pushBits(bits, ALPHANUMERIC.indexOf(text[text.length - 1]), 6);
+  }
+  pushBits(bits, 0, Math.min(4, capacity - bits.length));
+  while (bits.length % 8) bits.push(0);
+  for (let i = 0; bits.length < capacity; i++) pushBits(bits, i % 2 ? 0x11 : 0xec, 8);
+
+  const codewords: number[] = [];
+  for (let i = 0; i < bits.length; i += 8) {
+    let byte = 0;
+    for (let j = 0; j < 8; j++) byte = (byte << 1) | bits[i + j];
+    codewords.push(byte);
+  }
+  const dataBlocks: number[][] = [];
+  const ecBlocks: number[][] = [];
+  for (let b = 0; b < blockCount; b++) {
+    const block = codewords.slice(b * dataPerBlock, (b + 1) * dataPerBlock);
+    dataBlocks.push(block);
+    ecBlocks.push(errorCorrection(block, ecPerBlock));
+  }
+  const stream: number[] = [];
+  for (let i = 0; i < dataPerBlock; i++) for (const block of dataBlocks) pushBits(stream, block[i], 8);
+  for (let i = 0; i < ecPerBlock; i++) for (const block of ecBlocks) pushBits(stream, block[i], 8);
+  if (version > 1) for (let i = 0; i < 7; i++) stream.push(0);
+
+  const n = 17 + 4 * version;
+  let best: Uint8Array[] | null = null;
+  let bestScore = Infinity;
+
+  for (let mask = 0; mask < 8; mask++) {
+    const m = Array.from({ length: n }, () => new Uint8Array(n));
+    const fixed = Array.from({ length: n }, () => new Uint8Array(n));
+    const put = (r: number, c: number, dark: boolean) => {
+      if (r < 0 || c < 0 || r >= n || c >= n) return;
+      m[r][c] = dark ? 1 : 0;
+      fixed[r][c] = 1;
+    };
+    for (let i = 0; i < n; i++) {
+      put(6, i, i % 2 === 0);
+      put(i, 6, i % 2 === 0);
+    }
+    for (const [r0, c0] of [[0, 0], [0, n - 7], [n - 7, 0]]) {
+      for (let dy = -1; dy <= 7; dy++) {
+        for (let dx = -1; dx <= 7; dx++) {
+          const inside = dx >= 0 && dx <= 6 && dy >= 0 && dy <= 6;
+          const ring = dx === 0 || dx === 6 || dy === 0 || dy === 6;
+          const core = dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4;
+          put(r0 + dy, c0 + dx, inside && (ring || core));
+        }
+      }
+    }
+    if (version > 1) {
+      const centre = 4 * version + 10;
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) put(centre + dy, centre + dx, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+      }
+    }
+    // Reserve the format cells, leaving the two timing modules they cross alone.
+    for (let i = 0; i <= 8; i++) {
+      if (i !== 6) {
+        put(8, i, false);
+        put(i, 8, false);
+      }
+    }
+    for (let i = 0; i < 8; i++) {
+      put(8, n - 1 - i, false);
+      put(n - 1 - i, 8, false);
+    }
+    put(n - 8, 8, true);
+
+    let index = 0;
+    for (let right = n - 1; right >= 1; right -= 2) {
+      if (right === 6) right = 5;
+      const upward = ((right + 1) & 2) === 0;
+      for (let step = 0; step < n; step++) {
+        const row = upward ? n - 1 - step : step;
+        for (let side = 0; side < 2; side++) {
+          const col = right - side;
+          if (fixed[row][col]) continue;
+          const bit = index < stream.length ? stream[index] : 0;
+          index++;
+          m[row][col] = bit ^ (MASKS[mask](row, col) ? 1 : 0);
+        }
+      }
+    }
+
+    const format = formatBits(level, mask);
+    const bit = (i: number) => (format >>> i) & 1;
+    for (let i = 0; i <= 5; i++) m[i][8] = bit(i);
+    m[7][8] = bit(6);
+    m[8][8] = bit(7);
+    m[8][7] = bit(8);
+    for (let i = 9; i < 15; i++) m[8][14 - i] = bit(i);
+    for (let i = 0; i < 8; i++) m[8][n - 1 - i] = bit(i);
+    for (let i = 8; i < 15; i++) m[n - 15 + i][8] = bit(i);
+    m[n - 8][8] = 1;
+
+    const score = penalty(m);
+    if (score < bestScore) {
+      bestScore = score;
+      best = m;
+    }
+  }
+
+  return { modules: best as Uint8Array[], size: n, version };
+}
+
+/* ------------------------------------------------------------ drawing */
+
+const FLIGHT = 800;
+const SPREAD = 600;
+const TOTAL = SPREAD + FLIGHT;
+const EXIT_RATE = 1.7;
+const FADE = 150;
+
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 5);
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+function seeded(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Where the code sits in its square, in CSS pixels. Shared by the still and the canvas. */
+function geometry(size: number, n: number) {
+  const module = Math.max(2, Math.floor((size * 0.74) / n));
+  const code = module * n;
+  return { module, left: Math.round((size - code) / 2), top: Math.round((size - code) * 0.32) };
+}
+
+type Mark = { tx: number; ty: number; dx: number; dy: number; angle: number; start: number; grains: Float32Array; reach: number };
+
+type EngineConfig = {
+  size: number;
+  mode: "dust" | "beam";
+  reduced: boolean;
+  modules: Uint8Array[] | null;
+};
+
+type Engine = {
+  start: () => void;
+  swap: () => void;
+  rebuild: () => void;
+  motionChanged: () => void;
+  destroy: () => void;
+};
+
+function createEngine(root: HTMLElement, canvas: HTMLCanvasElement, config: () => EngineConfig): Engine | null {
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  const ctx = context;
+
+  let grid = config().modules;
+  let pending: Uint8Array[] | null | undefined;
+  let clock = 0;
+  let open = false;
+  let started = false;
+  let dead = false;
+  let raf = 0;
+  let prev = 0;
+  let wasReduced = config().reduced;
+  let marks: Mark[] = [];
+  let cell = 4;
+  let grain = 1;
+  let lx = 0;
+  let ly = 0;
+  let ink = "#0a0a0a";
+  let dpr = 1;
+
+  const span = () => (config().reduced ? FADE : TOTAL);
+
+  function paint() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = ink;
+    const half = cell / 2;
+    if (config().reduced) {
+      const a = clamp01(clock / FADE);
+      if (a <= 0) return;
+      ctx.globalAlpha = a;
+      for (const m of marks) ctx.fillRect(m.tx - half, m.ty - half, cell, cell);
+      ctx.globalAlpha = 1;
+      return;
+    }
+    const mode = config().mode;
+    for (const m of marks) {
+      const t = clamp01((clock - m.start) / FLIGHT);
+      if (t <= 0) continue;
+      if (t >= 1) {
+        ctx.globalAlpha = 1;
+        ctx.fillRect(m.tx - half, m.ty - half, cell, cell);
+        continue;
+      }
+      const e = easeOut(t);
+      const k = Math.pow(1 - t, 4);
+      const x = lx + m.dx * e;
+      const y = ly + m.dy * e;
+      ctx.globalAlpha = t < 0.2 ? t / 0.2 : 1;
+      if (mode === "beam") {
+        const stretch = 1 + 7 * k;
+        const squash = 1 - 0.55 * k;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(m.angle * Math.min(1, k * 5));
+        ctx.fillRect((-cell * stretch) / 2, (-cell * squash) / 2, cell * stretch, cell * squash);
+        ctx.restore();
+        continue;
+      }
+      const scatter = 1 - e;
+      if (scatter * m.reach < 0.6) {
+        ctx.fillRect(x - half, y - half, cell, cell);
+        continue;
+      }
+      const g = m.grains;
+      for (let i = 0; i < g.length; i += 4) ctx.fillRect(x + g[i] + g[i + 2] * scatter, y + g[i + 1] + g[i + 3] * scatter, grain, grain);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function rebuild() {
+    if (dead) return;
+    const { size, mode } = config();
+    dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+    const px = Math.round(size * dpr);
+    if (canvas.width !== px || canvas.height !== px) {
+      canvas.width = px;
+      canvas.height = px;
+    }
+    ink = getComputedStyle(root).color || ink;
+    marks = [];
+    if (!grid) {
+      paint();
+      return;
+    }
+    const n = grid.length;
+    const g = geometry(size, n);
+    cell = Math.max(2, Math.round(g.module * dpr));
+    const ox = Math.round(g.left * dpr);
+    const oy = Math.round(g.top * dpr);
+    // The largest grain that tiles a module exactly, at five grains a side at most.
+    const smallest = Math.max(Math.round(dpr), Math.ceil(cell / 5));
+    grain = cell;
+    for (let s = smallest; s <= cell; s++) {
+      if (cell % s === 0) {
+        grain = s;
+        break;
+      }
+    }
+    const perSide = cell / grain;
+    lx = Math.round(px / 2);
+    ly = px - Math.round(2 * dpr);
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        if (!grid[y][x]) continue;
+        const tx = ox + x * cell + cell / 2;
+        const ty = oy + y * cell + cell / 2;
+        marks.push({ tx, ty, dx: tx - lx, dy: ty - ly, angle: Math.atan2(ty - ly, tx - lx), start: 0, grains: new Float32Array(0), reach: 0 });
+      }
+    }
+    // Nearest modules land first, so the code grows up out of the launch point.
+    marks.sort((a, b) => Math.hypot(a.dx, a.dy) - Math.hypot(b.dx, b.dy));
+    const last = Math.max(1, marks.length - 1);
+    marks.forEach((m, i) => {
+      m.start = (SPREAD * i) / last;
+    });
+    if (mode === "dust") {
+      const rand = seeded(0x2f6b1d ^ n);
+      const reach = cell * 4;
+      for (const m of marks) {
+        const grains = new Float32Array(perSide * perSide * 4);
+        let k = 0;
+        let far = 0;
+        for (let gy = 0; gy < perSide; gy++) {
+          for (let gx = 0; gx < perSide; gx++) {
+            grains[k++] = -cell / 2 + gx * grain;
+            grains[k++] = -cell / 2 + gy * grain;
+            const spread = reach * (0.4 + rand() * 0.6);
+            const theta = rand() * Math.PI * 2;
+            const along = rand() * reach - reach * 0.25;
+            const sx = Math.cos(theta) * spread + Math.cos(m.angle) * along;
+            const sy = Math.sin(theta) * spread + Math.sin(m.angle) * along;
+            grains[k++] = sx;
+            grains[k++] = sy;
+            far = Math.max(far, Math.hypot(sx, sy));
+          }
+        }
+        m.grains = grains;
+        m.reach = far;
+      }
+    }
+    paint();
+  }
+
+  function onPark(atOpen: boolean) {
+    if (atOpen) {
+      if (pending !== undefined) {
+        open = false;
+        run();
+      }
+      return;
+    }
+    if (pending !== undefined) {
+      grid = pending;
+      pending = undefined;
+      rebuild();
+    }
+    if (grid) {
+      open = true;
+      run();
+    }
+  }
+
+  // Park on the signed step, never on the flag, so a change mid-run retargets.
+  function frame(now: number) {
+    if (dead) return;
+    const dt = Math.max(0, Math.min(64, now - prev));
+    prev = now;
+    const s = span();
+    const step = dt * (open ? 1 : -EXIT_RATE);
+    clock = Math.max(0, Math.min(s, clock + step));
+    const parked = (step > 0 && clock >= s) || (step < 0 && clock <= 0);
+    paint();
+    if (parked) {
+      raf = 0;
+      onPark(open);
+      return;
+    }
+    raf = requestAnimationFrame(frame);
+  }
+
+  function run() {
+    if (dead || raf) return;
+    prev = performance.now();
+    raf = requestAnimationFrame(frame);
+  }
+
+  const onResize = () => {
+    if (Math.max(1, Math.min(3, window.devicePixelRatio || 1)) !== dpr) rebuild();
+  };
+  window.addEventListener("resize", onResize);
+
+  rebuild();
+
+  return {
+    start() {
+      if (started || dead) return;
+      started = true;
+      root.dataset.live = "true";
+      if (grid) {
+        open = true;
+        run();
+      }
+    },
+    swap() {
+      const next = config().modules;
+      if (!started) {
+        grid = next;
+        rebuild();
+        return;
+      }
+      pending = next;
+      if (open) {
+        open = false;
+        run();
+      } else if (!raf) {
+        onPark(false);
+      }
+    },
+    rebuild,
+    motionChanged() {
+      const was = wasReduced ? FADE : TOTAL;
+      const reduced = config().reduced;
+      clock = (clock / was) * (reduced ? FADE : TOTAL);
+      wasReduced = reduced;
+      paint();
+      if (started) run();
+    },
+    destroy() {
+      dead = true;
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      window.removeEventListener("resize", onResize);
+    },
+  };
+}
+
+/* ---------------------------------------------------------- component */
+
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(RM_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const readReducedMotion = () => window.matchMedia(RM_QUERY).matches;
+const serverReducedMotion = () => false;
+
+export type ParticleQrCodeProps = {
+  /** What the code decodes to. Up to 62 bytes of text, or 90 characters from the QR alphanumeric set, at level M. */
+  value: string;
+  /** Width and height in CSS pixels. */
+  size?: number;
+  /** Accessible name. Say what scanning the code does. */
+  label?: string;
+  /** Error correction: L, M, Q or H. */
+  level?: QrLevel;
+  /** A cloud of grains per module, or a streak. */
+  mode?: "dust" | "beam";
+  /** Assemble when a quarter of it is in view, or as soon as it mounts. */
+  play?: "view" | "mount";
+  className?: string;
+};
+
+export function ParticleQrCode({
+  value,
+  size = 240,
+  label,
+  level = "M",
+  mode = "dust",
+  play = "view",
+  className = "",
+}: ParticleQrCodeProps) {
+  const reduced = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion);
+  const symbol = useMemo(() => {
+    try {
+      return buildQrSymbol(value, level);
+    } catch {
+      return null;
+    }
+  }, [value, level]);
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const engineRef = useRef<Engine | null>(null);
+  const configRef = useRef<EngineConfig>({ size, mode, reduced, modules: symbol?.modules ?? null });
+  configRef.current = { size, mode, reduced, modules: symbol?.modules ?? null };
+  const playRef = useRef(play);
+  playRef.current = play;
+  const [announcement, setAnnouncement] = useState("");
+  const firstValue = useRef(true);
+  const name = label ?? \`QR code for \${value}\`;
+
+  useEffect(() => {
+    const root = rootRef.current;
+    const canvas = canvasRef.current;
+    if (!root || !canvas) return;
+    const engine = createEngine(root, canvas, () => configRef.current);
+    if (!engine) return;
+    engineRef.current = engine;
+    let io: IntersectionObserver | null = null;
+    if (playRef.current === "mount" || !("IntersectionObserver" in window)) {
+      engine.start();
+    } else {
+      io = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting && entry.intersectionRatio >= 0.25)) {
+            engine.start();
+            io?.disconnect();
+          }
+        },
+        { threshold: [0, 0.25] },
+      );
+      io.observe(root);
+    }
+    return () => {
+      io?.disconnect();
+      engine.destroy();
+      engineRef.current = null;
+      delete root.dataset.live;
+    };
+  }, []);
+
+  useEffect(() => {
+    engineRef.current?.swap();
+    if (firstValue.current) {
+      firstValue.current = false;
+      return;
+    }
+    setAnnouncement(symbol ? \`QR code updated. \${name}.\` : "");
+  }, [symbol]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    engineRef.current?.rebuild();
+  }, [size, mode]);
+
+  useEffect(() => {
+    engineRef.current?.motionChanged();
+  }, [reduced]);
+
+  const still = useMemo(() => {
+    if (!symbol) return "";
+    const g = geometry(size, symbol.size);
+    let d = "";
+    symbol.modules.forEach((row, y) => {
+      row.forEach((dark, x) => {
+        if (dark) d += \`M\${g.left + x * g.module} \${g.top + y * g.module}h\${g.module}v\${g.module}h-\${g.module}z\`;
+      });
+    });
+    return d;
+  }, [symbol, size]);
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div
+        ref={rootRef}
+        className={\`bz-qr \${className}\`.trim()}
+        role="img"
+        aria-label={name}
+        style={{ ["--bz-qr-size" as string]: \`\${size}px\` } as CSSProperties}
+      >
+        <svg className="bz-qr-still" viewBox={\`0 0 \${size} \${size}\`} aria-hidden="true" focusable="false">
+          <path d={still} fill="currentColor" shapeRendering="crispEdges" />
+        </svg>
+        <canvas ref={canvasRef} className="bz-qr-canvas" aria-hidden="true" />
+      </div>
+      <span className="bz-qr-sr" aria-live="polite">
+        {announcement}
+      </span>
+      {symbol ? null : (
+        <p className="bz-qr-error" role="alert">
+          This value is too long for a QR code.
+        </p>
+      )}
+    </>
+  );
+}`,
+    description: "Scannable QR code that assembles from grains and re-forms when its value changes.",
+    tags: ["qr", "canvas", "particles", "scannable", "reduced-motion"],
+  },
+  {
+    name: "TimedTabs",
+    slug: "timed-tabs",
+    path: "navigation/TimedTabs.tsx",
+    category: "navigation",
+    code: `"use client";
+
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
+
+/*
+ * TimedTabs: tabs that move on by themselves, where the timer is the progress
+ * bar.
+ *
+ * The bar under the active tab is a CSS animation, and its \`animationend\` is
+ * what selects the next tab. Pausing therefore needs no timer bookkeeping: any
+ * rule that sets \`animation-play-state: paused\` stops the countdown and the
+ * switch together. It holds when the reader pauses it, when the tabs are out
+ * of view, when the browser tab is hidden, and while keyboard focus is inside.
+ *
+ * The active tab is a paper "tongue" joined to the panel below. It is a second,
+ * inert copy of the whole row clipped to one column, and moving the clip slides
+ * the tongue across while the colours change exactly at its edge.
+ *
+ * Reduced motion starts paused and drops the slides; the pause button still
+ * turns the timer on.
+ */
+
+const CSS = \`
+.bz-tt{container-type:inline-size;box-sizing:border-box;border:1px solid var(--bz-line-strong,rgba(10,10,10,0.13));border-radius:24px;background:var(--bz-paper,#ffffff);color:var(--bz-ink,#0a0a0a);font-family:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif)}
+.bz-tt *,.bz-tt *::before,.bz-tt *::after{box-sizing:border-box}
+.bz-tt-rail{display:flex;align-items:stretch;gap:4px;padding:6px 6px 0;border-radius:23px 23px 0 0;background:var(--bz-void,#0c0c0f)}
+.bz-tt-track{position:relative;flex:1;min-width:0}
+.bz-tt-tabs,.bz-tt-tongue{display:grid;grid-template-columns:repeat(var(--bz-tt-n),minmax(0,1fr))}
+.bz-tt-tongue{position:absolute;inset:0;pointer-events:none;clip-path:inset(0 calc((var(--bz-tt-n) - 1 - var(--bz-tt-active)) * 100% / var(--bz-tt-n)) 0 calc(var(--bz-tt-active) * 100% / var(--bz-tt-n)) round 16px 16px 0 0);transition:clip-path 300ms var(--bz-ease-in-out,cubic-bezier(0.77,0,0.175,1))}
+.bz-tt-tab{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:56px;margin:0;padding:12px 12px 15px;border:0;border-radius:16px 16px 0 0;background:transparent;color:rgba(255,255,255,0.74);font:inherit;font-size:0.9375rem;font-weight:600;line-height:1.25;letter-spacing:-0.01em;text-align:center;cursor:pointer;transition:color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),background-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-tt-tongue .bz-tt-tab{background:var(--bz-paper,#ffffff);color:var(--bz-ink,#0a0a0a);cursor:default}
+.bz-tt-tabs .bz-tt-tab:focus-visible{outline:2px solid #ffffff;outline-offset:-6px}
+.bz-tt:has(.bz-tt-tabs .bz-tt-tab:focus-visible) .bz-tt-tongue .bz-tt-tab[data-lit]{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:-6px}
+@media (hover:hover) and (pointer:fine){.bz-tt-tabs .bz-tt-tab:hover{color:#ffffff;background:rgba(255,255,255,0.08)}}
+.bz-tt-icon{display:grid;flex:none;place-items:center;width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,0.12)}
+.bz-tt-icon svg{width:16px;height:16px}
+.bz-tt-tongue .bz-tt-icon{background:var(--bz-paper-raised,#f7f3ee);color:var(--bz-accent,#912c22)}
+.bz-tt-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bz-tt-groove{position:absolute;left:0;bottom:0;width:calc(100% / var(--bz-tt-n));height:3px;overflow:hidden;pointer-events:none;background:rgba(10,10,10,0.1);transform:translateX(calc(var(--bz-tt-active) * 100%));transition:transform 300ms var(--bz-ease-in-out,cubic-bezier(0.77,0,0.175,1))}
+.bz-tt-fill{display:block;width:100%;height:100%;background:var(--bz-accent,#912c22);transform:scaleX(0);transform-origin:left center;animation:bz-tt-dwell var(--bz-tt-dwell,6000ms) linear forwards}
+@keyframes bz-tt-dwell{to{transform:scaleX(1)}}
+.bz-tt[data-auto="off"] .bz-tt-fill,.bz-tt[data-inview="false"] .bz-tt-fill,.bz-tt[data-hidden="true"] .bz-tt-fill,.bz-tt:has(:focus-visible) .bz-tt-fill{animation-play-state:paused}
+.bz-tt[data-auto="off"] .bz-tt-fill{opacity:0.4}
+.bz-tt-toggle{display:grid;flex:none;align-self:center;place-items:center;width:48px;height:48px;margin:0 2px 6px;padding:0;border:1px solid rgba(255,255,255,0.3);border-radius:999px;background:rgba(255,255,255,0.08);color:#ffffff;cursor:pointer;transition:background-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),border-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),transform 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-tt-toggle svg{width:14px;height:14px}
+.bz-tt-toggle:focus-visible{outline:2px solid #ffffff;outline-offset:2px}
+.bz-tt-toggle:active{transform:scale(0.97)}
+@media (hover:hover){.bz-tt-toggle:hover{background:rgba(255,255,255,0.18);border-color:rgba(255,255,255,0.55)}}
+.bz-tt-panel{padding:24px;border-radius:0 0 23px 23px;outline:none}
+.bz-tt-panel:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px}
+.bz-tt-swap{animation:bz-tt-in 300ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)) both}
+@keyframes bz-tt-in{from{opacity:0;transform:translateY(8px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes bz-tt-fade{from{opacity:0}to{opacity:1}}
+@container (max-width:560px){.bz-tt-tab{flex-direction:column;gap:6px;min-height:64px;padding:10px 4px 13px;font-size:0.75rem}.bz-tt-name{white-space:normal}.bz-tt-panel{padding:18px}}
+@media (prefers-reduced-motion:reduce){.bz-tt-tongue,.bz-tt-groove,.bz-tt-tab,.bz-tt-toggle{transition:none}.bz-tt-swap{animation:bz-tt-fade 150ms ease both}.bz-tt-toggle:active{transform:none}}
+\`;
+
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(RM_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const readReducedMotion = () => window.matchMedia(RM_QUERY).matches;
+const serverReducedMotion = () => false;
+
+export type TimedTab = {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+  content: ReactNode;
+};
+
+export type TimedTabsProps = {
+  items: TimedTab[];
+  /** Names the tab list for assistive tech. */
+  label: string;
+  /** How long each tab stays before the next, in milliseconds. */
+  dwell?: number;
+  defaultIndex?: number;
+  onChange?: (index: number) => void;
+  /** Accessible name of the pause button, which reports its state with \`aria-pressed\`. */
+  pauseLabel?: string;
+  className?: string;
+};
+
+export function TimedTabs({
+  items,
+  label,
+  dwell = 6000,
+  defaultIndex = 0,
+  onChange,
+  pauseLabel = "Pause automatic switching",
+  className = "",
+}: TimedTabsProps) {
+  const reduced = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion);
+  const count = items.length;
+  const [active, setActive] = useState(() => Math.max(0, Math.min(defaultIndex, count - 1)));
+  const [autoPref, setAutoPref] = useState<boolean | null>(null);
+  const [inView, setInView] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const tongueRef = useRef<HTMLDivElement>(null);
+  const uid = useId().replace(/:/g, "");
+
+  const auto = autoPref ?? !reduced;
+  const current = Math.max(0, Math.min(active, count - 1));
+
+  // React 18 does not pass \`inert\` through, so it is set on the node.
+  useEffect(() => {
+    tongueRef.current?.setAttribute("inert", "");
+  }, [count]);
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    if (!("IntersectionObserver" in window)) {
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.3 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const sync = () => setHidden(document.visibilityState === "hidden");
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, []);
+
+  const select = useCallback(
+    (next: number, focus = false) => {
+      if (!count) return;
+      const index = ((next % count) + count) % count;
+      setActive(index);
+      onChange?.(index);
+      if (focus) tabsRef.current?.querySelectorAll<HTMLButtonElement>('[role="tab"]')[index]?.focus();
+    },
+    [count, onChange],
+  );
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const moves: Record<string, number> = { ArrowRight: current + 1, ArrowLeft: current - 1, Home: 0, End: count - 1 };
+    if (!(event.key in moves)) return;
+    event.preventDefault();
+    select(moves[event.key], true);
+  };
+
+  if (!count) return null;
+
+  const style = {
+    ["--bz-tt-n" as string]: count,
+    ["--bz-tt-active" as string]: current,
+    ["--bz-tt-dwell" as string]: \`\${dwell}ms\`,
+  } as CSSProperties;
+
+  const tabInner = (item: TimedTab) => (
+    <>
+      {item.icon ? (
+        <span className="bz-tt-icon" aria-hidden="true">
+          {item.icon}
+        </span>
+      ) : null}
+      <span className="bz-tt-name">{item.label}</span>
+    </>
+  );
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div
+        ref={rootRef}
+        className={\`bz-tt \${className}\`.trim()}
+        style={style}
+        data-auto={auto ? "on" : "off"}
+        data-inview={inView ? "true" : "false"}
+        data-hidden={hidden ? "true" : "false"}
+      >
+        <div className="bz-tt-rail">
+          <div className="bz-tt-track">
+            <div ref={tabsRef} role="tablist" aria-label={label} className="bz-tt-tabs" onKeyDown={onKeyDown}>
+              {items.map((item, index) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  id={\`\${uid}-tab-\${index}\`}
+                  aria-selected={index === current}
+                  aria-controls={\`\${uid}-panel\`}
+                  tabIndex={index === current ? 0 : -1}
+                  className="bz-tt-tab"
+                  onClick={() => select(index)}
+                >
+                  {tabInner(item)}
+                </button>
+              ))}
+            </div>
+            <div ref={tongueRef} className="bz-tt-tongue" aria-hidden="true">
+              {items.map((item, index) => (
+                <span key={item.id} className="bz-tt-tab" data-lit={index === current ? "true" : undefined}>
+                  {tabInner(item)}
+                </span>
+              ))}
+            </div>
+            <div className="bz-tt-groove" aria-hidden="true">
+              <span
+                key={\`\${current}-\${items[current].id}\`}
+                className="bz-tt-fill"
+                onAnimationEnd={() => select(current + 1)}
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            className="bz-tt-toggle"
+            aria-label={pauseLabel}
+            aria-pressed={!auto}
+            onClick={() => setAutoPref(!auto)}
+          >
+            {auto ? (
+              <svg viewBox="0 0 14 14" aria-hidden="true">
+                <rect x="2.5" y="1.5" width="3" height="11" rx="1" fill="currentColor" />
+                <rect x="8.5" y="1.5" width="3" height="11" rx="1" fill="currentColor" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 14 14" aria-hidden="true">
+                <path d="M3.5 2.2v9.6c0 .6.7 1 1.2.6l7.2-4.8a.7.7 0 0 0 0-1.2L4.7 1.6c-.5-.4-1.2 0-1.2.6z" fill="currentColor" />
+              </svg>
+            )}
+          </button>
+        </div>
+        <div
+          role="tabpanel"
+          id={\`\${uid}-panel\`}
+          aria-labelledby={\`\${uid}-tab-\${current}\`}
+          tabIndex={0}
+          className="bz-tt-panel"
+        >
+          <div key={items[current].id} className="bz-tt-swap">
+            {items[current].content}
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}`,
+    description: "Self-advancing tabs whose progress bar is the timer, with a sliding paper tab.",
+    tags: ["tabs", "autoplay", "progress", "accessible", "keyboard", "pause"],
+  },
+  {
+    name: "GlyphField",
+    slug: "glyph-field",
+    path: "animation/GlyphField.tsx",
+    category: "animation",
+    code: `"use client";
+
+import { useEffect, useRef, useSyncExternalStore, type CSSProperties } from "react";
+
+/*
+ * GlyphField: a word drawn as a halftone of glyphs that part around the cursor.
+ *
+ * The text is set large on an offscreen canvas, sampled one pixel per cell and
+ * cut into three tones by luminance, so the solid body of the letters and their
+ * soft edges come out as three inks. Every cell is one small glyph blitted from
+ * a pre-drawn sheet. Under the pointer a raised-cosine torch lifts cells a tone
+ * and into the accent, and pushes them aside; its dithered edge comes from a
+ * fixed random threshold per cell.
+ *
+ * The resting field is cached, so a frame is one blit plus the cells within
+ * reach of the pointer. With nobody pointing, the torch wanders on a slow
+ * Lissajous path; that loop stops off screen and in hidden tabs, and never runs
+ * under reduced motion, where the torch still recolours under a real pointer but
+ * does not push.
+ */
+
+const CSS = \`
+.bz-gf{--bz-gf-ground:var(--bz-paper,#ffffff);--bz-gf-t1:#cfcfd3;--bz-gf-t2:var(--bz-ink-subtle,#6b6b70);--bz-gf-t3:var(--bz-ink,#0a0a0a);--bz-gf-a1:#e3a79d;--bz-gf-a2:#c0513f;--bz-gf-a3:var(--bz-accent,#912c22);position:relative;display:block;width:100%;min-height:200px;overflow:hidden;background:var(--bz-gf-ground);font-family:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);touch-action:pan-y pinch-zoom;-webkit-user-select:none;user-select:none}
+.bz-gf-canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
+\`;
+
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(RM_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const readReducedMotion = () => window.matchMedia(RM_QUERY).matches;
+const serverReducedMotion = () => false;
+
+const IDLE_MS = 2500;
+const CUTS = [0.3, 0.62, 0.85];
+
+type Options = {
+  text: string;
+  glyph: string;
+  cell: number;
+  radius: number;
+  wander: boolean;
+  reduced: boolean;
+};
+
+type Field = { refresh: () => void; wake: () => void; destroy: () => void };
+
+function createField(root: HTMLElement, canvas: HTMLCanvasElement, options: () => Options): Field | null {
+  const ctx = canvas.getContext("2d");
+  const source = document.createElement("canvas");
+  const sctx = source.getContext("2d");
+  const sampler = document.createElement("canvas");
+  const pctx = sampler.getContext("2d", { willReadFrequently: true });
+  const sheet = document.createElement("canvas");
+  const hctx = sheet.getContext("2d");
+  const cache = document.createElement("canvas");
+  const cctx = cache.getContext("2d");
+  if (!ctx || !sctx || !pctx || !hctx || !cctx) return null;
+
+  let dead = false;
+  let raf = 0;
+  let last = 0;
+  let inView = true;
+  let W = 0;
+  let H = 0;
+  let dpr = 1;
+  let cols = 0;
+  let rows = 0;
+  let cell = 8;
+  let sprite = 0;
+  let tones = new Uint8Array(0);
+  let jitter = new Float32Array(0);
+  let cacheDirty = true;
+  let dirty = true;
+  const pointer = { x: -1e4, y: -1e4, tx: -1e4, ty: -1e4, real: false, lastReal: -1e9 };
+
+  const running = () => inView && document.visibilityState === "visible";
+
+  function buildSheet() {
+    const style = getComputedStyle(root);
+    const read = (name: string, fallback: string) => style.getPropertyValue(name).trim() || fallback;
+    const inks = [
+      read("--bz-gf-t1", "#cfcfd3"),
+      read("--bz-gf-t2", "#6b6b70"),
+      read("--bz-gf-t3", "#0a0a0a"),
+      read("--bz-gf-a1", "#e3a79d"),
+      read("--bz-gf-a2", "#c0513f"),
+      read("--bz-gf-a3", "#912c22"),
+    ];
+    sheet.width = sprite * inks.length;
+    sheet.height = sprite;
+    hctx!.clearRect(0, 0, sheet.width, sheet.height);
+    hctx!.textAlign = "center";
+    hctx!.textBaseline = "middle";
+    hctx!.font = \`700 \${Math.round(cell * 1.3 * dpr)}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace\`;
+    inks.forEach((ink, i) => {
+      hctx!.fillStyle = ink;
+      hctx!.fillText(options().glyph, i * sprite + sprite / 2, sprite / 2 + sprite * 0.04);
+    });
+  }
+
+  function sample() {
+    const { text } = options();
+    source.width = Math.max(1, cols * 3);
+    source.height = Math.max(1, rows * 3);
+    sctx!.fillStyle = "#ffffff";
+    sctx!.fillRect(0, 0, source.width, source.height);
+    const family = getComputedStyle(root).fontFamily || "system-ui, sans-serif";
+    sctx!.font = \`800 100px \${family}\`;
+    const width = Math.max(1, sctx!.measureText(text).width);
+    const fontPx = Math.min(((source.width * 0.86) / width) * 100, source.height * 0.66);
+    sctx!.font = \`800 \${fontPx}px \${family}\`;
+    sctx!.textAlign = "center";
+    sctx!.textBaseline = "middle";
+    sctx!.fillStyle = "#000000";
+    sctx!.fillText(text, source.width / 2, source.height / 2 + fontPx * 0.04);
+
+    sampler.width = Math.max(1, cols);
+    sampler.height = Math.max(1, rows);
+    pctx!.imageSmoothingEnabled = true;
+    pctx!.imageSmoothingQuality = "high";
+    pctx!.drawImage(source, 0, 0, sampler.width, sampler.height);
+    const data = pctx!.getImageData(0, 0, sampler.width, sampler.height).data;
+    for (let i = 0, p = 0; i < tones.length; i++, p += 4) {
+      const luma = (0.2126 * data[p] + 0.7152 * data[p + 1] + 0.0722 * data[p + 2]) / 255;
+      tones[i] = luma < CUTS[0] ? 3 : luma < CUTS[1] ? 2 : luma < CUTS[2] ? 1 : 0;
+    }
+    cacheDirty = true;
+    dirty = true;
+  }
+
+  function layout() {
+    const rect = root.getBoundingClientRect();
+    W = Math.max(1, Math.round(rect.width));
+    H = Math.max(1, Math.round(rect.height));
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cell = Math.max(4, Math.round(options().cell));
+    const cw = Math.round(W * dpr);
+    const ch = Math.round(H * dpr);
+    if (canvas.width !== cw || canvas.height !== ch) {
+      canvas.width = cw;
+      canvas.height = ch;
+    }
+    if (cache.width !== cw || cache.height !== ch) {
+      cache.width = cw;
+      cache.height = ch;
+    }
+    const nextCols = Math.ceil(W / cell);
+    const nextRows = Math.ceil(H / cell);
+    if (nextCols !== cols || nextRows !== rows) {
+      cols = nextCols;
+      rows = nextRows;
+      tones = new Uint8Array(cols * rows);
+      jitter = new Float32Array(cols * rows);
+      for (let i = 0; i < jitter.length; i++) jitter[i] = Math.random();
+    }
+    sprite = Math.max(2, Math.round(cell * dpr));
+    buildSheet();
+    sample();
+  }
+
+  function drawCache() {
+    cctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cctx!.clearRect(0, 0, W, H);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0, i = r * cols; c < cols; c++, i++) {
+        const t = tones[i];
+        if (t) cctx!.drawImage(sheet, (t - 1) * sprite, 0, sprite, sprite, c * cell, r * cell, cell, cell);
+      }
+    }
+    cacheDirty = false;
+  }
+
+  function draw() {
+    if (cacheDirty) drawCache();
+    ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx!.clearRect(0, 0, W, H);
+    ctx!.drawImage(cache, 0, 0, W, H);
+    const px = pointer.x;
+    const py = pointer.y;
+    if (px < -1e3) return;
+    const o = options();
+    const R = W <= 420 ? o.radius * 0.7 : o.radius;
+    const R2 = R * R;
+    const push = o.reduced ? 0 : cell * 1.6;
+    const reach = R + push + cell;
+    const c0 = Math.max(0, Math.floor((px - reach) / cell));
+    const c1 = Math.min(cols - 1, Math.ceil((px + reach) / cell));
+    const r0 = Math.max(0, Math.floor((py - reach) / cell));
+    const r1 = Math.min(rows - 1, Math.ceil((py + reach) / cell));
+    if (c1 < c0 || r1 < r0) return;
+    ctx!.clearRect(c0 * cell, r0 * cell, (c1 - c0 + 1) * cell, (r1 - r0 + 1) * cell);
+    const half = cell / 2;
+    for (let r = r0; r <= r1; r++) {
+      const y = r * cell + half;
+      const dy = py - y;
+      for (let c = c0; c <= c1; c++) {
+        const i = r * cols + c;
+        let t = tones[i];
+        if (!t) continue;
+        const x = c * cell + half;
+        const dx = px - x;
+        const d2 = dx * dx + dy * dy;
+        let ox = 0;
+        let oy = 0;
+        let lit = false;
+        if (d2 < R2) {
+          const d = Math.sqrt(d2);
+          const w = 0.5 + 0.5 * Math.cos((Math.PI * d) / R);
+          if (w > jitter[i]) {
+            t = Math.min(3, t + 1);
+            lit = true;
+          }
+          const k = d > 0.001 ? (w * push) / d : 0;
+          ox = -dx * k;
+          oy = -dy * k;
+        }
+        ctx!.drawImage(
+          sheet,
+          (lit ? t + 2 : t - 1) * sprite,
+          0,
+          sprite,
+          sprite,
+          Math.round((x - half + ox) * dpr) / dpr,
+          Math.round((y - half + oy) * dpr) / dpr,
+          cell,
+          cell,
+        );
+      }
+    }
+  }
+
+  function schedule() {
+    if (!raf && !dead && running()) raf = requestAnimationFrame(frame);
+  }
+
+  function frame(now: number) {
+    raf = 0;
+    if (dead || !running()) return;
+    const dt = last ? Math.min(64, now - last) : 16;
+    last = now;
+    const o = options();
+    const idle = !pointer.real && now - pointer.lastReal > IDLE_MS;
+    const wandering = idle && o.wander && !o.reduced;
+    if (wandering) {
+      pointer.tx = W * (0.5 + 0.4 * Math.sin(now * 0.00037));
+      pointer.ty = H * (0.5 + 0.3 * Math.sin(now * 0.00053 + 1.3));
+    } else if (idle && pointer.tx > -1e3) {
+      pointer.tx = -1e4;
+      pointer.ty = -1e4;
+    }
+    if (pointer.x < -1e3 || pointer.tx < -1e3) {
+      if (pointer.x !== pointer.tx || pointer.y !== pointer.ty) dirty = true;
+      pointer.x = pointer.tx;
+      pointer.y = pointer.ty;
+    } else {
+      const k = 1 - Math.exp(-dt / 70);
+      pointer.x += (pointer.tx - pointer.x) * k;
+      pointer.y += (pointer.ty - pointer.y) * k;
+    }
+    const settled = Math.abs(pointer.tx - pointer.x) < 0.1 && Math.abs(pointer.ty - pointer.y) < 0.1;
+    if (settled) {
+      pointer.x = pointer.tx;
+      pointer.y = pointer.ty;
+    }
+    if (dirty || cacheDirty || !settled) {
+      draw();
+      dirty = false;
+    }
+    // Keep going while moving, wandering, or waiting for the idle wander to begin.
+    if (!settled || wandering || (!pointer.real && !idle && o.wander && !o.reduced)) schedule();
+  }
+
+  function wake() {
+    dirty = true;
+    last = 0;
+    schedule();
+  }
+
+  const toLocal = (event: PointerEvent) => {
+    const rect = root.getBoundingClientRect();
+    pointer.tx = event.clientX - rect.left;
+    pointer.ty = event.clientY - rect.top;
+    pointer.real = true;
+    pointer.lastReal = performance.now();
+    wake();
+  };
+  const release = () => {
+    pointer.real = false;
+    pointer.lastReal = performance.now();
+    wake();
+  };
+  const noHover = window.matchMedia("(hover: none)");
+  const onUp = () => {
+    if (noHover.matches) release();
+  };
+  root.addEventListener("pointermove", toLocal, { passive: true });
+  root.addEventListener("pointerdown", toLocal, { passive: true });
+  root.addEventListener("pointerleave", release);
+  root.addEventListener("pointercancel", release);
+  root.addEventListener("pointerup", onUp);
+
+  const onVisibility = () => wake();
+  document.addEventListener("visibilitychange", onVisibility);
+
+  const ro = new ResizeObserver(() => {
+    layout();
+    draw();
+    schedule();
+  });
+  ro.observe(root);
+
+  let io: IntersectionObserver | null = null;
+  if ("IntersectionObserver" in window) {
+    io = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        if (inView) wake();
+      },
+      { rootMargin: "10%" },
+    );
+    io.observe(root);
+  }
+
+  let dprQuery = window.matchMedia(\`(resolution: \${window.devicePixelRatio || 1}dppx)\`);
+  const onDpr = () => {
+    dprQuery.removeEventListener("change", onDpr);
+    dprQuery = window.matchMedia(\`(resolution: \${window.devicePixelRatio || 1}dppx)\`);
+    dprQuery.addEventListener("change", onDpr);
+    layout();
+    wake();
+  };
+  dprQuery.addEventListener("change", onDpr);
+
+  layout();
+  draw();
+  schedule();
+
+  document.fonts?.ready
+    .then(() => {
+      if (dead) return;
+      sample();
+      wake();
+    })
+    .catch(() => {});
+
+  return {
+    refresh() {
+      layout();
+      wake();
+    },
+    wake,
+    destroy() {
+      dead = true;
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      ro.disconnect();
+      io?.disconnect();
+      dprQuery.removeEventListener("change", onDpr);
+      document.removeEventListener("visibilitychange", onVisibility);
+      root.removeEventListener("pointermove", toLocal);
+      root.removeEventListener("pointerdown", toLocal);
+      root.removeEventListener("pointerleave", release);
+      root.removeEventListener("pointercancel", release);
+      root.removeEventListener("pointerup", onUp);
+    },
+  };
+}
+
+export type GlyphFieldProps = {
+  /** The word or short phrase the field draws. */
+  text: string;
+  /** Accessible name. Defaults to \`text\`. */
+  label?: string;
+  /** Hide it from assistive tech entirely, when the text is repeated elsewhere. */
+  decorative?: boolean;
+  /** The character every cell is drawn with. */
+  glyph?: string;
+  /** Cell size in CSS pixels. */
+  cellSize?: number;
+  /** Radius of the pointer's reach in CSS pixels. */
+  radius?: number;
+  /** Let the torch drift on its own while nobody is pointing. */
+  wander?: boolean;
+  className?: string;
+  style?: CSSProperties;
+};
+
+export function GlyphField({
+  text,
+  label,
+  decorative = false,
+  glyph = "+",
+  cellSize = 8,
+  radius = 110,
+  wander = true,
+  className = "",
+  style,
+}: GlyphFieldProps) {
+  const reduced = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fieldRef = useRef<Field | null>(null);
+  const optionsRef = useRef<Options>({ text, glyph, cell: cellSize, radius, wander, reduced });
+  optionsRef.current = { text, glyph, cell: cellSize, radius, wander, reduced };
+
+  useEffect(() => {
+    const root = rootRef.current;
+    const canvas = canvasRef.current;
+    if (!root || !canvas) return;
+    const field = createField(root, canvas, () => optionsRef.current);
+    fieldRef.current = field;
+    return () => {
+      field?.destroy();
+      fieldRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    fieldRef.current?.refresh();
+  }, [text, glyph, cellSize]);
+
+  useEffect(() => {
+    fieldRef.current?.wake();
+  }, [reduced, wander, radius]);
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div
+        ref={rootRef}
+        className={\`bz-gf \${className}\`.trim()}
+        style={style}
+        role={decorative ? undefined : "img"}
+        aria-label={decorative ? undefined : label ?? text}
+        aria-hidden={decorative ? true : undefined}
+      >
+        <canvas ref={canvasRef} className="bz-gf-canvas" aria-hidden="true" />
+      </div>
+    </>
+  );
+}`,
+    description: "Word drawn as a halftone of glyphs that part and warm under the cursor.",
+    tags: ["canvas", "pointer", "halftone", "typography", "interactive"],
+  },
 ];
 
 export function getComponent(slug: string): ComponentEntry | undefined {

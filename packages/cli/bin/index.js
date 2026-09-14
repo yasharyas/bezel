@@ -145,6 +145,10 @@ const COMPONENT_MAP = {
   "text-type": "animation/TextType.tsx",
   "celebration-overlay": "feedback/CelebrationOverlay.tsx",
   "damask-tile-backdrop": "layout/DamaskTileBackdrop.tsx",
+  "morph-dialog": "dialogs/MorphDialog.tsx",
+  "particle-qr-code": "display/ParticleQrCode.tsx",
+  "timed-tabs": "navigation/TimedTabs.tsx",
+  "glyph-field": "animation/GlyphField.tsx",
 };
 
 function showHelp() {
@@ -254,6 +258,10 @@ function showHelp() {
     text-type               Typewriter with GSAP blinking cursor
     celebration-overlay     Confetti burst overlay with GSAP card entrance
     damask-tile-backdrop    Fixed repeating ornamental pattern backdrop
+    morph-dialog            Modal that grows out of its trigger, with a focus trap
+    particle-qr-code        Scannable QR code that assembles from grains
+    timed-tabs              Self-advancing tabs with a pause button
+    glyph-field             Word drawn as a halftone of glyphs that part under the cursor
 
   Example:
     npx bezel add glass-button
