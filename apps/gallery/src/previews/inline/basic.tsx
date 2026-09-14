@@ -55,7 +55,8 @@ import { SkeletonCard } from "bezel-ui/loaders/SkeletonCard";
 import { Breadcrumb } from "bezel-ui/navigation/Breadcrumb";
 import { BakeryProductCard } from "bezel-ui/cards/BakeryProductCard";
 import { TestimonialCard } from "bezel-ui/cards/TestimonialCard";
-import { FAQAccordion } from "bezel-ui/sections/FAQAccordion";
+import { AccordionList } from "bezel-ui/sections/AccordionList";
+import { MessageForm } from "bezel-ui/forms/MessageForm";
 import { ImagePlaceholder } from "bezel-ui/feedback/ImagePlaceholder";
 import { ShinyBadge } from "bezel-ui/badges/ShinyBadge";
 import { BorderBeamButton } from "bezel-ui/buttons/BorderBeamButton";
@@ -626,17 +627,85 @@ function TestimonialCardPreview() {
   );
 }
 
-function FAQAccordionPreview() {
+function AccordionListPreview() {
   return (
-    <FAQAccordion
+    <AccordionList
       title="Questions, answered"
-      subtitle="Everything about orders and delivery."
+      subtitle="How the studio plans, builds and hands over work."
       items={[
-        { q: "Do you deliver on the same day?", a: "Yes, for orders placed before 11 am within city limits." },
-        { q: "Can I change my order after paying?", a: "Until it is packed. Message us and we will update it." },
-        { q: "Which payment methods do you accept?", a: "UPI, cards, net banking and cash on delivery." },
+        {
+          title: "How long does a typical project take?",
+          meta: "Planning",
+          content:
+            "Most projects run six to ten weeks, with a working preview at the end of the second week and a review every Friday after that.",
+        },
+        {
+          title: "Who owns the code at the end?",
+          meta: "Handover",
+          content:
+            "You do, from the first commit. Everything lives in your repository, and nothing depends on an account only we can open.",
+        },
+        {
+          title: "Can we start with a small piece?",
+          meta: "Scope",
+          content:
+            "Yes. A two-week trial on one screen is often the fastest way to find out whether the way we work suits your team.",
+        },
+        {
+          title: "What happens after launch?",
+          meta: "Support",
+          content:
+            "A month of fixes is included, and after that a few hours a week if you want someone on call for the parts we built.",
+        },
       ]}
     />
+  );
+}
+
+/** Resolve after `ms`, or give up quietly when the form cancels. */
+function wait(ms: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const timer = window.setTimeout(resolve, ms);
+    signal.addEventListener("abort", () => {
+      window.clearTimeout(timer);
+      reject(new Error("cancelled"));
+    });
+  });
+}
+
+function MessageFormPreview() {
+  return (
+    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 text-left">
+      <h3 className="text-lg font-semibold text-[#0a0a0a]">Start a conversation</h3>
+      <p className="mt-1 text-sm text-[#4a4a4c]">Tell us about the project. A person reads every message.</p>
+      <div className="mt-5">
+        <MessageForm
+          fields={[
+            { name: "name", label: "Name", required: true, autoComplete: "name", span: "half", minLength: 2 },
+            { name: "email", label: "Email", type: "email", required: true, autoComplete: "email", span: "half" },
+            {
+              name: "site",
+              label: "Current site",
+              type: "url",
+              placeholder: "https://example.com",
+              hint: "Optional. We check that it opens before sending.",
+              check: async (value, signal) => {
+                await wait(900, signal);
+                return /example\.(com|org)|vercel\.app/.test(value)
+                  ? { ok: true, message: "That page opens." }
+                  : { ok: false, message: "That page could not be reached. Check the address." };
+              },
+            },
+            { name: "message", label: "Message", type: "textarea", required: true, minLength: 20 },
+          ]}
+          defaultValues={{ name: "Ada Park", email: "ada@" }}
+          onSend={(_values, signal) => wait(1400, signal)}
+          note="Replies usually arrive within two working days."
+          fallback={{ href: "mailto:hello@example.com", label: "Email hello@example.com instead." }}
+          successBody={(values) => `We will reply to ${values.email}.`}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -1361,7 +1430,8 @@ export const previews: PreviewModule = {
   breadcrumb: BreadcrumbPreview,
   "bakery-product-card": BakeryProductCardPreview,
   "testimonial-card": TestimonialCardPreview,
-  "faq-accordion": FAQAccordionPreview,
+  "accordion-list": AccordionListPreview,
+  "message-form": MessageFormPreview,
   "image-placeholder": ImagePlaceholderPreview,
   "shiny-badge": ShinyBadgePreview,
   "border-beam-button": BorderBeamButtonPreview,

@@ -65,7 +65,7 @@ export const specs: Record<string, PreviewSpec> = {
   "app-header": frame("paper", 800, 533),
   "bakery-product-card": inline("basic", "paper", { fit: 440 }),
   "testimonial-card": inline("basic", "paper"),
-  "faq-accordion": inline("basic", "paper", { fit: 600 }),
+  "accordion-list": inline("basic", "paper", { fit: 600 }),
   "whatsapp-fab": frame("paper", 390, 260, { hint: "Hover" }),
   "image-placeholder": inline("basic", "paper"),
   "sticky-navbar": frame("paper", 390, 260),
@@ -124,6 +124,7 @@ export const specs: Record<string, PreviewSpec> = {
   "docking-card": inline("basic", "paper", { fit: 760, hint: "Hover" }),
   "sideways-scroll": frame("paper", 720, 480, { hint: "Scroll" }),
   "autoplay-carousel": inline("basic", "paper", { fit: 680 }),
+  "message-form": inline("basic", "paper", { fit: 560 }),
 };
 
 export const frameSlugs = Object.entries(specs)
