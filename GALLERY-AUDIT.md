@@ -4,10 +4,13 @@ A component-by-component review of the Bezel gallery, done first-hand in
 headless Chromium at 1440px desktop and 390px mobile, before and after the
 `gallery-overhaul` work. The gallery started with 107 components. During the
 audit the owner removed ten of them over two rounds (recorded under
-[Owner decisions](#owner-decisions)), so the table covers the 97 that remain.
+[Owner decisions](#owner-decisions)), so the table covered the 97 that remained. Nine components added later, one of
+them replacing FAQAccordion, bring the library to 105 (see
+[Additions, September 2026](#additions-september-2026)).
 
 - [Summary](#summary)
 - [Owner decisions](#owner-decisions)
+- [Additions, September 2026](#additions-september-2026)
 - [Where this disagrees with CURATION.md](#where-this-disagrees-with-curationmd)
 - [Component by component](#component-by-component)
 - [Library bugs found along the way](#library-bugs-found-along-the-way)
@@ -20,8 +23,8 @@ audit the owner removed ten of them over two rounds (recorded under
 
 | Rating | Count | Components |
 |---|---:|---|
-| **Showcase** | 5 | DepthText, CinematicWaterBackground, ScrollUnfurlPreloader, ScratchFoilReveal, MagicRings |
-| **Solid** | 26 | ToastContainer, TubelightNavBar, MD3Switch, DualConfirmDialog, SiteHeader, ElasticLineDivider, TextDisperseLink, SearchOverlay, MobileBottomNav, ProductCard, useThemeRipple, ScrollReveal, Magnet, ConicBorderButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, StarBorder, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay |
+| **Showcase** | 7 | DepthText, CinematicWaterBackground, ScrollUnfurlPreloader, ScratchFoilReveal, MagicRings, MorphDialog, ParticleQrCode |
+| **Solid** | 32 | ToastContainer, TubelightNavBar, MD3Switch, DualConfirmDialog, SiteHeader, ElasticLineDivider, TextDisperseLink, SearchOverlay, MobileBottomNav, ProductCard, useThemeRipple, ScrollReveal, Magnet, ConicBorderButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, StarBorder, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel, AccordionList |
 | **Ordinary** | 66 | Everything else. Each row says what would make it worth keeping. |
 
 - **Showcase**: genuinely strong, the kind of thing that makes a reviewer stop.
@@ -203,6 +206,55 @@ A second review brought these changes.
 
 ---
 
+## Additions, September 2026
+
+Nine components were added after the owner's second round, rated on the same
+scale as the table below. One of them replaces an existing component.
+
+| Component | Rating | Why |
+|---|---|---|
+| MorphDialog | Showcase | Grows out of its trigger, and closes the library's focus-trap gap. |
+| ParticleQrCode | Showcase | A scannable code that assembles from grains and re-forms on change. |
+| TimedTabs | Solid | Self-advancing tabs whose progress bar is the timer. |
+| GlyphField | Solid | A word drawn as a halftone of glyphs that part under the pointer. |
+| DockingCard | Solid | The picture flies into a header dock as a detail panel rises. |
+| SidewaysScroll | Solid | A pinned row that pans sideways as the page scrolls. |
+| AutoplayCarousel | Solid | A carousel that never crops, with a pause button. |
+| AccordionList | Solid | Replaces FAQAccordion; see below. |
+| MessageForm | Ordinary | Closes the form-level, announced-error and announced-loading gaps. |
+
+All nine are single files with no new dependencies. Each renders its
+stylesheet as a fixed string through `dangerouslySetInnerHTML`, so it
+server-renders without the hydration mismatch listed under library bugs, and
+each honours reduced motion itself, follows changes to it live, pauses ambient
+loops off screen and in hidden tabs, and keeps `:focus-visible` rings at 2px
+and targets at 48px or more.
+
+### FAQAccordion replaced by AccordionList
+
+`faq-accordion` is removed from the package source, the registry, the CLI, the
+gallery and the README. AccordionList covers everything it did (a list of
+questions and answers, an optional title and subtitle, one row open at a time
+by default) and fixes its recorded bug: closed answers are now inert, so they
+leave the tab order.
+
+To reverse the decision, restore `packages/ui/src/sections/FAQAccordion.tsx`
+and its export, registry entry, preview, CLI line and README row from the
+commit before the replacement, then remove `accordion-list`.
+
+### Gaps this closes
+
+- **Focus trap:** MorphDialog is the first overlay with an inert background, a
+  Tab loop, Escape handling and focus return.
+- **Announced errors, announced loading and a form-level pattern:** MessageForm.
+
+### Totals and the first screen
+
+The library now holds 105 components: 7 Showcase, 32 Solid and 66 Ordinary.
+"Start with these" is unchanged. ParticleQrCode is the only new piece with a
+case against ParallaxProductStage; at card size the code is small, so the swap
+is left to the owner.
+
 ## Where this disagrees with CURATION.md
 
 `CURATION.md` judges components as parts of a design system (is this the best
@@ -235,7 +287,7 @@ away is the better-looking one, so the merged result should keep its look.
 **CURATION keeps 19 components rated Ordinary.** TextInput, Stepper,
 ToolbarButton, SidePanel, EmptyState, LoadingSpinner, Pagination, Preloader,
 ProjectCard, ImageWithFallback, SkeletonCard, Breadcrumb, CategoryChips,
-FAQAccordion, StickyNavbar, ErrorBoundary, NumberedStepsList, SiteFooter and
+FAQAccordion (since replaced by AccordionList), StickyNavbar, ErrorBoundary, NumberedStepsList, SiteFooter and
 ScrollParallaxLayer. Mostly this is not a disagreement: a system needs
 primitives that nobody remembers. The exception is `Preloader`, covered above.
 
@@ -306,7 +358,7 @@ needs, and a rewritten description.
 | `app-header` | Broken: cropped, covered the gallery header | A cropped white slab whose sticky `z-50` painted over the site header | An 800px frame with a store grid under it; the cart badge increments | Ordinary | A shop header with a banner, search and cart. It renders its own `h1`.<br>**Worth keeping if** merged into `StickyNavbar` without the heading. |
 | `bakery-product-card` | Broken: clipped, index only | Cut off | Two cards at 440px: a photo with badges, and the no-photo placeholder | Ordinary | A second product card.<br>**Worth keeping if** merged into `ProductCard`. |
 | `testimonial-card` | Index only | A legible white card | Paper stage with a real quote and rating | Ordinary | Stars, quote and an initial.<br>**Worth keeping if** it did something testimonials rarely do, such as showing what was bought. |
-| `faq-accordion` | Broken: cropped and inert, index only | Scaled to 72%, cropped, with `pointer-events: none` | Laid out at 600px and fully interactive | Ordinary | An accordion with an eased height transition.<br>**Worth keeping if** closed answers left the tab order; today they are hidden with `max-height: 0` only. |
+| `accordion-list` | New, replacing `faq-accordion` | n/a | Laid out at 600px: four studio questions with the first one open | Solid | The tumbling arrow disc and answers that rise line by line give a plain primitive a signature, and closed answers are inert, which fixes the old tab-order bug. |
 | `whatsapp-fab` | No: mock | A mock of the button | A 390px frame over a product page; an idle hover shows the tooltip | Ordinary | A floating chat button for one messaging app.<br>**Worth keeping if** it became a general contact button with the channel as a prop. |
 | `image-placeholder` | Index only | Legible | A cover and two thumbnails, one labelled | Ordinary | A pulsing grey box.<br>**Worth keeping if** merged into `SkeletonCard`. |
 | `sticky-navbar` | Broken: collisions, covered the gallery header, index only | Scaled, with the brand colliding with the links and the bar sticky over the site header | A phone-width frame whose drawer opens on a loop, with an active link | Ordinary | A shop navbar with an announcement bar and a drawer.<br>**Worth keeping if** the drawer trapped focus and closed on Escape, and it absorbed `AppHeader`. |
@@ -358,6 +410,14 @@ needs, and a rewritten description.
 | `text-type` | Index only | Legible, but a source of hydration warnings | Client-side mount; three lines typing and deleting | Ordinary | A typewriter effect.<br>**Worth keeping if** it absorbed `TypingHero` and announced the finished line to screen readers once. |
 | `celebration-overlay` | No: a lone trigger, index only | A lone button and no overlay | A frame that opens it, lets it close and reopens it after a pause | Solid | Confetti, blur and a card pop, with the best dialog semantics in the library. |
 | `damask-tile-backdrop` | Broken: pattern missing, index only | Only the glass pane showed | A frame at full opacity with the glass pane over it | Ordinary | The component veils its own pattern at 94%, so the damask barely shows even now.<br>**Worth keeping if** the veil were a prop with a default that lets the pattern read. |
+| `morph-dialog` | New | n/a | A 720px frame: a board page whose Share button opens the dialog on a loop while idle | Showcase | The surface travels from the button to the dialog and back, and it is the first overlay in the library with a real focus trap, an inert background and focus return. |
+| `particle-qr-code` | New | n/a | A code for the gallery that dissolves and re-forms with a new address every few seconds while idle, with replay | Showcase | A code that genuinely scans assembles grain by grain and leaves the way it came. Reduced motion gets a short fade. |
+| `timed-tabs` | New | n/a | Laid out at 640px: three project stages advancing every 4.2 s | Solid | The progress bar is the timer, so the countdown and the switch cannot drift, and the clipped paper tab slides across with the colours changing exactly at its edge. |
+| `glyph-field` | New | n/a | The word Bezel full-bleed on paper, with the torch wandering while idle | Solid | Type as a field of glyphs that part and warm under the pointer. The idle wander stops off screen, in hidden tabs and under reduced motion. |
+| `docking-card` | New | n/a | Laid out at 760px: two case-study cards that dock in turn while idle | Solid | A hover that rearranges the card rather than tinting it, with the heading kept above the rising panel so keyboard focus is never covered. |
+| `sideways-scroll` | New | n/a | A 720px frame that scrolls itself through the pinned row and back while idle | Solid | The pinned pan needs no scroll library and brings a tabbed-to card into view. Short, narrow and reduced-motion views get a snap scroller. |
+| `autoplay-carousel` | New | n/a | Laid out at 680px: four photographs, one portrait and one square, on 3.5 s | Solid | Photos never crop, the bar is the timer, and it holds for hover, keyboard focus, touch, off-screen and hidden tabs, with a pause button. |
+| `message-form` | New | n/a | Laid out at 560px inside a card, with a link field whose check is simulated | Ordinary | A quiet form, but the library's only form-level pattern: errors linked and announced, focus to the first one, and honest sending, failure and timeout states.<br>**Worth keeping if** it gained a visual signature of its own; today it earns its place by closing three open gaps. |
 
 ---
 
@@ -382,7 +442,6 @@ Not fixed, because they change component behaviour rather than the gallery.
 - **CustomCursor** hides below 769px and is not hidden from assistive tech.
 - **SectionProgressRail** hides below 1180px and has 8px targets.
 - **MobileBottomNav** and **StickyCartBar** are `md:hidden`.
-- **FAQAccordion** leaves closed answers in the tab order.
 - **ToastContainer** and **LoadingSpinner** have no live region or status role.
 - **AppHeader** renders an `h1`.
 - **SidePanel**'s `PanelField` label is not associated with its input.

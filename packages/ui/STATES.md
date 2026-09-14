@@ -46,10 +46,13 @@ Three rules cut across all eight:
 | `forms/CheckboxVariants` (×4) | + | + | + | + | – | n/a | – | n/a |
 | `forms/MD3Switch` | + | + | + | + | + | – | – | n/a |
 | `forms/BlenderUpload` | + | + | + | + | + | + | ! | + |
+| `forms/MessageForm` | + | + | + | + | – | + | + | n/a |
 
 `TextInput` renders an error but does not set `aria-invalid` or link the message
 with `aria-describedby`, so the error is visual only. `BlenderUpload` reports errors through a callback and
-renders nothing, so it is marked `!`.
+renders nothing, so it is marked `!`. `MessageForm` is the reference for error
+and loading: `aria-invalid`, `aria-describedby`, focus to the first error once it has
+rendered, and one polite live region for checking, sending, sent and failed.
 
 ### Buttons and links
 
@@ -84,6 +87,7 @@ pass, and they are the reference for the rest.
 | `navigation/MobileMenu` | + | + | + | – | n/a |
 | `navigation/SectionProgressRail` | + | – | + | + | n/a |
 | `navigation/CollapsibleSidebar` | + | + | + | – | – |
+| `navigation/TimedTabs` | + | + | + | + | n/a |
 
 `Pagination` marks disabled with `disabled:pointer-events-none` on an `<a>`.
 Anchors are never `:disabled`, so those classes are dead, and it is marked `!`.
@@ -104,6 +108,7 @@ or `aria-selected`, which breaks cross-cutting rule 2 above.
 | `feedback/LoadingSpinner` | n/a | n/a | n/a | n/a | n/a | ! | n/a | n/a |
 | `feedback/ToastContainer` | n/a | n/a | n/a | n/a | n/a | n/a | ! | n/a |
 | `dialogs/DualConfirmDialog` | + | + | + | + | + | + | n/a | n/a |
+| `dialogs/MorphDialog` | + | + | + | + | n/a | n/a | n/a | n/a |
 | `overlays/SearchOverlay` | + | + | + | + | – | – | n/a | + |
 | `panels/SidePanel` | + | + | + | – | – | n/a | – | n/a |
 | `panels/StickyCartBar` | + | + | + | – | – | n/a | n/a | n/a |
@@ -120,14 +125,14 @@ so it is marked `!`. `ToastContainer` has the same gap: no `role="status"`, no
 Focus is now present everywhere. These remain open and are tracked here rather
 than being quietly dropped:
 
-- **No component in the library implements a focus trap.** `DualConfirmDialog`,
+- **Only `MorphDialog` implements a focus trap.** `DualConfirmDialog`,
   `SearchOverlay`, `MobileMenu`, `SubmissionLoader` and `CelebrationOverlay` are
   all full-screen overlays with background content still tabbable underneath.
   `SearchOverlay` handles Escape only while focus is in its input.
-- **Loading is almost never announced.** `aria-busy` and a live region appear in
-  `loaders/MultiStepLoader` and nowhere else.
-- **Error is visual only in every form component.** None set `aria-invalid` or
-  `aria-describedby`.
+- **Loading is rarely announced.** `aria-busy` and a live region appear in
+  `loaders/MultiStepLoader` and `forms/MessageForm` and nowhere else.
+- **Error is visual only in every form component except `MessageForm`.** No other
+  form component sets `aria-invalid` or `aria-describedby`.
 - **A label is not associated with its input.** `SidePanel`'s `PanelField`
   renders a `<label>` that neither wraps its control nor carries `htmlFor`.
 - **`forms/CheckboxVariants`' four exports have no accessible name at all.**

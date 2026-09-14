@@ -66,6 +66,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | MD3Switch | `md3-switch` | Material Design 3 toggle switch with spring-easing physics, a hover/press halo, rotating check/X icons, two sizes, and optional haptic click sound. |
 | BlenderUpload | `blender-upload` | Drag-and-drop upload with a playful blender animation — fruits fall in, liquid blends while uploading, then it becomes a smoothie glass. |
 | CheckboxVariants | `checkbox-variants` | Four stylized Tailwind-only checkbox variants: ripple, rainbow glow, morphing border, and pulsing circle. |
+| MessageForm | `message-form` | Form pattern with linked, announced errors, focus to the first one, optional async field checks and honest sending, failure and timeout states. |
 
 ### Navigation
 
@@ -82,6 +83,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | CategoryGrid | `category-grid` | Responsive category grid (4 cols mobile / 8 desktop) with staggered fade-in icons. |
 | MobileBottomNav | `mobile-bottom-nav` | Mobile bottom nav bar with animated active indicator, badge counts, and slide-up entrance. |
 | StickyNavbar | `sticky-navbar` | Sticky navbar with frosted-glass scroll effect, announcement bar, and animated mobile drawer. |
+| TimedTabs | `timed-tabs` | Self-advancing tabs whose progress bar is the timer, with a sliding paper tab, a pause button and full keyboard support. |
 | StickyNav | `sticky-nav` | Sticky glassmorphism nav with brand logo, center links, and a moon/sun theme-toggle button. |
 
 ### Buttons & CTAs
@@ -109,6 +111,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | SignalCardGrid | `signal-card-grid` | 5-column card grid with large serif display letters, responsive down to 1 column. |
 | PrincipleCardGrid | `principle-card-grid` | 4-column principle card grid with monospace numbering, responsive down to 1 column. |
 | DiagnosticGrid | `diagnostic-grid` | 2-column diagnostic card grid with amber/warning-tagged pills. |
+| DockingCard | `docking-card` | Card whose picture flies into a header dock on hover or focus while a detail panel rises into the space it left. |
 
 ### Feedback & States
 
@@ -141,6 +144,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Component | Slug | Description |
 |---|---|---|
 | DualConfirmDialog | `dual-confirm-dialog` | Two-step destructive confirmation dialog requiring a typed phrase, with a loading progress bar. |
+| MorphDialog | `morph-dialog` | Modal that grows out of the control that opened it, with an inert background, a focus trap, Escape handling and focus return. |
 
 ### Interaction
 
@@ -171,6 +175,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Component | Slug | Description |
 |---|---|---|
 | ImageReveal | `image-reveal` | Scroll-triggered GSAP `clip-path` image reveal with cinematic scale-down. |
+| AutoplayCarousel | `autoplay-carousel` | Photo carousel that never crops, times itself with its progress bar and pauses for hover, focus, touch, off-screen and hidden tabs. |
 | ImageWithFallback | `image-with-fallback` | `<img>` wrapper that gracefully falls back to an SVG placeholder on load failure. |
 
 ### Animation
@@ -178,6 +183,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Component | Slug | Description |
 |---|---|---|
 | Marquee | `marquee` | Infinite GSAP horizontal scrolling text marquee, oversized and low-opacity for a watermark effect. |
+| GlyphField | `glyph-field` | Canvas halftone of a word in glyphs that part and take the accent colour under the pointer. |
 | ScrollReveal | `scroll-reveal` | `IntersectionObserver`-based reveal wrapper with four variants and `prefers-reduced-motion` support. |
 
 ### Sections
@@ -186,6 +192,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 |---|---|---|
 | ContactSection | `contact-section` | Dark contact card with a rotating conic-gradient border and cursor-following spotlight. |
 | AccordionList | `accordion-list` | Accordion rows that open to their measured height, leave the tab order when closed and reveal plain-text answers line by line. |
+| SidewaysScroll | `sideways-scroll` | Row of cards that pins to the viewport and pans sideways with vertical scroll, falling back to a snap scroller. |
 | TypingHero | `typing-hero` | Hero section with a typewriter-animated subtitle and CTA that fades in after typing completes. |
 
 ### Overlays
@@ -230,6 +237,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Component | Slug | Description |
 |---|---|---|
 | FormulaBlock | `formula-block` | Monospace formula display in an accent-bordered, horizontally scrollable box. |
+| ParticleQrCode | `particle-qr-code` | Scannable QR code, encoded with no dependency, that assembles from grains and re-forms when its value changes. |
 
 ## Gallery App
 
