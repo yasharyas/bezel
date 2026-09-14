@@ -249,7 +249,7 @@ themselves duplicate pairs.
 | Component | Call | Reasoning |
 |---|---|---|
 | `ContactSection.tsx` | CUT | An infinite 4s border spin with no reduced-motion guard, a CTA with no states at all, and a `.yui-contact-circle-draw` class that is applied but never defined. |
-| `FAQAccordion.tsx` | KEEP | The accordion primitive. Closed answers are hidden with `max-height: 0` only, so they stay in the tab order and the a11y tree — that must be fixed. |
+| `AccordionList.tsx` | KEEP | The accordion primitive, which replaced FAQAccordion in September 2026. Closed answers are inert, so they leave the tab order and the accessibility tree. |
 | `ParallaxProductStage.tsx` | KEEP | The best reduced-motion implementation in the library: subscribes to `matchMedia` `change` and re-runs its whole GSAP context. The showpiece. |
 | `TypingHero.tsx` | CUT | `[a11y]` Mutates `textContent` outside React with no live region, keeps its CTA focusable while invisible, and leaks a `setInterval` on unmount. |
 
@@ -269,7 +269,7 @@ BorderBeamButton, ConicBorderButton) · `ToolbarButton` (IconButton) ·
 **Structure (8)**
 `Pagination` · `Breadcrumb` · `Stepper` ·
 `StickyNavbar` (absorbing AppHeader) · `SiteHeader` (absorbing MobileMenu) ·
-`SidePanel` · `FAQAccordion` · `SiteFooter`
+`SidePanel` · `AccordionList` · `SiteFooter`
 
 **Surfaces (4)**
 `CardGrid` (merged from DiagnosticGrid, FeatureCardGrid, PrincipleCardGrid,
