@@ -92,6 +92,8 @@ import { MetallicLogoShimmer } from "bezel-ui/media/MetallicLogoShimmer";
 import { ParticleQrCode } from "bezel-ui/display/ParticleQrCode";
 import { TimedTabs } from "bezel-ui/navigation/TimedTabs";
 import { GlyphField } from "bezel-ui/animation/GlyphField";
+import { DockingCard } from "bezel-ui/cards/DockingCard";
+import { AutoplayCarousel } from "bezel-ui/media/AutoplayCarousel";
 
 import {
   Caption,
@@ -1173,7 +1175,7 @@ function TimedTabsPreview() {
   return (
     <TimedTabs
       label="Project stages"
-      dwell={4200}
+      interval={4200}
       items={PROJECT_STAGES.map((stage) => ({
         id: stage.id,
         label: stage.label,
@@ -1205,7 +1207,134 @@ function GlyphFieldPreview() {
   );
 }
 
+const cardRing =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]";
+
+function RetentionChart() {
+  const bars = [62, 70, 66, 84, 96, 108, 122];
+  return (
+    <svg viewBox="0 0 300 200" aria-hidden preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="#f7f3ee" />
+      {[50, 90, 130].map((y) => (
+        <line key={y} x1="24" x2="276" y1={y} y2={y} stroke="rgba(10,10,10,0.08)" />
+      ))}
+      {bars.map((h, i) => (
+        <rect key={i} x={36 + i * 34} y={170 - h} width="20" height={h} rx="4" fill={i >= 4 ? "#912c22" : "rgba(10,10,10,0.2)"} />
+      ))}
+    </svg>
+  );
+}
+
+function TileGrid() {
+  const accent = new Set([2, 7, 9, 14]);
+  return (
+    <svg viewBox="0 0 300 200" aria-hidden preserveAspectRatio="xMidYMid slice">
+      <rect width="300" height="200" fill="#eef1f4" />
+      {Array.from({ length: 18 }, (_, i) => (
+        <rect
+          key={i}
+          x={30 + (i % 6) * 42}
+          y={36 + Math.floor(i / 6) * 44}
+          width="32"
+          height="32"
+          rx="8"
+          fill={accent.has(i) ? "#1f3b5a" : "rgba(10,10,10,0.14)"}
+        />
+      ))}
+    </svg>
+  );
+}
+
+function CaseDetail({ stats, note }: { stats: Array<[string, string]>; note: string }) {
+  return (
+    <div className="flex h-full flex-col text-left">
+      <dl className="grid grid-cols-2 gap-3">
+        {stats.map(([term, value]) => (
+          <div key={term} className="rounded-xl bg-[#fafafa] p-3">
+            <dt className="text-xs text-[#4a4a4c]">{term}</dt>
+            <dd className="mt-1 text-lg font-semibold text-[#0a0a0a]">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-3 text-sm leading-relaxed text-[#4a4a4c]">{note}</p>
+      <a
+        href="#case"
+        className={`mt-auto inline-flex h-12 items-center self-start rounded-full border border-black/15 px-5 text-sm font-semibold text-[#0a0a0a] ${cardRing}`}
+      >
+        Read the case study
+      </a>
+    </div>
+  );
+}
+
+function DockingCardPreview() {
+  const ref = useRef<HTMLDivElement>(null);
+  const turn = useRef(0);
+  // Dock one card, then the other, while nobody is pointing at the preview.
+  useIdleInterval(() => {
+    const cards = ref.current?.querySelectorAll("article");
+    const card = cards?.[turn.current++ % 2] ?? null;
+    if (!card) return;
+    card.dispatchEvent(new PointerEvent("pointerenter", { bubbles: false }));
+    window.setTimeout(() => card.dispatchEvent(new PointerEvent("pointerleave", { bubbles: false })), 2200);
+  }, 3400);
+  return (
+    <div ref={ref} className="grid grid-cols-2 gap-5 p-2">
+      <DockingCard
+        eyebrow="Case study"
+        title="Onboarding rework"
+        href="#onboarding"
+        meta="6 weeks"
+        media={<RetentionChart />}
+        summary="A shorter first run took week-one retention from 41% to 58%."
+        detail={
+          <CaseDetail
+            stats={[
+              ["Screens removed", "3"],
+              ["Setup time", "2 min faster"],
+            ]}
+            note="Interviews with twelve new teams showed where the first run lost people."
+          />
+        }
+      />
+      <DockingCard
+        eyebrow="Audit"
+        title="Design system review"
+        href="#audit"
+        meta="4 weeks"
+        media={<TileGrid />}
+        summary="Every component was checked for states, contrast and duplicates."
+        detail={
+          <CaseDetail
+            stats={[
+              ["Reviewed", "180"],
+              ["Duplicates merged", "24"],
+            ]}
+            note="The merged set shipped with one token file and a contrast gate in CI."
+          />
+        }
+      />
+    </div>
+  );
+}
+
+const unsplashCrop = (id: string, w: number, h: number) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&h=${h}&q=70`;
+
+const CAROUSEL_SLIDES = [
+  { src: unsplashCrop("photo-1506905925346-21bda4d32df4", 1200, 800), width: 1200, height: 800, alt: "A mountain ridge above low cloud at dawn", caption: "Ridge line at dawn" },
+  { src: unsplashCrop("photo-1441974231531-c6227db76b6e", 800, 1067), width: 800, height: 1067, alt: "Sunlight falling through tall forest trees", caption: "Old forest, portrait" },
+  { src: unsplashCrop("photo-1493246507139-91e8fad9978e", 1200, 800), width: 1200, height: 800, alt: "A still lake between mountains", caption: "Still water" },
+  { src: unsplashCrop("photo-1486406146926-c627a92ad1ab", 900, 900), width: 900, height: 900, alt: "Glass office towers seen from below", caption: "City blocks, square" },
+];
+
+function AutoplayCarouselPreview() {
+  return <AutoplayCarousel label="Landscape photographs" slides={CAROUSEL_SLIDES} interval={3500} />;
+}
+
 export const previews: PreviewModule = {
+  "docking-card": DockingCardPreview,
+  "autoplay-carousel": AutoplayCarouselPreview,
   "particle-qr-code": ParticleQrCodePreview,
   "timed-tabs": TimedTabsPreview,
   "glyph-field": GlyphFieldPreview,

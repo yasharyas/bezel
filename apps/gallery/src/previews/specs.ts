@@ -121,6 +121,9 @@ export const specs: Record<string, PreviewSpec> = {
   "particle-qr-code": inline("basic", "paper", { replay: true }),
   "timed-tabs": inline("basic", "paper", { fit: 640 }),
   "glyph-field": inline("basic", "paper", { hint: "Move" }),
+  "docking-card": inline("basic", "paper", { fit: 760, hint: "Hover" }),
+  "sideways-scroll": frame("paper", 720, 480, { hint: "Scroll" }),
+  "autoplay-carousel": inline("basic", "paper", { fit: 680 }),
 };
 
 export const frameSlugs = Object.entries(specs)

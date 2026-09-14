@@ -149,6 +149,9 @@ const COMPONENT_MAP = {
   "particle-qr-code": "display/ParticleQrCode.tsx",
   "timed-tabs": "navigation/TimedTabs.tsx",
   "glyph-field": "animation/GlyphField.tsx",
+  "docking-card": "cards/DockingCard.tsx",
+  "sideways-scroll": "sections/SidewaysScroll.tsx",
+  "autoplay-carousel": "media/AutoplayCarousel.tsx",
 };
 
 function showHelp() {
@@ -262,6 +265,9 @@ function showHelp() {
     particle-qr-code        Scannable QR code that assembles from grains
     timed-tabs              Self-advancing tabs with a pause button
     glyph-field             Word drawn as a halftone of glyphs that part under the cursor
+    docking-card            Card whose picture flies into a header dock on hover
+    sideways-scroll         Row of cards that pins and pans sideways on scroll
+    autoplay-carousel       Never-cropping photo carousel with a pause button
 
   Example:
     npx bezel add glass-button

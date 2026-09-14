@@ -1275,5 +1275,44 @@
       "typography",
       "interactive"
     ]
+  },
+  "docking-card": {
+    "name": "DockingCard",
+    "category": "cards",
+    "description": "Card whose picture flies into a header dock as its detail panel rises.",
+    "tags": [
+      "card",
+      "hover",
+      "flip",
+      "dock",
+      "focus",
+      "reduced-motion"
+    ]
+  },
+  "sideways-scroll": {
+    "name": "SidewaysScroll",
+    "category": "sections",
+    "description": "Row of cards that pins in place and pans sideways as the page scrolls.",
+    "tags": [
+      "scroll",
+      "horizontal",
+      "sticky",
+      "pin",
+      "keyboard",
+      "snap"
+    ]
+  },
+  "autoplay-carousel": {
+    "name": "AutoplayCarousel",
+    "category": "media",
+    "description": "Photo carousel that never crops, with a progress-bar timer and a pause button.",
+    "tags": [
+      "carousel",
+      "autoplay",
+      "images",
+      "swipe",
+      "accessible",
+      "pause"
+    ]
   }
 }

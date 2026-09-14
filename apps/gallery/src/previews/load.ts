@@ -41,6 +41,7 @@ const frames: Record<string, () => Promise<{ default: PreviewComponent }>> = {
   "celebration-overlay": () => import("./frames/celebration-overlay"),
   "damask-tile-backdrop": () => import("./frames/damask-tile-backdrop"),
   "morph-dialog": () => import("./frames/morph-dialog"),
+  "sideways-scroll": () => import("./frames/sideways-scroll"),
 };
 
 const cache = new Map<string, Promise<PreviewComponent>>();

@@ -165,3 +165,6 @@ export { MorphDialog } from "./dialogs/MorphDialog";
 export { ParticleQrCode, buildQrSymbol } from "./display/ParticleQrCode";
 export { TimedTabs } from "./navigation/TimedTabs";
 export { GlyphField } from "./animation/GlyphField";
+export { DockingCard } from "./cards/DockingCard";
+export { SidewaysScroll } from "./sections/SidewaysScroll";
+export { AutoplayCarousel } from "./media/AutoplayCarousel";

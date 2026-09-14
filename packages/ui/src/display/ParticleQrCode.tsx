@@ -20,7 +20,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSPro
 const CSS = `
 .bz-qr{position:relative;display:inline-block;vertical-align:middle;width:var(--bz-qr-size,240px);height:var(--bz-qr-size,240px);border-radius:var(--bz-radius-xl,16px);background:var(--bz-paper,#ffffff);color:var(--bz-ink,#0a0a0a)}
 .bz-qr-still,.bz-qr-canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
-.bz-qr[data-live] .bz-qr-still{visibility:hidden}
+.bz-qr[data-canvas] .bz-qr-still{visibility:hidden}
 .bz-qr-canvas{pointer-events:none}
 .bz-qr-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .bz-qr-error{margin:8px 0 0;font:500 0.875rem/1.5 var(--bz-font-sans,ui-sans-serif,system-ui,sans-serif);color:var(--bz-danger,#b91c1c)}
@@ -530,7 +530,7 @@ function createEngine(root: HTMLElement, canvas: HTMLCanvasElement, config: () =
     start() {
       if (started || dead) return;
       started = true;
-      root.dataset.live = "true";
+      root.dataset.canvas = "on";
       if (grid) {
         open = true;
         run();
@@ -651,7 +651,7 @@ export function ParticleQrCode({
       io?.disconnect();
       engine.destroy();
       engineRef.current = null;
-      delete root.dataset.live;
+      delete root.dataset.canvas;
     };
   }, []);
 
