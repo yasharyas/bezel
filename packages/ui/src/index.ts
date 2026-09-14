@@ -159,3 +159,9 @@ export { Highlighter } from "./animation/Highlighter";
 export { TextType } from "./animation/TextType";
 export { CelebrationOverlay } from "./feedback/CelebrationOverlay";
 export { DamaskTileBackdrop, TiledGlassSurface } from "./layout/DamaskTileBackdrop";
+
+// Morphing dialog, particle QR code, timed tabs and glyph field
+export { MorphDialog } from "./dialogs/MorphDialog";
+export { ParticleQrCode, buildQrSymbol } from "./display/ParticleQrCode";
+export { TimedTabs } from "./navigation/TimedTabs";
+export { GlyphField } from "./animation/GlyphField";

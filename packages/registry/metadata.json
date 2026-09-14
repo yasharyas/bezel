@@ -1225,5 +1225,55 @@
       "glassmorphism",
       "backdrop"
     ]
+  },
+  "morph-dialog": {
+    "name": "MorphDialog",
+    "category": "dialogs",
+    "description": "Modal that grows out of its trigger and traps focus until it closes.",
+    "tags": [
+      "dialog",
+      "modal",
+      "focus-trap",
+      "morph",
+      "accessible",
+      "clip-path"
+    ]
+  },
+  "particle-qr-code": {
+    "name": "ParticleQrCode",
+    "category": "display",
+    "description": "Scannable QR code that assembles from grains and re-forms when its value changes.",
+    "tags": [
+      "qr",
+      "canvas",
+      "particles",
+      "scannable",
+      "reduced-motion"
+    ]
+  },
+  "timed-tabs": {
+    "name": "TimedTabs",
+    "category": "navigation",
+    "description": "Self-advancing tabs whose progress bar is the timer, with a sliding paper tab.",
+    "tags": [
+      "tabs",
+      "autoplay",
+      "progress",
+      "accessible",
+      "keyboard",
+      "pause"
+    ]
+  },
+  "glyph-field": {
+    "name": "GlyphField",
+    "category": "animation",
+    "description": "Word drawn as a halftone of glyphs that part and warm under the cursor.",
+    "tags": [
+      "canvas",
+      "pointer",
+      "halftone",
+      "typography",
+      "interactive"
+    ]
   }
 }

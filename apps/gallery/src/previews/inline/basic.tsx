@@ -14,6 +14,9 @@ import {
   Underline,
   Undo2,
   Zap,
+  ClipboardList,
+  Hammer,
+  Rocket,
 } from "lucide-react";
 
 import { GlassButton } from "bezel-ui/GlassButton";
@@ -86,6 +89,9 @@ import { TillReceiptPrint } from "bezel-ui/feedback/TillReceiptPrint";
 import { StarBorder } from "bezel-ui/buttons/StarBorder";
 import { PinchedButton } from "bezel-ui/buttons/PinchedButton";
 import { MetallicLogoShimmer } from "bezel-ui/media/MetallicLogoShimmer";
+import { ParticleQrCode } from "bezel-ui/display/ParticleQrCode";
+import { TimedTabs } from "bezel-ui/navigation/TimedTabs";
+import { GlyphField } from "bezel-ui/animation/GlyphField";
 
 import {
   Caption,
@@ -1107,7 +1113,102 @@ function MetallicLogoShimmerPreview() {
   );
 }
 
+const QR_LINKS = [
+  { value: "https://bezel-ui.vercel.app", caption: "Opens the gallery" },
+  { value: "https://bezel-ui.vercel.app/principles", caption: "Opens the principles" },
+  { value: "https://bezel-ui.vercel.app/states", caption: "Opens the states" },
+];
+
+function ParticleQrCodePreview() {
+  const [index, setIndex] = useState(0);
+  // A new value while idle, so the dissolve and re-assembly can be seen.
+  useIdleInterval(() => setIndex((i) => (i + 1) % QR_LINKS.length), 6500);
+  const link = QR_LINKS[index];
+  return (
+    <Center>
+      <div className="flex flex-col items-center gap-3 text-center">
+        <ParticleQrCode
+          value={link.value}
+          size={150}
+          label={`QR code. ${link.caption}.`}
+          className="shadow-[0_0_0_1px_rgba(10,10,10,0.06)]"
+        />
+        <div>
+          <p className="text-sm font-semibold text-[#0a0a0a]">Scan to open on your phone</p>
+          <p className="mt-0.5 font-mono text-[11px] text-[#4a4a4c]">{link.value.replace("https://", "")}</p>
+        </div>
+      </div>
+    </Center>
+  );
+}
+
+const PROJECT_STAGES = [
+  {
+    id: "plan",
+    label: "Plan",
+    icon: <ClipboardList />,
+    title: "Agree on the brief",
+    body: "Scope, owners and a date that everyone has seen.",
+    points: ["Goals written down", "Risks named early", "One place for decisions"],
+  },
+  {
+    id: "build",
+    label: "Build",
+    icon: <Hammer />,
+    title: "Work in small slices",
+    body: "Every change reviewed, previewed and merged the same day.",
+    points: ["A preview for every change", "Tests beside the code", "No long-lived branches"],
+  },
+  {
+    id: "ship",
+    label: "Ship",
+    icon: <Rocket />,
+    title: "Release with a way back",
+    body: "A staged rollout, a watched dashboard and one clear owner.",
+    points: ["Roll out in stages", "Alerts on the key paths", "Notes ready for support"],
+  },
+];
+
+function TimedTabsPreview() {
+  return (
+    <TimedTabs
+      label="Project stages"
+      dwell={4200}
+      items={PROJECT_STAGES.map((stage) => ({
+        id: stage.id,
+        label: stage.label,
+        icon: stage.icon,
+        content: (
+          <div className="text-left">
+            <h3 className="text-xl font-semibold tracking-tight text-[#0a0a0a]">{stage.title}</h3>
+            <p className="mt-1.5 text-[15px] leading-relaxed text-[#4a4a4c]">{stage.body}</p>
+            <ul className="mt-4 grid gap-2 text-sm text-[#0a0a0a]">
+              {stage.points.map((point) => (
+                <li key={point} className="flex items-center gap-2.5">
+                  <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-[#912c22]" />
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ),
+      }))}
+    />
+  );
+}
+
+function GlyphFieldPreview() {
+  return (
+    <div className="h-full w-full">
+      <GlyphField text="Bezel" style={{ height: "100%" }} />
+    </div>
+  );
+}
+
 export const previews: PreviewModule = {
+  "particle-qr-code": ParticleQrCodePreview,
+  "timed-tabs": TimedTabsPreview,
+  "glyph-field": GlyphFieldPreview,
   "glass-button": GlassButtonPreview,
   card: CardPreview,
   "text-input": TextInputPreview,

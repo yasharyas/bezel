@@ -40,6 +40,7 @@ const frames: Record<string, () => Promise<{ default: PreviewComponent }>> = {
   "multi-step-loader": () => import("./frames/multi-step-loader"),
   "celebration-overlay": () => import("./frames/celebration-overlay"),
   "damask-tile-backdrop": () => import("./frames/damask-tile-backdrop"),
+  "morph-dialog": () => import("./frames/morph-dialog"),
 };
 
 const cache = new Map<string, Promise<PreviewComponent>>();
