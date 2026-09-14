@@ -47,10 +47,10 @@ const CSS = `
 .bz-tt-tongue .bz-tt-icon{background:var(--bz-paper-raised,#f7f3ee);color:var(--bz-accent,#912c22)}
 .bz-tt-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bz-tt-groove{position:absolute;left:0;bottom:0;width:calc(100% / var(--bz-tt-n));height:3px;overflow:hidden;pointer-events:none;background:rgba(10,10,10,0.1);transform:translateX(calc(var(--bz-tt-active) * 100%));transition:transform 300ms var(--bz-ease-in-out,cubic-bezier(0.77,0,0.175,1))}
-.bz-tt-fill{display:block;width:100%;height:100%;background:var(--bz-accent,#912c22);transform:scaleX(0);transform-origin:left center;animation:bz-tt-dwell var(--bz-tt-dwell,6000ms) linear forwards}
-@keyframes bz-tt-dwell{to{transform:scaleX(1)}}
-.bz-tt[data-auto="off"] .bz-tt-fill,.bz-tt[data-inview="false"] .bz-tt-fill,.bz-tt[data-hidden="true"] .bz-tt-fill,.bz-tt:has(:focus-visible) .bz-tt-fill{animation-play-state:paused}
-.bz-tt[data-auto="off"] .bz-tt-fill{opacity:0.4}
+.bz-tt-fill{display:block;width:100%;height:100%;background:var(--bz-accent,#912c22);transform:scaleX(0);transform-origin:left center;animation:bz-tt-countdown var(--bz-tt-time,6000ms) linear forwards}
+@keyframes bz-tt-countdown{to{transform:scaleX(1)}}
+.bz-tt[data-timer="off"] .bz-tt-fill,.bz-tt[data-onscreen="false"] .bz-tt-fill,.bz-tt[data-backgrounded="true"] .bz-tt-fill,.bz-tt:has(:focus-visible) .bz-tt-fill{animation-play-state:paused}
+.bz-tt[data-timer="off"] .bz-tt-fill{opacity:0.4}
 .bz-tt-toggle{display:grid;flex:none;align-self:center;place-items:center;width:48px;height:48px;margin:0 2px 6px;padding:0;border:1px solid rgba(255,255,255,0.3);border-radius:999px;background:rgba(255,255,255,0.08);color:#ffffff;cursor:pointer;transition:background-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),border-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),transform 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
 .bz-tt-toggle svg{width:14px;height:14px}
 .bz-tt-toggle:focus-visible{outline:2px solid #ffffff;outline-offset:2px}
@@ -86,7 +86,7 @@ export type TimedTabsProps = {
   /** Names the tab list for assistive tech. */
   label: string;
   /** How long each tab stays before the next, in milliseconds. */
-  dwell?: number;
+  interval?: number;
   defaultIndex?: number;
   onChange?: (index: number) => void;
   /** Accessible name of the pause button, which reports its state with `aria-pressed`. */
@@ -97,7 +97,7 @@ export type TimedTabsProps = {
 export function TimedTabs({
   items,
   label,
-  dwell = 6000,
+  interval = 6000,
   defaultIndex = 0,
   onChange,
   pauseLabel = "Pause automatic switching",
@@ -164,7 +164,7 @@ export function TimedTabs({
   const style = {
     ["--bz-tt-n" as string]: count,
     ["--bz-tt-active" as string]: current,
-    ["--bz-tt-dwell" as string]: `${dwell}ms`,
+    ["--bz-tt-time" as string]: `${interval}ms`,
   } as CSSProperties;
 
   const tabInner = (item: TimedTab) => (
@@ -185,9 +185,9 @@ export function TimedTabs({
         ref={rootRef}
         className={`bz-tt ${className}`.trim()}
         style={style}
-        data-auto={auto ? "on" : "off"}
-        data-inview={inView ? "true" : "false"}
-        data-hidden={hidden ? "true" : "false"}
+        data-timer={auto ? "on" : "off"}
+        data-onscreen={inView ? "true" : "false"}
+        data-backgrounded={hidden ? "true" : "false"}
       >
         <div className="bz-tt-rail">
           <div className="bz-tt-track">

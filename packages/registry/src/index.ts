@@ -11539,7 +11539,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSPro
 const CSS = \`
 .bz-qr{position:relative;display:inline-block;vertical-align:middle;width:var(--bz-qr-size,240px);height:var(--bz-qr-size,240px);border-radius:var(--bz-radius-xl,16px);background:var(--bz-paper,#ffffff);color:var(--bz-ink,#0a0a0a)}
 .bz-qr-still,.bz-qr-canvas{position:absolute;inset:0;display:block;width:100%;height:100%}
-.bz-qr[data-live] .bz-qr-still{visibility:hidden}
+.bz-qr[data-canvas] .bz-qr-still{visibility:hidden}
 .bz-qr-canvas{pointer-events:none}
 .bz-qr-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .bz-qr-error{margin:8px 0 0;font:500 0.875rem/1.5 var(--bz-font-sans,ui-sans-serif,system-ui,sans-serif);color:var(--bz-danger,#b91c1c)}
@@ -12049,7 +12049,7 @@ function createEngine(root: HTMLElement, canvas: HTMLCanvasElement, config: () =
     start() {
       if (started || dead) return;
       started = true;
-      root.dataset.live = "true";
+      root.dataset.canvas = "on";
       if (grid) {
         open = true;
         run();
@@ -12170,7 +12170,7 @@ export function ParticleQrCode({
       io?.disconnect();
       engine.destroy();
       engineRef.current = null;
-      delete root.dataset.live;
+      delete root.dataset.canvas;
     };
   }, []);
 
@@ -12286,10 +12286,10 @@ const CSS = \`
 .bz-tt-tongue .bz-tt-icon{background:var(--bz-paper-raised,#f7f3ee);color:var(--bz-accent,#912c22)}
 .bz-tt-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bz-tt-groove{position:absolute;left:0;bottom:0;width:calc(100% / var(--bz-tt-n));height:3px;overflow:hidden;pointer-events:none;background:rgba(10,10,10,0.1);transform:translateX(calc(var(--bz-tt-active) * 100%));transition:transform 300ms var(--bz-ease-in-out,cubic-bezier(0.77,0,0.175,1))}
-.bz-tt-fill{display:block;width:100%;height:100%;background:var(--bz-accent,#912c22);transform:scaleX(0);transform-origin:left center;animation:bz-tt-dwell var(--bz-tt-dwell,6000ms) linear forwards}
-@keyframes bz-tt-dwell{to{transform:scaleX(1)}}
-.bz-tt[data-auto="off"] .bz-tt-fill,.bz-tt[data-inview="false"] .bz-tt-fill,.bz-tt[data-hidden="true"] .bz-tt-fill,.bz-tt:has(:focus-visible) .bz-tt-fill{animation-play-state:paused}
-.bz-tt[data-auto="off"] .bz-tt-fill{opacity:0.4}
+.bz-tt-fill{display:block;width:100%;height:100%;background:var(--bz-accent,#912c22);transform:scaleX(0);transform-origin:left center;animation:bz-tt-countdown var(--bz-tt-time,6000ms) linear forwards}
+@keyframes bz-tt-countdown{to{transform:scaleX(1)}}
+.bz-tt[data-timer="off"] .bz-tt-fill,.bz-tt[data-onscreen="false"] .bz-tt-fill,.bz-tt[data-backgrounded="true"] .bz-tt-fill,.bz-tt:has(:focus-visible) .bz-tt-fill{animation-play-state:paused}
+.bz-tt[data-timer="off"] .bz-tt-fill{opacity:0.4}
 .bz-tt-toggle{display:grid;flex:none;align-self:center;place-items:center;width:48px;height:48px;margin:0 2px 6px;padding:0;border:1px solid rgba(255,255,255,0.3);border-radius:999px;background:rgba(255,255,255,0.08);color:#ffffff;cursor:pointer;transition:background-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),border-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),transform 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
 .bz-tt-toggle svg{width:14px;height:14px}
 .bz-tt-toggle:focus-visible{outline:2px solid #ffffff;outline-offset:2px}
@@ -12325,7 +12325,7 @@ export type TimedTabsProps = {
   /** Names the tab list for assistive tech. */
   label: string;
   /** How long each tab stays before the next, in milliseconds. */
-  dwell?: number;
+  interval?: number;
   defaultIndex?: number;
   onChange?: (index: number) => void;
   /** Accessible name of the pause button, which reports its state with \`aria-pressed\`. */
@@ -12336,7 +12336,7 @@ export type TimedTabsProps = {
 export function TimedTabs({
   items,
   label,
-  dwell = 6000,
+  interval = 6000,
   defaultIndex = 0,
   onChange,
   pauseLabel = "Pause automatic switching",
@@ -12403,7 +12403,7 @@ export function TimedTabs({
   const style = {
     ["--bz-tt-n" as string]: count,
     ["--bz-tt-active" as string]: current,
-    ["--bz-tt-dwell" as string]: \`\${dwell}ms\`,
+    ["--bz-tt-time" as string]: \`\${interval}ms\`,
   } as CSSProperties;
 
   const tabInner = (item: TimedTab) => (
@@ -12424,9 +12424,9 @@ export function TimedTabs({
         ref={rootRef}
         className={\`bz-tt \${className}\`.trim()}
         style={style}
-        data-auto={auto ? "on" : "off"}
-        data-inview={inView ? "true" : "false"}
-        data-hidden={hidden ? "true" : "false"}
+        data-timer={auto ? "on" : "off"}
+        data-onscreen={inView ? "true" : "false"}
+        data-backgrounded={hidden ? "true" : "false"}
       >
         <div className="bz-tt-rail">
           <div className="bz-tt-track">
@@ -12950,6 +12950,839 @@ export function GlyphField({
 }`,
     description: "Word drawn as a halftone of glyphs that part and warm under the cursor.",
     tags: ["canvas", "pointer", "halftone", "typography", "interactive"],
+  },
+  {
+    name: "DockingCard",
+    slug: "docking-card",
+    path: "cards/DockingCard.tsx",
+    category: "cards",
+    code: `"use client";
+
+import { useEffect, useRef, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+
+/*
+ * DockingCard: on hover or keyboard focus, the card's picture flies up into a
+ * small dock in its header while a detail panel rises into the space it left.
+ *
+ * The move is a measured FLIP: the media's box and the dock's box are read at
+ * the moment of intent, and the media gets a translate plus a uniform scale, so
+ * it lands in the dock without being stretched. Leaving hands the transform
+ * back to none, which interrupts cleanly mid-flight.
+ *
+ * The heading lives in the header strip, above the rising panel, so a focused
+ * title link is never covered. On touch screens, under reduced motion and
+ * without JavaScript the card is a plain column that shows everything.
+ */
+
+const CSS = \`
+.bz-dc{position:relative;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box;border:1px solid var(--bz-line-strong,rgba(10,10,10,0.13));border-radius:20px;background:var(--bz-paper,#ffffff);color:var(--bz-ink,#0a0a0a);font-family:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);transition:border-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-dc *,.bz-dc *::before,.bz-dc *::after{box-sizing:border-box}
+.bz-dc:focus-within{border-color:rgba(10,10,10,0.32)}
+@media (hover:hover){.bz-dc:hover{border-color:rgba(10,10,10,0.32)}}
+.bz-dc-head{display:flex;align-items:center;gap:16px;min-height:88px;padding:14px 16px 14px 20px;border-bottom:1px solid var(--bz-line,rgba(10,10,10,0.06));background:var(--bz-paper-sunken,#fafafa)}
+.bz-dc-headings{flex:1;min-width:0}
+.bz-dc-eyebrow{margin:0 0 4px;font:500 0.6875rem/1.4 var(--bz-font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);letter-spacing:0.12em;text-transform:uppercase;color:var(--bz-ink-muted,#4a4a4c)}
+.bz-dc-title{margin:0;font-size:1.125rem;line-height:1.3;font-weight:600;letter-spacing:-0.01em}
+.bz-dc-title a{color:inherit;text-decoration:none;border-radius:4px}
+.bz-dc-title a:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px}
+@media (hover:hover){.bz-dc-title a:hover{text-decoration:underline;text-underline-offset:3px}}
+.bz-dc-dock{position:relative;display:grid;flex:none;place-items:center;width:var(--bz-dc-dock,88px);aspect-ratio:var(--bz-dc-ratio,1.5)}
+.bz-dc-dock::after{content:"";position:absolute;inset:0;border:1px dashed rgba(10,10,10,0.34);border-radius:8px;opacity:0;transform:scale(0.9);transition:opacity 300ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),transform 300ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-dc-meta{font-size:0.8125rem;font-weight:600;line-height:1.25;text-align:right;color:var(--bz-ink-muted,#4a4a4c);transition:opacity 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-dc-stage{padding:20px 20px 0}
+.bz-dc-media{position:relative;z-index:3;width:100%;aspect-ratio:var(--bz-dc-ratio,1.5);overflow:hidden;border-radius:12px;background:var(--bz-paper-raised,#f7f3ee);transform-origin:center center;transition:transform 450ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-dc-media>*{display:block;width:100%;height:100%}
+.bz-dc-body{padding:16px 20px 20px}
+.bz-dc-summary{margin:0;font-size:0.9375rem;line-height:1.55;color:var(--bz-ink-muted,#4a4a4c)}
+.bz-dc-panel{padding:0 20px 20px}
+.bz-dc[data-dockable="true"] .bz-dc-panel{position:absolute;right:0;bottom:0;left:0;top:var(--bz-dc-head,88px);z-index:2;overflow:auto;padding:20px;background:var(--bz-paper,#ffffff);transform:translateY(calc(100% + 1px));transition:transform 500ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-dc[data-pose="dock"] .bz-dc-panel{transform:translateY(0)}
+.bz-dc[data-pose="dock"] .bz-dc-media{transition-duration:500ms}
+.bz-dc[data-pose="dock"] .bz-dc-dock::after{opacity:1;transform:none}
+.bz-dc[data-pose="dock"] .bz-dc-meta{opacity:0}
+@media (prefers-reduced-motion:reduce){.bz-dc,.bz-dc-media,.bz-dc-panel,.bz-dc-dock::after,.bz-dc-meta{transition:none}}
+\`;
+
+const DOCK_QUERY = "(hover: hover) and (pointer: fine)";
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+
+const subscribeDockable = (onChange: () => void) => {
+  const queries = [window.matchMedia(DOCK_QUERY), window.matchMedia(RM_QUERY)];
+  queries.forEach((q) => q.addEventListener("change", onChange));
+  return () => queries.forEach((q) => q.removeEventListener("change", onChange));
+};
+const readDockable = () => window.matchMedia(DOCK_QUERY).matches && !window.matchMedia(RM_QUERY).matches;
+const serverDockable = () => false;
+
+/** Offset of \`el\` inside \`root\`, in layout pixels, ignoring any transforms. */
+function offsetWithin(el: HTMLElement, root: HTMLElement) {
+  let left = 0;
+  let top = 0;
+  let node: HTMLElement | null = el;
+  while (node && node !== root) {
+    left += node.offsetLeft;
+    top += node.offsetTop;
+    node = node.offsetParent as HTMLElement | null;
+  }
+  return { left, top };
+}
+
+export type DockingCardProps = {
+  title: ReactNode;
+  /** Makes the title a link. */
+  href?: string;
+  eyebrow?: ReactNode;
+  /** The picture that travels to the dock: an image, an SVG, anything that fills its box. */
+  media: ReactNode;
+  /** Width divided by height of the media box and the dock. */
+  mediaRatio?: number;
+  /** Sits in the dock at rest and fades out as the media arrives. */
+  meta?: ReactNode;
+  summary: ReactNode;
+  /** Rises into the card while it is docked, and sits below the summary everywhere else. */
+  detail: ReactNode;
+  headingLevel?: 2 | 3;
+  className?: string;
+  style?: CSSProperties;
+};
+
+export function DockingCard({
+  title,
+  href,
+  eyebrow,
+  media,
+  mediaRatio = 1.5,
+  meta,
+  summary,
+  detail,
+  headingLevel = 3,
+  className = "",
+  style,
+}: DockingCardProps) {
+  const dockable = useSyncExternalStore(subscribeDockable, readDockable, serverDockable);
+  const rootRef = useRef<HTMLElement>(null);
+  const headRef = useRef<HTMLDivElement>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const mediaRef = useRef<HTMLDivElement>(null);
+  const dockableRef = useRef(dockable);
+  dockableRef.current = dockable;
+  const settleRef = useRef<() => void>(() => {});
+
+  useEffect(() => {
+    const root = rootRef.current;
+    const head = headRef.current;
+    const dock = dockRef.current;
+    const mediaEl = mediaRef.current;
+    if (!root || !head || !dock || !mediaEl) return;
+
+    let hovering = false;
+    let focusing = false;
+    let docked = false;
+
+    const place = () => {
+      if (!docked) {
+        mediaEl.style.transform = "";
+        return;
+      }
+      const mw = mediaEl.offsetWidth;
+      const mh = mediaEl.offsetHeight;
+      if (!mw || !mh) return;
+      const scale = Math.min(dock.offsetWidth / mw, dock.offsetHeight / mh);
+      const from = offsetWithin(mediaEl, root);
+      const to = offsetWithin(dock, root);
+      const tx = to.left + dock.offsetWidth / 2 - (from.left + mw / 2);
+      const ty = to.top + dock.offsetHeight / 2 - (from.top + mh / 2);
+      mediaEl.style.transform = \`translate(\${tx}px, \${ty}px) scale(\${scale})\`;
+    };
+
+    const settle = () => {
+      const next = dockableRef.current && (hovering || focusing);
+      if (next === docked) return;
+      docked = next;
+      root.dataset.pose = next ? "dock" : "rest";
+      place();
+    };
+    settleRef.current = settle;
+
+    const onEnter = (event: PointerEvent) => {
+      if (event.pointerType === "touch") return;
+      hovering = true;
+      settle();
+    };
+    const onLeave = () => {
+      hovering = false;
+      settle();
+    };
+    const onFocusIn = () => {
+      focusing = true;
+      settle();
+    };
+    const onFocusOut = (event: FocusEvent) => {
+      if (event.relatedTarget instanceof Node && root.contains(event.relatedTarget)) return;
+      focusing = false;
+      settle();
+    };
+
+    root.addEventListener("pointerenter", onEnter);
+    root.addEventListener("pointerleave", onLeave);
+    root.addEventListener("focusin", onFocusIn);
+    root.addEventListener("focusout", onFocusOut);
+
+    const ro = new ResizeObserver(() => {
+      root.style.setProperty("--bz-dc-head", \`\${head.offsetHeight}px\`);
+      place();
+    });
+    ro.observe(root);
+    ro.observe(head);
+
+    return () => {
+      ro.disconnect();
+      root.removeEventListener("pointerenter", onEnter);
+      root.removeEventListener("pointerleave", onLeave);
+      root.removeEventListener("focusin", onFocusIn);
+      root.removeEventListener("focusout", onFocusOut);
+      mediaEl.style.transform = "";
+    };
+  }, []);
+
+  // A preference change mid-hover undocks or re-docks straight away.
+  useEffect(() => {
+    settleRef.current();
+  }, [dockable]);
+
+  const Heading = headingLevel === 2 ? "h2" : "h3";
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <article
+        ref={rootRef}
+        className={\`bz-dc \${className}\`.trim()}
+        data-dockable={dockable ? "true" : "false"}
+        data-pose="rest"
+        style={{ ["--bz-dc-ratio" as string]: mediaRatio, ...style } as CSSProperties}
+      >
+        <div ref={headRef} className="bz-dc-head">
+          <div className="bz-dc-headings">
+            {eyebrow ? <p className="bz-dc-eyebrow">{eyebrow}</p> : null}
+            <Heading className="bz-dc-title">{href ? <a href={href}>{title}</a> : title}</Heading>
+          </div>
+          <div ref={dockRef} className="bz-dc-dock">
+            {meta ? <span className="bz-dc-meta">{meta}</span> : null}
+          </div>
+        </div>
+        <div className="bz-dc-stage">
+          <div ref={mediaRef} className="bz-dc-media">
+            {media}
+          </div>
+        </div>
+        <div className="bz-dc-body">
+          <p className="bz-dc-summary">{summary}</p>
+        </div>
+        <div className="bz-dc-panel">{detail}</div>
+      </article>
+    </>
+  );
+}`,
+    description: "Card whose picture flies into a header dock as its detail panel rises.",
+    tags: ["card", "hover", "flip", "dock", "focus", "reduced-motion"],
+  },
+  {
+    name: "SidewaysScroll",
+    slug: "sideways-scroll",
+    path: "sections/SidewaysScroll.tsx",
+    category: "sections",
+    code: `"use client";
+
+import {
+  Children,
+  isValidElement,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+
+/*
+ * SidewaysScroll: a row of cards that pins to the viewport and pans one pixel
+ * sideways for every pixel scrolled down, then holds on the last card for a
+ * moment before the page moves on.
+ *
+ * It needs no scroll library. The section is made as tall as the pan, an inner
+ * block sticks to the top, and a single passive scroll listener maps the page's
+ * scroll position to the row's translate. Tabbing to a card that is out of view
+ * scrolls the page to the point where that card is in view, so the keyboard
+ * never lands on something hidden.
+ *
+ * Narrow or short viewports, reduced motion and rows that already fit get a
+ * plain snap scroller instead.
+ */
+
+const CSS = \`
+.bz-ss{position:relative;color:var(--bz-ink,#0a0a0a);font-family:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif)}
+.bz-ss *,.bz-ss *::before,.bz-ss *::after{box-sizing:border-box}
+.bz-ss-sticky{display:flex;flex-direction:column;justify-content:center;gap:20px;padding-block:24px}
+.bz-ss[data-layout="pinned"] .bz-ss-sticky{position:sticky;top:var(--bz-ss-top,0px);height:calc(100vh - var(--bz-ss-top,0px));overflow:hidden}
+.bz-ss-head{padding-inline:var(--bz-ss-pad,24px)}
+.bz-ss-row{position:relative;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - min(12%,96px)),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - min(12%,96px)),transparent)}
+.bz-ss[data-end="true"] .bz-ss-row{-webkit-mask-image:none;mask-image:none}
+.bz-ss-track{position:relative;display:flex;gap:16px;padding:4px var(--bz-ss-pad,24px) 16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-padding-inline:var(--bz-ss-pad,24px);overscroll-behavior-x:contain;outline:none}
+.bz-ss-track:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:-2px;border-radius:12px}
+.bz-ss[data-layout="pinned"] .bz-ss-track{overflow:visible;scroll-snap-type:none;will-change:transform}
+.bz-ss-item{flex:none;scroll-snap-align:start}
+.bz-ss-hint{display:none;align-self:flex-start;align-items:center;gap:10px;margin-inline:var(--bz-ss-pad,24px);font-size:0.8125rem;font-weight:500;line-height:1;color:var(--bz-ink-muted,#4a4a4c);transition:opacity 300ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-ss[data-layout="pinned"] .bz-ss-hint{display:inline-flex}
+.bz-ss-mouse{position:relative;width:18px;height:28px;border:1.5px solid currentColor;border-radius:10px}
+.bz-ss-mouse::after{content:"";position:absolute;top:6px;left:50%;width:3px;height:6px;margin-left:-1.5px;border-radius:2px;background:currentColor;animation:bz-ss-wheel 1.6s var(--bz-ease-in-out,cubic-bezier(0.77,0,0.175,1)) infinite}
+.bz-ss[data-onscreen="false"] .bz-ss-mouse::after,.bz-ss[data-hint="off"] .bz-ss-mouse::after{animation-play-state:paused}
+@keyframes bz-ss-wheel{0%{transform:translateY(0);opacity:1}70%{transform:translateY(8px);opacity:0}100%{transform:translateY(0);opacity:0}}
+@media (prefers-reduced-motion:reduce){.bz-ss-mouse::after{animation:none}.bz-ss-hint{transition:none}}
+\`;
+
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(RM_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const readReducedMotion = () => window.matchMedia(RM_QUERY).matches;
+const serverReducedMotion = () => false;
+
+/** Extra scroll, as a share of the pan, spent holding on the last card. */
+const HOLD = 0.18;
+
+export type SidewaysScrollProps = {
+  /** One card per child. */
+  children: ReactNode;
+  /** Names the list of cards for assistive tech. */
+  label: string;
+  /** Pinned above the row, and panned with it out of the way of nothing. */
+  heading?: ReactNode;
+  /** Distance from the top of the viewport to pin at, for a sticky header. */
+  pinOffset?: number;
+  /** Below this viewport width the row is a snap scroller. */
+  minWidth?: number;
+  /** Below this viewport height the row is a snap scroller. */
+  minHeight?: number;
+  /** Text beside the scroll cue while pinned. */
+  hint?: string;
+  className?: string;
+};
+
+export function SidewaysScroll({
+  children,
+  label,
+  heading,
+  pinOffset = 0,
+  minWidth = 640,
+  minHeight = 420,
+  hint = "Scroll",
+  className = "",
+}: SidewaysScrollProps) {
+  const reduced = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion);
+  const [mode, setMode] = useState<"scroller" | "pinned">("scroller");
+  const sectionRef = useRef<HTMLElement>(null);
+  const rowRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const hintRef = useRef<HTMLDivElement>(null);
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    const row = rowRef.current;
+    const track = trackRef.current;
+    if (!section || !row || !track) return;
+
+    let distance = 0;
+    let start = 0;
+    let raf = 0;
+
+    const measure = () => {
+      const items = track.children;
+      const lastItem = items[items.length - 1] as HTMLElement | undefined;
+      const padRight = parseFloat(getComputedStyle(track).paddingRight) || 0;
+      const contentRight = lastItem ? lastItem.offsetLeft + lastItem.offsetWidth + padRight : 0;
+      distance = Math.max(0, Math.round(contentRight - row.clientWidth));
+      const allowPan =
+        !readReducedMotion() && window.innerWidth >= minWidth && window.innerHeight >= minHeight && distance > 0;
+      const nextMode = allowPan ? "pinned" : "scroller";
+      if (nextMode !== modeRef.current) {
+        modeRef.current = nextMode;
+        setMode(nextMode);
+      }
+      if (nextMode === "pinned") {
+        const stickyHeight = window.innerHeight - pinOffset;
+        section.style.height = \`\${Math.round(stickyHeight + distance * (1 + HOLD))}px\`;
+        start = section.getBoundingClientRect().top + window.scrollY - pinOffset;
+      } else {
+        section.style.height = "";
+        track.style.transform = "";
+      }
+      update();
+    };
+
+    const update = () => {
+      raf = 0;
+      if (modeRef.current !== "pinned") {
+        section.dataset.end = String(track.scrollLeft + track.clientWidth >= track.scrollWidth - 4);
+        return;
+      }
+      const travel = Math.max(0, Math.min(window.scrollY - start, distance * (1 + HOLD)));
+      const x = Math.min(travel, distance);
+      track.style.transform = \`translate3d(\${-x}px, 0, 0)\`;
+      section.dataset.end = String(x >= distance - 1);
+      const showHint = travel < 24;
+      section.dataset.hint = showHint ? "on" : "off";
+      if (hintRef.current) hintRef.current.style.opacity = showHint ? "1" : "0";
+    };
+
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    const onFocusIn = (event: FocusEvent) => {
+      if (modeRef.current !== "pinned") return;
+      const item = (event.target as Element | null)?.closest?.(".bz-ss-item") as HTMLElement | null;
+      if (!item || !track.contains(item)) return;
+      const current = Math.max(0, Math.min(window.scrollY - start, distance));
+      const left = item.offsetLeft - current;
+      const right = left + item.offsetWidth;
+      if (left >= 0 && right <= row.clientWidth) return;
+      const padLeft = parseFloat(getComputedStyle(track).paddingLeft) || 0;
+      const wanted = Math.max(0, Math.min(item.offsetLeft - padLeft, distance));
+      // After the browser's own scroll-into-view has run.
+      requestAnimationFrame(() => window.scrollTo({ top: start + wanted, behavior: "auto" }));
+    };
+
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(row);
+    ro.observe(track);
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    track.addEventListener("scroll", onScroll, { passive: true });
+    track.addEventListener("focusin", onFocusIn);
+
+    let io: IntersectionObserver | null = null;
+    if ("IntersectionObserver" in window) {
+      io = new IntersectionObserver(([entry]) => {
+        section.dataset.onscreen = String(entry.isIntersecting);
+      });
+      io.observe(section);
+    }
+
+    measure();
+
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      ro.disconnect();
+      io?.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", onScroll);
+      track.removeEventListener("scroll", onScroll);
+      track.removeEventListener("focusin", onFocusIn);
+      section.style.height = "";
+      track.style.transform = "";
+    };
+  }, [reduced, pinOffset, minWidth, minHeight, mode]);
+
+  const items = Children.toArray(children);
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <section
+        ref={sectionRef}
+        className={\`bz-ss \${className}\`.trim()}
+        data-layout={mode}
+        aria-label={heading ? undefined : label}
+        style={{ ["--bz-ss-top" as string]: \`\${pinOffset}px\` } as CSSProperties}
+      >
+        <div className="bz-ss-sticky">
+          {heading ? <div className="bz-ss-head">{heading}</div> : null}
+          <div ref={rowRef} className="bz-ss-row">
+            <div
+              ref={trackRef}
+              className="bz-ss-track"
+              role="list"
+              aria-label={label}
+              tabIndex={mode === "scroller" ? 0 : undefined}
+            >
+              {items.map((child, index) => (
+                <div key={isValidElement(child) && child.key != null ? child.key : index} className="bz-ss-item" role="listitem">
+                  {child}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div ref={hintRef} className="bz-ss-hint" aria-hidden="true">
+            <span className="bz-ss-mouse" />
+            {hint}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}`,
+    description: "Row of cards that pins in place and pans sideways as the page scrolls.",
+    tags: ["scroll", "horizontal", "sticky", "pin", "keyboard", "snap"],
+  },
+  {
+    name: "AutoplayCarousel",
+    slug: "autoplay-carousel",
+    path: "media/AutoplayCarousel.tsx",
+    category: "media",
+    code: `"use client";
+
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type FocusEvent as ReactFocusEvent,
+  type KeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
+
+/*
+ * AutoplayCarousel: a photo carousel that moves on by itself and never crops.
+ *
+ * Every photo sits on a plate sized to its own proportions inside the stage,
+ * over a blurred, darkened copy of itself, so portraits and landscapes share one
+ * stage without losing an edge. The progress bar under the photo is the timer:
+ * its \`animationend\` advances the slide, so the bar and the change can never
+ * drift apart, and anything that pauses the bar pauses the carousel.
+ *
+ * It holds while the pointer is over it, while keyboard focus is inside, while a
+ * finger is down, when it is out of view and when the tab is hidden. The pause
+ * button stops it outright, and reduced motion starts it paused. Changes made by
+ * the reader are announced; the automatic ones are not, so nothing talks over
+ * the page every few seconds.
+ */
+
+const CSS = \`
+.bz-ac{container-type:inline-size;position:relative;color:var(--bz-ink,#0a0a0a);font-family:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif)}
+.bz-ac *,.bz-ac *::before,.bz-ac *::after{box-sizing:border-box}
+.bz-ac:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:4px;border-radius:20px}
+.bz-ac-viewport{position:relative;overflow:hidden;border-radius:20px;background:var(--bz-void,#0c0c0f);touch-action:pan-y}
+.bz-ac-track{display:flex;transition:transform 600ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-ac-slide{--bz-ac-stage:var(--bz-ac-wide,1.5);position:relative;flex:0 0 100%;margin:0;aspect-ratio:var(--bz-ac-stage);overflow:hidden;isolation:isolate}
+@container (max-width:560px){.bz-ac-slide{--bz-ac-stage:var(--bz-ac-narrow,1)}}
+.bz-ac-backdrop{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:blur(32px) saturate(1.1) brightness(0.45);transform:scale(1.25)}
+.bz-ac-plate{position:absolute;inset:0;margin:auto;width:min(100%,calc(100% * var(--bz-ac-photo,1.5) / var(--bz-ac-stage)));height:min(100%,calc(100% * var(--bz-ac-stage) / var(--bz-ac-photo,1.5)));overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.14)}
+.bz-ac-img{display:block;width:100%;height:100%;object-fit:cover}
+.bz-ac-caption{position:absolute;left:12px;bottom:14px;z-index:1;max-width:calc(100% - 24px);margin:0;padding:6px 12px;border-radius:999px;background:rgba(12,12,15,0.66);color:#ffffff;font-size:0.8125rem;font-weight:500;line-height:1.3}
+.bz-ac-nav{position:absolute;top:50%;z-index:2;display:grid;place-items:center;width:48px;height:48px;margin-top:-24px;padding:0;border:1px solid rgba(255,255,255,0.35);border-radius:999px;background:rgba(12,12,15,0.55);color:#ffffff;cursor:pointer;transition:background-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),transform 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-ac-nav[data-side="start"]{left:12px}
+.bz-ac-nav[data-side="end"]{right:12px}
+.bz-ac-nav svg{width:18px;height:18px}
+.bz-ac-nav:focus-visible{outline:2px solid #ffffff;outline-offset:2px;box-shadow:0 0 0 6px rgba(12,12,15,0.6)}
+.bz-ac-nav:active{transform:scale(0.97)}
+@media (hover:hover){.bz-ac-nav:hover{background:rgba(12,12,15,0.82)}}
+.bz-ac-progress{position:absolute;right:0;bottom:0;left:0;z-index:2;height:3px;background:rgba(255,255,255,0.25)}
+.bz-ac-bar{display:block;height:100%;background:#ffffff;transform:scaleX(0);transform-origin:left center;animation:bz-ac-fill 5000ms linear forwards}
+@keyframes bz-ac-fill{to{transform:scaleX(1)}}
+.bz-ac:not([data-playing="true"]) .bz-ac-bar{animation-play-state:paused}
+.bz-ac-controls{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:10px}
+.bz-ac-toggle{display:grid;flex:none;place-items:center;width:48px;height:48px;margin-right:4px;padding:0;border:1px solid var(--bz-line-strong,rgba(10,10,10,0.13));border-radius:999px;background:var(--bz-paper,#ffffff);color:var(--bz-ink,#0a0a0a);cursor:pointer;transition:background-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),transform 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-ac-toggle svg{width:14px;height:14px}
+.bz-ac-toggle:active{transform:scale(0.97)}
+@media (hover:hover){.bz-ac-toggle:hover{background:var(--bz-paper-sunken,#fafafa)}}
+.bz-ac-toggle:focus-visible,.bz-ac-dot:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px}
+.bz-ac-dots{display:flex;align-items:center}
+.bz-ac-dot{display:grid;place-items:center;width:48px;height:48px;padding:0;border:0;border-radius:999px;background:transparent;cursor:pointer}
+.bz-ac-dot::before{content:"";width:8px;height:8px;border-radius:999px;background:rgba(10,10,10,0.45);transition:width 300ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),background-color 300ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
+.bz-ac-dot[aria-current="true"]::before{width:24px;background:var(--bz-ink,#0a0a0a)}
+.bz-ac-counter{min-width:64px;font:500 0.8125rem/1 var(--bz-font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-variant-numeric:tabular-nums;text-align:center;color:var(--bz-ink-muted,#4a4a4c)}
+.bz-ac-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+@media (prefers-reduced-motion:reduce){.bz-ac-track,.bz-ac-nav,.bz-ac-toggle,.bz-ac-dot::before{transition:none}.bz-ac-nav:active,.bz-ac-toggle:active{transform:none}}
+\`;
+
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(RM_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const readReducedMotion = () => window.matchMedia(RM_QUERY).matches;
+const serverReducedMotion = () => false;
+
+export type CarouselSlide = {
+  src: string;
+  alt: string;
+  caption?: string;
+  /** Intrinsic size, so the plate is right before the image loads. */
+  width?: number;
+  height?: number;
+};
+
+export type AutoplayCarouselProps = {
+  slides: CarouselSlide[];
+  /** Names the carousel for assistive tech. */
+  label: string;
+  /** Time on each slide, in milliseconds. */
+  interval?: number;
+  /** Stage width divided by height. */
+  aspect?: number;
+  /** Stage proportions when the carousel is 560px wide or less. */
+  narrowAspect?: number;
+  /** More slides than this show a counter instead of dots. */
+  maxDots?: number;
+  pauseLabel?: string;
+  className?: string;
+};
+
+export function AutoplayCarousel({
+  slides,
+  label,
+  interval = 5000,
+  aspect = 1.5,
+  narrowAspect = 1,
+  maxDots = 6,
+  pauseLabel = "Pause slideshow",
+  className = "",
+}: AutoplayCarouselProps) {
+  const reduced = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion);
+  const count = slides.length;
+  const [index, setIndex] = useState(0);
+  const [autoPref, setAutoPref] = useState<boolean | null>(null);
+  const [held, setHeld] = useState(false);
+  const [ratios, setRatios] = useState<Record<number, number>>({});
+  const [announcement, setAnnouncement] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const holds = useRef(new Set<string>());
+  const swipe = useRef<{ x: number; y: number } | null>(null);
+
+  const current = count ? Math.max(0, Math.min(index, count - 1)) : 0;
+  const auto = autoPref ?? !reduced;
+  const playing = auto && !held && count > 1;
+
+  const hold = useCallback((reason: string, on: boolean) => {
+    const set = holds.current;
+    if (on) set.add(reason);
+    else set.delete(reason);
+    setHeld(set.size > 0);
+  }, []);
+
+  const go = useCallback(
+    (next: number, announce: boolean) => {
+      if (!count) return;
+      const i = ((next % count) + count) % count;
+      setIndex(i);
+      if (announce) {
+        const caption = slides[i]?.caption;
+        setAnnouncement(\`Photo \${i + 1} of \${count}\${caption ? \`: \${caption}\` : ""}\`);
+      }
+    },
+    [count, slides],
+  );
+
+  useEffect(() => {
+    const el = rootRef.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver(([entry]) => hold("offscreen", !entry.isIntersecting), { threshold: 0.25 });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hold]);
+
+  useEffect(() => {
+    const sync = () => hold("hidden", document.visibilityState === "hidden");
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, [hold]);
+
+  if (!count) return null;
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      go(current + 1, true);
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      go(current - 1, true);
+    }
+  };
+
+  const onFocus = (event: ReactFocusEvent<HTMLDivElement>) => {
+    let visible = true;
+    try {
+      visible = (event.target as Element).matches(":focus-visible");
+    } catch {
+      visible = true;
+    }
+    if (visible) hold("focus", true);
+  };
+  const onBlur = (event: ReactFocusEvent<HTMLDivElement>) => {
+    const next = event.relatedTarget as Node | null;
+    if (next && rootRef.current?.contains(next)) return;
+    hold("focus", false);
+  };
+
+  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "mouse") return;
+    swipe.current = { x: event.clientX, y: event.clientY };
+    hold("press", true);
+  };
+  const onPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const start = swipe.current;
+    swipe.current = null;
+    hold("press", false);
+    if (!start) return;
+    const dx = event.clientX - start.x;
+    const dy = event.clientY - start.y;
+    if (Math.abs(dx) < 44 || Math.abs(dx) <= Math.abs(dy)) return;
+    go(current + (dx < 0 ? 1 : -1), true);
+  };
+
+  const rootStyle = {
+    ["--bz-ac-wide" as string]: aspect,
+    ["--bz-ac-narrow" as string]: narrowAspect,
+  } as CSSProperties;
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div
+        ref={rootRef}
+        className={\`bz-ac \${className}\`.trim()}
+        role="region"
+        aria-roledescription="carousel"
+        aria-label={label}
+        tabIndex={0}
+        data-playing={playing ? "true" : "false"}
+        style={rootStyle}
+        onKeyDown={onKeyDown}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        onPointerEnter={(event) => {
+          if (event.pointerType === "mouse") hold("hover", true);
+        }}
+        onPointerLeave={() => hold("hover", false)}
+      >
+        <div
+          className="bz-ac-viewport"
+          onPointerDown={onPointerDown}
+          onPointerUp={onPointerUp}
+          onPointerCancel={() => {
+            swipe.current = null;
+            hold("press", false);
+          }}
+        >
+          <div className="bz-ac-track" style={{ transform: \`translate3d(\${-current * 100}%, 0, 0)\` }}>
+            {slides.map((slide, i) => {
+              const ratio = slide.width && slide.height ? slide.width / slide.height : ratios[i];
+              return (
+                <figure
+                  key={\`\${slide.src}-\${i}\`}
+                  className="bz-ac-slide"
+                  role="group"
+                  aria-roledescription="slide"
+                  aria-label={\`\${i + 1} of \${count}\${slide.caption ? \`: \${slide.caption}\` : ""}\`}
+                  aria-hidden={i === current ? undefined : true}
+                  style={ratio ? ({ ["--bz-ac-photo" as string]: ratio } as CSSProperties) : undefined}
+                >
+                  <img className="bz-ac-backdrop" src={slide.src} alt="" aria-hidden="true" decoding="async" loading={i === 0 ? "eager" : "lazy"} />
+                  <div className="bz-ac-plate">
+                    <img
+                      className="bz-ac-img"
+                      src={slide.src}
+                      alt={slide.alt}
+                      decoding="async"
+                      loading={i === 0 ? "eager" : "lazy"}
+                      draggable={false}
+                      onLoad={(event) => {
+                        if (slide.width && slide.height) return;
+                        const img = event.currentTarget;
+                        if (img.naturalWidth && img.naturalHeight) {
+                          setRatios((prev) => ({ ...prev, [i]: img.naturalWidth / img.naturalHeight }));
+                        }
+                      }}
+                    />
+                  </div>
+                  {slide.caption ? <figcaption className="bz-ac-caption">{slide.caption}</figcaption> : null}
+                </figure>
+              );
+            })}
+          </div>
+          {count > 1 ? (
+            <>
+              <button type="button" className="bz-ac-nav" data-side="start" aria-label="Previous photo" onClick={() => go(current - 1, true)}>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <button type="button" className="bz-ac-nav" data-side="end" aria-label="Next photo" onClick={() => go(current + 1, true)}>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M9 5l7 7-7 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+              <div className="bz-ac-progress" aria-hidden="true">
+                <span
+                  key={current}
+                  className="bz-ac-bar"
+                  style={{ animationDuration: \`\${interval}ms\`, opacity: auto ? 1 : 0 }}
+                  onAnimationEnd={() => go(current + 1, false)}
+                />
+              </div>
+            </>
+          ) : null}
+        </div>
+
+        {count > 1 ? (
+          <div className="bz-ac-controls">
+            <button
+              type="button"
+              className="bz-ac-toggle"
+              aria-label={pauseLabel}
+              aria-pressed={!auto}
+              onClick={() => setAutoPref(!auto)}
+            >
+              {auto ? (
+                <svg viewBox="0 0 14 14" aria-hidden="true">
+                  <rect x="2.5" y="1.5" width="3" height="11" rx="1" fill="currentColor" />
+                  <rect x="8.5" y="1.5" width="3" height="11" rx="1" fill="currentColor" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 14 14" aria-hidden="true">
+                  <path d="M3.5 2.2v9.6c0 .6.7 1 1.2.6l7.2-4.8a.7.7 0 0 0 0-1.2L4.7 1.6c-.5-.4-1.2 0-1.2.6z" fill="currentColor" />
+                </svg>
+              )}
+            </button>
+            {count <= maxDots ? (
+              <div className="bz-ac-dots">
+                {slides.map((slide, i) => (
+                  <button
+                    key={\`\${slide.src}-dot-\${i}\`}
+                    type="button"
+                    className="bz-ac-dot"
+                    aria-label={\`Show photo \${i + 1}\${slide.caption ? \`: \${slide.caption}\` : ""}\`}
+                    aria-current={i === current ? "true" : undefined}
+                    onClick={() => go(i, true)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="bz-ac-counter" aria-hidden="true">
+                {String(current + 1).padStart(String(count).length, "0")} / {count}
+              </p>
+            )}
+          </div>
+        ) : null}
+
+        <p className="bz-ac-sr" aria-live="polite">
+          {announcement}
+        </p>
+      </div>
+    </>
+  );
+}`,
+    description: "Photo carousel that never crops, with a progress-bar timer and a pause button.",
+    tags: ["carousel", "autoplay", "images", "swipe", "accessible", "pause"],
   },
 ];
 
