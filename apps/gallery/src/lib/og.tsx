@@ -121,7 +121,7 @@ export function componentCard({
           <div style={{ fontSize: 36, lineHeight: 1.35, color: MUTED, marginTop: 22, maxWidth: 980 }}>{description}</div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", fontSize: 24, color: MUTED }}>
-          <div>{`npx bezel-add add ${slug}`}</div>
+          <div>{slug === "multi-step-loader" ? "Copy from the gallery" : `npx bezel-add add ${slug}`}</div>
           <div>bezel-ui.vercel.app</div>
         </div>
       </div>

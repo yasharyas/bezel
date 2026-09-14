@@ -54,7 +54,16 @@ export default function ComponentPage({ params }: { params: { slug: string } }) 
         {/* The package is `bezel-add`, never bare `bezel`: that name belongs to an
             unrelated package on npm, so `npx bezel` would fetch and run a
             stranger's code. `npx bezel-add` resolves to this project. */}
-        <InstallCommand command={`npx bezel-add add ${entry.slug}`} label={`Copy the command that adds ${entry.name}`} />
+        {/* multi-step-loader imports MagicRings and ShinyText by relative path, so
+            the CLI's single-file copy leaves it out. Offering the command would
+            hand people an error. */}
+        {entry.slug === "multi-step-loader" ? (
+          <p className="max-w-xs text-sm leading-relaxed text-void-muted">
+            Not in the CLI: it imports MagicRings and ShinyText, so copy all three files by hand.
+          </p>
+        ) : (
+          <InstallCommand command={`npx bezel-add add ${entry.slug}`} label={`Copy the command that adds ${entry.name}`} />
+        )}
       </header>
 
       <section aria-label={`${entry.name} live preview`} className="mt-8">
