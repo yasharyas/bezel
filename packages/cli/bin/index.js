@@ -271,12 +271,29 @@ function showHelp() {
     autoplay-carousel       Never-cropping photo carousel with a pause button
     message-form            Form with announced errors and honest sending states
 
+  Not in the CLI (copy by hand from the gallery):
+    multi-step-loader       Imports MagicRings and ShinyText
+
   Example:
-    npx bezel add glass-button
+    npx bezel-add add glass-button
   `);
 }
 
+// Components the single-file copy can't carry, and what to do instead. Kept
+// out of COMPONENT_MAP so they don't fall through to "Unknown component".
+const HAND_COPY = {
+  "multi-step-loader":
+    'multi-step-loader isn\'t in the CLI: it imports MagicRings and ShinyText by relative path.\n' +
+    "Copy all three files from the gallery instead:\n" +
+    "  https://bezel-ui.vercel.app/component/multi-step-loader",
+};
+
 function addComponent(slug) {
+  if (HAND_COPY[slug]) {
+    console.error(HAND_COPY[slug]);
+    process.exit(1);
+  }
+
   const fileName = COMPONENT_MAP[slug];
   if (!fileName) {
     console.error(`Unknown component: "${slug}"`);
