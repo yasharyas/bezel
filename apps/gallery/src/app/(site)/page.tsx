@@ -4,7 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import { ComponentIndex, ComponentIndexView } from "@/components/index/ComponentIndex";
 import { InstallCommand } from "@/components/InstallCommand";
 import { catalog, categories } from "@/lib/catalog";
-import { FEATURED } from "@/lib/featured";
+import { FEATURED, pinFirst } from "@/lib/featured";
 import { GITHUB_URL, NPM_URL } from "@/lib/site";
 
 const RIGOUR = [
@@ -26,7 +26,7 @@ const RIGOUR = [
 ];
 
 export default function GalleryPage() {
-  const indexProps = { entries: catalog, categories, featured: FEATURED };
+  const indexProps = { entries: pinFirst(catalog), categories, featured: FEATURED };
   return (
     <main id="main">
       <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-10 sm:gap-12 sm:px-6 sm:pb-14 sm:pt-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-end">
