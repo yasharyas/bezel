@@ -118,7 +118,7 @@ export const specs: Record<string, PreviewSpec> = {
   "celebration-overlay": frame("paper", 640, 427),
   "damask-tile-backdrop": frame("cream", 600, 400),
   "morph-dialog": frame("paper", 720, 480, { hint: "Click" }),
-  "particle-qr-code": inline("basic", "paper", { replay: true }),
+  "particle-qr-code": inline("basic", "paper"),
   "timed-tabs": inline("basic", "paper", { fit: 640 }),
   "glyph-field": inline("basic", "paper", { hint: "Move" }),
   "docking-card": inline("basic", "paper", { fit: 760, hint: "Hover" }),

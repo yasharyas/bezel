@@ -263,9 +263,9 @@ function showHelp() {
     celebration-overlay     Confetti burst overlay with GSAP card entrance
     damask-tile-backdrop    Fixed repeating ornamental pattern backdrop
     morph-dialog            Modal that grows out of its trigger, with a focus trap
-    particle-qr-code        Scannable QR code that assembles from grains
+    particle-qr-code        Scannable QR codes that assemble from grains and cycle, with a pause button
     timed-tabs              Self-advancing tabs with a pause button
-    glyph-field             Word drawn as a halftone of glyphs that part under the cursor
+    glyph-field             Word built as a 3D solid of glyphs that tilts toward the cursor
     docking-card            Card whose picture flies into a header dock on hover
     sideways-scroll         Row of cards that pins and pans sideways on scroll
     autoplay-carousel       Never-cropping photo carousel with a pause button
