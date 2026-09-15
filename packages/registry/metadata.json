@@ -1242,12 +1242,14 @@
   "particle-qr-code": {
     "name": "ParticleQrCode",
     "category": "display",
-    "description": "Scannable QR code that assembles from grains and re-forms when its value changes.",
+    "description": "Scannable QR codes that assemble from grains and cycle, with a pause button.",
     "tags": [
       "qr",
       "canvas",
       "particles",
       "scannable",
+      "autoplay",
+      "pause",
       "reduced-motion"
     ]
   },
@@ -1267,13 +1269,15 @@
   "glyph-field": {
     "name": "GlyphField",
     "category": "animation",
-    "description": "Word drawn as a halftone of glyphs that part and warm under the cursor.",
+    "description": "Word built as a bevelled 3D solid of glyphs that tilts toward the cursor.",
     "tags": [
       "canvas",
       "pointer",
+      "3d",
       "halftone",
       "typography",
-      "interactive"
+      "interactive",
+      "reduced-motion"
     ]
   },
   "docking-card": {

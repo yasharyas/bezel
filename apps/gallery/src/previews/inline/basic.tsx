@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   Bold,
   Clock,
@@ -1185,31 +1185,47 @@ function MetallicLogoShimmerPreview() {
 }
 
 const QR_LINKS = [
-  { value: "https://bezel-ui.vercel.app", caption: "Opens the gallery" },
-  { value: "https://bezel-ui.vercel.app/principles", caption: "Opens the principles" },
-  { value: "https://bezel-ui.vercel.app/states", caption: "Opens the states" },
+  { value: "https://bezel-ui.vercel.app", title: "Browse the gallery", label: "QR code that opens the Bezel gallery" },
+  { value: "https://github.com/yasharyas/bezel", title: "Read the source", label: "QR code that opens the Bezel repository on GitHub" },
+  { value: "https://www.npmjs.com/package/bezel-ui", title: "Install from npm", label: "QR code that opens the bezel-ui package on npm" },
+  { value: "https://yash-arya.com", title: "Meet the maker", label: "QR code that opens yash-arya.com" },
 ];
 
+const QR_ITEMS = QR_LINKS.map((link) => ({
+  value: link.value,
+  label: link.label,
+  caption: (
+    <>
+      {link.title}
+      <span className="mt-0.5 block font-mono text-[11px] font-medium tracking-normal text-[#4a4a4c]">
+        {link.value.replace("https://", "").replace("www.", "")}
+      </span>
+    </>
+  ),
+}));
+
 function ParticleQrCodePreview() {
-  const [index, setIndex] = useState(0);
-  // A new value while idle, so the dissolve and re-assembly can be seen.
-  useIdleInterval(() => setIndex((i) => (i + 1) % QR_LINKS.length), 6500);
-  const link = QR_LINKS[index];
+  const ref = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState(0);
+  // The code takes the width the 12rem caption column leaves, so the pair sits side by side at every stage size.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const room = Math.min(el.clientWidth - 192 - 20 - 12, el.clientHeight);
+      setSize(Math.max(104, Math.min(184, Math.floor(room))));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
-    <Center>
-      <div className="flex flex-col items-center gap-3 text-center">
-        <ParticleQrCode
-          value={link.value}
-          size={150}
-          label={`QR code. ${link.caption}.`}
-          className="shadow-[0_0_0_1px_rgba(10,10,10,0.06)]"
-        />
-        <div>
-          <p className="text-sm font-semibold text-[#0a0a0a]">Scan to open on your phone</p>
-          <p className="mt-0.5 font-mono text-[11px] text-[#4a4a4c]">{link.value.replace("https://", "")}</p>
-        </div>
+    <div className="h-full w-full px-3 py-4">
+      <div ref={ref} className="flex h-full w-full items-center justify-center">
+        {size ? <ParticleQrCode value={QR_ITEMS} size={size} hold={4500} /> : null}
       </div>
-    </Center>
+    </div>
   );
 }
 
