@@ -122,7 +122,7 @@ export { Checklist } from "./lists/Checklist";
 export { ScrollReveal } from "./animation/ScrollReveal";
 export { SiteFooter } from "./layout/SiteFooter";
 
-// visual and motion extraction — high-craft visual/motion components
+// High-craft visual and motion components
 export { DepthText } from "./display/DepthText";
 export { Magnet } from "./interaction/Magnet";
 export { GlareHover } from "./interaction/GlareHover";
@@ -137,7 +137,7 @@ export { ParallaxProductStage } from "./sections/ParallaxProductStage";
 export { StaggerBlurText } from "./animation/StaggerBlurText";
 export { AnimatedGradientRule } from "./dividers/AnimatedGradientRule";
 
-// ceremonial extraction — ceremonial invitation motion components
+// Ceremonial and invitation motion components
 export { JewelryCursor } from "./interaction/JewelryCursor";
 export { ScrollUnfurlPreloader } from "./loaders/ScrollUnfurlPreloader";
 export { CanvasPetalField } from "./animation/CanvasPetalField";
@@ -147,7 +147,7 @@ export { PixelDemorphImage } from "./media/PixelDemorphImage";
 export { ScrollParallaxLayer, FallingPetalField } from "./animation/ScrollParallaxLayer";
 export { TillReceiptPrint } from "./feedback/TillReceiptPrint";
 
-// editorial extraction — WebGL / editorial motion components
+// WebGL and editorial motion components
 export { MagicRings, LOADER_MAGIC_RINGS } from "./animation/MagicRings";
 export { StarBorder } from "./buttons/StarBorder";
 export { ShinyText } from "./animation/ShinyText";
