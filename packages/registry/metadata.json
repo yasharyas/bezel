@@ -600,7 +600,7 @@
   "image-placeholder": {
     "name": "ImagePlaceholder",
     "category": "feedback",
-    "description": "Pulsing image placeholder that holds an aspect ratio and shows an optional label.",
+    "description": "Image placeholder that holds an aspect ratio, with a slow sheen and optional label.",
     "tags": [
       "skeleton",
       "shimmer",
