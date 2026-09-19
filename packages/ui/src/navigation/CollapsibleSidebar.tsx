@@ -58,11 +58,11 @@ export function CollapsibleSidebar({
     <div className="w-60 bg-white border-r border-neutral-200 flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">{title}</h2>
+        <h2 className="text-xs font-semibold text-[color:var(--bz-ink-subtle,#6b6b70)] uppercase tracking-wider">{title}</h2>
         <button
           onClick={() => setCollapsed(true)}
           aria-label="Collapse sidebar"
-          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+          className="p-1.5 rounded-lg hover:bg-neutral-100 text-[color:var(--bz-ink-subtle,#6b6b70)] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <PanelLeftClose size={16} />
         </button>
@@ -71,13 +71,13 @@ export function CollapsibleSidebar({
       {/* Search */}
       <div className="px-3 pb-3">
         <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[color:var(--bz-ink-subtle,#6b6b70)]" />
           <input
             type="text"
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-300 placeholder-neutral-400 transition"
+            className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-[color:var(--bz-line-control,#8a8a8e)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[color:var(--bz-focus-ring,#912c22)] placeholder:text-[color:var(--bz-ink-subtle,#6b6b70)] transition"
           />
         </div>
       </div>
@@ -89,7 +89,7 @@ export function CollapsibleSidebar({
           if (filtered.length === 0) return null;
           return (
             <div key={cat.label}>
-              <h3 className="text-[10px] font-semibold text-neutral-300 uppercase tracking-widest mb-2 px-1">
+              <h3 className="text-[10px] font-semibold text-[color:var(--bz-ink-subtle,#6b6b70)] uppercase tracking-widest mb-2 px-1">
                 {cat.label}
               </h3>
               <div className="space-y-1.5">
@@ -109,7 +109,7 @@ export function CollapsibleSidebar({
                     <div>
                       <div className="text-xs font-medium text-neutral-700">{item.label}</div>
                       {item.description && (
-                        <div className="text-[10px] text-neutral-400">{item.description}</div>
+                        <div className="text-[10px] text-[color:var(--bz-ink-subtle,#6b6b70)]">{item.description}</div>
                       )}
                     </div>
                   </div>

@@ -143,7 +143,9 @@ export const MD3Switch = React.forwardRef<HTMLInputElement, MD3SwitchProps>(
         <div
           className={[
             switchVariants({ variant, size }),
-            "bg-muted border-border",
+            // The unchecked outline shows where the handle can travel, so it
+            // takes the muted text colour, which clears 3:1, not the hairline.
+            "bg-muted border-muted-foreground",
             "peer-checked:bg-primary peer-checked:border-primary",
             className ?? "",
           ].join(" ")}

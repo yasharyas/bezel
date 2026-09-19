@@ -239,7 +239,7 @@ export function BlenderUpload({
 
           {/* Text */}
           <div className="mt-4 text-center">
-            <h3 className={`text-xl font-bold transition-colors ${isBlending ? "text-[#7A8A70]" : blendComplete ? "text-[#92A086]" : "text-gray-800"}`}>
+            <h3 className={`text-xl font-bold transition-colors ${isBlending ? "text-[#7A8A70]" : blendComplete ? "text-[#5f6e55]" : "text-gray-800"}`}>
               {isBlending ? "Uploading..." : blendComplete ? "🍹 Smoothie Served!" : "Drop files to upload"}
             </h3>
             <p className="mt-2 text-gray-500">
@@ -248,7 +248,7 @@ export function BlenderUpload({
               ) : blendComplete ? (
                 "Your image is ready to use!"
               ) : (
-                <>or <span className="text-[#92A086] font-semibold hover:underline">browse</span> to choose a file</>
+                <>or <span className="text-[#5f6e55] font-semibold hover:underline">browse</span> to choose a file</>
               )}
             </p>
           </div>
@@ -256,12 +256,12 @@ export function BlenderUpload({
           {/* Preview */}
           {blendComplete && previewUrl && (
             <div className="mt-5 p-3 bg-white rounded-lg shadow-md border border-[#92A086]/30">
-              <p className="text-xs text-[#92A086] font-medium mb-2 text-center">📸 Your Image</p>
+              <p className="text-xs text-[#5f6e55] font-medium mb-2 text-center">📸 Your Image</p>
               <img src={previewUrl} alt="Uploaded preview" className="max-w-40 max-h-[100px] rounded-md object-cover mx-auto" />
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); resetUpload() }}
-                className="mt-2 w-full py-1.5 px-3 text-xs font-medium text-[#7A8A70] bg-[#92A086]/10 hover:bg-[#92A086]/20 rounded-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+                className="mt-2 w-full py-1.5 px-3 text-xs font-medium text-[#5f6e55] bg-[#92A086]/10 hover:bg-[#92A086]/20 rounded-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               >
                 Change image
               </button>

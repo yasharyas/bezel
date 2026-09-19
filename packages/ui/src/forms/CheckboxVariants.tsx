@@ -8,7 +8,7 @@ const CustomCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttribu
       type="checkbox"
       ref={ref}
       className={[
-        "border-1 relative box-border block h-[1.5rem] w-[1.5rem] cursor-pointer appearance-none rounded-md border-[#d9d9d9] bg-slate-200 transition-[background-color,border-color] duration-300",
+        "relative box-border block h-[1.5rem] w-[1.5rem] cursor-pointer appearance-none rounded-md border border-[color:var(--bz-line-control,#8a8a8e)] bg-slate-200 transition-[background-color,border-color] duration-300",
         "before:absolute before:left-2/4 before:top-[42%] before:h-[10px] before:w-[6px]",
         "before:-translate-x-2/4 before:-translate-y-2/4 before:rotate-45 before:scale-75",
         "before:border-b-2 before:border-r-2 before:border-solid before:border-b-white before:border-r-white",
@@ -76,11 +76,11 @@ const AnimatedCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttri
     <label className="relative block cursor-pointer select-none rounded-full text-2xl outline-2 outline-offset-1 outline-[#0b6e4f] has-[:checked]:rounded-md has-[:focus-visible]:outline">
       <input ref={ref} type="checkbox" className="peer absolute h-0 w-0 opacity-0" {...props} />
       <div className={[
-        "relative left-0 top-0 h-[1.5rem] w-[1.5rem] rounded-[50%] bg-slate-200 transition duration-300",
+        "relative left-0 top-0 h-[1.5rem] w-[1.5rem] rounded-[50%] border border-[color:var(--bz-line-control,#8a8a8e)] bg-slate-200 transition duration-300",
         "after:absolute after:left-[0.5rem] after:top-1 after:hidden after:h-[0.8rem] after:w-[0.5rem]",
         "after:rotate-45 after:border-b-[0.2rem] after:border-r-[0.2rem] after:content-['']",
         "focus:outline-[#0b6e4f]",
-        "peer-checked:animate-pulse peer-checked:rounded-lg peer-checked:bg-[#0b6e4f] peer-checked:after:block",
+        "peer-checked:animate-pulse peer-checked:rounded-lg peer-checked:border-[#0b6e4f] peer-checked:bg-[#0b6e4f] peer-checked:after:block",
         className,
       ].filter(Boolean).join(" ")} />
     </label>

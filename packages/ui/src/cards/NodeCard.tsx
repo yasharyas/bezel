@@ -65,7 +65,7 @@ export function NodeCard({
       {/* Description */}
       {description && (
         <div className="px-4 pb-3">
-          <p className="text-xs text-neutral-400 truncate">{description}</p>
+          <p className="text-xs text-[color:var(--bz-ink-subtle,#6b6b70)] truncate">{description}</p>
         </div>
       )}
 

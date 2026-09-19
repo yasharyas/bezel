@@ -42,7 +42,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
                 key={step.id}
                 className={[
                   'w-2 h-2 rounded-full transition-[background-color,transform] duration-300',
-                  isCompleted ? 'bg-green-500' : isCurrent ? 'bg-indigo-500 scale-125' : 'bg-neutral-300',
+                  isCompleted ? 'bg-[color:var(--bz-emerald-decor,#059669)]' : isCurrent ? 'bg-indigo-600 scale-125' : 'bg-neutral-300',
                 ].join(' ')}
               />
             );
@@ -64,10 +64,10 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
                     className={[
                       'w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-[background-color,color,box-shadow] duration-300',
                       isCompleted
-                        ? 'bg-green-500 text-white'
+                        ? 'bg-[color:var(--bz-emerald-decor,#059669)] text-white'
                         : isCurrent
-                          ? 'bg-indigo-500 text-white shadow-[0_0_0_3px_rgba(99,102,241,0.3)]'
-                          : 'bg-neutral-200 text-neutral-500',
+                          ? 'bg-indigo-600 text-white shadow-[0_0_0_3px_rgba(99,102,241,0.3)]'
+                          : 'bg-neutral-200 text-[color:var(--bz-ink-muted,#4a4a4c)]',
                     ].join(' ')}
                   >
                     {isCompleted ? (
@@ -81,7 +81,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
                   <span
                     className={[
                       'text-xs text-center w-full leading-tight mt-1.5',
-                      isCurrent ? 'text-indigo-600 font-semibold' : isCompleted ? 'text-green-600 font-medium' : 'text-neutral-400',
+                      isCurrent ? 'text-indigo-600 font-semibold' : isCompleted ? 'text-[color:var(--bz-emerald,#047857)] font-medium' : 'text-[color:var(--bz-ink-subtle,#6b6b70)]',
                     ].join(' ')}
                   >
                     {step.title}
@@ -91,7 +91,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
                   <div
                     className={[
                       'flex-1 h-0.5 mt-[18px] transition-[background-color] duration-300',
-                      isCompleted ? 'bg-green-500' : 'bg-neutral-200',
+                      isCompleted ? 'bg-[color:var(--bz-emerald-decor,#059669)]' : 'bg-neutral-200',
                     ].join(' ')}
                   />
                 )}

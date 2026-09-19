@@ -105,7 +105,7 @@ export function TextInput({
     <div className="flex flex-col gap-1">
       <label htmlFor={name} className="text-sm font-medium text-neutral-700">
         {label}
-        {mandatory && <span className="text-red-500 ml-1">*</span>}
+        {mandatory && <span className="text-[color:var(--bz-danger,#b91c1c)] ml-1">*</span>}
       </label>
       <input
         id={name}
@@ -117,15 +117,15 @@ export function TextInput({
         disabled={disabled}
         maxLength={maxLength}
         className={[
-          'h-11 px-4 rounded-full border bg-white text-neutral-900 placeholder:text-neutral-400',
-          'focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-[border-color,box-shadow] duration-200',
+          'h-11 px-4 rounded-full border bg-white text-neutral-900 placeholder:text-[color:var(--bz-ink-subtle,#6b6b70)]',
+          'focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-[border-color,box-shadow] duration-200',
           uppercase ? 'uppercase' : '',
-          error ? 'border-red-500 focus:border-red-500' : 'border-neutral-300',
+          error ? 'border-red-500 focus:border-red-500' : 'border-[color:var(--bz-line-control,#8a8a8e)]',
           disabled ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed' : '',
         ].join(' ')}
         autoComplete="off"
       />
-      {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
+      {error && <p className="text-xs text-[color:var(--bz-danger,#b91c1c)] mt-0.5">{error}</p>}
     </div>
   );
 }`,
@@ -181,7 +181,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
                 key={step.id}
                 className={[
                   'w-2 h-2 rounded-full transition-[background-color,transform] duration-300',
-                  isCompleted ? 'bg-green-500' : isCurrent ? 'bg-indigo-500 scale-125' : 'bg-neutral-300',
+                  isCompleted ? 'bg-[color:var(--bz-emerald-decor,#059669)]' : isCurrent ? 'bg-indigo-600 scale-125' : 'bg-neutral-300',
                 ].join(' ')}
               />
             );
@@ -203,10 +203,10 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
                     className={[
                       'w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-[background-color,color,box-shadow] duration-300',
                       isCompleted
-                        ? 'bg-green-500 text-white'
+                        ? 'bg-[color:var(--bz-emerald-decor,#059669)] text-white'
                         : isCurrent
-                          ? 'bg-indigo-500 text-white shadow-[0_0_0_3px_rgba(99,102,241,0.3)]'
-                          : 'bg-neutral-200 text-neutral-500',
+                          ? 'bg-indigo-600 text-white shadow-[0_0_0_3px_rgba(99,102,241,0.3)]'
+                          : 'bg-neutral-200 text-[color:var(--bz-ink-muted,#4a4a4c)]',
                     ].join(' ')}
                   >
                     {isCompleted ? (
@@ -220,7 +220,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
                   <span
                     className={[
                       'text-xs text-center w-full leading-tight mt-1.5',
-                      isCurrent ? 'text-indigo-600 font-semibold' : isCompleted ? 'text-green-600 font-medium' : 'text-neutral-400',
+                      isCurrent ? 'text-indigo-600 font-semibold' : isCompleted ? 'text-[color:var(--bz-emerald,#047857)] font-medium' : 'text-[color:var(--bz-ink-subtle,#6b6b70)]',
                     ].join(' ')}
                   >
                     {step.title}
@@ -230,7 +230,7 @@ export function Stepper({ steps, currentStepIndex, completedStepIds }: StepperPr
                   <div
                     className={[
                       'flex-1 h-0.5 mt-[18px] transition-[background-color] duration-300',
-                      isCompleted ? 'bg-green-500' : 'bg-neutral-200',
+                      isCompleted ? 'bg-[color:var(--bz-emerald-decor,#059669)]' : 'bg-neutral-200',
                     ].join(' ')}
                   />
                 )}
@@ -289,13 +289,13 @@ export function SubmissionLoader({ phase, phases = DEFAULT_PHASES, phaseConfig =
         <div className="flex justify-center mb-6">
           {isComplete ? (
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-100 flex items-center justify-center">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[color:var(--bz-emerald,#047857)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
           ) : (
             <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center">
-              <svg className="w-8 h-8 text-indigo-500 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 text-indigo-600 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
@@ -321,7 +321,7 @@ export function SubmissionLoader({ phase, phases = DEFAULT_PHASES, phaseConfig =
             />
           ))}
         </div>
-        <p className="text-xs text-neutral-400 mt-3">
+        <p className="text-xs text-[color:var(--bz-ink-subtle,#6b6b70)] mt-3">
           Step {currentIndex + 1} of {phases.length}
         </p>
       </div>
@@ -554,11 +554,11 @@ export function CollapsibleSidebar({
     <div className="w-60 bg-white border-r border-neutral-200 flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h2 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">{title}</h2>
+        <h2 className="text-xs font-semibold text-[color:var(--bz-ink-subtle,#6b6b70)] uppercase tracking-wider">{title}</h2>
         <button
           onClick={() => setCollapsed(true)}
           aria-label="Collapse sidebar"
-          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+          className="p-1.5 rounded-lg hover:bg-neutral-100 text-[color:var(--bz-ink-subtle,#6b6b70)] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <PanelLeftClose size={16} />
         </button>
@@ -567,13 +567,13 @@ export function CollapsibleSidebar({
       {/* Search */}
       <div className="px-3 pb-3">
         <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[color:var(--bz-ink-subtle,#6b6b70)]" />
           <input
             type="text"
             placeholder={searchPlaceholder}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-neutral-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-neutral-300 placeholder-neutral-400 transition"
+            className="w-full pl-8 pr-3 py-2 text-xs bg-neutral-50 border border-[color:var(--bz-line-control,#8a8a8e)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[color:var(--bz-focus-ring,#912c22)] placeholder:text-[color:var(--bz-ink-subtle,#6b6b70)] transition"
           />
         </div>
       </div>
@@ -585,7 +585,7 @@ export function CollapsibleSidebar({
           if (filtered.length === 0) return null;
           return (
             <div key={cat.label}>
-              <h3 className="text-[10px] font-semibold text-neutral-300 uppercase tracking-widest mb-2 px-1">
+              <h3 className="text-[10px] font-semibold text-[color:var(--bz-ink-subtle,#6b6b70)] uppercase tracking-widest mb-2 px-1">
                 {cat.label}
               </h3>
               <div className="space-y-1.5">
@@ -605,7 +605,7 @@ export function CollapsibleSidebar({
                     <div>
                       <div className="text-xs font-medium text-neutral-700">{item.label}</div>
                       {item.description && (
-                        <div className="text-[10px] text-neutral-400">{item.description}</div>
+                        <div className="text-[10px] text-[color:var(--bz-ink-subtle,#6b6b70)]">{item.description}</div>
                       )}
                     </div>
                   </div>
@@ -659,14 +659,14 @@ export function SidePanel({ title, headerLeft, onClose, footer, children }: Side
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-neutral-100">
         <div className="flex items-center gap-2">
           {headerLeft}
-          <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+          <span className="text-[10px] font-semibold text-[color:var(--bz-ink-subtle,#6b6b70)] uppercase tracking-wider">
             {title}
           </span>
         </div>
         <button
           onClick={onClose}
           aria-label="Close panel"
-          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+          className="p-1.5 rounded-lg hover:bg-neutral-100 text-[color:var(--bz-ink-subtle,#6b6b70)] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <X size={16} />
         </button>
@@ -695,7 +695,7 @@ type FieldProps = {
 export function PanelField({ label, children }: FieldProps) {
   return (
     <div>
-      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+      <label className="text-[10px] font-semibold text-[color:var(--bz-ink-subtle,#6b6b70)] uppercase tracking-wider">
         {label}
       </label>
       <div className="mt-1">{children}</div>
@@ -708,8 +708,8 @@ export function PanelInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={
-        'w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl ' +
-        'focus:outline-none focus:ring-2 focus:ring-neutral-300 placeholder-neutral-300 transition ' +
+        'w-full px-3 py-2 text-sm bg-neutral-50 border border-[color:var(--bz-line-control,#8a8a8e)] rounded-xl ' +
+        'focus:outline-none focus:ring-2 focus:ring-[color:var(--bz-focus-ring,#912c22)] placeholder:text-[color:var(--bz-ink-subtle,#6b6b70)] transition ' +
         (props.className ?? '')
       }
     />
@@ -721,8 +721,8 @@ export function PanelTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaEl
     <textarea
       {...props}
       className={
-        'w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl ' +
-        'focus:outline-none focus:ring-2 focus:ring-neutral-300 resize-none transition ' +
+        'w-full px-3 py-2 text-sm bg-neutral-50 border border-[color:var(--bz-line-control,#8a8a8e)] rounded-xl ' +
+        'focus:outline-none focus:ring-2 focus:ring-[color:var(--bz-focus-ring,#912c22)] resize-none transition ' +
         (props.className ?? '')
       }
     />
@@ -733,7 +733,7 @@ export function PanelDeleteButton({ onClick, label = 'Delete' }: { onClick: () =
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+      className="w-full flex items-center justify-center gap-2 py-2 text-sm text-[color:var(--bz-danger,#b91c1c)] hover:bg-red-50 rounded-xl transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
     >
       {label}
     </button>
@@ -814,7 +814,7 @@ export function NodeCard({
       {/* Description */}
       {description && (
         <div className="px-4 pb-3">
-          <p className="text-xs text-neutral-400 truncate">{description}</p>
+          <p className="text-xs text-[color:var(--bz-ink-subtle,#6b6b70)] truncate">{description}</p>
         </div>
       )}
 
@@ -1080,7 +1080,9 @@ export const MD3Switch = React.forwardRef<HTMLInputElement, MD3SwitchProps>(
         <div
           className={[
             switchVariants({ variant, size }),
-            "bg-muted border-border",
+            // The unchecked outline shows where the handle can travel, so it
+            // takes the muted text colour, which clears 3:1, not the hairline.
+            "bg-muted border-muted-foreground",
             "peer-checked:bg-primary peer-checked:border-primary",
             className ?? "",
           ].join(" ")}
@@ -1299,7 +1301,7 @@ export function DualConfirmDialog({
                 <p className="font-semibold text-destructive">
                   You are about to delete {itemCount} {itemType}{itemCount > 1 ? "s" : ""}.
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">This action cannot be undone.</p>
+                <p className="text-sm text-foreground/60 mt-1">This action cannot be undone.</p>
               </div>
             </div>
           ) : (
@@ -1620,7 +1622,7 @@ export function BlenderUpload({
 
           {/* Text */}
           <div className="mt-4 text-center">
-            <h3 className={\`text-xl font-bold transition-colors \${isBlending ? "text-[#7A8A70]" : blendComplete ? "text-[#92A086]" : "text-gray-800"}\`}>
+            <h3 className={\`text-xl font-bold transition-colors \${isBlending ? "text-[#7A8A70]" : blendComplete ? "text-[#5f6e55]" : "text-gray-800"}\`}>
               {isBlending ? "Uploading..." : blendComplete ? "🍹 Smoothie Served!" : "Drop files to upload"}
             </h3>
             <p className="mt-2 text-gray-500">
@@ -1629,7 +1631,7 @@ export function BlenderUpload({
               ) : blendComplete ? (
                 "Your image is ready to use!"
               ) : (
-                <>or <span className="text-[#92A086] font-semibold hover:underline">browse</span> to choose a file</>
+                <>or <span className="text-[#5f6e55] font-semibold hover:underline">browse</span> to choose a file</>
               )}
             </p>
           </div>
@@ -1637,12 +1639,12 @@ export function BlenderUpload({
           {/* Preview */}
           {blendComplete && previewUrl && (
             <div className="mt-5 p-3 bg-white rounded-lg shadow-md border border-[#92A086]/30">
-              <p className="text-xs text-[#92A086] font-medium mb-2 text-center">📸 Your Image</p>
+              <p className="text-xs text-[#5f6e55] font-medium mb-2 text-center">📸 Your Image</p>
               <img src={previewUrl} alt="Uploaded preview" className="max-w-40 max-h-[100px] rounded-md object-cover mx-auto" />
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); resetUpload() }}
-                className="mt-2 w-full py-1.5 px-3 text-xs font-medium text-[#7A8A70] bg-[#92A086]/10 hover:bg-[#92A086]/20 rounded-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+                className="mt-2 w-full py-1.5 px-3 text-xs font-medium text-[#5f6e55] bg-[#92A086]/10 hover:bg-[#92A086]/20 rounded-md transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
               >
                 Change image
               </button>
@@ -1738,7 +1740,7 @@ const CustomCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttribu
       type="checkbox"
       ref={ref}
       className={[
-        "border-1 relative box-border block h-[1.5rem] w-[1.5rem] cursor-pointer appearance-none rounded-md border-[#d9d9d9] bg-slate-200 transition-[background-color,border-color] duration-300",
+        "relative box-border block h-[1.5rem] w-[1.5rem] cursor-pointer appearance-none rounded-md border border-[color:var(--bz-line-control,#8a8a8e)] bg-slate-200 transition-[background-color,border-color] duration-300",
         "before:absolute before:left-2/4 before:top-[42%] before:h-[10px] before:w-[6px]",
         "before:-translate-x-2/4 before:-translate-y-2/4 before:rotate-45 before:scale-75",
         "before:border-b-2 before:border-r-2 before:border-solid before:border-b-white before:border-r-white",
@@ -1806,11 +1808,11 @@ const AnimatedCheckbox = React.forwardRef<HTMLInputElement, React.InputHTMLAttri
     <label className="relative block cursor-pointer select-none rounded-full text-2xl outline-2 outline-offset-1 outline-[#0b6e4f] has-[:checked]:rounded-md has-[:focus-visible]:outline">
       <input ref={ref} type="checkbox" className="peer absolute h-0 w-0 opacity-0" {...props} />
       <div className={[
-        "relative left-0 top-0 h-[1.5rem] w-[1.5rem] rounded-[50%] bg-slate-200 transition duration-300",
+        "relative left-0 top-0 h-[1.5rem] w-[1.5rem] rounded-[50%] border border-[color:var(--bz-line-control,#8a8a8e)] bg-slate-200 transition duration-300",
         "after:absolute after:left-[0.5rem] after:top-1 after:hidden after:h-[0.8rem] after:w-[0.5rem]",
         "after:rotate-45 after:border-b-[0.2rem] after:border-r-[0.2rem] after:content-['']",
         "focus:outline-[#0b6e4f]",
-        "peer-checked:animate-pulse peer-checked:rounded-lg peer-checked:bg-[#0b6e4f] peer-checked:after:block",
+        "peer-checked:animate-pulse peer-checked:rounded-lg peer-checked:border-[#0b6e4f] peer-checked:bg-[#0b6e4f] peer-checked:after:block",
         className,
       ].filter(Boolean).join(" ")} />
     </label>

@@ -37,13 +37,13 @@ export function SubmissionLoader({ phase, phases = DEFAULT_PHASES, phaseConfig =
         <div className="flex justify-center mb-6">
           {isComplete ? (
             <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-100 flex items-center justify-center">
-              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[color:var(--bz-emerald,#047857)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
           ) : (
             <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center">
-              <svg className="w-8 h-8 text-indigo-500 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 text-indigo-600 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
@@ -69,7 +69,7 @@ export function SubmissionLoader({ phase, phases = DEFAULT_PHASES, phaseConfig =
             />
           ))}
         </div>
-        <p className="text-xs text-neutral-400 mt-3">
+        <p className="text-xs text-[color:var(--bz-ink-subtle,#6b6b70)] mt-3">
           Step {currentIndex + 1} of {phases.length}
         </p>
       </div>

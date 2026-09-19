@@ -36,7 +36,7 @@ export function TextInput({
     <div className="flex flex-col gap-1">
       <label htmlFor={name} className="text-sm font-medium text-neutral-700">
         {label}
-        {mandatory && <span className="text-red-500 ml-1">*</span>}
+        {mandatory && <span className="text-[color:var(--bz-danger,#b91c1c)] ml-1">*</span>}
       </label>
       <input
         id={name}
@@ -48,15 +48,15 @@ export function TextInput({
         disabled={disabled}
         maxLength={maxLength}
         className={[
-          'h-11 px-4 rounded-full border bg-white text-neutral-900 placeholder:text-neutral-400',
-          'focus:outline-none focus:ring-2 focus:ring-indigo-400 transition-[border-color,box-shadow] duration-200',
+          'h-11 px-4 rounded-full border bg-white text-neutral-900 placeholder:text-[color:var(--bz-ink-subtle,#6b6b70)]',
+          'focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-[border-color,box-shadow] duration-200',
           uppercase ? 'uppercase' : '',
-          error ? 'border-red-500 focus:border-red-500' : 'border-neutral-300',
+          error ? 'border-red-500 focus:border-red-500' : 'border-[color:var(--bz-line-control,#8a8a8e)]',
           disabled ? 'bg-neutral-100 text-neutral-500 cursor-not-allowed' : '',
         ].join(' ')}
         autoComplete="off"
       />
-      {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
+      {error && <p className="text-xs text-[color:var(--bz-danger,#b91c1c)] mt-0.5">{error}</p>}
     </div>
   );
 }

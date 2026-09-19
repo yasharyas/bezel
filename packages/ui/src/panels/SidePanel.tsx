@@ -31,14 +31,14 @@ export function SidePanel({ title, headerLeft, onClose, footer, children }: Side
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-neutral-100">
         <div className="flex items-center gap-2">
           {headerLeft}
-          <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+          <span className="text-[10px] font-semibold text-[color:var(--bz-ink-subtle,#6b6b70)] uppercase tracking-wider">
             {title}
           </span>
         </div>
         <button
           onClick={onClose}
           aria-label="Close panel"
-          className="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-400 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+          className="p-1.5 rounded-lg hover:bg-neutral-100 text-[color:var(--bz-ink-subtle,#6b6b70)] transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
         >
           <X size={16} />
         </button>
@@ -67,7 +67,7 @@ type FieldProps = {
 export function PanelField({ label, children }: FieldProps) {
   return (
     <div>
-      <label className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider">
+      <label className="text-[10px] font-semibold text-[color:var(--bz-ink-subtle,#6b6b70)] uppercase tracking-wider">
         {label}
       </label>
       <div className="mt-1">{children}</div>
@@ -80,8 +80,8 @@ export function PanelInput(props: React.InputHTMLAttributes<HTMLInputElement>) {
     <input
       {...props}
       className={
-        'w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl ' +
-        'focus:outline-none focus:ring-2 focus:ring-neutral-300 placeholder-neutral-300 transition ' +
+        'w-full px-3 py-2 text-sm bg-neutral-50 border border-[color:var(--bz-line-control,#8a8a8e)] rounded-xl ' +
+        'focus:outline-none focus:ring-2 focus:ring-[color:var(--bz-focus-ring,#912c22)] placeholder:text-[color:var(--bz-ink-subtle,#6b6b70)] transition ' +
         (props.className ?? '')
       }
     />
@@ -93,8 +93,8 @@ export function PanelTextarea(props: React.TextareaHTMLAttributes<HTMLTextAreaEl
     <textarea
       {...props}
       className={
-        'w-full px-3 py-2 text-sm bg-neutral-50 border border-neutral-200 rounded-xl ' +
-        'focus:outline-none focus:ring-2 focus:ring-neutral-300 resize-none transition ' +
+        'w-full px-3 py-2 text-sm bg-neutral-50 border border-[color:var(--bz-line-control,#8a8a8e)] rounded-xl ' +
+        'focus:outline-none focus:ring-2 focus:ring-[color:var(--bz-focus-ring,#912c22)] resize-none transition ' +
         (props.className ?? '')
       }
     />
@@ -105,7 +105,7 @@ export function PanelDeleteButton({ onClick, label = 'Delete' }: { onClick: () =
   return (
     <button
       onClick={onClick}
-      className="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+      className="w-full flex items-center justify-center gap-2 py-2 text-sm text-[color:var(--bz-danger,#b91c1c)] hover:bg-red-50 rounded-xl transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
     >
       {label}
     </button>

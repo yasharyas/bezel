@@ -140,7 +140,7 @@ export function DualConfirmDialog({
                 <p className="font-semibold text-destructive">
                   You are about to delete {itemCount} {itemType}{itemCount > 1 ? "s" : ""}.
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">This action cannot be undone.</p>
+                <p className="text-sm text-foreground/60 mt-1">This action cannot be undone.</p>
               </div>
             </div>
           ) : (
