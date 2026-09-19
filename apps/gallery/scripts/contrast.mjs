@@ -116,6 +116,8 @@ export const PAIRS = [
   // Non-text: focus, control boundaries and icons (WCAG 1.4.11, 3:1).
   { group: "Controls", where: "Focus outline on the page", fg: "--bz-focus-ring-void", bg: "void", min: 3 },
   { group: "Controls", where: "Focus outline on raised surfaces", fg: "--bz-focus-ring-void", bg: "void-raised", min: 3 },
+  { group: "Controls", where: "Replay focus outline on a paper stage", fg: "--bz-focus-ring", bg: "paper-sunken", min: 3 },
+  { group: "Controls", where: "Replay focus outline on a cream stage", fg: "--bz-focus-ring", bg: "paper-raised", min: 3 },
   { group: "Controls", where: "Icon buttons (expand, copy, close, clear)", fg: "void-ink", bg: "void", min: 3 },
   { group: "Controls", where: "Search field border against the page", fg: "rgba(255,255,255,0.36)", fgOn: "void-raised", bg: "void", min: 3 },
 

@@ -109,6 +109,24 @@
   },
   {
     "group": "Controls",
+    "where": "Replay focus outline on a paper stage",
+    "fg": "#912c22",
+    "bg": "#fafafa",
+    "ratio": 7.78,
+    "min": 3,
+    "pass": true
+  },
+  {
+    "group": "Controls",
+    "where": "Replay focus outline on a cream stage",
+    "fg": "#912c22",
+    "bg": "#f7f3ee",
+    "ratio": 7.35,
+    "min": 3,
+    "pass": true
+  },
+  {
+    "group": "Controls",
     "where": "Icon buttons (expand, copy, close, clear)",
     "fg": "#ffffff",
     "bg": "#0c0c0f",

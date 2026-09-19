@@ -145,7 +145,8 @@ export function PreviewStage({ slug, name, size = "card", eager = false, classNa
           className={`focus-ring absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-full transition-opacity duration-200 motion-safe-transition ${
             spec.tone === "void"
               ? "bg-white/10 text-void-ink hover:bg-white/20"
-              : "bg-white/85 text-ink-muted ring-1 ring-inset ring-black/[0.08] hover:bg-white"
+              : // The chrome's white ring vanishes on a light stage; use the paper one.
+                "bg-white/85 text-ink-muted ring-1 ring-inset ring-black/[0.08] hover:bg-white focus-visible:[outline-color:var(--bz-focus-ring)]"
           } ${size === "card" && !engaged ? "pointer-events-none opacity-0" : "opacity-100"}`}
         >
           <RotateCcw aria-hidden size={14} strokeWidth={2.25} />
