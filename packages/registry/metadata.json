@@ -901,7 +901,7 @@
   "pointer-glow-card": {
     "name": "PointerGlowCard",
     "category": "cards",
-    "description": "Card whose border lights up in a gradient under the pointer or keyboard focus.",
+    "description": "Card whose border and surface light up under the pointer or keyboard focus.",
     "tags": [
       "glow-border",
       "pointer",

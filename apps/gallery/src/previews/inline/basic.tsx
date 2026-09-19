@@ -871,14 +871,27 @@ function SiteFooterPreview() {
 }
 
 function PointerGlowCardPreview() {
+  // While idle, a slow synthetic pointer crosses the card so the index shows
+  // the spotlight; a real pointer or reduced motion stops it.
+  const ref = useRef<HTMLDivElement>(null);
+  useIdleInterval(() => {
+    sweep(ref.current?.querySelector(".pgc") ?? null, { duration: 2400 });
+  }, 4200);
   return (
     <Center>
-      <PointerGlowCard className="w-64 p-5 text-left">
-        <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#7a6015]">Starter kit</p>
-        <h4 className="mt-2 text-lg font-semibold text-[#0a0a0a]">Kitchen essentials</h4>
-        <p className="mt-1 text-sm text-[#4a4a4c]">Three concentrates and one refill box.</p>
-        <p className="mt-4 text-base font-semibold text-[#0a0a0a]">₹499</p>
-      </PointerGlowCard>
+      <div ref={ref}>
+        <PointerGlowCard className="w-64 p-5 text-left">
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#912c22]">Notebook</p>
+          <h4 className="mt-2 text-lg font-semibold text-[#0a0a0a]">Field notes</h4>
+          <p className="mt-1 text-sm text-[#4a4a4c]">Sketches and measurements from a week of drawing old buildings.</p>
+          <a
+            href="#notes"
+            className={`-mb-2 mt-1 inline-flex min-h-[48px] items-center rounded text-sm font-medium text-[#912c22] underline-offset-4 hover:underline ${cardRing}`}
+          >
+            Open the notebook
+          </a>
+        </PointerGlowCard>
+      </div>
     </Center>
   );
 }
