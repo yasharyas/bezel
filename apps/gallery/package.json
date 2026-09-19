@@ -6,7 +6,7 @@
     "dev": "next dev --port 3333",
     "build": "npm run check && next build",
     "start": "next start",
-    "check": "node ../../packages/ui/scripts/check-contrast.mjs && node scripts/check-contrast.mjs && node scripts/check-previews.mjs",
+    "check": "node ../../packages/ui/scripts/check-contrast.mjs && node scripts/check-contrast.mjs && node scripts/check-previews.mjs && node scripts/check-rendered-record.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
     "check:previews": "node scripts/check-previews.mjs",
     "check:rendered": "node scripts/check-rendered.mjs",
