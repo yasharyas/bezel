@@ -873,7 +873,7 @@ export function TubelightNavBar({ items, activeItem, className, onNavigate }: Na
           const Icon = item.icon
           const isActive = currentActive === item.name
           const baseClasses =
-            "relative cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-full transition-colors text-center text-foreground/80 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]" +
+            "relative cursor-pointer text-xs font-semibold px-3 py-1.5 rounded-full transition-colors text-center text-foreground/80 hover:text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" +
             (isActive ? " bg-muted text-primary" : "")
 
           const content = (
@@ -4077,7 +4077,11 @@ type Props = {
   primaryAction?: {
     label: string;
     onClick: () => void;
-    /** Tailwind bg class, default "bg-[#25D366] hover:bg-[#22c35e]" */
+    /**
+     * Tailwind bg class, default "bg-[#008069] hover:bg-[#006e5a]": a darker
+     * WhatsApp green that carries white text at 4.9:1. The brand's light
+     * #25D366 is 2.0:1 under white.
+     */
     colorClass?: string;
   };
 };
@@ -4129,7 +4133,7 @@ export function StickyCartBar({ itemCount, totalPrice, onViewCart, primaryAction
                 <button
                   onClick={primaryAction.onClick}
                   className={\`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white \${
-                    primaryAction.colorClass ?? "bg-[#25D366] hover:bg-[#22c35e]"
+                    primaryAction.colorClass ?? "bg-[#008069] hover:bg-[#006e5a]"
                   }\`}
                 >
                   <MessageCircle className="w-4 h-4" />
@@ -4860,7 +4864,7 @@ export function WhatsAppFAB({ phoneNumber, message = "Hello! I have a question."
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-[background-color,box-shadow,transform] duration-300 hover:scale-110 active:scale-105 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+      className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-14 h-14 bg-green-600 hover:bg-green-700 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-[background-color,box-shadow,transform] duration-300 hover:scale-110 active:scale-105 group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
       aria-label="Chat on WhatsApp"
       title="Chat on WhatsApp"
     >
@@ -9698,7 +9702,7 @@ export function StarBorder<T extends ElementType = "button">({
         .star-border-container:focus-visible { outline: none; }
         .star-border-container:focus-visible .star-border-inner {
           outline: none;
-          box-shadow: 0 0 0 2px #fff, 0 0 0 4px hsl(5 62% 35% / 0.55);
+          box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--bz-focus-ring, #912c22);
         }
         .star-border-container:disabled .border-gradient-bottom,
         .star-border-container:disabled .border-gradient-top {

@@ -10,7 +10,11 @@ type Props = {
   primaryAction?: {
     label: string;
     onClick: () => void;
-    /** Tailwind bg class, default "bg-[#25D366] hover:bg-[#22c35e]" */
+    /**
+     * Tailwind bg class, default "bg-[#008069] hover:bg-[#006e5a]": a darker
+     * WhatsApp green that carries white text at 4.9:1. The brand's light
+     * #25D366 is 2.0:1 under white.
+     */
     colorClass?: string;
   };
 };
@@ -62,7 +66,7 @@ export function StickyCartBar({ itemCount, totalPrice, onViewCart, primaryAction
                 <button
                   onClick={primaryAction.onClick}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
-                    primaryAction.colorClass ?? "bg-[#25D366] hover:bg-[#22c35e]"
+                    primaryAction.colorClass ?? "bg-[#008069] hover:bg-[#006e5a]"
                   }`}
                 >
                   <MessageCircle className="w-4 h-4" />

@@ -66,7 +66,7 @@ export function StarBorder<T extends ElementType = "button">({
         .star-border-container:focus-visible { outline: none; }
         .star-border-container:focus-visible .star-border-inner {
           outline: none;
-          box-shadow: 0 0 0 2px #fff, 0 0 0 4px hsl(5 62% 35% / 0.55);
+          box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--bz-focus-ring, #912c22);
         }
         .star-border-container:disabled .border-gradient-bottom,
         .star-border-container:disabled .border-gradient-top {
