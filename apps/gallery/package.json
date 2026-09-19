@@ -9,6 +9,7 @@
     "check": "node ../../packages/ui/scripts/check-contrast.mjs && node scripts/check-contrast.mjs && node scripts/check-previews.mjs",
     "check:contrast": "node scripts/check-contrast.mjs",
     "check:previews": "node scripts/check-previews.mjs",
+    "check:rendered": "node scripts/check-rendered.mjs",
     "lint": "npm run check && tsc --noEmit"
   },
   "dependencies": {
