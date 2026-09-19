@@ -25,6 +25,8 @@ export const color = {
   lineStrong: "rgba(10, 10, 10, 0.13)",
   lineOpaque: "#f0f0f0",
   lineStrongOpaque: "#dedede",
+  /** The edge of a form control. 3.4:1 on paper, the 3:1 non-text bar. */
+  lineControl: "#8a8a8e",
 
   void: "#0c0c0f",
   voidRaised: "#1a1a1a",

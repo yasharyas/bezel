@@ -132,6 +132,12 @@ for (const t of decorMarks) {
   pairs.push([`${t} on paper (mark, 3:1)`, need(t), paperSurfaces.paper, AA_LARGE]);
 }
 
+// A control's edge identifies the control, so it clears 3:1 on every paper
+// surface a form can sit on.
+for (const [sName, s] of Object.entries(paperSurfaces)) {
+  pairs.push([`bz-line-control on ${sName} (edge)`, need("bz-line-control"), s, AA_LARGE]);
+}
+
 // Reported but not gated, each for a stated reason.
 const exempt = [
   [
@@ -178,6 +184,7 @@ const tsPairs = {
   paper: "bz-paper",
   paperSunken: "bz-paper-sunken",
   paperRaised: "bz-paper-raised",
+  lineControl: "bz-line-control",
   accent: "bz-accent",
   amber: "bz-amber",
   emerald: "bz-emerald",

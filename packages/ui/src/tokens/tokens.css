@@ -43,6 +43,10 @@
   --bz-line-strong: rgba(10, 10, 10, 0.13);   /* border-black/[0.13], 2 files */
   --bz-line-opaque: #f0f0f0;
   --bz-line-strong-opaque: #dedede;
+  /* The edge of a form control: an input, a checkbox, a switch track. The
+   * hairlines above separate surfaces and cannot identify a control, which
+   * WCAG 1.4.11 needs at 3:1. 3.4:1 on paper, 3.1:1 on paper-raised. */
+  --bz-line-control: #8a8a8e;
 
   /* Void surfaces (dark glass) */
   --bz-void: #0c0c0f;          /* the gallery ground */
