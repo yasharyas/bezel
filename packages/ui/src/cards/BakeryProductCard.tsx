@@ -73,7 +73,7 @@ export function BakeryProductCard({ product, href, currencySymbol = "₹", unitL
           </span>
         )}
         {product.tag && (
-          <span className="absolute top-3 right-3 bg-green-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+          <span className="absolute top-3 right-3 bg-[color:var(--bz-emerald-fill,#047857)] text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
             {product.tag}
           </span>
         )}
@@ -88,9 +88,9 @@ export function BakeryProductCard({ product, href, currencySymbol = "₹", unitL
         <div className="flex items-baseline gap-1 sm:gap-2 mb-2 sm:mb-3">
           <span className="text-neutral-900 font-bold text-base sm:text-lg">{currencySymbol}{product.price}</span>
           {product.originalPrice && (
-            <span className="text-neutral-400 text-xs line-through">{currencySymbol}{product.originalPrice}</span>
+            <span className="text-[color:var(--bz-ink-subtle,#6b6b70)] text-xs line-through">{currencySymbol}{product.originalPrice}</span>
           )}
-          <span className="text-neutral-400 text-[10px] sm:text-xs">{unitLabel}</span>
+          <span className="text-[color:var(--bz-ink-subtle,#6b6b70)] text-[10px] sm:text-xs">{unitLabel}</span>
         </div>
         <span className="w-full bg-neutral-900 text-white text-[10px] sm:text-xs font-medium py-2 sm:py-2.5 rounded-full group-hover:bg-neutral-700 transition-colors flex items-center justify-center gap-1.5 min-h-[40px]">
           {ctaLabel}

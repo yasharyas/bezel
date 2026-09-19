@@ -52,14 +52,16 @@ const LoaderCore = ({
           const isActive = value === index;
           const isDone = index < value;
           const isPending = index > value;
-          const opacity = isActive ? 1 : isDone ? 0.9 : Math.max(0.68 - distance * 0.06, 0.56);
+          // Pending rows fade with distance, but never below the point where ink
+          // on white still clears 4.5:1 (0.6 gives 5.4:1).
+          const opacity = isActive ? 1 : isDone ? 0.9 : Math.max(0.68 - distance * 0.06, 0.6);
 
           return (
             <div key={index} className="flex h-10 items-center gap-2.5 text-left" style={{ opacity }}>
               <div className="shrink-0">
                 {isDone ? <CheckFilled className="text-amber-700/80" /> : null}
                 {isActive ? <CheckFilled className="text-amber-700" /> : null}
-                {isPending ? <PendingIcon className="text-neutral-500/50" /> : null}
+                {isPending ? <PendingIcon className="text-[color:var(--bz-ink,#0a0a0a)]" /> : null}
               </div>
               {isActive && shinyActive ? (
                 <ShinyText text={loadingState.text} className="text-base font-medium sm:text-lg" speed={2.2} spread={110} {...SHINY_ITEM} />
@@ -69,7 +71,7 @@ const LoaderCore = ({
                     "text-base sm:text-lg",
                     isActive && "font-medium text-neutral-900",
                     isDone && "text-neutral-800/80",
-                    isPending && "text-neutral-600/60",
+                    isPending && "text-[color:var(--bz-ink,#0a0a0a)]",
                   )}
                 >
                   {loadingState.text}

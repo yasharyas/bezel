@@ -159,7 +159,7 @@ export function TillReceiptPrint({
           </div>
 
           <p
-            className="till-item mt-4 text-center text-[10px] tracking-wide text-[oklch(0.6_0.015_330)]"
+            className="till-item mt-4 text-center text-[10px] tracking-wide text-[oklch(0.52_0.015_330)]"
             style={{ ["--i" as string]: rows.length + 2 }}
           >
             {footer}

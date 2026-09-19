@@ -150,7 +150,7 @@ export function CircularText({
           font-weight: 600;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: hsl(38 45% 42% / 0.85);
+          color: var(--bz-gold, #7a6015);
           transform-origin: center center;
           white-space: pre;
           font-size: 0.5625rem;

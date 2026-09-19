@@ -17,11 +17,11 @@ export function PrincipleCardGrid({ principles }: Props) {
           key={p.number}
           className="p-[22px] border border-black/[0.06] rounded-xl bg-black/[0.02]"
         >
-          <div className="font-mono text-[#059669] text-xs tracking-[0.2em]">{p.number}</div>
+          <div className="font-mono text-[color:var(--bz-emerald,#047857)] text-xs tracking-[0.2em]">{p.number}</div>
           <h3 className="font-serif font-medium mt-2.5 mb-1 text-[22px] text-[#0a0a0a]">
             {p.title}
           </h3>
-          <div className="text-[13px] text-[#059669] mb-2">{p.subtitle}</div>
+          <div className="text-[13px] text-[color:var(--bz-emerald,#047857)] mb-2">{p.subtitle}</div>
           <p className="text-[#4a4a4c] text-sm m-0">{p.description}</p>
         </article>
       ))}

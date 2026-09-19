@@ -90,7 +90,7 @@ export function AppHeader({
           <div className="flex-1 max-w-2xl hidden md:block">
             <button
               onClick={onSearchClick}
-              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-gray-100 rounded-xl text-gray-400 text-sm hover:bg-gray-200 transition-colors duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-gray-100 rounded-xl text-[color:var(--bz-ink-muted,#4a4a4c)] text-sm hover:bg-gray-200 transition-colors duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
             >
               <Search className="w-4 h-4 shrink-0" />
               <span>Search…</span>

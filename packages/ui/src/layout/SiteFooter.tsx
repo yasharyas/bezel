@@ -31,14 +31,14 @@ export function SiteFooter({
             {brandName}
           </div>
           {tagline && (
-            <p className="text-sm text-[#8a8a8e] mt-2.5 max-w-[360px]">{tagline}</p>
+            <p className="text-sm text-[color:var(--bz-ink-subtle,#6b6b70)] mt-2.5 max-w-[360px]">{tagline}</p>
           )}
         </div>
 
         {/* Link columns */}
         {columns.map((col) => (
           <div key={col.heading}>
-            <h4 className="font-mono text-[11px] tracking-[0.3em] text-[#059669] mt-0 mb-3.5 uppercase">
+            <h4 className="font-mono text-[11px] tracking-[0.3em] text-[color:var(--bz-emerald,#047857)] mt-0 mb-3.5 uppercase">
               {col.heading}
             </h4>
             <ul className="list-none p-0 m-0">
@@ -58,7 +58,7 @@ export function SiteFooter({
       </div>
 
       {/* Bottom bar */}
-      <div className="max-w-[1200px] mx-auto flex justify-between flex-wrap gap-3 mt-12 pt-[22px] border-t border-black/[0.06] text-[#8a8a8e] text-xs">
+      <div className="max-w-[1200px] mx-auto flex justify-between flex-wrap gap-3 mt-12 pt-[22px] border-t border-black/[0.06] text-[color:var(--bz-ink-subtle,#6b6b70)] text-xs">
         <span>{copyright}</span>
         {publishedBy && (
           <span>

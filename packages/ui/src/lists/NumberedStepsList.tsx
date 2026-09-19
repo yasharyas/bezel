@@ -17,7 +17,7 @@ export function NumberedStepsList({ steps }: Props) {
           className="grid gap-8 py-8 border-t border-black/[0.06]"
           style={{ gridTemplateColumns: "90px 1fr" }}
         >
-          <div className="font-mono text-sm text-[#059669] tracking-[0.2em]">
+          <div className="font-mono text-sm text-[color:var(--bz-emerald,#047857)] tracking-[0.2em]">
             {step.number}
           </div>
           <div>

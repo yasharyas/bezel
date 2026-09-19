@@ -15,7 +15,7 @@ export function FeatureCardGrid({ cards }: Props) {
           key={i}
           className="flex flex-col gap-2 p-[22px] rounded-xl bg-black/[0.02] border border-black/[0.06] transition-[background-color,border-color,transform] duration-[250ms] hover:bg-black/[0.04] hover:border-[#059669] hover:-translate-y-0.5"
         >
-          <div className="font-mono text-[11px] tracking-[0.2em] text-[#059669] uppercase">
+          <div className="font-mono text-[11px] tracking-[0.2em] text-[color:var(--bz-emerald,#047857)] uppercase">
             {card.label}
           </div>
           <div className="text-[17px] text-[#0a0a0a] font-medium">{card.title}</div>

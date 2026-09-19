@@ -4243,7 +4243,7 @@ export function AppHeader({
           <div className="flex-1 max-w-2xl hidden md:block">
             <button
               onClick={onSearchClick}
-              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-gray-100 rounded-xl text-gray-400 text-sm hover:bg-gray-200 transition-colors duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
+              className="w-full flex items-center gap-2 pl-3 pr-4 py-2.5 bg-gray-100 rounded-xl text-[color:var(--bz-ink-muted,#4a4a4c)] text-sm hover:bg-gray-200 transition-colors duration-150 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
             >
               <Search className="w-4 h-4 shrink-0" />
               <span>Search…</span>
@@ -4384,7 +4384,7 @@ export function BakeryProductCard({ product, href, currencySymbol = "₹", unitL
           </span>
         )}
         {product.tag && (
-          <span className="absolute top-3 right-3 bg-green-600 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
+          <span className="absolute top-3 right-3 bg-[color:var(--bz-emerald-fill,#047857)] text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">
             {product.tag}
           </span>
         )}
@@ -4399,9 +4399,9 @@ export function BakeryProductCard({ product, href, currencySymbol = "₹", unitL
         <div className="flex items-baseline gap-1 sm:gap-2 mb-2 sm:mb-3">
           <span className="text-neutral-900 font-bold text-base sm:text-lg">{currencySymbol}{product.price}</span>
           {product.originalPrice && (
-            <span className="text-neutral-400 text-xs line-through">{currencySymbol}{product.originalPrice}</span>
+            <span className="text-[color:var(--bz-ink-subtle,#6b6b70)] text-xs line-through">{currencySymbol}{product.originalPrice}</span>
           )}
-          <span className="text-neutral-400 text-[10px] sm:text-xs">{unitLabel}</span>
+          <span className="text-[color:var(--bz-ink-subtle,#6b6b70)] text-[10px] sm:text-xs">{unitLabel}</span>
         </div>
         <span className="w-full bg-neutral-900 text-white text-[10px] sm:text-xs font-medium py-2 sm:py-2.5 rounded-full group-hover:bg-neutral-700 transition-colors flex items-center justify-center gap-1.5 min-h-[40px]">
           {ctaLabel}
@@ -5564,7 +5564,7 @@ export function FeatureCardGrid({ cards }: Props) {
           key={i}
           className="flex flex-col gap-2 p-[22px] rounded-xl bg-black/[0.02] border border-black/[0.06] transition-[background-color,border-color,transform] duration-[250ms] hover:bg-black/[0.04] hover:border-[#059669] hover:-translate-y-0.5"
         >
-          <div className="font-mono text-[11px] tracking-[0.2em] text-[#059669] uppercase">
+          <div className="font-mono text-[11px] tracking-[0.2em] text-[color:var(--bz-emerald,#047857)] uppercase">
             {card.label}
           </div>
           <div className="text-[17px] text-[#0a0a0a] font-medium">{card.title}</div>
@@ -5600,7 +5600,7 @@ export function NumberedStepsList({ steps }: Props) {
           className="grid gap-8 py-8 border-t border-black/[0.06]"
           style={{ gridTemplateColumns: "90px 1fr" }}
         >
-          <div className="font-mono text-sm text-[#059669] tracking-[0.2em]">
+          <div className="font-mono text-sm text-[color:var(--bz-emerald,#047857)] tracking-[0.2em]">
             {step.number}
           </div>
           <div>
@@ -5675,7 +5675,7 @@ export function SignalCardGrid({ cards }: Props) {
             {card.letter}
           </div>
           <h4 className="mt-2 mb-1 text-base text-[#0a0a0a] font-medium">{card.title}</h4>
-          <p className="m-0 mb-1 text-sm text-[#8a8a8e]">{card.subtitle}</p>
+          <p className="m-0 mb-1 text-sm text-[color:var(--bz-ink-subtle,#6b6b70)]">{card.subtitle}</p>
           <p className="m-0 text-sm text-[#4a4a4c]">{card.description}</p>
         </div>
       ))}
@@ -5709,11 +5709,11 @@ export function PrincipleCardGrid({ principles }: Props) {
           key={p.number}
           className="p-[22px] border border-black/[0.06] rounded-xl bg-black/[0.02]"
         >
-          <div className="font-mono text-[#059669] text-xs tracking-[0.2em]">{p.number}</div>
+          <div className="font-mono text-[color:var(--bz-emerald,#047857)] text-xs tracking-[0.2em]">{p.number}</div>
           <h3 className="font-serif font-medium mt-2.5 mb-1 text-[22px] text-[#0a0a0a]">
             {p.title}
           </h3>
-          <div className="text-[13px] text-[#059669] mb-2">{p.subtitle}</div>
+          <div className="text-[13px] text-[color:var(--bz-emerald,#047857)] mb-2">{p.subtitle}</div>
           <p className="text-[#4a4a4c] text-sm m-0">{p.description}</p>
         </article>
       ))}
@@ -5746,7 +5746,7 @@ export function DiagnosticGrid({ items }: Props) {
           key={item.tag}
           className="p-6 border border-black/[0.06] rounded-xl bg-black/[0.02]"
         >
-          <span className="inline-block px-2.5 py-1 rounded-full bg-[rgba(234,179,8,0.2)] text-[#b45309] font-mono text-[10px] tracking-[0.15em] mb-3">
+          <span className="inline-block px-2.5 py-1 rounded-full bg-[rgba(234,179,8,0.2)] text-[#92400e] font-mono text-[10px] tracking-[0.15em] mb-3">
             {item.tag}
           </span>
           <h3 className="font-serif font-medium text-[#0a0a0a] mt-0 mb-1.5 text-[22px]">
@@ -5843,7 +5843,7 @@ export function Checklist({ items }: Props) {
           key={i}
           className="flex gap-3 items-start px-4 py-[14px] bg-black/[0.02] border border-black/[0.06] rounded-[10px] text-[#1a1a1a] text-[15px]"
         >
-          <span className="inline-flex w-[22px] h-[22px] items-center justify-center rounded-full bg-[rgba(5,150,105,0.1)] text-[#059669] text-xs shrink-0">
+          <span className="inline-flex w-[22px] h-[22px] items-center justify-center rounded-full bg-[rgba(5,150,105,0.1)] text-[color:var(--bz-emerald,#047857)] text-xs shrink-0">
             {item.symbol}
           </span>
           <span>{item.text}</span>
@@ -5974,14 +5974,14 @@ export function SiteFooter({
             {brandName}
           </div>
           {tagline && (
-            <p className="text-sm text-[#8a8a8e] mt-2.5 max-w-[360px]">{tagline}</p>
+            <p className="text-sm text-[color:var(--bz-ink-subtle,#6b6b70)] mt-2.5 max-w-[360px]">{tagline}</p>
           )}
         </div>
 
         {/* Link columns */}
         {columns.map((col) => (
           <div key={col.heading}>
-            <h4 className="font-mono text-[11px] tracking-[0.3em] text-[#059669] mt-0 mb-3.5 uppercase">
+            <h4 className="font-mono text-[11px] tracking-[0.3em] text-[color:var(--bz-emerald,#047857)] mt-0 mb-3.5 uppercase">
               {col.heading}
             </h4>
             <ul className="list-none p-0 m-0">
@@ -6001,7 +6001,7 @@ export function SiteFooter({
       </div>
 
       {/* Bottom bar */}
-      <div className="max-w-[1200px] mx-auto flex justify-between flex-wrap gap-3 mt-12 pt-[22px] border-t border-black/[0.06] text-[#8a8a8e] text-xs">
+      <div className="max-w-[1200px] mx-auto flex justify-between flex-wrap gap-3 mt-12 pt-[22px] border-t border-black/[0.06] text-[color:var(--bz-ink-subtle,#6b6b70)] text-xs">
         <span>{copyright}</span>
         {publishedBy && (
           <span>
@@ -9203,7 +9203,7 @@ export function TillReceiptPrint({
           </div>
 
           <p
-            className="till-item mt-4 text-center text-[10px] tracking-wide text-[oklch(0.6_0.015_330)]"
+            className="till-item mt-4 text-center text-[10px] tracking-wide text-[oklch(0.52_0.015_330)]"
             style={{ ["--i" as string]: rows.length + 2 }}
           >
             {footer}
@@ -10141,7 +10141,7 @@ export function CircularText({
           font-weight: 600;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: hsl(38 45% 42% / 0.85);
+          color: var(--bz-gold, #7a6015);
           transform-origin: center center;
           white-space: pre;
           font-size: 0.5625rem;
@@ -10457,14 +10457,16 @@ const LoaderCore = ({
           const isActive = value === index;
           const isDone = index < value;
           const isPending = index > value;
-          const opacity = isActive ? 1 : isDone ? 0.9 : Math.max(0.68 - distance * 0.06, 0.56);
+          // Pending rows fade with distance, but never below the point where ink
+          // on white still clears 4.5:1 (0.6 gives 5.4:1).
+          const opacity = isActive ? 1 : isDone ? 0.9 : Math.max(0.68 - distance * 0.06, 0.6);
 
           return (
             <div key={index} className="flex h-10 items-center gap-2.5 text-left" style={{ opacity }}>
               <div className="shrink-0">
                 {isDone ? <CheckFilled className="text-amber-700/80" /> : null}
                 {isActive ? <CheckFilled className="text-amber-700" /> : null}
-                {isPending ? <PendingIcon className="text-neutral-500/50" /> : null}
+                {isPending ? <PendingIcon className="text-[color:var(--bz-ink,#0a0a0a)]" /> : null}
               </div>
               {isActive && shinyActive ? (
                 <ShinyText text={loadingState.text} className="text-base font-medium sm:text-lg" speed={2.2} spread={110} {...SHINY_ITEM} />
@@ -10474,7 +10476,7 @@ const LoaderCore = ({
                     "text-base sm:text-lg",
                     isActive && "font-medium text-neutral-900",
                     isDone && "text-neutral-800/80",
-                    isPending && "text-neutral-600/60",
+                    isPending && "text-[color:var(--bz-ink,#0a0a0a)]",
                   )}
                 >
                   {loadingState.text}

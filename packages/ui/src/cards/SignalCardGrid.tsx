@@ -26,7 +26,7 @@ export function SignalCardGrid({ cards }: Props) {
             {card.letter}
           </div>
           <h4 className="mt-2 mb-1 text-base text-[#0a0a0a] font-medium">{card.title}</h4>
-          <p className="m-0 mb-1 text-sm text-[#8a8a8e]">{card.subtitle}</p>
+          <p className="m-0 mb-1 text-sm text-[color:var(--bz-ink-subtle,#6b6b70)]">{card.subtitle}</p>
           <p className="m-0 text-sm text-[#4a4a4c]">{card.description}</p>
         </div>
       ))}

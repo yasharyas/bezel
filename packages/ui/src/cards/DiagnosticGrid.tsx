@@ -16,7 +16,7 @@ export function DiagnosticGrid({ items }: Props) {
           key={item.tag}
           className="p-6 border border-black/[0.06] rounded-xl bg-black/[0.02]"
         >
-          <span className="inline-block px-2.5 py-1 rounded-full bg-[rgba(234,179,8,0.2)] text-[#b45309] font-mono text-[10px] tracking-[0.15em] mb-3">
+          <span className="inline-block px-2.5 py-1 rounded-full bg-[rgba(234,179,8,0.2)] text-[#92400e] font-mono text-[10px] tracking-[0.15em] mb-3">
             {item.tag}
           </span>
           <h3 className="font-serif font-medium text-[#0a0a0a] mt-0 mb-1.5 text-[22px]">
