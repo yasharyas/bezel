@@ -419,13 +419,13 @@
   "skeleton-card": {
     "name": "SkeletonCard",
     "category": "loading",
-    "description": "Pulsing product card and list row skeletons that follow the theme's muted colour.",
+    "description": "Product card and list row skeletons with a slow sheen, announced as loading.",
     "tags": [
       "skeleton",
       "loading",
       "placeholder",
-      "pulse",
-      "shimmer"
+      "shimmer",
+      "aria-busy"
     ]
   },
   "ecom-empty-state": {
