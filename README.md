@@ -162,7 +162,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 
 | Component | Slug | Description |
 |---|---|---|
-| SkeletonCard | `skeleton-card` | `SkeletonCard` and `SkeletonRow` pulse-animated loading placeholders. |
+| SkeletonCard | `skeleton-card` | `SkeletonCard` and `SkeletonRow` loading placeholders with a slow sheen, announced as loading. |
 
 ### Dividers
 

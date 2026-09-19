@@ -11,6 +11,7 @@ them replacing FAQAccordion, bring the library to 105 (see
 - [Summary](#summary)
 - [Owner decisions](#owner-decisions)
 - [Additions, September 2026](#additions-september-2026)
+- [Component fixes, September 2026](#component-fixes-september-2026)
 - [Where this disagrees with CURATION.md](#where-this-disagrees-with-curationmd)
 - [Component by component](#component-by-component)
 - [Library bugs found along the way](#library-bugs-found-along-the-way)
@@ -256,6 +257,68 @@ The library now holds 105 components: 7 Showcase, 32 Solid and 66 Ordinary.
 case against ParallaxProductStage; at card size the code is small, so the swap
 is left to the owner.
 
+## Component fixes, September 2026
+
+Four findings came from measuring recorded pixels rather than looking. The
+method, before and after: headless Chromium with GPU rasterisation at 1440px on
+each component page, 34 screenshots of the stage at 110 ms. A pixel counts as
+changed when any channel moves more than 16 levels over the run; the share is of
+the component's own box plus an 8px margin. Dark-ground runs switch the stage to
+the void tone.
+
+| Component | Run | Max pixel delta | Share that changes |
+|---|---|---|---|
+| SkeletonCard | one cycle, paper | 14 → 28 | 0% → 54.4% |
+| SkeletonCard | one cycle, void | 11 → 35 | 0% → 56.6% |
+| ImagePlaceholder | one cycle, paper | 9 → 25 | 0% → 73.1% |
+| ImagePlaceholder | one cycle, void | 24 → 24 | 0.2% → 72.8% |
+| PointerGlowCard | pointer sweep across the card | 28 → 219 | 0.06% → 64.7% |
+| PointerGlowCard | Tab into the card | 0 → 219 | 0% → 18.2% |
+| Highlighter | Replay pressed | 232 → 217 | 9.4% → 8.8% |
+| TestimonialCard | hover, press (unchanged) | 21 | 1.1% |
+
+Under reduced motion, every run on SkeletonCard, ImagePlaceholder and
+Highlighter now changes 0% of its box.
+
+- **SkeletonCard and ImagePlaceholder: the pulse was invisible.** SkeletonCard's
+  bones sat 15 grey levels off the card and ImagePlaceholder's two greys 16
+  apart, and each pulse only faded them in opacity, so no pixel crossed the
+  threshold. The skeleton bones now sit at muted-foreground
+  15-20%, and a band of the surface colour sweeps across them on a 2.4 s linear
+  loop with a rest. ImagePlaceholder draws everything from `currentColor` (fill
+  at 12%, thinned to 2% by the band, icon at 55%, label at 72%), so it reads on
+  light and dark grounds and its label clears 4.5:1 where `neutral-400` at 60%
+  did not. Both pause off screen and in hidden tabs. The skeletons are polite
+  status regions with `aria-busy` and a label; the placeholder carries
+  `aria-busy` and is named "Loading image" by default.
+- **PointerGlowCard lit one hairline.** The ring was drawn at `inset: -1px`, over
+  the border, and the card's own `overflow: hidden` clips everything outside
+  the padding box, so only the anti-aliased corners survived. The ring now sits
+  just inside the border, a 14% wash of the glow colour follows the pointer
+  beneath the content, and the defaults moved to the brick family. Lighting
+  follows `pointerenter` from fine pointers only, so a tap leaves nothing
+  behind. The preview had nothing focusable; it now has a link, and focus inside
+  the card lights it and moves the spotlight to the focused element.
+- **Highlighter: Replay.** The recorded evidence was 34 identical frames across a
+  replay. That did not reproduce here: on the dev server, the production site
+  and the index card, Replay remounted the preview and the marks redrew over
+  about 900 ms before and after this change. What did reproduce was a defect in
+  the same code path: the component's ResizeObserver called `hide()` then
+  `show()` on any body resize, which replays the whole draw, so a viewport
+  resize left strokes up to 204px undrawn (none after). The component also had
+  no way to replay without remounting its children. It now takes `replayKey`,
+  redraws the finished mark in place on layout changes, follows reduced motion
+  live, and ignores replays while it is on. The preview passes the stage's
+  replay count to `replayKey` (the `replayInPlace` spec flag) instead of
+  remounting, and the Replay button's focus ring, white on a near-white stage
+  at 1.04:1, now uses `--bz-focus-ring` on paper and cream.
+- **TestimonialCard is static, and stays unchanged.** Nothing in it is a link or
+  a control, so it has no hover or focus state to strengthen, and Tab passes it
+  by. Idle and scroll change nothing; its one response is `hover:shadow-md`,
+  which moves 1.1% of its box by at most 21 levels. Making that stronger would
+  advertise an interaction that does not exist. Its contrast and rating
+  problems are listed under [Library bugs](#library-bugs-found-along-the-way).
+
 ## Where this disagrees with CURATION.md
 
 `CURATION.md` judges components as parts of a design system (is this the best
@@ -347,7 +410,7 @@ needs, and a rewritten description.
 | `contact-section` | Broken: cropped, crashed hydration | Scaled and cropped; its injected `<style>` caused the landing page's hydration error | A 960px frame, mounted client-side, with an idle pointer driving the spotlight | Ordinary | Image-filled type, a conic border and a spotlight: three effects on one panel, none leading.<br>**Worth keeping if** it committed to one of them, probably the image-filled type. |
 | `text-disperse-link` | Yes | Legible, but just a word on a stage | An idle hover scatters and regroups the letters on a loop | Solid | The scatter and sequenced regroup are playful and precise. Per-letter spans hurt screen-reader pronunciation, and it is mouse-only. |
 | `image-with-fallback` | Index only | Legible, but its demo image pointed at a host that does not exist and logged a failed request | The fallback is shown with an undecodable data URI, no network request, beside a loaded image | Ordinary | A utility, done correctly.<br>**Worth keeping if** the fallback matched the image's frame and brand rather than one grey icon. |
-| `skeleton-card` | Broken: empty outline, index only | Bar colours undefined, so only an outline drew | Tone colours give the bars their fill; two cards pulsing | Ordinary | A skeleton.<br>**Worth keeping if** it came with text and list variants and stopped pulsing under reduced motion. |
+| `skeleton-card` | Broken: empty outline, index only | Bar colours undefined, so only an outline drew | Tone colours give the bars their fill; two cards pulsing | Ordinary | A skeleton. Its pulse was later measured as invisible and replaced by a sheen that stops under reduced motion (see [Component fixes](#component-fixes-september-2026)).<br>**Worth keeping if** it came with text variants. |
 | `ecom-empty-state` | Broken: colourless, index only | Oversized text and a colourless icon | Tone colours; the cart, search and network presets switchable in the preview; the preset icon floats while motion is allowed | Ordinary | Preset copy for shop empty states.<br>**Worth keeping if** merged into `EmptyState` as presets. |
 | `breadcrumb` | Index only | Legible but tiny | Shown above a product title, so the truncated last crumb has context | Ordinary | A breadcrumb with `aria-current`: correct and plain.<br>**Worth keeping if** it collapsed middle crumbs on narrow screens. |
 | `category-chips` | Broken: blank active chip, index only | A white slab; the active "All" chip rendered blank | Tone colours; six categories with a live item count | Ordinary | A filter chip row whose active state is colour only.<br>**Worth keeping if** it exposed `aria-pressed` and animated the selection. |
@@ -358,10 +421,10 @@ needs, and a rewritten description.
 | `sticky-cart-bar` | Broken: empty stage | An empty stage | A 390px frame above a sketched tab bar; the add buttons update count and total | Ordinary | A cart summary bar whose summary row and primary button fire the same handler.<br>**Worth keeping if** it animated the total and had one tab stop per action. |
 | `app-header` | Broken: cropped, covered the gallery header | A cropped white slab whose sticky `z-50` painted over the site header | An 800px frame with a store grid under it; the cart badge increments | Ordinary | A shop header with a banner, search and cart. It renders its own `h1`.<br>**Worth keeping if** merged into `StickyNavbar` without the heading. |
 | `bakery-product-card` | Broken: clipped, index only | Cut off | Two cards at 440px: a photo with badges, and the no-photo placeholder | Ordinary | A second product card.<br>**Worth keeping if** merged into `ProductCard`. |
-| `testimonial-card` | Index only | A legible white card | Paper stage with a real quote and rating | Ordinary | Stars, quote and an initial.<br>**Worth keeping if** it did something testimonials rarely do, such as showing what was bought. |
+| `testimonial-card` | Index only | A legible white card | Paper stage with a real quote and rating | Ordinary | Stars, quote and an initial. Static content by design; measured, nothing in it responds except a faint hover shadow (see [Component fixes](#component-fixes-september-2026)).<br>**Worth keeping if** it did something testimonials rarely do, such as showing what was bought. |
 | `accordion-list` | New, replacing `faq-accordion` | n/a | Laid out at 600px: four studio questions with the first one open | Solid | The tumbling arrow disc and answers that rise line by line give a plain primitive a signature, and closed answers are inert, which fixes the old tab-order bug. |
 | `whatsapp-fab` | No: mock | A mock of the button | A 390px frame over a product page; an idle hover shows the tooltip | Ordinary | A floating chat button for one messaging app.<br>**Worth keeping if** it became a general contact button with the channel as a prop. |
-| `image-placeholder` | Index only | Legible | A cover and two thumbnails, one labelled | Ordinary | A pulsing grey box.<br>**Worth keeping if** merged into `SkeletonCard`. |
+| `image-placeholder` | Index only | Legible | A cover and two thumbnails, one labelled | Ordinary | A grey box with a slow sheen, drawn from the surrounding text colour so it reads on light and dark grounds (see [Component fixes](#component-fixes-september-2026)).<br>**Worth keeping if** merged into `SkeletonCard`. |
 | `sticky-navbar` | Broken: collisions, covered the gallery header, index only | Scaled, with the brand colliding with the links and the bar sticky over the site header | A phone-width frame whose drawer opens on a loop, with an active link | Ordinary | A shop navbar with an announcement bar and a drawer.<br>**Worth keeping if** the drawer trapped focus and closed on Escape, and it absorbed `AppHeader`. |
 | `error-boundary` | No: mock, unreadable | A mock scaled to 50% | A frame with a Healthy and Caught toggle; the caught state starts inside the boundary without throwing, so no real error is logged | Ordinary | A class boundary with a refresh screen.<br>**Worth keeping if** it reported errors through `componentDidCatch` and offered an inline fallback for part of a page. |
 | `sticky-nav` | Broken: covered the gallery header, index only | A grey slab, sticky over the site header | A frame with a scrolling page under the frosted bar | Ordinary | Its theme button swaps only its own icon; the bar never changes palette.<br>**Worth keeping if** the toggle actually themed the bar. |
@@ -384,7 +447,7 @@ needs, and a rewritten description.
 | `glare-hover` | Broken: a green block, index only | A flat green block with no hint | A photo print with a caption; an idle sweep shows the glare | Ordinary | A glare that follows the pointer.<br>**Worth keeping if** merged into `PointerGlowCard` as a glare mode. |
 | `cinematic-water-background` | Index only | Legible and strong | Hero copy over it | Showcase | Turbulent water, light shafts and rising bubbles in SVG and CSS set a mood no stock background does. Two always-on turbulence filters make it expensive. |
 | `conic-border-button` | Index only | Legible | Textured and plain variants side by side | Solid | The spinning conic ring over grain has real material presence; of the animated-border buttons, this is the one to keep. |
-| `pointer-glow-card` | Broken: white slab, index only | A white slab | A product card on paper; the glow follows the pointer or keyboard focus | Solid | A subtle gradient border under the pointer that also works on focus. |
+| `pointer-glow-card` | Broken: white slab, index only | A white slab | A product card on paper; the glow follows the pointer or keyboard focus | Solid | A spotlight on the border and surface that follows the pointer or keyboard focus. The rating was of the idea: measured later, the lit ring had been clipped down to its corners, and the preview had nothing to focus (see [Component fixes](#component-fixes-september-2026)). |
 | `shiny-gradient-text` | Index only | Legible but small | A large display line with a subline | Ordinary | Gradient-filled text.<br>**Worth keeping if** merged with `ShinyText`. |
 | `blur-in-reveal` | Broken: near invisible, index only | `neutral-700` text on the dark stage | Paper stage; eyebrow, headline and body blur in, with replay | Ordinary | ScrollReveal with a blur.<br>**Worth keeping if** it became a `blur` variant of `ScrollReveal`. |
 | `section-progress-rail` | No: mock dots | A drawing of dots | The real rail stepping through five sections while idle; clicking a dot selects it | Ordinary | Dots with a pill for the current section. It hides below 1180px and its targets are 8px.<br>**Worth keeping if** it worked on smaller screens with 24px targets. |
@@ -407,7 +470,7 @@ needs, and a rewritten description.
 | `pinched-button` | Index only | A legible cream slab | Filled and ghost buttons side by side | Solid | The asymmetric pinched corner is an original shape and the hover lift is well tuned. |
 | `multi-step-loader` | No: a lone trigger, index only | A lone button and no loader | A frame looping five stages | Solid | Ticked stages, a shining active label and correct status wiring. It imports two components by relative path, so the CLI cannot ship it yet. |
 | `metallic-logo-shimmer` | Index only | A legible cream slab | A Bezel wordmark as the logo | Ordinary | A metallic sweep across a logo whose alt text is hard-coded to "YASH logo".<br>**Worth keeping if** the alt came from props and the sweep could follow the pointer. |
-| `highlighter` | Index only | The old demo ran two words together ("feelunforgettable") | Highlight, underline and circle marks in one sentence, with replay | Ordinary | Hand-drawn marks through `rough-notation`.<br>**Worth keeping if** it drew its own SVG strokes and dropped the dependency. |
+| `highlighter` | Index only | The old demo ran two words together ("feelunforgettable") | Highlight, underline and circle marks in one sentence, with replay | Ordinary | Hand-drawn marks through `rough-notation`, replayable through `replayKey` (see [Component fixes](#component-fixes-september-2026)).<br>**Worth keeping if** it drew its own SVG strokes and dropped the dependency. |
 | `text-type` | Index only | Legible, but a source of hydration warnings | Client-side mount; three lines typing and deleting | Ordinary | A typewriter effect.<br>**Worth keeping if** it absorbed `TypingHero` and announced the finished line to screen readers once. |
 | `celebration-overlay` | No: a lone trigger, index only | A lone button and no overlay | A frame that opens it, lets it close and reopens it after a pause | Solid | Confetti, blur and a card pop, with the best dialog semantics in the library. |
 | `damask-tile-backdrop` | Broken: pattern missing, index only | Only the glass pane showed | A frame at full opacity with the glass pane over it | Ordinary | The component veils its own pattern at 94%, so the damask barely shows even now.<br>**Worth keeping if** the veil were a prop with a default that lets the pattern read. |
@@ -429,7 +492,8 @@ Not fixed, because they change component behaviour rather than the gallery.
 - **45 components inject `<style>{css}</style>`.** React escapes the quotes and
   angle brackets inside during server rendering, so the client text differs and
   hydration fails. The gallery avoids it by mounting previews client-side; a
-  consumer rendering these on the server will hit it.
+  consumer rendering these on the server will hit it. 42 still do: PointerGlowCard
+  moved to a fixed string in the [component fixes](#component-fixes-september-2026).
 - **17 components depend on shadcn colour tokens** (`primary`, `muted`,
   `border` and others) that Bezel does not define: PriceBreakdown, ProductCard,
   DualConfirmDialog, CircularText, EcomEmptyState, EmptyState, LoadingSpinner,
@@ -453,3 +517,13 @@ Not fixed, because they change component behaviour rather than the gallery.
 - **Highlighter**, **MagicRings** and **CelebrationOverlay** each pull in a
   dependency (`rough-notation`, `three`, `canvas-confetti`) that nothing else
   uses.
+- **TestimonialCard** sets its role line in `neutral-400` (2.52:1 on white) and
+  its stars in `yellow-400` (1.53:1), under the 4.5:1 and 3:1 bars; the star
+  rating has no text alternative, so it is never announced; and its
+  `hover:shadow-md` suggests an interaction the card does not have and breaks
+  the hairline rule. Recorded rather than fixed in the component fixes, whose
+  brief was to leave a static component alone.
+- **Highlighter**'s `highlight` mark is drawn above neighbouring text that is not
+  inside the span, so a comma right after a highlighted word disappears under
+  it. The preview now puts the highlight before a space; the component is
+  unchanged.

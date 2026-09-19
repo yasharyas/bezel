@@ -105,6 +105,8 @@ or `aria-selected`, which breaks cross-cutting rule 2 above.
 | `feedback/CelebrationOverlay` | + | – | + | – | + | n/a | n/a | n/a |
 | `feedback/TillReceiptPrint` | + | – | + | – | – | n/a | n/a | n/a |
 | `feedback/SubmissionLoader` | n/a | n/a | n/a | n/a | n/a | + | n/a | n/a |
+| `loaders/SkeletonCard` (×2) | n/a | n/a | n/a | n/a | n/a | + | n/a | n/a |
+| `feedback/ImagePlaceholder` | n/a | n/a | n/a | n/a | n/a | + | n/a | n/a |
 | `feedback/LoadingSpinner` | n/a | n/a | n/a | n/a | n/a | ! | n/a | n/a |
 | `feedback/ToastContainer` | n/a | n/a | n/a | n/a | n/a | n/a | ! | n/a |
 | `dialogs/DualConfirmDialog` | + | + | + | + | + | + | n/a | n/a |
@@ -118,6 +120,27 @@ label, so the loading state exists visually and not at all for assistive tech,
 so it is marked `!`. `ToastContainer` has the same gap: no `role="status"`, no
 `aria-live`, so nothing it says is ever announced.
 
+`SkeletonCard` and `SkeletonRow` are each a polite `role="status"` with
+`aria-busy` and a text label ("Loading" by default), and `ImagePlaceholder`
+carries `aria-busy` on its image role. Until September 2026 all three were
+visual only, and their pulse was too faint to see: over a full cycle no pixel
+moved more than 14 grey levels. Each now sweeps a visible sheen, pauses it off
+screen and in hidden tabs, and holds a still placeholder under reduced motion.
+
+### Cards
+
+| Component | default | hover | focus | active | disabled |
+|---|---|---|---|---|---|
+| `cards/PointerGlowCard` | + | + | + | n/a | n/a |
+| `cards/TestimonialCard` | + | ! | n/a | n/a | n/a |
+
+`PointerGlowCard` lights its border and surface under a fine pointer, and focus
+anywhere inside it lights the card and moves the spotlight to the focused
+element, so its hover has a keyboard counterpart. `TestimonialCard` is static
+content with nothing to focus. Its `hover:shadow-md` is the only thing that
+responds, and it signals an interaction the card does not have, so it is marked
+`!`.
+
 ---
 
 ## Known gaps this matrix does not close
@@ -130,7 +153,9 @@ than being quietly dropped:
   all full-screen overlays with background content still tabbable underneath.
   `SearchOverlay` handles Escape only while focus is in its input.
 - **Loading is rarely announced.** `aria-busy` and a live region appear in
-  `loaders/MultiStepLoader` and `forms/MessageForm` and nowhere else.
+  `loaders/MultiStepLoader`, `forms/MessageForm` and the two skeletons in
+  `loaders/SkeletonCard`; `feedback/ImagePlaceholder` has `aria-busy` alone.
+  `LoadingSpinner` and the rest still have neither.
 - **Error is visual only in every form component except `MessageForm`.** No other
   form component sets `aria-invalid` or `aria-describedby`.
 - **A label is not associated with its input.** `SidePanel`'s `PanelField`
