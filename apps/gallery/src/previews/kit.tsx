@@ -18,6 +18,8 @@ export type PreviewEnv = {
   engaged: boolean;
   reducedMotion: boolean;
   size: StageSize | "frame";
+  /** How many times Replay has been pressed, for specs with `replayInPlace`. */
+  replay?: number;
 };
 
 export const PreviewEnvContext = createContext<PreviewEnv>({

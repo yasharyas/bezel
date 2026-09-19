@@ -106,12 +106,14 @@ export function PreviewStage({ slug, name, size = "card", eager = false, classNa
     >
       {near ? (
         <div ref={contentRef} className="stage-content absolute inset-0">
-          <PreviewEnvContext.Provider value={{ engaged, reducedMotion, size }}>
+          <PreviewEnvContext.Provider value={{ engaged, reducedMotion, size, replay: replayToken }}>
             <PreviewBoundary name={name}>
               {spec.kind === "frame" ? (
                 <PreviewFrame slug={slug} name={name} spec={spec} size={size} replayToken={replayToken} />
               ) : (
-                <InlinePreview key={replayToken} slug={slug} spec={spec} />
+                // Remounting replays one-shot entrances; a component with its own
+                // replay API gets the count instead and redraws in place.
+                <InlinePreview key={spec.replayInPlace ? "in-place" : replayToken} slug={slug} spec={spec} />
               )}
             </PreviewBoundary>
           </PreviewEnvContext.Provider>

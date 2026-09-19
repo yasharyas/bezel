@@ -113,7 +113,7 @@ export const specs: Record<string, PreviewSpec> = {
   "pinched-button": inline("basic", "cream"),
   "multi-step-loader": frame("paper", 720, 480),
   "metallic-logo-shimmer": inline("basic", "cream"),
-  highlighter: inline("motion", "paper", { replay: true }),
+  highlighter: inline("motion", "paper", { replay: true, replayInPlace: true }),
   "text-type": inline("gsap", "paper"),
   "celebration-overlay": frame("paper", 640, 427),
   "damask-tile-backdrop": frame("cream", 600, 400),

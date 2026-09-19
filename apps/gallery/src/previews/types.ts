@@ -15,6 +15,11 @@ type BaseSpec = {
   hint?: string;
   /** Offer a replay control, for entrances that only play once. */
   replay?: boolean;
+  /**
+   * Replay through the component's own API instead of remounting the preview:
+   * the preview reads the replay count from `usePreviewEnv().replay`.
+   */
+  replayInPlace?: boolean;
 };
 
 export type InlineSpec = BaseSpec & {

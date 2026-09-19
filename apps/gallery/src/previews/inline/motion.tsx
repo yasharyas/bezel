@@ -24,7 +24,7 @@ import { ShinyText } from "bezel-ui/animation/ShinyText";
 import { CircularText } from "bezel-ui/display/CircularText";
 import { Highlighter } from "bezel-ui/animation/Highlighter";
 
-import { Caption, Center, IMAGES, useIdleInterval } from "../kit";
+import { Caption, Center, IMAGES, useIdleInterval, usePreviewEnv } from "../kit";
 import type { PreviewModule } from "../types";
 
 const noop = () => {};
@@ -165,19 +165,24 @@ function CircularTextPreview() {
 }
 
 function HighlighterPreview() {
+  // Replay passes its count to `replayKey`, so the marks redraw on the same
+  // words instead of the whole preview remounting.
+  const { replay = 0 } = usePreviewEnv();
   return (
     <Center>
+      {/* The highlight sits before a space, not a comma: its rough edge would
+          paint over punctuation next to it. */}
       <p className="max-w-[300px] text-center text-2xl leading-relaxed text-[#0a0a0a]">
         Good work is{" "}
-        <Highlighter action="highlight" color="#f3d9a4">
-          specific
+        <Highlighter action="underline" color="#912c22" animationDuration={700} replayKey={replay}>
+          honest
         </Highlighter>
         ,{" "}
-        <Highlighter action="underline" color="#912c22" animationDuration={700}>
-          honest
+        <Highlighter action="highlight" color="#f3d9a4" replayKey={replay}>
+          specific
         </Highlighter>{" "}
         and{" "}
-        <Highlighter action="circle" color="#912c22" animationDuration={900}>
+        <Highlighter action="circle" color="#912c22" animationDuration={900} replayKey={replay}>
           finished
         </Highlighter>
         .
