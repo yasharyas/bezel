@@ -157,10 +157,13 @@ export function Center({
   );
 }
 
-/** A small uppercase caption for labelling variants inside a preview. */
+/**
+ * A small uppercase caption for labelling variants inside a preview. It takes
+ * the colour around it at 80%, which keeps muted ink (#4a4a4c) above 4.5:1.
+ */
 export function Caption({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <span className={`font-mono text-[10px] uppercase tracking-[0.14em] opacity-70 ${className}`}>
+    <span className={`font-mono text-[10px] uppercase tracking-[0.14em] opacity-80 ${className}`}>
       {children}
     </span>
   );

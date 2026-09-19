@@ -46,7 +46,8 @@ function MarqueePreview() {
   return (
     <div className="flex h-full w-full flex-col justify-center text-white [&_.yui-marquee-root]:!my-1">
       <Marquee text="Motion" fontSize="4.25rem" speed={70} opacity={0.95} separator={" · "} />
-      <Marquee text="Craft" fontSize="4.25rem" speed={40} opacity={0.3} separator={" · "} />
+      {/* The echo row stays fainter than the first, but clears 3:1 for large text. */}
+      <Marquee text="Craft" fontSize="4.25rem" speed={40} opacity={0.4} separator={" · "} />
     </div>
   );
 }
