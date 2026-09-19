@@ -20,7 +20,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
       {icon && (
-        <div className="mb-4 text-muted-foreground/40">
+        <div aria-hidden className="mb-4 text-muted-foreground/40">
           {icon}
         </div>
       )}

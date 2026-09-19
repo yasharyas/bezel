@@ -25,7 +25,7 @@ export function Breadcrumb({ items, className = "" }: Props) {
           return (
             <li key={i} className="flex items-center gap-0.5 min-w-0">
               {i > 0 && (
-                <ChevronRight className="w-3 h-3 mx-0.5 shrink-0 opacity-40" />
+                <ChevronRight aria-hidden className="w-3 h-3 mx-0.5 shrink-0 opacity-40" />
               )}
               {isLast ? (
                 <span

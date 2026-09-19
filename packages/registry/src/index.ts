@@ -1704,7 +1704,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center">
       {icon && (
-        <div className="mb-4 text-muted-foreground/40">
+        <div aria-hidden className="mb-4 text-muted-foreground/40">
           {icon}
         </div>
       )}
@@ -3434,7 +3434,7 @@ export function Breadcrumb({ items, className = "" }: Props) {
           return (
             <li key={i} className="flex items-center gap-0.5 min-w-0">
               {i > 0 && (
-                <ChevronRight className="w-3 h-3 mx-0.5 shrink-0 opacity-40" />
+                <ChevronRight aria-hidden className="w-3 h-3 mx-0.5 shrink-0 opacity-40" />
               )}
               {isLast ? (
                 <span
