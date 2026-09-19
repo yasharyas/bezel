@@ -132,14 +132,15 @@ screen and in hidden tabs, and holds a still placeholder under reduced motion.
 | Component | default | hover | focus | active | disabled |
 |---|---|---|---|---|---|
 | `cards/PointerGlowCard` | + | + | + | n/a | n/a |
-| `cards/TestimonialCard` | + | ! | n/a | n/a | n/a |
+| `cards/TestimonialCard` | + | n/a | n/a | n/a | n/a |
 
 `PointerGlowCard` lights its border and surface under a fine pointer, and focus
 anywhere inside it lights the card and moves the spotlight to the focused
 element, so its hover has a keyboard counterpart. `TestimonialCard` is static
-content with nothing to focus. Its `hover:shadow-md` is the only thing that
-responds, and it signals an interaction the card does not have, so it is marked
-`!`.
+content with nothing to focus. Until September 2026 a `hover:shadow-md`
+signalled an interaction the card does not have, and it was marked `!`; that is
+gone, so hover is `n/a`. Its stars are now one image named "Rated N out of 5",
+so the rating is announced as well as drawn.
 
 ---
 

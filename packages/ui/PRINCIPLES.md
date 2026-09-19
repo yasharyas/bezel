@@ -81,8 +81,18 @@ A colour that cannot meet the bar is renamed, not excused. Three did:
   text colour, and never a fill under white.
 - `red-500` is 3.76:1. It stays as the error *mark*; error *text* is `#b91c1c`.
 
+Control edges have their own token, `--bz-line-control` (`#8a8a8e`, 3.4:1 on
+paper), because the hairlines separate surfaces and cannot identify a control.
+
 The script parses `tokens.css` directly and cross-checks `tokens.ts` against it,
 so the two token surfaces cannot drift apart without the gate noticing.
+
+Tokens are only half of it: a component can hard-code a colour, and a preview
+can stack an opacity on top. So the gallery also measures what every preview
+actually paints. In a browser, it checks text, icons, control edges and focus
+rings against the ground they land on, and the gallery build refuses a failing
+pair or a measurement older than the sources. How that works, and what it
+cannot measure, is in `GALLERY-AUDIT.md` under "Rendered contrast".
 
 ## 5. One curve, one ladder
 
@@ -121,7 +131,7 @@ radii for the same primary CTA.
 | 1. The file is the interface | 104 of 105 files are standalone | `MultiStepLoader` (excluded from the CLI) |
 | 2. Motion is refusable | 36 of 90 animated files | 54 files, 3 of them infinite loops |
 | 3. Focus is visible | every interactive file, after this pass | maintain it; `:focus` should become `:focus-visible` in 6 older files |
-| 4. Contrast is a gate | all tokens | components still carry pre-token literals |
+| 4. Contrast is a gate | all tokens, and every measurable pair the 105 previews render | 73 rendered pairs sit on images, gradients, canvases or blend modes and are reported, not measured; components still carry pre-token literals |
 | 5. One curve, one ladder | the token set | components carry 5 curves and 4 springs |
 | 6. Pills on paper | the token set | 6 card radii, 3 CTA radii in components |
 

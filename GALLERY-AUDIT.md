@@ -12,6 +12,7 @@ them replacing FAQAccordion, bring the library to 105 (see
 - [Owner decisions](#owner-decisions)
 - [Additions, September 2026](#additions-september-2026)
 - [Component fixes, September 2026](#component-fixes-september-2026)
+- [Rendered contrast, September 2026](#rendered-contrast-september-2026)
 - [Where this disagrees with CURATION.md](#where-this-disagrees-with-curationmd)
 - [Component by component](#component-by-component)
 - [Library bugs found along the way](#library-bugs-found-along-the-way)
@@ -312,12 +313,151 @@ Highlighter now changes 0% of its box.
   replay count to `replayKey` (the `replayInPlace` spec flag) instead of
   remounting, and the Replay button's focus ring, white on a near-white stage
   at 1.04:1, now uses `--bz-focus-ring` on paper and cream.
-- **TestimonialCard is static, and stays unchanged.** Nothing in it is a link or
+- **TestimonialCard is static, and stays static.** Nothing in it is a link or
   a control, so it has no hover or focus state to strengthen, and Tab passes it
-  by. Idle and scroll change nothing; its one response is `hover:shadow-md`,
-  which moves 1.1% of its box by at most 21 levels. Making that stronger would
-  advertise an interaction that does not exist. Its contrast and rating
-  problems are listed under [Library bugs](#library-bugs-found-along-the-way).
+  by. Idle and scroll change nothing; its one response was `hover:shadow-md`,
+  which moved 1.1% of its box by at most 21 levels. Making that stronger would
+  advertise an interaction that does not exist, so it was left for the
+  [rendered contrast](#rendered-contrast-september-2026) pass, which removed it
+  and fixed the card's contrast and its silent rating.
+
+## Rendered contrast, September 2026
+
+The token gate measures the tokens and the gallery gate measures the gallery's
+own chrome. Neither sees a colour a component hard-codes, a colour a demo adds,
+or an opacity three wrappers up, so "the gallery refuses to build below AA"
+held for tokens and chrome but not for what the previews paint.
+TestimonialCard was the known case: role line 2.52:1, stars 1.53:1. Measuring
+what actually renders found 147 failing pairs in 32 of the 105 components.
+
+### How the gate works
+
+- **The browser run**, `npm run check:rendered -w gallery`
+  (`apps/gallery/scripts/check-rendered.mjs` and `rendered.mjs`). Headless
+  Chromium opens `/component/<slug>` for all 105 components at 1440px, then the
+  78 inline previews again at 390px (a frame preview renders at its own virtual
+  viewport, so the page width does not change it). Reduced motion is on so
+  entrances settle, and each page is sampled twice, 700 ms apart; a pair that
+  moved between samples is marked. For each visible text node the browser is
+  asked which elements are painted at that point (`elementsFromPoint`, in
+  paint order), and their backgrounds are composited, with each opacity applied
+  to its whole group as the compositor applies it, into the pixel under a glyph
+  and the pixel beside it. Siblings positioned behind the text count, so do
+  overlays in front of it and an opacity on any ancestor, and so does the
+  stage's own background, because it is in the stack. Text needs 4.5:1, or
+  3:1 from 24px (18.66px bold). Icons, form-control edges and focus rings need
+  3:1; every control is focused in turn under keyboard modality, and a ring
+  drawn on a peer, a wrapper or a copy elsewhere counts.
+- **Printed but not gated.** Decorative text: `aria-hidden` text that repeats
+  words already visible, such as DepthText's depth layers or a marquee's loop
+  copies. `aria-hidden` text that is the only visible form of its words is
+  gated, as CircularText's letters are. Decorative icons: `aria-hidden` and not
+  the only content of a control. Disabled controls (WCAG 1.4.3). Content behind
+  a modal backdrop. The browser's own two-tone focus ring. A field with no
+  drawn edge.
+- **Not measurable, never guessed.** An image, gradient, canvas, video, SVG
+  shape or blurred layer in the stack has no single colour. If such a layer is
+  nearly covered, it is replaced in turn by black, grey and white; when that
+  moves the pixels by no more than 10% of the range, the worst of the three
+  ratios is gated and printed as a worst case. Anything else is reported as not
+  measurable, as is anything under a blend mode or a colour filter.
+- **The build gate**, `apps/gallery/scripts/check-rendered-record.mjs`, the
+  last step of `npm run check` and so of `npm run build`. The browser run
+  writes `apps/gallery/src/lib/rendered-contrast.json`, one line per pair, with
+  a fingerprint of everything that decides what a preview paints:
+  `packages/ui/src`, the previews, the stage and frame code, `globals.css`, the
+  Tailwind config and the measuring code. The build prints every pair with its
+  ratio and fails if a gated pair is under its minimum, if a component could
+  not be measured, or if the fingerprint no longer matches the sources, so a
+  component cannot change colour without the browser run being repeated. It
+  needs no browser, so it also runs on Vercel, which has no Chromium.
+
+The browser run takes about two minutes: 120 s from cold on the development
+machine, including starting `next dev`, and about 110 s against a dev server
+that is already running (it reuses `npm run dev` on 3333 rather than starting a
+second one on the same `.next`). The build gate takes under a second.
+Playwright is not a dependency of this repo; the run finds it through
+`PLAYWRIGHT_PATH` or a normal install. Its place is CI: add `playwright` as a
+devDependency of the gallery, run `npx playwright install chromium`, then
+`npm run check:rendered -w gallery` on every pull request, which names the
+failing pair before the build gate would only report a stale record.
+
+### Before and after
+
+Both columns come from the same script; the before column is `4b0535e`.
+
+| Measure | Before | After |
+|---|---:|---:|
+| Components with a failing pair | 32 | 0 |
+| Failing pairs (repeats on one page counted) | 147 | 0 |
+| Gated pairs | 783 | 779 |
+| Decorative, disabled, exempt | 53, 3, 29 | 57, 3, 29 |
+| Not measurable | 73 | 73 |
+
+The four pairs that left the gate are EmptyState's illustration and
+Breadcrumb's three separators, now marked decorative; they are still printed,
+at 1.72:1.
+
+### What changed
+
+Colours moved to Bezel tokens, each with its literal fallback, wherever a token
+has the role. One token was added: `--bz-line-control` (`#8a8a8e`, 3.4:1 on
+paper), because the hairlines separate surfaces and cannot identify a control;
+the token gate measures it on all three paper surfaces.
+
+| Component | Before | Change | After |
+|---|---|---|---|
+| TestimonialCard | Role line 2.52, stars 1.53, rating never announced, hover shadow | Role line `--bz-ink-subtle`; stars keep a `--bz-gold-fill` fill inside a `--bz-gold` outline; the row is one `role="img"` named "Rated N out of 5"; `hover:shadow-md` removed | 5.30, 5.98 |
+| Stepper | Done check 2.28, done label 3.16, current number 4.47, next number 3.76, next label 2.42 | Done fill `--bz-emerald-decor`, done label `--bz-emerald`, current indigo-500 to 600, next number `--bz-ink-muted`, next label `--bz-ink-subtle` | 3.77 to 7.02 |
+| TextInput | Edge 1.42, ring 2.86, asterisk and error 3.61 | Edge `--bz-line-control`, ring indigo-400 to 500, asterisk and error `--bz-danger`; placeholder `--bz-ink-subtle` too | 3.29, 4.28, 6.20 |
+| CollapsibleSidebar, SidePanel | `neutral-300` and `neutral-400` text and icons at 1.48 to 2.52, field edges 1.26, rings 1.48, red-500 delete 3.76 | `--bz-ink-subtle` text, icons and placeholders; `--bz-line-control` edges; `--bz-focus-ring` rings; `--bz-danger` delete | 3.44 to 8.12 |
+| NodeCard, SubmissionLoader, BakeryProductCard | `neutral-400` text 2.52, spinner arc 2.72, badge 3.30 | `--bz-ink-subtle`; spinner indigo-500 to 600; badge `--bz-emerald-fill` | 3.51 to 5.48 |
+| FeatureCardGrid, NumberedStepsList, PrincipleCardGrid, Checklist, SiteFooter | `#059669` as text, 3.21 to 3.77 | `--bz-emerald`; `#059669` stays for rules and dots, as PRINCIPLES.md says | 4.67 to 5.48 |
+| SignalCardGrid, SiteFooter | `#8a8a8e` as text, 3.29 and 3.44 | `--bz-ink-subtle` | 5.08, 5.30 |
+| MD3Switch | Unchecked track edge 1.29 | `border-muted-foreground`, the muted text colour, instead of the hairline | 5.08 |
+| TubelightNavBar | Brick focus ring on a dark bar, 2.17 | `outline-ring`, the theme's ring colour | 17.58 |
+| StarBorder | Focus ring at 55% alpha, 2.77 | Full `--bz-focus-ring` | 7.35 |
+| CheckboxVariants | Unchecked Pulse, a grey dot at 1.18 | 1px `--bz-line-control` edge; Pop gets the same, and its dead `border-1` class became `border` | 3.29 |
+| CircularText | Ring letters 2.94 | `--bz-gold` | 5.41 |
+| MultiStepLoader | Pending steps 1.70 to 1.82, pending icons 1.41 | Ink, with the row fade floored at 0.6 | 5.11 to 5.51, worst case |
+| DualConfirmDialog | "This action cannot be undone" 4.47 on the red tint | `text-foreground/60` | 4.96 |
+| DiagnosticGrid | Amber pill 4.26 | `#92400e` on the same tint | 6.01 |
+| BlenderUpload | Sage "browse" 2.77 | Text sage darkened to `#5f6e55`, also in the three states the preview does not show | 5.46 |
+| TillReceiptPrint | Footer 3.87 | Same hue at lightness 0.52 | 5.41 |
+| AppHeader | Search trigger 2.31 | `--bz-ink-muted`, which also holds on its hover fill | 8.03 |
+| StickyCartBar | WhatsApp button 1.98 | Default `#008069`, a darker WhatsApp green | 4.89 |
+| WhatsAppFAB | Icon 2.28 | green-500 to 600 | 3.30 |
+| EmptyState, Breadcrumb | Illustration and separators 1.72 | Marked `aria-hidden`: both are decoration, and were exposed as unnamed images | Decorative |
+
+Three failures came from demo content, so the previews changed instead. The
+kit's `Caption` sat at 70% of muted ink (3.83:1 in CheckboxVariants,
+LoadingSpinner and ImageWithFallback) and now sits at 80% (4.95:1). Marquee's
+echo row ran at 30% opacity (2.73:1 at 68px) and now runs at 40% (3.83:1).
+
+### What it does not cover
+
+- **One state per preview.** The run measures what each preview shows at rest,
+  with the pointer parked off the stage. Hover fills, unchecked states a preview
+  does not show and entrances that only exist with motion allowed are not
+  measured. Where the same defect sat in an unshown state of a fixed component
+  (TextInput's placeholder, CheckboxVariants' unchecked Pop, BlenderUpload's
+  later states), it was fixed with the rest.
+- **73 pairs are not measurable** and are printed on every build: text over
+  photos and gradients (SiteHeader, ContactSection, CalloutBox,
+  ParallaxProductStage, DamaskTileBackdrop, GlareHover, the AutoplayCarousel
+  caption and controls), gradient text (ShinyBadge, ShinyGradientText), blend
+  modes (MobileMenu's logo, FilmGrainOverlay, ScratchFoilReveal), the confetti
+  canvas over CelebrationOverlay and Highlighter's hand-drawn SVG.
+- **Marquee's default opacity is 0.08,** a watermark. The preview does not use
+  it and the component was not changed; anyone using the default should mark it
+  decorative.
+- **Browser default focus rings.** A few component controls still show only
+  the browser's ring: the SiteHeader and MobileMenu logo links, the StickyNav and
+  StickyNavbar brand links and ProductCard's quantity buttons. So do demo
+  controls in the ToastContainer, ErrorBoundary, EcomEmptyState, StickyCartBar,
+  UseThemeRipple, TypingHero, Magnet and JewelryCursor previews. That ring is
+  two-tone and visible, so it is reported rather than failed, but it is not the
+  2px outline Principle 3 asks for.
 
 ## Where this disagrees with CURATION.md
 
@@ -421,7 +561,7 @@ needs, and a rewritten description.
 | `sticky-cart-bar` | Broken: empty stage | An empty stage | A 390px frame above a sketched tab bar; the add buttons update count and total | Ordinary | A cart summary bar whose summary row and primary button fire the same handler.<br>**Worth keeping if** it animated the total and had one tab stop per action. |
 | `app-header` | Broken: cropped, covered the gallery header | A cropped white slab whose sticky `z-50` painted over the site header | An 800px frame with a store grid under it; the cart badge increments | Ordinary | A shop header with a banner, search and cart. It renders its own `h1`.<br>**Worth keeping if** merged into `StickyNavbar` without the heading. |
 | `bakery-product-card` | Broken: clipped, index only | Cut off | Two cards at 440px: a photo with badges, and the no-photo placeholder | Ordinary | A second product card.<br>**Worth keeping if** merged into `ProductCard`. |
-| `testimonial-card` | Index only | A legible white card | Paper stage with a real quote and rating | Ordinary | Stars, quote and an initial. Static content by design; measured, nothing in it responds except a faint hover shadow (see [Component fixes](#component-fixes-september-2026)).<br>**Worth keeping if** it did something testimonials rarely do, such as showing what was bought. |
+| `testimonial-card` | Index only | A legible white card | Paper stage with a real quote and rating | Ordinary | Stars, quote and an initial. Static content by design: nothing in it responds, and the rating is spoken as "Rated 5 out of 5" (see [Rendered contrast](#rendered-contrast-september-2026)).<br>**Worth keeping if** it did something testimonials rarely do, such as showing what was bought. |
 | `accordion-list` | New, replacing `faq-accordion` | n/a | Laid out at 600px: four studio questions with the first one open | Solid | The tumbling arrow disc and answers that rise line by line give a plain primitive a signature, and closed answers are inert, which fixes the old tab-order bug. |
 | `whatsapp-fab` | No: mock | A mock of the button | A 390px frame over a product page; an idle hover shows the tooltip | Ordinary | A floating chat button for one messaging app.<br>**Worth keeping if** it became a general contact button with the channel as a prop. |
 | `image-placeholder` | Index only | Legible | A cover and two thumbnails, one labelled | Ordinary | A grey box with a slow sheen, drawn from the surrounding text colour so it reads on light and dark grounds (see [Component fixes](#component-fixes-september-2026)).<br>**Worth keeping if** merged into `SkeletonCard`. |
@@ -517,12 +657,6 @@ Not fixed, because they change component behaviour rather than the gallery.
 - **Highlighter**, **MagicRings** and **CelebrationOverlay** each pull in a
   dependency (`rough-notation`, `three`, `canvas-confetti`) that nothing else
   uses.
-- **TestimonialCard** sets its role line in `neutral-400` (2.52:1 on white) and
-  its stars in `yellow-400` (1.53:1), under the 4.5:1 and 3:1 bars; the star
-  rating has no text alternative, so it is never announced; and its
-  `hover:shadow-md` suggests an interaction the card does not have and breaks
-  the hairline rule. Recorded rather than fixed in the component fixes, whose
-  brief was to leave a static component alone.
 - **Highlighter**'s `highlight` mark is drawn above neighbouring text that is not
   inside the span, so a comma right after a highlighted word disappears under
   it. The preview now puts the highlight before a space; the component is
