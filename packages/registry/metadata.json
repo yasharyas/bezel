@@ -1123,7 +1123,7 @@
   "scroll-flip-deck": {
     "name": "ScrollFlipDeck",
     "category": "sections",
-    "description": "Pinned deck of images that tip in and away as the page scrolls.",
+    "description": "Pinned deck of images that turn away one at a time as you scroll.",
     "tags": [
       "scroll",
       "3d",

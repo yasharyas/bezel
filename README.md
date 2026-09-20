@@ -179,7 +179,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 |---|---|---|
 | ContactSection | `contact-section` | Dark contact card with a rotating conic-gradient border and cursor-following spotlight. |
 | SidewaysScroll | `sideways-scroll` | Row of cards that pins to the viewport and pans sideways with vertical scroll, falling back to a snap scroller. |
-| ScrollFlipDeck | `scroll-flip-deck` | Pinned deck of images that tip in and away as the page scrolls, with a plain-column fallback. |
+| ScrollFlipDeck | `scroll-flip-deck` | Pinned deck of images that turn away one at a time as the page scrolls, with a plain-column fallback. |
 | TypingHero | `typing-hero` | Hero section with a typewriter-animated subtitle and CTA that fades in after typing completes. |
 
 ### Overlays
