@@ -74,11 +74,12 @@ const STEP = 0.85;
 const HOLD = 0.25;
 
 /*
- * Cards spend the middle third of their step face on rather than passing
- * through it. Without the dwell every card is mid-turn at every scroll
- * position, and the deck never resolves into something you can look at.
+ * Cards rest face on for a share of their step rather than turning the whole
+ * way through it, so the deck resolves into something you can look at. Keep it
+ * small: most of the step should be the turn, or the motion is over in a
+ * flick and the deck reads as a still image that jumps.
  */
-const DWELL = 0.3;
+const DWELL = 0.14;
 const dwell = (offset: number) => {
   const sign = offset < 0 ? -1 : 1;
   const size = Math.abs(offset);
