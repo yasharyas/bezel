@@ -1,5 +1,5 @@
 {
-  "fingerprint": "6d38c368b1063927",
+  "fingerprint": "d6c01027e58c88fb",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -387,11 +387,11 @@
     ]},
     {"slug":"parallax-product-stage","kind":"inline","tone":"void","textNodes":{"textNodes":10,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"p.pps__note","text":"Three jobs. One flat-price box.","size":18.4,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Tap","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#073b34","bg":"#e6e6e6","ratio":9.99,"bound":"worst case over a gradient 10% visible","n":2},
-      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Floor","size":10,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Tap","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#073b34","bg":"#e6e6e6","ratio":9.99,"bound":"worst case over a gradient 10% visible","n":3},
       {"kind":"text","element":"span","text":"Hard water","size":10.9,"weight":720,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":4},
       {"kind":"text","element":"strong","text":"₹499","size":24.8,"weight":780,"min":3,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"small","text":"save ₹398","size":12,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null}
+      {"kind":"text","element":"small","text":"save ₹398","size":12,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Floor","size":10,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"at":[390]}
     ]},
     {"slug":"stagger-blur-text","kind":"inline","tone":"paper","textNodes":{"textNodes":8,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"span","text":"Good","size":24,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":8}

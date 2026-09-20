@@ -34,7 +34,7 @@ const CSS = `
 .bz-sfd-img{display:block;width:100%;height:100%;object-fit:cover}
 .bz-sfd-caption{margin:10px 2px 0;font-size:0.8125rem;line-height:1.5;color:var(--bz-ink-muted,#4a4a4c)}
 .bz-sfd[data-layout="pinned"] .bz-sfd-caption{position:absolute;left:0;right:0;top:100%}
-.bz-sfd-count{position:absolute;left:0;top:calc(100% + 34px);font-family:var(--bz-font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:0.6875rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--bz-ink-subtle,#6b6b70)}
+.bz-sfd-count{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);font-family:var(--bz-font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:0.6875rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--bz-ink-subtle,#6b6b70)}
 .bz-sfd[data-layout="column"] .bz-sfd-count{display:none}
 `;
 
@@ -53,6 +53,8 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 const TIP = 58;
 /** Share of the viewport height each card gets to travel through. */
 const STEP = 0.85;
+/** Extra scroll, as a share of the deck, spent holding on the last card. */
+const HOLD = 0.25;
 
 /*
  * Cards spend the middle third of their step face on rather than passing
@@ -116,6 +118,13 @@ export function ScrollFlipDeck({
     if (!section || !list) return;
 
     const cards = () => Array.from(list.children) as HTMLElement[];
+    const reset = () => {
+      for (const card of cards()) {
+        card.style.cssText = "";
+        const caption = card.querySelector<HTMLElement>(".bz-sfd-caption");
+        if (caption) caption.style.opacity = "";
+      }
+    };
     let distance = 0;
     let start = 0;
     let raf = 0;
@@ -129,13 +138,16 @@ export function ScrollFlipDeck({
       }
       if (next === "pinned") {
         const stage = window.innerHeight - pinOffset;
-        distance = Math.round(window.innerHeight * STEP * items.length);
+        // One step per gap between cards, not per card, so the deck ends on the
+        // last card rather than on an empty pinned stage. HOLD keeps it there
+        // for a moment before the page moves on.
+        distance = Math.round(window.innerHeight * STEP * (items.length - 1) * (1 + HOLD));
         section.style.height = `${stage + distance}px`;
         start = section.getBoundingClientRect().top + window.scrollY - pinOffset;
       } else {
         distance = 0;
         section.style.height = "";
-        for (const card of cards()) card.style.cssText = "";
+        reset();
       }
       update();
     };
@@ -145,30 +157,46 @@ export function ScrollFlipDeck({
       if (layoutRef.current !== "pinned" || distance <= 0) return;
 
       const progress = clamp((window.scrollY - start) / distance, 0, 1);
-      const head = progress * items.length;
+      const span = items.length - 1;
+      const head = Math.min(progress * span * (1 + HOLD), span);
       const list_ = cards();
 
       for (let i = 0; i < list_.length; i++) {
         const card = list_[i];
         // How far this card is from the front of the deck: 0 is face on,
-        // negative is still coming, positive is already turning away.
-        const offset = clamp(head - i, -1.4, 1.4);
-        const turn = dwell(offset);
-        const turnY = mode === "alternate" && i % 2 === 1;
-        const axis = turnY ? "rotateY" : "rotateX";
-        const angle = -turn * TIP;
-        const depth = -Math.abs(turn) * 120;
-        const scale = 1 - Math.abs(turn) * 0.05;
-        // Cards still to come sit a little lower, so the stack reads as a deck
-        // rather than as one card flipping in an empty frame.
-        const lift = offset < 0 ? Math.min(-offset, 2) * 14 : 0;
-        const fade = 1 - clamp((Math.abs(offset) - 0.95) / 0.35, 0, 1);
+        // negative is still waiting underneath, positive is turning away.
+        const offset = clamp(head - i, -2.2, 1.4);
 
-        card.style.transform = `translate3d(0, ${lift}px, ${depth}px) ${axis}(${angle}deg) scale(${scale})`;
+        // Only the card on its way out turns. A waiting card that rotates
+        // shows up as a sliver poking out from behind the front one, which
+        // reads as a rendering fault rather than a deck.
+        const turn = offset > 0 ? dwell(offset) : 0;
+        const axis = mode === "alternate" && i % 2 === 1 ? "rotateY" : "rotateX";
+        const angle = -turn * TIP;
+
+        // Waiting cards stay square on, stacked back and down a little, so the
+        // deck has visible depth and the next card is already legible.
+        const waiting = Math.min(Math.max(-offset, 0), 2.4);
+        const depth = -turn * 120 - waiting * 60;
+        const scale = (1 - Math.abs(turn) * 0.05) * (1 - waiting * 0.035);
+        const drop = waiting * 16;
+
+        const fade =
+          offset > 0
+            ? 1 - clamp((offset - 0.5) / 0.45, 0, 1)
+            : 1 - clamp((waiting - 1.6) / 0.7, 0, 1);
+
+        card.style.transform = `translate3d(0, ${drop}px, ${depth}px) ${axis}(${angle}deg) scale(${scale})`;
         card.style.opacity = String(fade);
         card.style.zIndex = String(100 - Math.round(Math.abs(offset) * 20));
-        // A card turned past its edge catches no pointer, so links under it stay clickable.
-        card.style.pointerEvents = fade > 0.5 ? "auto" : "none";
+        // A card turned past its edge catches no pointer, so what is under it
+        // stays clickable.
+        card.style.pointerEvents = Math.abs(offset) < 0.5 ? "auto" : "none";
+
+        // One caption at a time. They all sit in the same place under the
+        // deck, so anything but the front card's is a pile of overlapping text.
+        const caption = card.querySelector<HTMLElement>(".bz-sfd-caption");
+        if (caption) caption.style.opacity = String(1 - clamp(Math.abs(offset) / 0.5, 0, 1));
       }
 
       if (countRef.current) {
@@ -194,7 +222,7 @@ export function ScrollFlipDeck({
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", onScroll);
       section.style.height = "";
-      for (const card of cards()) card.style.cssText = "";
+      reset();
     };
   }, [reduced, items.length, mode, pinOffset, minHeight]);
 
