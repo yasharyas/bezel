@@ -78,10 +78,6 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Pagination | `pagination` | Accessible, composable pagination (`Pagination`, `PaginationItem`, `PaginationLink`, `PaginationEllipsis`, etc). |
 | SiteHeader | `site-header` | Fixed top nav for a dark portfolio site with dual-text hover links and an expanding-circle CTA button. |
 | MobileMenu | `mobile-menu` | Hamburger-to-X animated icon that opens a fullscreen overlay menu with pill-bordered links. |
-| Breadcrumb | `breadcrumb` | Generic breadcrumb with Home icon, chevron separators, and link/button item support. |
-| CategoryChips | `category-chips` | Horizontally scrollable category filter chips with Framer Motion active/tap states. |
-| CategoryGrid | `category-grid` | Responsive category grid (4 cols mobile / 8 desktop) with staggered fade-in icons. |
-| MobileBottomNav | `mobile-bottom-nav` | Mobile bottom nav bar with animated active indicator, badge counts, and slide-up entrance. |
 | StickyNavbar | `sticky-navbar` | Sticky navbar with frosted-glass scroll effect, announcement bar, and animated mobile drawer. |
 | TimedTabs | `timed-tabs` | Self-advancing tabs whose progress bar is the timer, with a sliding paper tab, a pause button and full keyboard support. |
 | StickyNav | `sticky-nav` | Sticky glassmorphism nav with brand logo, center links, and a moon/sun theme-toggle button. |
@@ -93,7 +89,6 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | ToolbarButton | `toolbar-button` | Compact icon-only toolbar button with hover/disabled states, optional tooltip, neutral colour scheme. |
 | CircleCTA | `circle-cta` | Circular CTA button with a GSAP-animated SVG stroke that draws around it on hover. |
 | TextDisperseLink | `text-disperse-link` | Text link whose characters scatter to preset offsets on hover and snap back on mouse leave (GSAP). |
-| WhatsAppFAB | `whatsapp-fab` | Floating WhatsApp chat button that opens a pre-filled `wa.me` link, with hover tooltip. |
 | BorderBeamButton | `border-beam-button` | Button with an animated gradient "beam" that continuously travels around its border. |
 
 ### Cards
@@ -104,13 +99,8 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | PriceBreakdown | `price-breakdown` | Read-only price breakdown: base price, tax, divider, total. |
 | FeaturedProjectCard | `featured-project-card` | Large full-width portfolio project card with alternating image/text layout. |
 | ProjectCard | `project-card` | Masonry-style portfolio project card with hover-zoom image. |
-| ProductCard | `product-card` | E-commerce product card with discount badge, quantity stepper, out-of-stock overlay, and add-to-cart animation. |
-| BakeryProductCard | `bakery-product-card` | Product card with shimmer image placeholder, badge/tag pills, strikethrough pricing, and hover lift. |
 | TestimonialCard | `testimonial-card` | Testimonial card with star rating, quoted review, and auto-generated author avatar. |
-| FeatureCardGrid | `feature-card-grid` | Responsive 3-column feature card grid with accent-border hover lift. |
-| SignalCardGrid | `signal-card-grid` | 5-column card grid with large serif display letters, responsive down to 1 column. |
-| PrincipleCardGrid | `principle-card-grid` | 4-column principle card grid with monospace numbering, responsive down to 1 column. |
-| DiagnosticGrid | `diagnostic-grid` | 2-column diagnostic card grid with amber/warning-tagged pills. |
+| CardGrid | `card-grid` | One card grid with four eyebrow styles: mono label, number, serif drop letter or amber tag. |
 | DockingCard | `docking-card` | Card whose picture flies into a header dock on hover or focus while a detail panel rises into the space it left. |
 
 ### Feedback & States
@@ -122,7 +112,6 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | ToastContainer | `toast-container` | Toast notification system with a `useToast` hook, auto-dismiss, and portal-based bottom-right stacking. |
 | EmptyState | `empty-state` | Centered empty state with icon slot, heading, description, and optional CTA. |
 | LoadingSpinner | `loading-spinner` | Minimal centered spinner in three sizes using `animate-spin`. |
-| EcomEmptyState | `ecom-empty-state` | Four preset empty states (cart, search, category, network) with Framer Motion fade-in. |
 | ImagePlaceholder | `image-placeholder` | Image skeleton/placeholder with shimmer overlay and centered icon. |
 | ErrorBoundary | `error-boundary` | Class-based error boundary with a full-screen fallback UI and reload button. |
 
@@ -130,7 +119,6 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 
 | Component | Slug | Description |
 |---|---|---|
-| AppHeader | `app-header` | Sticky app header with info banner, logo, search bar, and animated cart badge. |
 | SiteFooter | `site-footer` | 4-column responsive footer with brand column and bottom copyright bar. |
 
 ### Panels
@@ -191,7 +179,6 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Component | Slug | Description |
 |---|---|---|
 | ContactSection | `contact-section` | Dark contact card with a rotating conic-gradient border and cursor-following spotlight. |
-| AccordionList | `accordion-list` | Accordion rows that open to their measured height, leave the tab order when closed and reveal plain-text answers line by line. |
 | SidewaysScroll | `sideways-scroll` | Row of cards that pins to the viewport and pans sideways with vertical scroll, falling back to a snap scroller. |
 | TypingHero | `typing-hero` | Hero section with a typewriter-animated subtitle and CTA that fades in after typing completes. |
 
@@ -199,13 +186,11 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 
 | Component | Slug | Description |
 |---|---|---|
-| SearchOverlay | `search-overlay` | Full-screen search overlay with spring slide-down, recent/popular searches, and blurred backdrop. |
 
 ### E-commerce
 
 | Component | Slug | Description |
 |---|---|---|
-| StickyCartBar | `sticky-cart-bar` | Sticky mobile cart summary bar that spring-animates in/out based on cart contents. |
 
 ### Hooks
 

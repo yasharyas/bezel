@@ -128,13 +128,14 @@ radii for the same primary CTA.
 
 | Principle | Holds | Does not yet |
 |---|---|---|
-| 1. The file is the interface | 104 of 105 files are standalone | `MultiStepLoader` (excluded from the CLI) |
+| 1. The file is the interface | 89 of 90 files are standalone | `MultiStepLoader` (excluded from the CLI) |
 | 2. Motion is refusable | 36 of 90 animated files | 54 files, 3 of them infinite loops |
 | 3. Focus is visible | every interactive file, after this pass | maintain it; `:focus` should become `:focus-visible` in 6 older files |
 | 4. Contrast is a gate | all tokens, and every measurable pair the 105 previews render | 73 rendered pairs sit on images, gradients, canvases or blend modes and are reported, not measured; components still carry pre-token literals |
 | 5. One curve, one ladder | the token set | components carry 5 curves and 4 springs |
 | 6. Pills on paper | the token set | 6 card radii, 3 CTA radii in components |
 
-The motion and radius counts were measured before seven components were removed
-in September 2026 and have not been re-measured since. The nine components added
-later that month each gate their own motion on reduced motion.
+The motion and radius counts were measured before the September 2026 removals:
+seven components first, then twelve more on 20 September, when four card grids
+also merged into `CardGrid`. They have not been re-measured since. The nine
+components added in September each gate their own motion on reduced motion.

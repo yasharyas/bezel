@@ -66,7 +66,6 @@ rendered, and one polite live region for checking, sending, sent and failed.
 | `buttons/ConicBorderButton` | + | + | + | + | – | n/a | n/a | n/a |
 | `buttons/CircleCTA` | + | + | + | – | – | n/a | n/a | n/a |
 | `buttons/TextDisperseLink` | + | + | + | – | n/a | n/a | n/a | n/a |
-| `buttons/WhatsAppFAB` | + | + | + | – | n/a | n/a | n/a | n/a |
 
 `PinchedButton` and `StarBorder` are the only two that were complete before this
 pass, and they are the reference for the rest.
@@ -76,10 +75,6 @@ pass, and they are the reference for the rest.
 | Component | default | hover | focus | active/current | disabled |
 |---|---|---|---|---|---|
 | `navigation/Pagination` | + | + | + | + | ! |
-| `navigation/Breadcrumb` | + | + | + | + | n/a |
-| `navigation/CategoryChips` | + | + | + | + | – |
-| `navigation/CategoryGrid` | + | + | + | – | – |
-| `navigation/MobileBottomNav` | + | + | + | + | – |
 | `navigation/TubelightNavBar` | + | + | + | + | – |
 | `navigation/StickyNav` | + | + | + | + | – |
 | `navigation/StickyNavbar` | + | + | + | + | – |
@@ -100,7 +95,6 @@ or `aria-selected`, which breaks cross-cutting rule 2 above.
 | Component | default | hover | focus | active | disabled | loading | error | empty |
 |---|---|---|---|---|---|---|---|---|
 | `feedback/EmptyState` | + | + | + | – | – | n/a | n/a | + |
-| `feedback/EcomEmptyState` | + | + | + | + | – | n/a | + | + |
 | `feedback/ErrorBoundary` | + | + | + | – | n/a | n/a | + | n/a |
 | `feedback/CelebrationOverlay` | + | – | + | – | + | n/a | n/a | n/a |
 | `feedback/TillReceiptPrint` | + | – | + | – | – | n/a | n/a | n/a |
@@ -111,9 +105,7 @@ or `aria-selected`, which breaks cross-cutting rule 2 above.
 | `feedback/ToastContainer` | n/a | n/a | n/a | n/a | n/a | n/a | ! | n/a |
 | `dialogs/DualConfirmDialog` | + | + | + | + | + | + | n/a | n/a |
 | `dialogs/MorphDialog` | + | + | + | + | n/a | n/a | n/a | n/a |
-| `overlays/SearchOverlay` | + | + | + | + | – | – | n/a | + |
 | `panels/SidePanel` | + | + | + | – | – | n/a | – | n/a |
-| `panels/StickyCartBar` | + | + | + | – | – | n/a | n/a | n/a |
 
 `LoadingSpinner` renders a spinner with no `role="status"` and no accessible
 label, so the loading state exists visually and not at all for assistive tech,
@@ -133,8 +125,11 @@ screen and in hidden tabs, and holds a still placeholder under reduced motion.
 |---|---|---|---|---|---|
 | `cards/PointerGlowCard` | + | + | + | n/a | n/a |
 | `cards/TestimonialCard` | + | n/a | n/a | n/a | n/a |
+| `cards/CardGrid` | + | n/a | n/a | n/a | n/a |
 
-`PointerGlowCard` lights its border and surface under a fine pointer, and focus
+`CardGrid` is content, not controls, so it has no hover: the four grids it
+replaced in September 2026 lifted on hover and read as clickable when they were
+not. `PointerGlowCard` lights its border and surface under a fine pointer, and focus
 anywhere inside it lights the card and moves the spotlight to the focused
 element, so its hover has a keyboard counterpart. `TestimonialCard` is static
 content with nothing to focus. Until September 2026 a `hover:shadow-md`
@@ -150,9 +145,8 @@ Focus is now present everywhere. These remain open and are tracked here rather
 than being quietly dropped:
 
 - **Only `MorphDialog` implements a focus trap.** `DualConfirmDialog`,
-  `SearchOverlay`, `MobileMenu`, `SubmissionLoader` and `CelebrationOverlay` are
-  all full-screen overlays with background content still tabbable underneath.
-  `SearchOverlay` handles Escape only while focus is in its input.
+  `MobileMenu`, `SubmissionLoader` and `CelebrationOverlay` are all full-screen
+  overlays with background content still tabbable underneath.
 - **Loading is rarely announced.** `aria-busy` and a live region appear in
   `loaders/MultiStepLoader`, `forms/MessageForm` and the two skeletons in
   `loaders/SkeletonCard`; `feedback/ImagePlaceholder` has `aria-busy` alone.

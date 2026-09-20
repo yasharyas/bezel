@@ -4,6 +4,17 @@
 accept, reject or revise. Since it was written the owner has removed ten
 components; their rows are gone, and the counts describe the 97 that remain.
 
+**Acted on, 20 September 2026.** The owner removed twelve more and merged the
+card grids, taking the library to 90. Removed: EcomEmptyState, Breadcrumb,
+CategoryChips, CategoryGrid, SearchOverlay, MobileBottomNav, ProductCard,
+StickyCartBar, AppHeader, BakeryProductCard, AccordionList, WhatsAppFAB. That
+overrides the KEEP calls on Breadcrumb, CategoryChips, SearchOverlay,
+ProductCard and AccordionList below: the commerce surface went as a set, rather
+than being absorbed one by one. `CardGrid` now exists, merged from
+DiagnosticGrid, FeatureCardGrid, PrincipleCardGrid and SignalCardGrid.
+CalloutBox was not folded in and still ships on its own. The rows below are left
+as written, so the reasoning stays readable next to what was done.
+
 - **KEEP: 38** clear the quality bar
 - **MERGE: 26** fold into a component that is kept, as a variant or prop
 - **CUT: 33** remove from the library

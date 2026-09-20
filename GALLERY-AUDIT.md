@@ -5,13 +5,16 @@ headless Chromium at 1440px desktop and 390px mobile, before and after the
 `gallery-overhaul` work. The gallery started with 107 components. During the
 audit the owner removed ten of them over two rounds (recorded under
 [Owner decisions](#owner-decisions)), so the table covered the 97 that remained. Nine components added later, one of
-them replacing FAQAccordion, bring the library to 105 (see
-[Additions, September 2026](#additions-september-2026)).
+them replacing FAQAccordion, brought the library to 105 (see
+[Additions, September 2026](#additions-september-2026)). Twelve more came out on
+20 September and four card grids merged into one, leaving 90 (see
+[Removals, 20 September 2026](#removals-20-september-2026)).
 
 - [Summary](#summary)
 - [Owner decisions](#owner-decisions)
 - [Additions, September 2026](#additions-september-2026)
 - [Component fixes, September 2026](#component-fixes-september-2026)
+- [Removals, 20 September 2026](#removals-20-september-2026)
 - [Rendered contrast, September 2026](#rendered-contrast-september-2026)
 - [Where this disagrees with CURATION.md](#where-this-disagrees-with-curationmd)
 - [Component by component](#component-by-component)
@@ -26,8 +29,8 @@ them replacing FAQAccordion, bring the library to 105 (see
 | Rating | Count | Components |
 |---|---:|---|
 | **Showcase** | 7 | DepthText, CinematicWaterBackground, ScrollUnfurlPreloader, ScratchFoilReveal, MagicRings, MorphDialog, ParticleQrCode |
-| **Solid** | 32 | ToastContainer, TubelightNavBar, MD3Switch, DualConfirmDialog, SiteHeader, ElasticLineDivider, TextDisperseLink, SearchOverlay, MobileBottomNav, ProductCard, useThemeRipple, ScrollReveal, Magnet, ConicBorderButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, StarBorder, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel, AccordionList |
-| **Ordinary** | 66 | Everything else. Each row says what would make it worth keeping. |
+| **Solid** | 28 | ToastContainer, TubelightNavBar, MD3Switch, DualConfirmDialog, SiteHeader, ElasticLineDivider, TextDisperseLink, useThemeRipple, ScrollReveal, Magnet, ConicBorderButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, StarBorder, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel |
+| **Ordinary** | 55 | Everything else. Each row says what would make it worth keeping. |
 
 - **Showcase**: genuinely strong, the kind of thing that makes a reviewer stop.
 - **Solid**: well made, earns its place.
@@ -253,10 +256,41 @@ commit before the replacement, then remove `accordion-list`.
 
 ### Totals and the first screen
 
-The library now holds 105 components: 7 Showcase, 32 Solid and 66 Ordinary.
+The library now holds 90 components: 7 Showcase, 28 Solid and 55 Ordinary.
 "Start with these" is unchanged. ParticleQrCode is the only new piece with a
 case against ParallaxProductStage; at card size the code is small, so the swap
 is left to the owner.
+
+## Removals, 20 September 2026
+
+Twelve components were removed and four card grids became one. The library goes
+from 105 to 90.
+
+**Removed.** EcomEmptyState, Breadcrumb, CategoryChips, CategoryGrid,
+SearchOverlay, MobileBottomNav, ProductCard, StickyCartBar, AppHeader,
+BakeryProductCard, AccordionList, WhatsAppFAB.
+
+Four of those were rated Solid (SearchOverlay, MobileBottomNav, ProductCard,
+AccordionList). They went anyway: as a set they were one shop's surface area
+rather than a library, and CURATION.md had already marked most of the rest as
+duplicates of components that stay (StickyNavbar, TubelightNavBar, EmptyState,
+Pagination).
+
+**Merged into CardGrid.** FeatureCardGrid, PrincipleCardGrid, SignalCardGrid and
+DiagnosticGrid were the same card, `p-[22px]` and all, differing only in the line
+above the title. `CardGrid` takes `eyebrow` as "label", "letter" or "tag",
+`columns` as 1 to 4 or "fit", and `serifTitles`. Three things changed in the merge:
+
+- The hard-coded hexes became tokens, so the grid now follows the contrast gate
+  instead of sitting beside it.
+- The hover lift is gone. It read as clickable on cards that were never
+  clickable, the same defect TestimonialCard's hover shadow had.
+- Cards render as `ul`/`li` rather than sibling divs, so a screen reader
+  announces how many there are.
+
+Old imports break. FeatureCardGrid, PrincipleCardGrid, SignalCardGrid and
+DiagnosticGrid no longer exist, and `npx bezel-add add card-grid` replaces their
+four install commands.
 
 ## Component fixes, September 2026
 
