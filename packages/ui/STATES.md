@@ -103,7 +103,6 @@ or `aria-selected`, which breaks cross-cutting rule 2 above.
 | `feedback/ImagePlaceholder` | n/a | n/a | n/a | n/a | n/a | + | n/a | n/a |
 | `feedback/LoadingSpinner` | n/a | n/a | n/a | n/a | n/a | ! | n/a | n/a |
 | `feedback/ToastContainer` | n/a | n/a | n/a | n/a | n/a | n/a | ! | n/a |
-| `dialogs/DualConfirmDialog` | + | + | + | + | + | + | n/a | n/a |
 | `dialogs/MorphDialog` | + | + | + | + | n/a | n/a | n/a | n/a |
 | `panels/SidePanel` | + | + | + | – | – | n/a | – | n/a |
 
@@ -144,7 +143,7 @@ so the rating is announced as well as drawn.
 Focus is now present everywhere. These remain open and are tracked here rather
 than being quietly dropped:
 
-- **Only `MorphDialog` implements a focus trap.** `DualConfirmDialog`,
+- **Only `MorphDialog` implements a focus trap.**
   `MobileMenu`, `SubmissionLoader` and `CelebrationOverlay` are all full-screen
   overlays with background content still tabbable underneath.
 - **Loading is rarely announced.** `aria-busy` and a live region appear in

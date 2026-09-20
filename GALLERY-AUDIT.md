@@ -29,8 +29,8 @@ them replacing FAQAccordion, brought the library to 105 (see
 | Rating | Count | Components |
 |---|---:|---|
 | **Showcase** | 7 | DepthText, CinematicWaterBackground, ScrollUnfurlPreloader, ScratchFoilReveal, MagicRings, MorphDialog, ParticleQrCode |
-| **Solid** | 28 | ToastContainer, TubelightNavBar, MD3Switch, DualConfirmDialog, SiteHeader, ElasticLineDivider, TextDisperseLink, useThemeRipple, ScrollReveal, Magnet, ConicBorderButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, StarBorder, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel |
-| **Ordinary** | 55 | Everything else. Each row says what would make it worth keeping. |
+| **Solid** | 27 | ToastContainer, TubelightNavBar, MD3Switch, SiteHeader, ElasticLineDivider, TextDisperseLink, useThemeRipple, ScrollReveal, Magnet, ConicBorderButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, StarBorder, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel |
+| **Ordinary** | 56 | Everything else. Each row says what would make it worth keeping. |
 
 - **Showcase**: genuinely strong, the kind of thing that makes a reviewer stop.
 - **Solid**: well made, earns its place.
@@ -256,7 +256,7 @@ commit before the replacement, then remove `accordion-list`.
 
 ### Totals and the first screen
 
-The library now holds 90 components: 7 Showcase, 28 Solid and 55 Ordinary.
+The library now holds 90 components: 7 Showcase, 27 Solid and 56 Ordinary.
 "Start with these" is unchanged. ParticleQrCode is the only new piece with a
 case against ParallaxProductStage; at card size the code is small, so the swap
 is left to the owner.
@@ -291,6 +291,18 @@ above the title. `CardGrid` takes `eyebrow` as "label", "letter" or "tag",
 Old imports break. FeatureCardGrid, PrincipleCardGrid, SignalCardGrid and
 DiagnosticGrid no longer exist, and `npx bezel-add add card-grid` replaces their
 four install commands.
+
+**Also removed: DualConfirmDialog.** It was rated Solid and it was genuinely
+good, but it was the second dialog in a library that already ships MorphDialog,
+and it was the one without a focus trap. Two dialogs, one of which leaks focus,
+is worse than one that does not.
+
+**Added: ScrollFlipDeck**, rated Ordinary until it has been reviewed alongside
+the rest. A stack of images that pins to the viewport and tips one card at a
+time as the page scrolls, on plain transforms with no scroll library and no 3D
+library. The images keep their alt text and stay in source order whatever the
+scroll position is doing to them. Reduced motion, a short viewport or a single
+image gets a plain column instead of a pinned deck.
 
 ## Component fixes, September 2026
 
