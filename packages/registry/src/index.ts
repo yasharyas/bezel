@@ -1155,228 +1155,6 @@ MD3Switch.displayName = "MD3Switch"`,
     tags: ["switch", "toggle", "material-design", "md3", "animated", "haptic", "physics"],
   },
   {
-    name: "DualConfirmDialog",
-    slug: "dual-confirm-dialog",
-    path: "dialogs/DualConfirmDialog.tsx",
-    category: "dialogs",
-    code: `import { useEffect, useState } from "react"
-import { AlertTriangle, Loader2 } from "lucide-react"
-
-const EXIT_MS = 160
-
-// @starting-style drives the entrance (paint-driven, not a mount effect +
-// requestAnimationFrame, so it isn't silently skipped if the tab was
-// backgrounded when the dialog opened). Exit still needs JS: the dialog has
-// to stay mounted for one transition after \`open\` goes false, which
-// [data-closing] below drives, kept in sync with the delayed unmount.
-const dialogStyle = \`
-  .yui-dialog-backdrop {
-    opacity: 1;
-    transition: opacity 200ms cubic-bezier(0.23,1,0.32,1);
-  }
-  @starting-style { .yui-dialog-backdrop { opacity: 0; } }
-  .yui-dialog-backdrop[data-closing="true"] { opacity: 0; }
-
-  .yui-dialog {
-    opacity: 1;
-    transform: scale(1);
-    transition: transform 200ms cubic-bezier(0.23,1,0.32,1), opacity 200ms cubic-bezier(0.23,1,0.32,1);
-  }
-  @starting-style { .yui-dialog { opacity: 0; transform: scale(0.96); } }
-  .yui-dialog[data-closing="true"] { opacity: 0; transform: scale(0.96); }
-\`;
-
-export interface DeleteProgress {
-  current: number
-  total: number
-  strategy?: "frontend" | "backend"
-}
-
-export interface DualConfirmDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onConfirm: () => void
-  title: string
-  description: string
-  itemCount: number
-  itemType: string
-  confirmationPhrase?: string
-  isLoading?: boolean
-  progress?: DeleteProgress | null
-}
-
-export function DualConfirmDialog({
-  open,
-  onOpenChange,
-  onConfirm,
-  title,
-  description,
-  itemCount,
-  itemType,
-  confirmationPhrase = "DELETE",
-  isLoading = false,
-  progress = null,
-}: DualConfirmDialogProps) {
-  const [step, setStep] = useState<1 | 2>(1)
-  const [inputValue, setInputValue] = useState("")
-
-  // Keep the dialog mounted for one exit transition after \`open\` flips to
-  // false — interruptible if \`open\` flips back true before the timer fires.
-  const [rendered, setRendered] = useState(open)
-
-  useEffect(() => {
-    if (open) {
-      setRendered(true)
-      return
-    }
-    const timer = setTimeout(() => setRendered(false), EXIT_MS)
-    return () => clearTimeout(timer)
-  }, [open])
-
-  const handleFirstConfirm = () => setStep(2)
-  const handleFinalConfirm = () => { if (inputValue === confirmationPhrase) onConfirm() }
-  const handleClose = () => {
-    if (isLoading) return
-    setStep(1)
-    setInputValue("")
-    onOpenChange(false)
-  }
-
-  const progressPercentage = progress
-    ? Math.round((progress.current / progress.total) * 100)
-    : 0
-
-  if (!rendered) return null
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <style>{dialogStyle}</style>
-
-      {/* Backdrop */}
-      <div
-        className="yui-dialog-backdrop absolute inset-0 bg-black/50"
-        data-closing={!open ? "true" : undefined}
-        onClick={handleClose}
-      />
-
-      {/* Dialog — transform-origin stays centered; it isn't anchored to a trigger */}
-      <div
-        className="yui-dialog relative z-10 w-full max-w-md mx-4 bg-background border border-border rounded-lg shadow-xl"
-        data-closing={!open ? "true" : undefined}
-      >
-        {/* Header */}
-        <div className="p-6 pb-0">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-destructive">
-            <AlertTriangle className="h-5 w-5 shrink-0" />
-            {title}
-          </h2>
-        </div>
-
-        {/* Body */}
-        <div className="p-6">
-          {isLoading && progress ? (
-            /* Progress view */
-            <div className="space-y-4">
-              <div className="flex items-center justify-center gap-2 text-sm">
-                <Loader2 className="h-5 w-5 animate-spin" />
-                <span>Deleting items...</span>
-              </div>
-              <div className="w-full bg-secondary rounded-full h-2.5">
-                <div
-                  className="bg-primary h-2.5 rounded-full transition-[width] duration-300 ease-[cubic-bezier(0.77,0,0.175,1)]"
-                  style={{ width: \`\${progressPercentage}%\` }}
-                />
-              </div>
-              <p className="text-center text-sm text-muted-foreground">
-                {progress.current} of {progress.total}
-                {progress.strategy === "frontend" && " (sequential mode)"}
-                {progress.strategy === "backend" && " (batch mode)"}
-              </p>
-            </div>
-          ) : step === 1 ? (
-            /* Step 1: warning */
-            <div className="space-y-4">
-              <p className="text-muted-foreground">{description}</p>
-              <div className="p-3 bg-destructive/10 rounded-md border border-destructive/20">
-                <p className="font-semibold text-destructive">
-                  You are about to delete {itemCount} {itemType}{itemCount > 1 ? "s" : ""}.
-                </p>
-                <p className="text-sm text-foreground/60 mt-1">This action cannot be undone.</p>
-              </div>
-            </div>
-          ) : (
-            /* Step 2: type to confirm */
-            <div className="space-y-4">
-              <p className="font-medium text-destructive">⚠️ Final Confirmation Required</p>
-              <p className="text-sm text-muted-foreground">
-                Type{" "}
-                <code className="bg-muted px-2 py-0.5 rounded font-mono text-foreground">
-                  {confirmationPhrase}
-                </code>{" "}
-                to confirm deletion of {itemCount} {itemType}{itemCount > 1 ? "s" : ""}.
-              </p>
-              <input
-                className="w-full px-3 py-2 text-sm font-mono uppercase border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 disabled:opacity-50"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={\`Type \${confirmationPhrase} to confirm\`}
-                autoFocus
-                disabled={isLoading}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && inputValue === confirmationPhrase) handleFinalConfirm()
-                }}
-              />
-              <p className="text-xs text-muted-foreground">Note: Type in UPPERCASE letters</p>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        {!(isLoading && progress) && (
-          <div className="flex justify-end gap-2 px-6 pb-6">
-            {step === 1 ? (
-              <>
-                <button
-                  onClick={handleClose}
-                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-[background-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleFirstConfirm}
-                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-[background-color,transform] active:scale-[0.97] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
-                >
-                  Continue to Final Confirmation
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => setStep(1)}
-                  disabled={isLoading}
-                  className="px-4 py-2 text-sm rounded-md border border-border bg-background hover:bg-muted transition-[background-color,transform] active:scale-[0.97] disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
-                >
-                  Go Back
-                </button>
-                <button
-                  onClick={handleFinalConfirm}
-                  disabled={inputValue !== confirmationPhrase || isLoading}
-                  className="px-4 py-2 text-sm rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-[background-color,transform] active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
-                >
-                  Delete Permanently
-                </button>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}`,
-    description: "Two-step delete dialog that asks you to type a phrase before it confirms.",
-    tags: ["confirmation", "destructive", "two-step", "modal", "bulk-delete", "loading", "progress"],
-  },
-  {
     name: "BlenderUpload",
     slug: "blender-upload",
     path: "forms/BlenderUpload.tsx",
@@ -4070,8 +3848,6 @@ type Props = {
   eyebrow?: "label" | "letter" | "tag";
   /** Serif titles, as the principle and diagnostic grids had them. */
   serifTitles?: boolean;
-  /** Tint and lift on hover, as the feature grid had. */
-  interactive?: boolean;
   className?: string;
 };
 
@@ -4087,7 +3863,6 @@ export function CardGrid({
   columns = 3,
   eyebrow = "label",
   serifTitles = false,
-  interactive = false,
   className = "",
 }: Props) {
   const fit = columns === "fit";
@@ -4105,13 +3880,9 @@ export function CardGrid({
       {items.map((item, i) => (
         <li
           key={item.eyebrow ?? item.title ?? i}
-          className={[
-            "flex flex-col gap-1.5 p-[22px] rounded-xl",
-            "bg-[color:var(--bz-paper-sunken,#fafafa)] border border-[color:var(--bz-line,rgba(10,10,10,0.06))]",
-            interactive
-              ? "transition-[background-color,border-color,transform] duration-[250ms] hover:border-[color:var(--bz-emerald-decor,#059669)] hover:-translate-y-0.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-              : "",
-          ].join(" ")}
+          /* No hover state: these cards are content, not controls. The grid it
+             replaces lifted on hover and read as clickable when it was not. */
+          className="flex flex-col gap-1.5 p-[22px] rounded-xl bg-[color:var(--bz-paper-sunken,#fafafa)] border border-[color:var(--bz-line,rgba(10,10,10,0.06))]"
         >
           {item.eyebrow && eyebrow === "label" && (
             <div className="font-mono text-[11px] tracking-[0.2em] uppercase text-[color:var(--bz-emerald,#047857)]">
@@ -4129,7 +3900,9 @@ export function CardGrid({
             </div>
           )}
           {item.eyebrow && eyebrow === "tag" && (
-            <span className="self-start px-2.5 py-1 mb-1 rounded-full font-mono text-[10px] tracking-[0.15em] bg-[rgba(180,83,9,0.1)] text-[color:var(--bz-amber,#b45309)]">
+            /* Amber on white, not on an amber tint: the tinted pill the
+               diagnostic grid used measured 4.2:1 and missed AA. */
+            <span className="self-start px-2.5 py-1 mb-1 rounded-full font-mono text-[10px] tracking-[0.15em] bg-[color:var(--bz-paper,#ffffff)] border border-[color:var(--bz-amber,#b45309)] text-[color:var(--bz-amber,#b45309)]">
               {item.eyebrow}
             </span>
           )}
@@ -13810,6 +13583,229 @@ export function MessageForm({
 }`,
     description: "Form with announced errors, focus to the first one and honest sending states.",
     tags: ["form", "validation", "aria-invalid", "live-region", "async", "accessible"],
+  },
+  {
+    name: "ScrollFlipDeck",
+    slug: "scroll-flip-deck",
+    path: "sections/ScrollFlipDeck.tsx",
+    category: "sections",
+    code: `"use client";
+
+import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
+
+/*
+ * ScrollFlipDeck: a stack of images pinned to the viewport, each one tipping in
+ * from below and away again as you scroll, like pages turning on a flipbook.
+ *
+ * No scroll library and no 3D library. The section is made as tall as the flip
+ * needs, an inner stage sticks to the top, and one passive scroll listener maps
+ * the page's scroll position to a rotation per card. Nothing writes to layout,
+ * only to \`transform\` and \`opacity\`, so a long deck costs the same as a short
+ * one.
+ *
+ * The deck is decoration wrapped around real content: the images keep their alt
+ * text and stay in the accessibility tree in source order, whatever the scroll
+ * position is doing to them.
+ *
+ * Reduced motion, a short viewport or a single item gets a plain column of
+ * images instead. Nothing pins, nothing rotates.
+ */
+
+const CSS = \`
+.bz-sfd{position:relative;color:var(--bz-ink,#0a0a0a);font-family:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif)}
+.bz-sfd *,.bz-sfd *::before,.bz-sfd *::after{box-sizing:border-box}
+.bz-sfd-stage{display:flex;align-items:center;justify-content:center}
+.bz-sfd[data-layout="pinned"] .bz-sfd-stage{position:sticky;top:var(--bz-sfd-top,0px);height:calc(100vh - var(--bz-sfd-top,0px));perspective:1400px;perspective-origin:50% 45%}
+.bz-sfd-list{position:relative;width:min(var(--bz-sfd-width,560px),100% - 32px);margin:0;padding:0;list-style:none}
+.bz-sfd[data-layout="pinned"] .bz-sfd-list{height:min(var(--bz-sfd-height,64vh),72vw);transform-style:preserve-3d}
+.bz-sfd[data-layout="column"] .bz-sfd-list{display:flex;flex-direction:column;gap:24px;margin-inline:auto;padding-block:24px}
+.bz-sfd-card{margin:0}
+.bz-sfd[data-layout="pinned"] .bz-sfd-card{position:absolute;inset:0;transform-origin:50% 100%;backface-visibility:hidden;will-change:transform,opacity}
+.bz-sfd-frame{overflow:hidden;height:100%;border-radius:16px;background:var(--bz-paper-sunken,#fafafa);border:1px solid var(--bz-line,rgba(10,10,10,0.06));box-shadow:0 18px 40px -24px rgba(10,10,10,0.45)}
+.bz-sfd-img{display:block;width:100%;height:100%;object-fit:cover}
+.bz-sfd-caption{margin:10px 2px 0;font-size:0.8125rem;line-height:1.5;color:var(--bz-ink-muted,#4a4a4c)}
+.bz-sfd[data-layout="pinned"] .bz-sfd-caption{position:absolute;left:0;right:0;top:100%}
+.bz-sfd-count{position:absolute;left:0;top:calc(100% + 34px);font-family:var(--bz-font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);font-size:0.6875rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--bz-ink-subtle,#6b6b70)}
+.bz-sfd[data-layout="column"] .bz-sfd-count{display:none}
+\`;
+
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(RM_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+const readReducedMotion = () => window.matchMedia(RM_QUERY).matches;
+const serverReducedMotion = () => false;
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+/** Degrees a card is tipped when it is one full step away from centre. */
+const TIP = 72;
+/** Share of the viewport height each card gets to travel through. */
+const STEP = 0.85;
+
+export type ScrollFlipItem = {
+  src: string;
+  /** Describe the image. Empty string only if the image says nothing the text does not. */
+  alt: string;
+  caption?: ReactNode;
+};
+
+export type ScrollFlipDeckProps = {
+  items: ScrollFlipItem[];
+  /** Names the deck for assistive tech. */
+  label: string;
+  /** "sequence" tips every card on the same axis. "alternate" turns every other card on its side. */
+  mode?: "sequence" | "alternate";
+  /** Distance from the top of the viewport to pin at, for a sticky header. */
+  pinOffset?: number;
+  /** Below this viewport height the deck is a plain column. */
+  minHeight?: number;
+  /** Width of the card stack. */
+  width?: number;
+  /** Shows "02 / 05" under the deck while it is pinned. */
+  counter?: boolean;
+  className?: string;
+};
+
+export function ScrollFlipDeck({
+  items,
+  label,
+  mode = "sequence",
+  pinOffset = 0,
+  minHeight = 520,
+  width = 560,
+  counter = true,
+  className = "",
+}: ScrollFlipDeckProps) {
+  const reduced = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, serverReducedMotion);
+  const [layout, setLayout] = useState<"column" | "pinned">("column");
+  const sectionRef = useRef<HTMLElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const countRef = useRef<HTMLParagraphElement>(null);
+  const layoutRef = useRef(layout);
+  layoutRef.current = layout;
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    const list = listRef.current;
+    if (!section || !list) return;
+
+    const cards = () => Array.from(list.children) as HTMLElement[];
+    let distance = 0;
+    let start = 0;
+    let raf = 0;
+
+    const measure = () => {
+      const next =
+        !readReducedMotion() && window.innerHeight >= minHeight && items.length > 1 ? "pinned" : "column";
+      if (next !== layoutRef.current) {
+        layoutRef.current = next;
+        setLayout(next);
+      }
+      if (next === "pinned") {
+        const stage = window.innerHeight - pinOffset;
+        distance = Math.round(window.innerHeight * STEP * items.length);
+        section.style.height = \`\${stage + distance}px\`;
+        start = section.getBoundingClientRect().top + window.scrollY - pinOffset;
+      } else {
+        distance = 0;
+        section.style.height = "";
+        for (const card of cards()) card.style.cssText = "";
+      }
+      update();
+    };
+
+    const update = () => {
+      raf = 0;
+      if (layoutRef.current !== "pinned" || distance <= 0) return;
+
+      const progress = clamp((window.scrollY - start) / distance, 0, 1);
+      const head = progress * items.length;
+      const list_ = cards();
+
+      for (let i = 0; i < list_.length; i++) {
+        const card = list_[i];
+        // How far this card is from the front of the deck: 0 is face on,
+        // negative is still coming, positive is already turning away.
+        const offset = clamp(head - i, -1.35, 1.35);
+        const turnY = mode === "alternate" && i % 2 === 1;
+        const angle = -offset * TIP;
+        const axis = turnY ? "rotateY" : "rotateX";
+        const depth = -Math.abs(offset) * 140;
+        const scale = 1 - Math.abs(offset) * 0.06;
+        const fade = 1 - clamp((Math.abs(offset) - 0.55) / 0.6, 0, 1);
+
+        card.style.transform = \`translate3d(0, 0, \${depth}px) \${axis}(\${angle}deg) scale(\${scale})\`;
+        card.style.opacity = String(fade);
+        card.style.zIndex = String(100 - Math.round(Math.abs(offset) * 20));
+        // A card turned past its edge catches no pointer, so links under it stay clickable.
+        card.style.pointerEvents = fade > 0.5 ? "auto" : "none";
+      }
+
+      if (countRef.current) {
+        const current = clamp(Math.round(head) + 1, 1, items.length);
+        countRef.current.textContent = \`\${String(current).padStart(2, "0")} / \${String(items.length).padStart(2, "0")}\`;
+      }
+    };
+
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(list);
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    measure();
+
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", onScroll);
+      section.style.height = "";
+      for (const card of cards()) card.style.cssText = "";
+    };
+  }, [reduced, items.length, mode, pinOffset, minHeight]);
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <section
+        ref={sectionRef}
+        className={\`bz-sfd \${className}\`.trim()}
+        data-layout={layout}
+        style={
+          {
+            ["--bz-sfd-top" as string]: \`\${pinOffset}px\`,
+            ["--bz-sfd-width" as string]: \`\${width}px\`,
+          } as CSSProperties
+        }
+      >
+        <div className="bz-sfd-stage">
+          <ul ref={listRef} className="bz-sfd-list" aria-label={label}>
+            {items.map((item, i) => (
+              <li key={item.src + i} className="bz-sfd-card">
+                <figure className="bz-sfd-figure">
+                  <div className="bz-sfd-frame">
+                    <img className="bz-sfd-img" src={item.src} alt={item.alt} loading={i > 1 ? "lazy" : undefined} />
+                  </div>
+                  {item.caption ? <figcaption className="bz-sfd-caption">{item.caption}</figcaption> : null}
+                </figure>
+              </li>
+            ))}
+          </ul>
+          {counter ? <p ref={countRef} className="bz-sfd-count" aria-hidden="true" /> : null}
+        </div>
+      </section>
+    </>
+  );
+}`,
+    description: "Pinned deck of images that tip in and away as the page scrolls.",
+    tags: ["scroll", "3d", "images", "pinned", "sticky", "gallery", "reduced-motion"],
   },
 ];
 

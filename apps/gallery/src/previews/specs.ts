@@ -33,7 +33,6 @@ export const specs: Record<string, PreviewSpec> = {
   "node-card": inline("basic", "paper"),
   "tubelight-navbar": inline("motion", "void"),
   "md3-switch": inline("basic", "paper"),
-  "dual-confirm-dialog": frame("paper", 600, 400),
   "blender-upload": inline("basic", "paper", { fit: 340 }),
   "empty-state": inline("basic", "paper", { fit: 420 }),
   "checkbox-variants": inline("basic", "paper"),
@@ -108,6 +107,7 @@ export const specs: Record<string, PreviewSpec> = {
   "glyph-field": inline("basic", "paper", { hint: "Move" }),
   "docking-card": inline("basic", "paper", { fit: 760, hint: "Hover" }),
   "sideways-scroll": frame("paper", 720, 480, { hint: "Scroll" }),
+  "scroll-flip-deck": frame("paper", 720, 560, { hint: "Scroll" }),
   "autoplay-carousel": inline("basic", "paper", { fit: 680 }),
   "message-form": inline("basic", "paper", { fit: 560 }),
 };

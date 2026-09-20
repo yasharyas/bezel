@@ -59,7 +59,6 @@ const COMPONENT_MAP = {
   "node-card": "cards/NodeCard.tsx",
   "tubelight-navbar": "navigation/TubelightNavBar.tsx",
   "md3-switch": "forms/MD3Switch.tsx",
-  "dual-confirm-dialog": "dialogs/DualConfirmDialog.tsx",
   "blender-upload": "forms/BlenderUpload.tsx",
   "empty-state": "feedback/EmptyState.tsx",
   "checkbox-variants": "forms/CheckboxVariants.tsx",
@@ -136,6 +135,7 @@ const COMPONENT_MAP = {
   "glyph-field": "animation/GlyphField.tsx",
   "docking-card": "cards/DockingCard.tsx",
   "sideways-scroll": "sections/SidewaysScroll.tsx",
+  "scroll-flip-deck": "sections/ScrollFlipDeck.tsx",
   "autoplay-carousel": "media/AutoplayCarousel.tsx",
   "message-form": "forms/MessageForm.tsx",
 };
@@ -164,7 +164,6 @@ function showHelp() {
     node-card            Workflow node card with accent colour
     tubelight-navbar     Floating nav bar with lamp glow (framer-motion)
     md3-switch           Material Design 3 toggle switch with haptics
-    dual-confirm-dialog  Two-step destructive confirmation dialog
     blender-upload       Drag-and-drop upload with blender animation
     empty-state          Centered empty state with icon slot and CTA
     checkbox-variants    4 animated checkbox variants (ripple/glow/morph/pulse)
@@ -238,6 +237,7 @@ function showHelp() {
     glyph-field             Word built as a 3D solid of glyphs that tilts toward the cursor
     docking-card            Card whose picture flies into a header dock on hover
     sideways-scroll         Row of cards that pins and pans sideways on scroll
+    scroll-flip-deck     Pinned image deck that tips card by card on scroll
     autoplay-carousel       Never-cropping photo carousel with a pause button
     message-form            Form with announced errors and honest sending states
 

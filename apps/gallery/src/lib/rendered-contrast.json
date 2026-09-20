@@ -1,5 +1,5 @@
 {
-  "fingerprint": "33c8d380ddf8adb6",
+  "fingerprint": "6d38c368b1063927",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -112,19 +112,6 @@
       {"kind":"boundary","element":"div.peer.inline-flex.shrink-0.cursor-pointer","min":3,"text":"Wi-Fi (border-top)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":2},
       {"kind":"boundary","element":"div.peer.inline-flex.shrink-0.cursor-pointer","min":3,"text":"Bluetooth (border-top)","status":"measured","why":null,"fg":"#6b6b70","bg":"#fafafa","ratio":5.08},
       {"kind":"focus","element":"input.peer.sr-only","min":3,"text":"Wi-Fi (on div, ring)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":3}
-    ]},
-    {"slug":"dual-confirm-dialog","kind":"frame","tone":"paper","textNodes":{"textNodes":15,"hidden":3,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.text-sm.font-semibold","text":"3 events selected","size":14,"weight":600,"min":4.5,"status":"exempt","why":"behind an overlay such as a modal backdrop","fg":"#050505","bg":"#808080","ratio":5.16},
-      {"kind":"text","element":"button.rounded-md.bg-[#b91c1c].px-3.py-1.5","text":"Delete","size":12,"weight":500,"min":4.5,"status":"exempt","why":"behind an overlay such as a modal backdrop","fg":"#808080","bg":"#5d0e0e","ratio":3.46},
-      {"kind":"text","element":"h2.flex.items-center.gap-2.text-lg","text":"Delete events","size":18,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#b91c1c","bg":"#ffffff","ratio":6.47},
-      {"kind":"text","element":"p.text-muted-foreground","text":"These events will be removed for everyone invit…","size":16,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"text","element":"p.font-semibold.text-destructive","text":"You are about to delete 3 event s .","size":16,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#b91c1c","bg":"#f8e8e8","ratio":5.45},
-      {"kind":"text","element":"p.text-sm.text-foreground/60.mt-1","text":"This action cannot be undone.","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#696363","bg":"#f8e8e8","ratio":4.96},
-      {"kind":"text","element":"button.px-4.py-2.text-sm.rounded-md","text":"Cancel","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"button.px-4.py-2.text-sm.rounded-md","text":"Continue to Final Confirmation","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#b91c1c","ratio":6.47},
-      {"kind":"icon","element":"svg.lucide.lucide-triangle-alert.h-5.w-5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#b91c1c","bg":"#ffffff","ratio":6.47},
-      {"kind":"focus","element":"button.rounded-md.bg-[#b91c1c].px-3.py-1.5","min":3,"text":"Delete","status":"exempt","why":"behind an overlay such as a modal backdrop","fg":null,"bg":null,"ratio":null},
-      {"kind":"focus","element":"button.px-4.py-2.text-sm.rounded-md","min":3,"text":"Cancel (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12,"n":2}
     ]},
     {"slug":"blender-upload","kind":"inline","tone":"paper","textNodes":{"textNodes":4,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"h3.text-xl.font-bold.transition-colors.text-gray-800","text":"Drop files to upload","size":20,"weight":700,"min":3,"status":"measured","why":null,"fg":"#1f2937","bg":"#ffffff","ratio":14.68},
@@ -400,11 +387,11 @@
     ]},
     {"slug":"parallax-product-stage","kind":"inline","tone":"void","textNodes":{"textNodes":10,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"p.pps__note","text":"Three jobs. One flat-price box.","size":18.4,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Tap","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#073b34","bg":"#e6e6e6","ratio":9.99,"bound":"worst case over a gradient 10% visible","n":3},
+      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Tap","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#073b34","bg":"#e6e6e6","ratio":9.99,"bound":"worst case over a gradient 10% visible","n":2},
+      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Floor","size":10,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
       {"kind":"text","element":"span","text":"Hard water","size":10.9,"weight":720,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":4},
       {"kind":"text","element":"strong","text":"₹499","size":24.8,"weight":780,"min":3,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"small","text":"save ₹398","size":12,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Floor","size":10,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"at":[390]}
+      {"kind":"text","element":"small","text":"save ₹398","size":12,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null}
     ]},
     {"slug":"stagger-blur-text","kind":"inline","tone":"paper","textNodes":{"textNodes":8,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"span","text":"Good","size":24,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":8}
@@ -599,6 +586,11 @@
       {"kind":"focus","element":"input.bz-mf-control","min":3,"text":"input (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12,"n":3},
       {"kind":"focus","element":"textarea.bz-mf-control","min":3,"text":"textarea (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
       {"kind":"focus","element":"button.bz-mf-submit","min":3,"text":"Send messageSending (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12}
+    ]},
+    {"slug":"scroll-flip-deck","kind":"frame","tone":"paper","textNodes":{"textNodes":7,"hidden":0,"offscreen":4}, "items": [
+      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.16em]","text":"Selected work","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
+      {"kind":"text","element":"p.mt-2.max-w-xs.font-serif.text-2xl","text":"Keep scrolling. The deck turns one card at a ti…","size":24,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
+      {"kind":"text","element":"figcaption.bz-sfd-caption","text":"Kiln · Studio identity","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47}
     ]}
   ]
 }

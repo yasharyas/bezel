@@ -164,20 +164,6 @@
       "physics"
     ]
   },
-  "dual-confirm-dialog": {
-    "name": "DualConfirmDialog",
-    "category": "dialogs",
-    "description": "Two-step delete dialog that asks you to type a phrase before it confirms.",
-    "tags": [
-      "confirmation",
-      "destructive",
-      "two-step",
-      "modal",
-      "bulk-delete",
-      "loading",
-      "progress"
-    ]
-  },
   "blender-upload": {
     "name": "BlenderUpload",
     "category": "forms",
@@ -1132,6 +1118,20 @@
       "live-region",
       "async",
       "accessible"
+    ]
+  },
+  "scroll-flip-deck": {
+    "name": "ScrollFlipDeck",
+    "category": "sections",
+    "description": "Pinned deck of images that tip in and away as the page scrolls.",
+    "tags": [
+      "scroll",
+      "3d",
+      "images",
+      "pinned",
+      "sticky",
+      "gallery",
+      "reduced-motion"
     ]
   }
 }

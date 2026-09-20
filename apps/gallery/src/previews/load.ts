@@ -17,7 +17,6 @@ const inlineGroups: Record<string, () => Promise<{ previews: PreviewModule }>> =
 const frames: Record<string, () => Promise<{ default: PreviewComponent }>> = {
   "submission-loader": () => import("./frames/submission-loader"),
   "toast-container": () => import("./frames/toast-container"),
-  "dual-confirm-dialog": () => import("./frames/dual-confirm-dialog"),
   "custom-cursor": () => import("./frames/custom-cursor"),
   preloader: () => import("./frames/preloader"),
   "site-header": () => import("./frames/site-header"),
@@ -36,6 +35,7 @@ const frames: Record<string, () => Promise<{ default: PreviewComponent }>> = {
   "damask-tile-backdrop": () => import("./frames/damask-tile-backdrop"),
   "morph-dialog": () => import("./frames/morph-dialog"),
   "sideways-scroll": () => import("./frames/sideways-scroll"),
+  "scroll-flip-deck": () => import("./frames/scroll-flip-deck"),
 };
 
 const cache = new Map<string, Promise<PreviewComponent>>();

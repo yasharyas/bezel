@@ -50,11 +50,6 @@ export { SidePanel, PanelField, PanelInput, PanelTextarea, PanelDeleteButton } f
 export { NodeCard } from "./cards/NodeCard";
 export { PriceBreakdown } from "./cards/PriceBreakdown";
 
-// Dialogs
-export { DualConfirmDialog } from "./dialogs/DualConfirmDialog";
-
-// Layout
-
 // Interaction
 export { CustomCursor } from "./interaction/CustomCursor";
 
@@ -155,3 +150,5 @@ export { DockingCard } from "./cards/DockingCard";
 export { SidewaysScroll } from "./sections/SidewaysScroll";
 export { AutoplayCarousel } from "./media/AutoplayCarousel";
 export { MessageForm } from "./forms/MessageForm";
+export { ScrollFlipDeck } from "./sections/ScrollFlipDeck";
+export type { ScrollFlipItem } from "./sections/ScrollFlipDeck";
