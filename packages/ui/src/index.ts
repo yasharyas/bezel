@@ -85,38 +85,24 @@ export { ProjectCard } from "./cards/ProjectCard";
 // Sections
 export { ContactSection } from "./sections/ContactSection";
 
-// Grocery / ecommerce components
+// Content surfaces
 export { ImageWithFallback } from "./media/ImageWithFallback";
 export { SkeletonCard, SkeletonRow } from "./loaders/SkeletonCard";
-export { EcomEmptyState } from "./feedback/EcomEmptyState";
-export { Breadcrumb } from "./navigation/Breadcrumb";
-export { CategoryChips } from "./navigation/CategoryChips";
-export { CategoryGrid } from "./navigation/CategoryGrid";
-export { SearchOverlay } from "./overlays/SearchOverlay";
-export { MobileBottomNav } from "./navigation/MobileBottomNav";
-export { ProductCard } from "./cards/ProductCard";
-export { StickyCartBar } from "./panels/StickyCartBar";
-export { AppHeader } from "./layout/AppHeader";
-export { BakeryProductCard } from "./cards/BakeryProductCard";
 export { TestimonialCard } from "./cards/TestimonialCard";
-export { AccordionList } from "./sections/AccordionList";
-export { WhatsAppFAB } from "./buttons/WhatsAppFAB";
 export { ImagePlaceholder } from "./feedback/ImagePlaceholder";
 export { StickyNavbar } from "./navigation/StickyNavbar";
 export { ErrorBoundary } from "./feedback/ErrorBoundary";
 
-// LanceMart AI — Project A components
+// Landing page and editorial components
 export { StickyNav } from "./navigation/StickyNav";
 export { useThemeRipple } from "./hooks/useThemeRipple";
 export { ShinyBadge } from "./badges/ShinyBadge";
 export { BorderBeamButton } from "./buttons/BorderBeamButton";
 export { TypingHero } from "./sections/TypingHero";
-export { FeatureCardGrid } from "./cards/FeatureCardGrid";
+export { CardGrid } from "./cards/CardGrid";
+export type { CardGridItem } from "./cards/CardGrid";
 export { NumberedStepsList } from "./lists/NumberedStepsList";
 export { FormulaBlock } from "./display/FormulaBlock";
-export { SignalCardGrid } from "./cards/SignalCardGrid";
-export { PrincipleCardGrid } from "./cards/PrincipleCardGrid";
-export { DiagnosticGrid } from "./cards/DiagnosticGrid";
 export { CalloutBox } from "./callouts/CalloutBox";
 export { Checklist } from "./lists/Checklist";
 export { ScrollReveal } from "./animation/ScrollReveal";

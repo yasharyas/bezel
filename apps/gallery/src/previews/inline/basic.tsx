@@ -52,20 +52,14 @@ import { ElasticLineDivider } from "bezel-ui/dividers/ElasticLineDivider";
 import { ProjectCard } from "bezel-ui/cards/ProjectCard";
 import { ImageWithFallback } from "bezel-ui/media/ImageWithFallback";
 import { SkeletonCard } from "bezel-ui/loaders/SkeletonCard";
-import { Breadcrumb } from "bezel-ui/navigation/Breadcrumb";
-import { BakeryProductCard } from "bezel-ui/cards/BakeryProductCard";
 import { TestimonialCard } from "bezel-ui/cards/TestimonialCard";
-import { AccordionList } from "bezel-ui/sections/AccordionList";
 import { MessageForm } from "bezel-ui/forms/MessageForm";
 import { ImagePlaceholder } from "bezel-ui/feedback/ImagePlaceholder";
 import { ShinyBadge } from "bezel-ui/badges/ShinyBadge";
 import { BorderBeamButton } from "bezel-ui/buttons/BorderBeamButton";
-import { FeatureCardGrid } from "bezel-ui/cards/FeatureCardGrid";
+import { CardGrid } from "bezel-ui/cards/CardGrid";
 import { NumberedStepsList } from "bezel-ui/lists/NumberedStepsList";
 import { FormulaBlock } from "bezel-ui/display/FormulaBlock";
-import { SignalCardGrid } from "bezel-ui/cards/SignalCardGrid";
-import { PrincipleCardGrid } from "bezel-ui/cards/PrincipleCardGrid";
-import { DiagnosticGrid } from "bezel-ui/cards/DiagnosticGrid";
 import { CalloutBox } from "bezel-ui/callouts/CalloutBox";
 import { Checklist } from "bezel-ui/lists/Checklist";
 import { ScrollReveal } from "bezel-ui/animation/ScrollReveal";
@@ -493,25 +487,6 @@ function PaginationPreview() {
   );
 }
 
-function BreadcrumbPreview() {
-  return (
-    <Center>
-      <div className="w-[300px] text-[#0a0a0a]">
-        <Breadcrumb
-          items={[
-            { label: "Home", href: "#" },
-            { label: "Snacks", href: "#" },
-            { label: "Namkeen", href: "#" },
-            { label: "Masala Munch 90g" },
-          ]}
-        />
-        <h4 className="mt-3 text-lg font-semibold">Masala Munch</h4>
-        <p className="text-sm text-[#4a4a4c]">90g · ₹20</p>
-      </div>
-    </Center>
-  );
-}
-
 /* --------------------------------------------------------------- surfaces */
 
 function SectionHeading({ eyebrow, title }: { eyebrow: string; title: string }) {
@@ -580,36 +555,6 @@ function SkeletonCardPreview() {
   );
 }
 
-function BakeryProductCardPreview() {
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      <BakeryProductCard
-        href="#"
-        product={{
-          name: "Chocolate truffle cake",
-          image: IMAGES.cake,
-          price: 699,
-          originalPrice: 899,
-          badge: "Bestseller",
-          tag: "Eggless",
-          description: "Dark chocolate sponge layered with ganache.",
-        }}
-      />
-      <BakeryProductCard
-        href="#"
-        unitLabel="/piece"
-        ctaLabel="Add to order"
-        product={{
-          name: "Almond croissant",
-          price: 180,
-          tag: "Fresh today",
-          description: "Baked each morning, no photo yet.",
-        }}
-      />
-    </div>
-  );
-}
-
 function TestimonialCardPreview() {
   return (
     <Center>
@@ -624,41 +569,6 @@ function TestimonialCardPreview() {
         />
       </div>
     </Center>
-  );
-}
-
-function AccordionListPreview() {
-  return (
-    <AccordionList
-      title="Questions, answered"
-      subtitle="How the studio plans, builds and hands over work."
-      items={[
-        {
-          title: "How long does a typical project take?",
-          meta: "Planning",
-          content:
-            "Most projects run six to ten weeks, with a working preview at the end of the second week and a review every Friday after that.",
-        },
-        {
-          title: "Who owns the code at the end?",
-          meta: "Handover",
-          content:
-            "You do, from the first commit. Everything lives in your repository, and nothing depends on an account only we can open.",
-        },
-        {
-          title: "Can we start with a small piece?",
-          meta: "Scope",
-          content:
-            "Yes. A two-week trial on one screen is often the fastest way to find out whether the way we work suits your team.",
-        },
-        {
-          title: "What happens after launch?",
-          meta: "Support",
-          content:
-            "A month of fixes is included, and after that a few hours a week if you want someone on call for the parts we built.",
-        },
-      ]}
-    />
   );
 }
 
@@ -733,17 +643,44 @@ function BorderBeamButtonPreview() {
   );
 }
 
-function FeatureCardGridPreview() {
+function CardGridPreview() {
   return (
-    <div className="bg-white p-8">
-      <SectionHeading eyebrow="What you get" title="Built for teams that ship" />
-      <FeatureCardGrid
-        cards={[
-          { label: "Platform", title: "One workspace for every signal" },
-          { label: "Agent", title: "Automations that explain themselves" },
-          { label: "API", title: "Typed endpoints for your stack" },
-        ]}
-      />
+    <div className="bg-white p-8 flex flex-col gap-8">
+      <div>
+        <SectionHeading eyebrow="What you get" title="Built for teams that ship" />
+        <CardGrid
+          items={[
+            { eyebrow: "Platform", title: "One workspace for every signal" },
+            { eyebrow: "Agent", title: "Automations that explain themselves" },
+            { eyebrow: "API", title: "Typed endpoints for your stack" },
+          ]}
+        />
+      </div>
+      <div>
+        <SectionHeading eyebrow="Framework" title="Four questions, one signal" />
+        <CardGrid
+          columns="fit"
+          eyebrow="letter"
+          items={[
+            { eyebrow: "M", title: "Mode", subtitle: "How is it perceived?", description: "Text, image, audio" },
+            { eyebrow: "G", title: "Genre", subtitle: "What form is it?", description: "Brief, spec, report" },
+            { eyebrow: "T", title: "Type", subtitle: "What does it do?", description: "Inform, direct, commit" },
+            { eyebrow: "F", title: "Format", subtitle: "What holds it?", description: "Doc, message, video" },
+          ]}
+        />
+      </div>
+      <div>
+        <SectionHeading eyebrow="Diagnosis" title="Where the process breaks" />
+        <CardGrid
+          columns={2}
+          eyebrow="tag"
+          serifTitles
+          items={[
+            { eyebrow: "Overload", title: "Too many channels", description: "Messages arrive faster than anyone can read them." },
+            { eyebrow: "Gap", title: "No feedback loop", description: "Errors repeat because outcomes never return." },
+          ]}
+        />
+      </div>
     </div>
   );
 }
@@ -767,54 +704,6 @@ function FormulaBlockPreview() {
   return (
     <div className="bg-white px-8 py-2">
       <FormulaBlock formula="conversion = signups ÷ visitors" caption="Weekly conversion rate" />
-    </div>
-  );
-}
-
-function SignalCardGridPreview() {
-  return (
-    <div className="bg-white p-8">
-      <SectionHeading eyebrow="Framework" title="Read any signal in four questions" />
-      <SignalCardGrid
-        cards={[
-          { letter: "M", title: "Mode", subtitle: "How is it perceived?", description: "Text, image, audio" },
-          { letter: "G", title: "Genre", subtitle: "What form is it?", description: "Brief, spec, report" },
-          { letter: "T", title: "Type", subtitle: "What does it do?", description: "Inform, direct, commit" },
-          { letter: "F", title: "Format", subtitle: "What holds it?", description: "Doc, message, video" },
-        ]}
-      />
-    </div>
-  );
-}
-
-function PrincipleCardGridPreview() {
-  return (
-    <div className="bg-white p-8">
-      <SectionHeading eyebrow="Principles" title="What we will not trade away" />
-      <PrincipleCardGrid
-        principles={[
-          { number: "1", title: "Strategy", subtitle: "Clarity of intent", description: "Outcomes are defined before anything ships." },
-          { number: "2", title: "Data", subtitle: "Fuel for judgement", description: "Clean, connected and explained." },
-          { number: "3", title: "Automation", subtitle: "Agentic execution", description: "Agents take repetition, people take judgement." },
-          { number: "4", title: "Governance", subtitle: "Trust and feedback", description: "Every loop closes, every action is logged." },
-        ]}
-      />
-    </div>
-  );
-}
-
-function DiagnosticGridPreview() {
-  return (
-    <div className="bg-white p-8">
-      <SectionHeading eyebrow="Diagnosis" title="Where the process breaks" />
-      <DiagnosticGrid
-        items={[
-          { tag: "Overload", title: "Too many channels", description: "Messages arrive faster than anyone can read them." },
-          { tag: "Gap", title: "No feedback loop", description: "Errors repeat because outcomes never return." },
-          { tag: "Variety", title: "One tool for all", description: "The system cannot express the work it meets." },
-          { tag: "Missing", title: "No owner", description: "Coordination breaks down between teams." },
-        ]}
-      />
     </div>
   );
 }
@@ -1456,20 +1345,14 @@ export const previews: PreviewModule = {
   "project-card": ProjectCardPreview,
   "image-with-fallback": ImageWithFallbackPreview,
   "skeleton-card": SkeletonCardPreview,
-  breadcrumb: BreadcrumbPreview,
-  "bakery-product-card": BakeryProductCardPreview,
   "testimonial-card": TestimonialCardPreview,
-  "accordion-list": AccordionListPreview,
   "message-form": MessageFormPreview,
   "image-placeholder": ImagePlaceholderPreview,
   "shiny-badge": ShinyBadgePreview,
   "border-beam-button": BorderBeamButtonPreview,
-  "feature-card-grid": FeatureCardGridPreview,
+  "card-grid": CardGridPreview,
   "numbered-steps-list": NumberedStepsListPreview,
   "formula-block": FormulaBlockPreview,
-  "signal-card-grid": SignalCardGridPreview,
-  "principle-card-grid": PrincipleCardGridPreview,
-  "diagnostic-grid": DiagnosticGridPreview,
   "callout-box": CalloutBoxPreview,
   checklist: ChecklistPreview,
   "scroll-reveal": ScrollRevealPreview,

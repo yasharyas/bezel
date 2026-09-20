@@ -428,137 +428,6 @@
       "aria-busy"
     ]
   },
-  "ecom-empty-state": {
-    "name": "EcomEmptyState",
-    "category": "feedback",
-    "description": "Shop empty states with presets for cart, search, category and network errors.",
-    "tags": [
-      "empty",
-      "placeholder",
-      "no-results",
-      "animated",
-      "preset",
-      "ecommerce"
-    ]
-  },
-  "breadcrumb": {
-    "name": "Breadcrumb",
-    "category": "navigation",
-    "description": "Breadcrumb trail with a home icon, truncated current page and aria-current.",
-    "tags": [
-      "breadcrumb",
-      "navigation",
-      "accessible",
-      "semantic"
-    ]
-  },
-  "category-chips": {
-    "name": "CategoryChips",
-    "category": "navigation",
-    "description": "Horizontally scrolling category chips with icons and a filled active state.",
-    "tags": [
-      "filter",
-      "chips",
-      "pills",
-      "horizontal-scroll",
-      "tabs",
-      "categories"
-    ]
-  },
-  "category-grid": {
-    "name": "CategoryGrid",
-    "category": "navigation",
-    "description": "Grid of round category icons that staggers in, four columns wide on phones.",
-    "tags": [
-      "grid",
-      "categories",
-      "icon-grid",
-      "animated",
-      "responsive"
-    ]
-  },
-  "search-overlay": {
-    "name": "SearchOverlay",
-    "category": "overlays",
-    "description": "Search sheet that drops from the top with recent and popular searches.",
-    "tags": [
-      "search",
-      "overlay",
-      "modal",
-      "animated",
-      "recent-searches",
-      "popular"
-    ]
-  },
-  "mobile-bottom-nav": {
-    "name": "MobileBottomNav",
-    "category": "navigation",
-    "description": "Phone tab bar with a sliding active indicator, count badges and accent tabs.",
-    "tags": [
-      "mobile",
-      "bottom-nav",
-      "tabs",
-      "badge",
-      "animated",
-      "ios-safe-area"
-    ]
-  },
-  "product-card": {
-    "name": "ProductCard",
-    "category": "cards",
-    "description": "Grocery product card with discount badge, quantity stepper and out-of-stock overlay.",
-    "tags": [
-      "product",
-      "ecommerce",
-      "add-to-cart",
-      "stepper",
-      "animated",
-      "discount",
-      "out-of-stock"
-    ]
-  },
-  "sticky-cart-bar": {
-    "name": "StickyCartBar",
-    "category": "ecommerce",
-    "description": "Mobile cart summary that springs up above the tab bar once items are added.",
-    "tags": [
-      "cart",
-      "sticky",
-      "mobile",
-      "animated",
-      "summary-bar",
-      "cta",
-      "ecommerce"
-    ]
-  },
-  "app-header": {
-    "name": "AppHeader",
-    "category": "layout",
-    "description": "Sticky shop header with an open-now bar, inline search and animated cart badge.",
-    "tags": [
-      "header",
-      "navbar",
-      "sticky",
-      "responsive",
-      "cart-badge",
-      "animated",
-      "ecommerce"
-    ]
-  },
-  "bakery-product-card": {
-    "name": "BakeryProductCard",
-    "category": "cards",
-    "description": "Product card with corner badges, struck-through price, hover zoom and image placeholder.",
-    "tags": [
-      "ecommerce",
-      "product",
-      "hover-zoom",
-      "skeleton",
-      "badge",
-      "responsive",
-      "bakery"
-    ]
-  },
   "testimonial-card": {
     "name": "TestimonialCard",
     "category": "cards",
@@ -569,32 +438,6 @@
       "stars",
       "avatar",
       "social-proof"
-    ]
-  },
-  "accordion-list": {
-    "name": "AccordionList",
-    "category": "sections",
-    "description": "Accordion whose arrow tumbles open and whose answers rise into place line by line.",
-    "tags": [
-      "accordion",
-      "faq",
-      "disclosure",
-      "accessible",
-      "inert",
-      "reduced-motion"
-    ]
-  },
-  "whatsapp-fab": {
-    "name": "WhatsAppFAB",
-    "category": "buttons",
-    "description": "Floating WhatsApp chat button with a prefilled message and hover tooltip.",
-    "tags": [
-      "whatsapp",
-      "fab",
-      "floating",
-      "chat",
-      "fixed",
-      "tooltip"
     ]
   },
   "image-placeholder": {
@@ -699,17 +542,18 @@
       "headline"
     ]
   },
-  "feature-card-grid": {
-    "name": "FeatureCardGrid",
+  "card-grid": {
+    "name": "CardGrid",
     "category": "cards",
-    "description": "Three-column grid of feature cards with mono labels and an emerald hover border.",
+    "description": "One card grid with four eyebrow styles: label, number, serif letter or tag.",
     "tags": [
       "cards",
       "grid",
-      "feature",
-      "hover",
       "responsive",
-      "3-col"
+      "label",
+      "serif",
+      "tag",
+      "list"
     ]
   },
   "numbered-steps-list": {
@@ -736,48 +580,6 @@
       "monospace",
       "accent",
       "callout"
-    ]
-  },
-  "signal-card-grid": {
-    "name": "SignalCardGrid",
-    "category": "cards",
-    "description": "Up to five definition cards, each headed by a large italic serif letter.",
-    "tags": [
-      "cards",
-      "grid",
-      "letter",
-      "serif",
-      "5-col",
-      "responsive",
-      "acronym"
-    ]
-  },
-  "principle-card-grid": {
-    "name": "PrincipleCardGrid",
-    "category": "cards",
-    "description": "Four-column principle cards with mono numbers, serif titles and emerald subtitles.",
-    "tags": [
-      "cards",
-      "grid",
-      "4-col",
-      "numbered",
-      "serif",
-      "principles",
-      "pillars"
-    ]
-  },
-  "diagnostic-grid": {
-    "name": "DiagnosticGrid",
-    "category": "cards",
-    "description": "Two-column diagnosis cards, each tagged with a small amber monospace pill.",
-    "tags": [
-      "cards",
-      "grid",
-      "diagnostic",
-      "warning",
-      "2-col",
-      "tag",
-      "status"
     ]
   },
   "callout-box": {

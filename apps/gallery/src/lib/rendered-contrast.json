@@ -1,5 +1,5 @@
 {
-  "fingerprint": "d27e056d36aef5a0",
+  "fingerprint": "33c8d380ddf8adb6",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -238,167 +238,12 @@
     ]},
     {"slug":"skeleton-card","kind":"inline","tone":"paper","textNodes":{"textNodes":2,"hidden":2,"offscreen":0}, "items": [
     ]},
-    {"slug":"ecom-empty-state","kind":"inline","tone":"paper","textNodes":{"textNodes":6,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"button.rounded-full.px-3.py-1.text-xs","text":"cart","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"button.rounded-full.px-3.py-1.text-xs","text":"search","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#eeeeee","ratio":7.62,"n":2},
-      {"kind":"text","element":"h3.m-0.mb-2.text-lg.font-semibold","text":"Your cart is empty","size":18,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
-      {"kind":"text","element":"p.text-muted-foreground.m-0.mb-1.max-w-xs","text":"Add items from the store to get started","size":16,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#fafafa","ratio":5.08},
-      {"kind":"text","element":"button.mt-4.px-6.py-2.5.bg-primary","text":"Start Shopping","size":16,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"icon","element":"svg.lucide.lucide-shopping-bag.w-9.h-9","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#912c22","bg":"#f0f0f0","ratio":7.12},
-      {"kind":"focus","element":"button.rounded-full.px-3.py-1.text-xs","min":3,"text":"cart","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null,"n":3},
-      {"kind":"focus","element":"button.mt-4.px-6.py-2.5.bg-primary","min":3,"text":"Start Shopping (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78}
-    ]},
-    {"slug":"breadcrumb","kind":"inline","tone":"paper","textNodes":{"textNodes":6,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"a.flex.items-center.gap-1.transition-colors","text":"Home","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#fafafa","ratio":5.08,"n":3},
-      {"kind":"text","element":"span.font-medium.text-foreground.truncate.max-w-[160px]","text":"Masala Munch 90g","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
-      {"kind":"text","element":"h4.mt-3.text-lg.font-semibold","text":"Masala Munch","size":18,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
-      {"kind":"text","element":"p.text-sm.text-[#4a4a4c]","text":"90g · ₹20","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
-      {"kind":"icon","element":"svg.lucide.lucide-house.w-3.h-3","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#6b6b70","bg":"#fafafa","ratio":5.08},
-      {"kind":"icon","element":"svg.lucide.lucide-chevron-right.w-3.h-3","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#c1c1c3","bg":"#fafafa","ratio":1.72,"n":3},
-      {"kind":"focus","element":"a.flex.items-center.gap-1.transition-colors","min":3,"text":"Home (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":3}
-    ]},
-    {"slug":"category-chips","kind":"inline","tone":"paper","textNodes":{"textNodes":8,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"button.flex.items-center.gap-1.5.px-3","text":"All","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#171717","bg":"#ffffff","ratio":17.93,"n":5},
-      {"kind":"text","element":"button.flex.items-center.gap-1.5.px-3","text":"Fruits","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"text","element":"p.text-sm.text-[#4a4a4c]","text":"24 items in","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
-      {"kind":"text","element":"span.font-medium.text-[#0a0a0a]","text":"Fruits","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
-      {"kind":"icon","element":"svg.lucide.lucide-layout-grid.w-3.5.h-3.5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#404040","bg":"#ffffff","ratio":10.37},
-      {"kind":"icon","element":"svg.lucide.lucide-apple.w-3.5.h-3.5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"icon","element":"svg.lucide.lucide-milk.w-3.5.h-3.5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#1d4ed8","bg":"#ffffff","ratio":6.7},
-      {"kind":"icon","element":"svg.lucide.lucide-wheat.w-3.5.h-3.5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#b45309","bg":"#ffffff","ratio":5.02},
-      {"kind":"icon","element":"svg.lucide.lucide-cookie.w-3.5.h-3.5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#c2410c","bg":"#ffffff","ratio":5.18,"at":[1440]},
-      {"kind":"icon","element":"svg.lucide.lucide-cup-soda.w-3.5.h-3.5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#0e7490","bg":"#ffffff","ratio":5.36,"at":[1440]},
-      {"kind":"focus","element":"button.flex.items-center.gap-1.5.px-3","min":3,"text":"All (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":6}
-    ]},
-    {"slug":"category-grid","kind":"frame","tone":"paper","textNodes":{"textNodes":10,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"h1.text-base.font-semibold","text":"Shop by category","size":16,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"span.text-xs.text-[#4a4a4c]","text":"See all","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
-      {"kind":"text","element":"span.text-center.leading-tight.text-xs.text-neutral-900","text":"Fruits","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#171717","bg":"#ffffff","ratio":17.93,"n":8},
-      {"kind":"icon","element":"svg.lucide.lucide-apple.w-7.h-7","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#15803d","bg":"#dcfce7","ratio":4.57},
-      {"kind":"icon","element":"svg.lucide.lucide-milk.w-7.h-7","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#1d4ed8","bg":"#dbeafe","ratio":5.49},
-      {"kind":"icon","element":"svg.lucide.lucide-sandwich.w-7.h-7","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#b45309","bg":"#fef3c7","ratio":4.51},
-      {"kind":"icon","element":"svg.lucide.lucide-cookie.w-7.h-7","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#c2410c","bg":"#ffedd5","ratio":4.52},
-      {"kind":"icon","element":"svg.lucide.lucide-cup-soda.w-7.h-7","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#0e7490","bg":"#cffafe","ratio":4.79},
-      {"kind":"icon","element":"svg.lucide.lucide-wheat.w-7.h-7","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#a16207","bg":"#fef9c3","ratio":4.58},
-      {"kind":"icon","element":"svg.lucide.lucide-house.w-7.h-7","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#7e22ce","bg":"#f3e8ff","ratio":5.92},
-      {"kind":"icon","element":"svg.lucide.lucide-sparkles.w-7.h-7","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#be185d","bg":"#fce7f3","ratio":5.14},
-      {"kind":"focus","element":"button.flex.flex-col.items-center.gap-2","min":3,"text":"Fruits (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12,"n":8}
-    ]},
-    {"slug":"search-overlay","kind":"frame","tone":"paper","textNodes":{"textNodes":12,"hidden":3,"offscreen":0}, "items": [
-      {"kind":"text","element":"button.text-primary.font-medium.text-sm.shrink-0","text":"Cancel","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
-      {"kind":"text","element":"span.text-xs.font-semibold.text-muted-foreground.uppercase","text":"Recent","size":12,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3,"n":2},
-      {"kind":"text","element":"button.text-xs.text-primary.focus-visible:outline.focus-visible:outline-2","text":"Clear","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
-      {"kind":"text","element":"button.flex.items-center.gap-1.5.px-3","text":"Milk","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#f0f0f0","ratio":17.37,"n":2},
-      {"kind":"text","element":"button.flex.items-center.gap-1.px-3","text":"Atta","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#912c22","bg":"#f4eae9","ratio":6.88,"n":3},
-      {"kind":"text","element":"input.flex-1.text-base.outline-none.bg-transparent::placeholder","text":"Search…","size":16,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"icon","element":"svg.lucide.lucide-search.w-5.h-5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"icon","element":"svg.lucide.lucide-clock.w-3.5.h-3.5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#6b6b70","bg":"#f0f0f0","ratio":4.65,"moving":[4.65,5.3],"n":3},
-      {"kind":"icon","element":"svg.lucide.lucide-trending-up.w-3.5.h-3.5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"icon","element":"svg.lucide.lucide-chevron-right.w-3.h-3","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#912c22","bg":"#f4eae9","ratio":6.88,"n":3},
-      {"kind":"boundary","element":"div.fixed.top-0.left-0.right-0","min":3,"text":"Search… (wrapper fill)","status":"measured","why":null,"fg":"#ffffff","bg":"#939393","ratio":3.07},
-      {"kind":"focus","element":"button.ml-auto.flex.flex-1.items-center","min":3,"text":"Search groceries","status":"exempt","why":"behind an overlay such as a modal backdrop","fg":null,"bg":null,"ratio":null},
-      {"kind":"focus","element":"input.flex-1.text-base.outline-none.bg-transparent","min":3,"text":"Search… (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
-      {"kind":"focus","element":"button.text-primary.font-medium.text-sm.shrink-0","min":3,"text":"Cancel (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
-      {"kind":"focus","element":"button.text-xs.text-primary.focus-visible:outline.focus-visible:outline-2","min":3,"text":"Clear (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
-      {"kind":"focus","element":"button.flex.items-center.gap-1.5.px-3","min":3,"text":"Milk (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12,"n":2},
-      {"kind":"focus","element":"button.flex.items-center.gap-1.px-3","min":3,"text":"Atta (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12,"n":4}
-    ]},
-    {"slug":"mobile-bottom-nav","kind":"frame","tone":"paper","textNodes":{"textNodes":7,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.text-xs.text-[#4a4a4c]","text":"Good evening","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
-      {"kind":"text","element":"h1.text-xl.font-semibold","text":"Home","size":20,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
-      {"kind":"text","element":"span.text-[10px]","text":"Home","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
-      {"kind":"text","element":"span.text-[10px]","text":"Categories","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3,"n":3},
-      {"kind":"text","element":"span.absolute.-top-1.5.-right-1.5.bg-destructive","text":"3","size":9,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#b91c1c","ratio":6.47},
-      {"kind":"icon","element":"svg.lucide.lucide-house.w-5.h-5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
-      {"kind":"icon","element":"svg.lucide.lucide-grid3x3.w-5.h-5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"icon","element":"svg.lucide.lucide-search.w-5.h-5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"icon","element":"svg.lucide.lucide-shopping-cart.w-5.h-5","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"focus","element":"button.flex.flex-col.items-center.gap-0.5","min":3,"text":"Home (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12,"n":4}
-    ]},
-    {"slug":"product-card","kind":"inline","tone":"paper","textNodes":{"textNodes":15,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"div.absolute.top-2.left-2.bg-destructive","text":"10 % OFF","size":12,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#b91c1c","ratio":6.47},
-      {"kind":"text","element":"div.absolute.top-2.right-2.w-5","text":"1","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"text","element":"h3.line-clamp-2.m-0.mb-0.5.text-sm","text":"Basmati rice, aged","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":2},
-      {"kind":"text","element":"p.text-muted-foreground.text-xs.m-0.mb-2","text":"5 kg bag","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3,"n":2},
-      {"kind":"text","element":"span.font-bold.text-sm","text":"₹ 449","size":14,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":2},
-      {"kind":"text","element":"span.line-through.text-muted-foreground.text-xs","text":"₹ 499","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"text","element":"span.w-5.text-center.text-sm.font-semibold","text":"1","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"text","element":"span.bg-white.text-foreground.px-3.py-1","text":"Out of Stock","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"icon","element":"svg.lucide.lucide-minus.w-3.5.h-3.5","text":"icon-only control","min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"icon","element":"svg.lucide.lucide-plus.w-3.5.h-3.5","text":"icon-only control","min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"focus","element":"button.text-left.w-full.no-underline.text-inherit","min":3,"text":"Basmati rice, aged (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12,"n":2},
-      {"kind":"focus","element":"button.w-6.h-6.flex.items-center","min":3,"text":"button","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null,"n":2}
-    ]},
-    {"slug":"sticky-cart-bar","kind":"frame","tone":"paper","textNodes":{"textNodes":17,"hidden":2,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.text-sm.font-medium","text":"Brown bread","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":2},
-      {"kind":"text","element":"p.text-xs.text-[#4a4a4c]","text":"₹ 55","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84,"n":2},
-      {"kind":"text","element":"span.absolute.-top-1.5.-right-1.5.bg-primary","text":"2","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"text","element":"span.text-sm.font-medium","text":"2 item s","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8},
-      {"kind":"text","element":"div.flex.items-center.gap-1.text-sm","text":"₹ 244","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8},
-      {"kind":"text","element":"button.flex-1.flex.items-center.justify-center","text":"View Cart","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8},
-      {"kind":"text","element":"button.flex-1.flex.items-center.justify-center","text":"Order on WhatsApp","size":14,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#008069","ratio":4.89},
-      {"kind":"icon","element":"svg.lucide.lucide-plus","text":"icon-only control","min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":2},
-      {"kind":"icon","element":"svg.lucide.lucide-chevron-up.w-4.h-4","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#9d9d9d","bg":"#0a0a0a","ratio":7.3},
-      {"kind":"icon","element":"svg.lucide.lucide-shopping-cart.w-4.h-4","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8},
-      {"kind":"icon","element":"svg.lucide.lucide-message-circle.w-4.h-4","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#008069","ratio":4.89},
-      {"kind":"focus","element":"button.grid.h-8.w-8.place-items-center","min":3,"text":"Add Brown bread","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null,"n":3},
-      {"kind":"focus","element":"button.w-full.flex.items-center.justify-between","min":3,"text":"22 items₹244 (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8},
-      {"kind":"focus","element":"button.flex-1.flex.items-center.justify-center","min":3,"text":"View Cart (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8,"n":2}
-    ]},
-    {"slug":"app-header","kind":"frame","tone":"paper","textNodes":{"textNodes":14,"hidden":1,"offscreen":0}, "items": [
-      {"kind":"text","element":"span.flex.items-center.gap-1.5.font-medium","text":"Open Now","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"text","element":"span.hidden.opacity-80","text":"Free delivery on orders over ₹299","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#e9d5d3","bg":"#912c22","ratio":5.77},
-      {"kind":"text","element":"span","text":"Call the store","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"text","element":"h1.text-neutral-900.m-0.leading-none.text-xl","text":"FreshCart","size":20,"weight":800,"min":3,"status":"measured","why":null,"fg":"#171717","bg":"#ffffff","ratio":17.93},
-      {"kind":"text","element":"p.text-[10px].text-neutral-500.m-0.hidden","text":"Groceries in 20 minutes","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#737373","bg":"#ffffff","ratio":4.74},
-      {"kind":"text","element":"span","text":"Search…","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#f3f4f6","ratio":8.03},
-      {"kind":"text","element":"span.hidden","text":"Cart","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"text","element":"span.absolute.-top-1.5.-right-1.5.bg-destructive","text":"3","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#b91c1c","ratio":6.47},
-      {"kind":"text","element":"span.rounded-full.border.border-black/10.bg-white","text":"Fruits","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84,"n":5},
-      {"kind":"icon","element":"svg.lucide.lucide-phone","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"icon","element":"svg.lucide.lucide-search.w-4.h-4","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#f3f4f6","ratio":8.03},
-      {"kind":"icon","element":"svg.lucide.lucide-phone","text":"icon-only control","min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"icon","element":"svg.lucide.lucide-shopping-cart.w-4.h-4","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"focus","element":"button.flex.items-center.gap-1.5.transition-opacity","min":3,"text":"Call the store (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
-      {"kind":"focus","element":"button.w-full.flex.items-center.gap-2","min":3,"text":"Search… (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
-      {"kind":"focus","element":"button.hidden.items-center.gap-1.5.px-3","min":3,"text":"Call the store (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
-      {"kind":"focus","element":"button.relative.flex.items-center.gap-2","min":3,"text":"Cart, 3 items (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12}
-    ]},
-    {"slug":"bakery-product-card","kind":"inline","tone":"paper","textNodes":{"textNodes":18,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"span.absolute.top-3.left-3.bg-red-600","text":"Bestseller","size":12,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#dc2626","ratio":4.83},
-      {"kind":"text","element":"span.absolute.top-3.right-3.bg-[color:var(--bz-emerald-fill,#047857)]","text":"Eggless","size":10,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#047857","ratio":5.48,"n":2},
-      {"kind":"text","element":"h3.font-semibold.text-sm.text-neutral-900.mb-1","text":"Chocolate truffle cake","size":16,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#171717","bg":"#ffffff","ratio":17.93,"n":2},
-      {"kind":"text","element":"p.text-neutral-500.text-xs.mb-2.line-clamp-2","text":"Dark chocolate sponge layered with ganache.","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#737373","bg":"#ffffff","ratio":4.74,"n":2,"at":[1440]},
-      {"kind":"text","element":"span.text-neutral-900.font-bold.text-base","text":"₹ 699","size":18,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#171717","bg":"#ffffff","ratio":17.93,"n":2},
-      {"kind":"text","element":"span.text-[color:var(--bz-ink-subtle,#6b6b70)].text-xs.line-through","text":"₹ 899","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"text","element":"span.text-[color:var(--bz-ink-subtle,#6b6b70)].text-[10px]","text":"/kg","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3,"n":2},
-      {"kind":"text","element":"span.w-full.bg-neutral-900.text-white.text-[10px]","text":"View & Customize","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#171717","ratio":17.93,"n":2},
-      {"kind":"text","element":"span.text-xs.font-medium.opacity-60","text":"Almond croissant","size":12,"weight":500,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"icon","element":"svg.w-10.h-10.mb-2.opacity-40","text":"labelled graphic","min":3,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"focus","element":"a.group.bg-white.rounded-2xl.overflow-hidden","min":3,"text":"BestsellerEgglessChocolate truffle cakeD (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":2}
-    ]},
     {"slug":"testimonial-card","kind":"inline","tone":"paper","textNodes":{"textNodes":6,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"p.text-neutral-600.text-sm.leading-relaxed.mb-5","text":"“ Delivered on time, and the packaging kept eve…","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#525252","bg":"#ffffff","ratio":7.81},
       {"kind":"text","element":"span.text-neutral-600.font-bold.text-sm","text":"P","size":14,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#525252","bg":"#e5e5e5","ratio":6.2},
       {"kind":"text","element":"p.text-neutral-900.font-semibold.text-sm","text":"Priya Sharma","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#171717","bg":"#ffffff","ratio":17.93},
       {"kind":"text","element":"p.text-[color:var(--bz-ink-subtle,#6b6b70)].text-xs","text":"Verified buyer","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
       {"kind":"icon","element":"svg.lucide.lucide-star.fill-[color:var(--bz-gold-fill,#c9a227)].text-[color:var(--bz-gold,#7a6015)]","text":"labelled graphic","min":3,"status":"measured","why":null,"fg":"#7a6015","bg":"#ffffff","ratio":5.98,"n":5}
-    ]},
-    {"slug":"accordion-list","kind":"inline","tone":"paper","textNodes":{"textNodes":26,"hidden":10,"offscreen":0}, "items": [
-      {"kind":"text","element":"h2.bz-al-title","text":"Questions, answered","size":36,"weight":600,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
-      {"kind":"text","element":"p.bz-al-subtitle","text":"How the studio plans, builds and hands over wor…","size":16,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
-      {"kind":"text","element":"span.bz-al-index","text":"01","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#fafafa","ratio":5.08,"n":4},
-      {"kind":"text","element":"span.bz-al-name","text":"How long does a typical project take?","size":18,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":4},
-      {"kind":"text","element":"span.bz-al-meta","text":"Planning","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47,"n":4,"at":[1440]},
-      {"kind":"text","element":"span","text":"Most projects run six to ten weeks, with a work…","size":16,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47,"n":2},
-      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8,"n":4},
-      {"kind":"focus","element":"button.bz-al-trigger","min":3,"text":"01How long does a typical project take?, (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":4}
-    ]},
-    {"slug":"whatsapp-fab","kind":"frame","tone":"paper","textNodes":{"textNodes":3,"hidden":1,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.text-base.font-semibold","text":"Chocolate truffle cake","size":16,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"p.text-sm.text-[#4a4a4c]","text":"₹699 · serves 8 · order a day ahead","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
-      {"kind":"icon","element":"svg.lucide.lucide-message-circle","text":"exposed graphic","min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#16a34a","ratio":3.3},
-      {"kind":"focus","element":"a.fixed.bottom-4.right-4.z-50","min":3,"text":"Chat on WhatsApp (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12}
     ]},
     {"slug":"image-placeholder","kind":"inline","tone":"paper","textNodes":{"textNodes":1,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"span.bz-ip-label.text-xs.font-medium","text":"Cover photo","size":12,"weight":500,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
@@ -458,11 +303,16 @@
       {"kind":"focus","element":"a.rounded-[10px].bg-[#0a0a0a].px-5.py-3","min":3,"text":"Start free","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null},
       {"kind":"focus","element":"a.rounded-[10px].border.border-black/15.px-5","min":3,"text":"Read the docs","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null}
     ]},
-    {"slug":"feature-card-grid","kind":"inline","tone":"paper","textNodes":{"textNodes":8,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.2em]","text":"What you get","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#ffffff","ratio":5.48},
-      {"kind":"text","element":"h3.mt-2.font-serif.text-3xl.font-medium","text":"Built for teams that ship","size":30,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"div.font-mono.text-[11px].tracking-[0.2em].text-[color:var(--bz-emerald,#047857)]","text":"Platform","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#fafafa","ratio":5.25,"n":3},
-      {"kind":"text","element":"div.text-[17px].text-[#0a0a0a].font-medium","text":"One workspace for every signal","size":17,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":3}
+    {"slug":"card-grid","kind":"inline","tone":"paper","textNodes":{"textNodes":34,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.2em]","text":"What you get","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#ffffff","ratio":5.48,"n":3},
+      {"kind":"text","element":"h3.mt-2.font-serif.text-3xl.font-medium","text":"Built for teams that ship","size":30,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3},
+      {"kind":"text","element":"div.font-mono.text-[11px].tracking-[0.2em].uppercase","text":"Platform","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#fafafa","ratio":5.25,"n":3},
+      {"kind":"text","element":"h3.m-0.font-medium.text-[color:var(--bz-ink,#0a0a0a)].text-[17px]","text":"One workspace for every signal","size":17,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":7},
+      {"kind":"text","element":"div.font-serif.italic.text-[44px].leading-none","text":"M","size":44,"weight":400,"min":3,"status":"measured","why":null,"fg":"#059669","bg":"#fafafa","ratio":3.61,"n":4},
+      {"kind":"text","element":"div.text-[13px].text-[color:var(--bz-ink-subtle,#6b6b70)]","text":"How is it perceived?","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#fafafa","ratio":5.08,"n":4},
+      {"kind":"text","element":"p.m-0.text-sm.text-[color:var(--bz-ink-muted,#4a4a4c)]","text":"Text, image, audio","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47,"n":6},
+      {"kind":"text","element":"span.self-start.px-2.5.py-1.mb-1","text":"Overload","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#b45309","bg":"#ffffff","ratio":5.02,"n":2},
+      {"kind":"text","element":"h3.m-0.font-medium.text-[color:var(--bz-ink,#0a0a0a)].font-serif","text":"Too many channels","size":22,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":2}
     ]},
     {"slug":"numbered-steps-list","kind":"inline","tone":"paper","textNodes":{"textNodes":11,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.2em]","text":"How it works","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#ffffff","ratio":5.48},
@@ -474,29 +324,6 @@
     {"slug":"formula-block","kind":"inline","tone":"paper","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"code.font-[inherit].bg-transparent.p-0","text":"conversion = signups ÷ visitors","size":20,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#e6f5f0","ratio":17.61},
       {"kind":"text","element":"div.mt-2.5.text-xs.text-[#4a4a4c].tracking-[0.1em]","text":"Weekly conversion rate","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#e6f5f0","ratio":7.87}
-    ]},
-    {"slug":"signal-card-grid","kind":"inline","tone":"paper","textNodes":{"textNodes":18,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.2em]","text":"Framework","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#ffffff","ratio":5.48},
-      {"kind":"text","element":"h3.mt-2.font-serif.text-3xl.font-medium","text":"Read any signal in four questions","size":30,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"div.font-serif.italic.text-[44px].text-[#059669]","text":"M","size":44,"weight":400,"min":3,"status":"measured","why":null,"fg":"#059669","bg":"#fafafa","ratio":3.61,"n":4},
-      {"kind":"text","element":"h4.mt-2.mb-1.text-base.text-[#0a0a0a]","text":"Mode","size":16,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":4},
-      {"kind":"text","element":"p.m-0.mb-1.text-sm.text-[color:var(--bz-ink-subtle,#6b6b70)]","text":"How is it perceived?","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#fafafa","ratio":5.08,"n":4},
-      {"kind":"text","element":"p.m-0.text-sm.text-[#4a4a4c]","text":"Text, image, audio","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47,"n":4}
-    ]},
-    {"slug":"principle-card-grid","kind":"inline","tone":"paper","textNodes":{"textNodes":18,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.2em]","text":"Principles","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#ffffff","ratio":5.48},
-      {"kind":"text","element":"h3.mt-2.font-serif.text-3xl.font-medium","text":"What we will not trade away","size":30,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"div.font-mono.text-[color:var(--bz-emerald,#047857)].text-xs.tracking-[0.2em]","text":"1","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#fafafa","ratio":5.25,"n":4},
-      {"kind":"text","element":"h3.font-serif.font-medium.mt-2.5.mb-1","text":"Strategy","size":22,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":4},
-      {"kind":"text","element":"div.text-[13px].text-[color:var(--bz-emerald,#047857)].mb-2","text":"Clarity of intent","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#fafafa","ratio":5.25,"n":4},
-      {"kind":"text","element":"p.text-[#4a4a4c].text-sm.m-0","text":"Outcomes are defined before anything ships.","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47,"n":4}
-    ]},
-    {"slug":"diagnostic-grid","kind":"inline","tone":"paper","textNodes":{"textNodes":14,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.2em]","text":"Diagnosis","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#ffffff","ratio":5.48},
-      {"kind":"text","element":"h3.mt-2.font-serif.text-3xl.font-medium","text":"Where the process breaks","size":30,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"span.inline-block.px-2.5.py-1.rounded-full","text":"Overload","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#92400e","bg":"#f7ecca","ratio":6.01,"n":4},
-      {"kind":"text","element":"h3.font-serif.font-medium.text-[#0a0a0a].mt-0","text":"Too many channels","size":22,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":4},
-      {"kind":"text","element":"p.text-[#4a4a4c].m-0.text-[15px]","text":"Messages arrive faster than anyone can read the…","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47,"n":4}
     ]},
     {"slug":"callout-box","kind":"inline","tone":"paper","textNodes":{"textNodes":13,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"h3.font-serif.font-medium.text-[#0a0a0a].text-2xl","text":"Why launches slip","size":24,"weight":500,"min":3,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
@@ -573,11 +400,11 @@
     ]},
     {"slug":"parallax-product-stage","kind":"inline","tone":"void","textNodes":{"textNodes":10,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"p.pps__note","text":"Three jobs. One flat-price box.","size":18.4,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Tap","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#073b34","bg":"#e6e6e6","ratio":9.99,"bound":"worst case over a gradient 10% visible","n":2},
-      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Floor","size":10,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Tap","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#073b34","bg":"#e6e6e6","ratio":9.99,"bound":"worst case over a gradient 10% visible","n":3},
       {"kind":"text","element":"span","text":"Hard water","size":10.9,"weight":720,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":4},
       {"kind":"text","element":"strong","text":"₹499","size":24.8,"weight":780,"min":3,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"small","text":"save ₹398","size":12,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null}
+      {"kind":"text","element":"small","text":"save ₹398","size":12,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Floor","size":10,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"at":[390]}
     ]},
     {"slug":"stagger-blur-text","kind":"inline","tone":"paper","textNodes":{"textNodes":8,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"span","text":"Good","size":24,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":8}
