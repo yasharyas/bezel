@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { CodeBlock } from "@/components/CodeBlock";
 import { InstallCommand } from "@/components/InstallCommand";
 import { PreviewStage } from "@/components/preview/PreviewStage";
-import { catalog, categoryLabel, getEntry } from "@/lib/catalog";
+import { catalog, categoryLabel, getEntry, tagLabels } from "@/lib/catalog";
 
 export const dynamicParams = false;
 
@@ -45,10 +45,26 @@ export default function ComponentPage({ params }: { params: { slug: string } }) 
         {categoryLabel(entry.category)}
       </Link>
 
-      <header className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
-        <div>
-          <p className="font-mono text-xs uppercase tracking-[0.18em] text-void-muted">{categoryLabel(entry.category)}</p>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-void-ink sm:text-5xl">{entry.name}</h1>
+      {/* grid-cols-1 rather than the implicit single track: an implicit `auto`
+          track sizes to the install command's max-content, which for a long
+          slug is wider than a 390px viewport, and `max-w-full` inside it
+          measures against that same over-wide track. minmax(0,1fr) caps it at
+          the container so the pill wraps instead of pushing the page sideways. */}
+      <header className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+        <div className="min-w-0">
+          <p className="flex flex-wrap items-center gap-2 font-mono text-xs uppercase tracking-[0.18em] text-void-muted">
+            <span>{categoryLabel(entry.category)}</span>
+            {tagLabels(entry).map((label) => (
+              <span key={label} className="rounded-full border border-void-line px-2 leading-[15px] text-void-ink">
+                {label}
+              </span>
+            ))}
+          </p>
+          {/* Component names are single unbroken words, and the longest of them
+              (CinematicWaterBackground) is wider than a 390px viewport at this
+              size. Without the break the page gained a horizontal scrollbar and
+              clipped the install command beside it. */}
+          <h1 className="mt-2 break-words text-4xl font-semibold tracking-tight text-void-ink sm:text-5xl">{entry.name}</h1>
           <p className="mt-3 max-w-2xl text-lg leading-relaxed text-void-muted">{entry.description}</p>
         </div>
         {/* The package is `bezel-add`, never bare `bezel`: that name belongs to an

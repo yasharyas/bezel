@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Maximize2 } from "lucide-react";
 import { PreviewStage } from "@/components/preview/PreviewStage";
-import { categoryLabel, type CatalogEntry } from "@/lib/catalog";
+import { categoryLabel, tagLabels, type CatalogEntry } from "@/lib/catalog";
 
 type Props = {
   entry: CatalogEntry;
@@ -31,8 +31,16 @@ export function ComponentCard({ entry, onExpand }: Props) {
             </Link>
           </h3>
           <p className="mt-1 line-clamp-2 text-[13px] leading-[1.45] text-void-muted">{entry.description}</p>
-          <p className="mt-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-void-muted">
-            {categoryLabel(entry.category)}
+          {/* One line, and the chip is shorter than the text's own line box, so
+              the card is exactly as tall with or without it. Cards are
+              height-locked in the strip and the grid. */}
+          <p className="mt-2.5 flex items-center gap-2 whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.12em] text-void-muted">
+            <span>{categoryLabel(entry.category)}</span>
+            {tagLabels(entry).map((label) => (
+              <span key={label} className="rounded-full border border-void-line px-1.5 leading-[13px] text-void-ink">
+                {label}
+              </span>
+            ))}
           </p>
         </div>
         <button

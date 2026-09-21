@@ -6,7 +6,10 @@ export function InstallCommand({ command, label }: { command: string; label: str
       <span aria-hidden className="select-none font-mono text-sm text-void-muted">
         $
       </span>
-      <code className="min-w-0 truncate font-mono text-sm text-void-ink">{command}</code>
+      {/* Wraps rather than truncates: on a phone the longest slug does not fit
+          on one line, and an ellipsis would hide the command someone is here
+          to read. It breaks at the spaces and hyphens it already has. */}
+      <code className="min-w-0 break-words font-mono text-sm text-void-ink">{command}</code>
       <CopyButton value={command} label={label} />
     </div>
   );
