@@ -46,13 +46,11 @@ Three rules cut across all eight:
 | `forms/CheckboxVariants` (×4) | + | + | + | + | – | n/a | – | n/a |
 | `forms/MD3Switch` | + | + | + | + | + | – | – | n/a |
 | `forms/BlenderUpload` | + | + | + | + | + | + | ! | + |
-| `forms/MessageForm` | + | + | + | + | – | + | + | n/a |
 
 `TextInput` renders an error but does not set `aria-invalid` or link the message
 with `aria-describedby`, so the error is visual only. `BlenderUpload` reports errors through a callback and
-renders nothing, so it is marked `!`. `MessageForm` is the reference for error
-and loading: `aria-invalid`, `aria-describedby`, focus to the first error once it has
-rendered, and one polite live region for checking, sending, sent and failed.
+renders nothing, so it is marked `!`. No form component links and announces its
+errors, so the library has no reference to copy for that pattern.
 
 ### Buttons and links
 
@@ -60,15 +58,14 @@ rendered, and one polite live region for checking, sending, sent and failed.
 |---|---|---|---|---|---|---|---|---|
 | `GlassButton` | + | + | + | + | + | n/a | n/a | n/a |
 | `buttons/PinchedButton` | + | + | + | + | + | n/a | n/a | n/a |
-| `buttons/StarBorder` | + | + | + | + | + | n/a | n/a | n/a |
 | `buttons/ToolbarButton` | + | + | + | – | + | n/a | n/a | n/a |
-| `buttons/BorderBeamButton` | + | + | + | + | – | n/a | n/a | n/a |
-| `buttons/ConicBorderButton` | + | + | + | + | – | n/a | n/a | n/a |
+| `buttons/BorderBeamButton` | + | + | + | + | + | n/a | n/a | n/a |
 | `buttons/CircleCTA` | + | + | + | – | – | n/a | n/a | n/a |
 | `buttons/TextDisperseLink` | + | + | + | – | n/a | n/a | n/a | n/a |
 
-`PinchedButton` and `StarBorder` are the only two that were complete before this
-pass, and they are the reference for the rest.
+`PinchedButton` and the star ring now carried by `BorderBeamButton` are the
+only two that were complete before this pass, and they are the reference for
+the rest.
 
 ### Navigation
 
@@ -95,7 +92,7 @@ or `aria-selected`, which breaks cross-cutting rule 2 above.
 | Component | default | hover | focus | active | disabled | loading | error | empty |
 |---|---|---|---|---|---|---|---|---|
 | `feedback/EmptyState` | + | + | + | – | – | n/a | n/a | + |
-| `feedback/ErrorBoundary` | + | + | + | – | n/a | n/a | + | n/a |
+| `feedback/ErrorBoundary` | + | + | + | + | n/a | n/a | + | n/a |
 | `feedback/CelebrationOverlay` | + | – | + | – | + | n/a | n/a | n/a |
 | `feedback/TillReceiptPrint` | + | – | + | – | – | n/a | n/a | n/a |
 | `feedback/SubmissionLoader` | n/a | n/a | n/a | n/a | n/a | + | n/a | n/a |
@@ -136,6 +133,23 @@ signalled an interaction the card does not have, and it was marked `!`; that is
 gone, so hover is `n/a`. Its stars are now one image named "Rated N out of 5",
 so the rating is announced as well as drawn.
 
+### Annotation
+
+| Component | default | hover | focus | active | disabled |
+|---|---|---|---|---|---|
+| `animation/SketchHighlight` | + | n/a | n/a | n/a | n/a |
+| `callouts/SketchArrow` | + | n/a | n/a | n/a | n/a |
+
+Both are marks rather than controls: they draw over or behind content that is
+already in the document, take no pointer events and hold no state a reader
+could change. `SketchHighlight` has one opt-in pointer behaviour,
+`resketchOnHover`, which re-rolls the wobble in the stroke and says nothing, so
+it has no keyboard counterpart to miss. `SketchArrow` is hidden from assistive
+technology unless it is given a `label`, at which point it becomes a named
+image, because an arrow that carries meaning has to be readable and one that
+repeats the copy next to it should not be read twice. Under reduced motion both
+hold their first take still, and both stop cycling while the tab is hidden.
+
 ---
 
 ## Known gaps this matrix does not close
@@ -147,11 +161,11 @@ than being quietly dropped:
   `MobileMenu`, `SubmissionLoader` and `CelebrationOverlay` are all full-screen
   overlays with background content still tabbable underneath.
 - **Loading is rarely announced.** `aria-busy` and a live region appear in
-  `loaders/MultiStepLoader`, `forms/MessageForm` and the two skeletons in
+  `loaders/MultiStepLoader` and the two skeletons in
   `loaders/SkeletonCard`; `feedback/ImagePlaceholder` has `aria-busy` alone.
   `LoadingSpinner` and the rest still have neither.
-- **Error is visual only in every form component except `MessageForm`.** No other
-  form component sets `aria-invalid` or `aria-describedby`.
+- **Error is visual only in every form component.** No form component sets
+  `aria-invalid` or `aria-describedby`.
 - **A label is not associated with its input.** `SidePanel`'s `PanelField`
   renders a `<label>` that neither wraps its control nor carries `htmlFor`.
 - **`forms/CheckboxVariants`' four exports have no accessible name at all.**

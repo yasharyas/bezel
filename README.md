@@ -1,5 +1,4 @@
 # Bezel
-
 A React component library for interfaces that move — motion, navigation, pointer behaviour and editorial surfaces — published to npm as [`bezel-ui`](https://www.npmjs.com/package/bezel-ui) and developed here as a Turborepo monorepo with a live gallery and a component-copying CLI.
 
 A bezel is the frame that holds a lens, a watch face or a screen: the precise edge around the thing you actually look at. That is the scope of the library — the framing around your content.
@@ -66,7 +65,6 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | MD3Switch | `md3-switch` | Material Design 3 toggle switch with spring-easing physics, a hover/press halo, rotating check/X icons, two sizes, and optional haptic click sound. |
 | BlenderUpload | `blender-upload` | Drag-and-drop upload with a playful blender animation — fruits fall in, liquid blends while uploading, then it becomes a smoothie glass. |
 | CheckboxVariants | `checkbox-variants` | Four stylized Tailwind-only checkbox variants: ripple, rainbow glow, morphing border, and pulsing circle. |
-| MessageForm | `message-form` | Form pattern with linked, announced errors, focus to the first one, optional async field checks and honest sending, failure and timeout states. |
 
 ### Navigation
 
@@ -81,6 +79,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | StickyNavbar | `sticky-navbar` | Sticky navbar with frosted-glass scroll effect, announcement bar, and animated mobile drawer. |
 | TimedTabs | `timed-tabs` | Self-advancing tabs whose progress bar is the timer, with a sliding paper tab, a pause button and full keyboard support. |
 | StickyNav | `sticky-nav` | Sticky glassmorphism nav with brand logo, center links, and a moon/sun theme-toggle button. |
+| SectionProgressRail | `section-progress-rail` | Fixed rail of section dots where the current dot stretches into a pill. |
 
 ### Buttons & CTAs
 
@@ -89,7 +88,8 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | ToolbarButton | `toolbar-button` | Compact icon-only toolbar button with hover/disabled states, optional tooltip, neutral colour scheme. |
 | CircleCTA | `circle-cta` | Circular CTA button with a GSAP-animated SVG stroke that draws around it on hover. |
 | TextDisperseLink | `text-disperse-link` | Text link whose characters scatter to preset offsets on hover and snap back on mouse leave (GSAP). |
-| BorderBeamButton | `border-beam-button` | Button with an animated gradient "beam" that continuously travels around its border. |
+| BorderBeamButton | `border-beam-button` | Button whose border carries a travelling beam, a spinning conic gradient or sweeping edge glints, across six fills. |
+| PinchedButton | `pinched-button` | Asymmetric brick button with a pinched corner radius, hover lift and arrow nudge. |
 
 ### Cards
 
@@ -102,6 +102,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | TestimonialCard | `testimonial-card` | Testimonial card with star rating, quoted review, and auto-generated author avatar. |
 | CardGrid | `card-grid` | One card grid with four eyebrow styles: mono label, number, serif drop letter or amber tag. |
 | DockingCard | `docking-card` | Card whose picture flies into a header dock on hover or focus while a detail panel rises into the space it left. |
+| PointerGlowCard | `pointer-glow-card` | Card whose border and surface light up under the pointer or keyboard focus. |
 
 ### Feedback & States
 
@@ -113,13 +114,16 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | EmptyState | `empty-state` | Centered empty state with icon slot, heading, description, and optional CTA. |
 | LoadingSpinner | `loading-spinner` | Minimal centered spinner in three sizes using `animate-spin`. |
 | ImagePlaceholder | `image-placeholder` | Image skeleton/placeholder with shimmer overlay and centered icon. |
-| ErrorBoundary | `error-boundary` | Class-based error boundary with a full-screen fallback UI and reload button. |
+| ErrorBoundary | `error-boundary` | Class error boundary whose fallback arrives in layers and retries in place. |
+| TillReceiptPrint | `till-receipt-print` | Payment receipt that prints out of a till slot and stamps itself PAID. |
+| CelebrationOverlay | `celebration-overlay` | Blurred success dialog with three timed confetti bursts and a card that pops in. |
 
 ### Layout
 
 | Component | Slug | Description |
 |---|---|---|
-| SiteFooter | `site-footer` | 4-column responsive footer with brand column and bottom copyright bar. |
+| SiteFooter | `site-footer` | Footer that wraps from four columns down to one, with a brand block and a legal row. |
+| DamaskTileBackdrop | `damask-tile-backdrop` | Fixed ornamental tile lattice behind the page, plus a matching tiled glass pane. |
 
 ### Panels
 
@@ -138,12 +142,18 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Component | Slug | Description |
 |---|---|---|
 | CustomCursor | `custom-cursor` | GSAP-driven crosshair custom cursor with `mix-blend-mode: difference` and hover-grow targets. |
+| Magnet | `magnet` | Wrapper that pulls its child toward a nearby pointer, then springs back. |
+| GlareHover | `glare-hover` | Soft-light glare that follows the pointer across any surface it wraps. |
+| JewelryCursor | `jewelry-cursor` | Gold dot cursor with a lagging ring that swells over links and buttons. |
+| ScratchFoilReveal | `scratch-foil-reveal` | Gold foil you scratch away with the pointer, clearing itself past a threshold. |
 
 ### Loaders
 
 | Component | Slug | Description |
 |---|---|---|
 | Preloader | `preloader` | Fullscreen letter-reveal preloader with a 0–100% counter and slide-away exit. |
+| ScrollUnfurlPreloader | `scroll-unfurl-preloader` | Parchment preloader where brass rods roll apart to unfurl the brand, then lift away. |
+| MultiStepLoader | `multi-step-loader` | Full-screen step loader with ticked stages, a shining active label and WebGL rings. Not in the CLI: it imports `MagicRings` and `ShinyText`, so copy it by hand. |
 
 ### Loading
 
@@ -156,6 +166,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Component | Slug | Description |
 |---|---|---|
 | ElasticLineDivider | `elastic-line-divider` | Interactive SVG divider that deflects like a spring-physics elastic thread on mouse movement. |
+| AnimatedGradientRule | `animated-gradient-rule` | Two-pixel divider with a slow three-colour gradient sliding along it. |
 
 ### Media
 
@@ -164,6 +175,9 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | ImageReveal | `image-reveal` | Scroll-triggered GSAP `clip-path` image reveal with cinematic scale-down. |
 | AutoplayCarousel | `autoplay-carousel` | Photo carousel that never crops, times itself with its progress bar and pauses for hover, focus, touch, off-screen and hidden tabs. |
 | ImageWithFallback | `image-with-fallback` | `<img>` wrapper that gracefully falls back to an SVG placeholder on load failure. |
+| CinematicWaterBackground | `cinematic-water-background` | Underwater backdrop of turbulent waves, drifting light shafts and rising bubbles. |
+| PixelDemorphImage | `pixel-demorph-image` | Image that resolves from coarse pixel blocks to sharp as it scrolls into view. |
+| MetallicLogoShimmer | `metallic-logo-shimmer` | Logo on a soft plate with a champagne bloom and a slow metallic sweep. |
 
 ### Animation
 
@@ -171,7 +185,17 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 |---|---|---|
 | Marquee | `marquee` | Infinite GSAP horizontal scrolling text marquee, oversized and low-opacity for a watermark effect. |
 | GlyphField | `glyph-field` | Canvas halftone of a word in glyphs that part and take the accent colour under the pointer. |
-| ScrollReveal | `scroll-reveal` | `IntersectionObserver`-based reveal wrapper with four variants and `prefers-reduced-motion` support. |
+| ScrollReveal | `scroll-reveal` | `IntersectionObserver` reveal wrapper with four variants, token timing and a reduced-motion fallback. |
+| SketchHighlight | `sketch-highlight` | Marker wash, underline or strike drawn as its own seeded strokes, cycling three takes so the ink keeps boiling. |
+| MagicRings | `magic-rings` | WebGL rings that expand in two colours, with optional mouse parallax and click burst. |
+| BlurInReveal | `blur-in-reveal` | Scroll reveal that lifts content into place out of a 7px blur. |
+| StaggerBlurText | `stagger-blur-text` | Paragraph that resolves word by word out of a soft blur. |
+| EdgeFadeMarquee | `edge-fade-marquee` | CSS marquee with faded edges that pauses on hover and stops for reduced motion. |
+| CanvasPetalField | `canvas-petal-field` | Canvas of marigold and jasmine petals drifting down, nudged by the cursor. |
+| ScrollParallaxLayer | `scroll-parallax-layer` | Scroll-scrubbed depth plane that drifts, scales, blurs and fades, with a petal field. |
+| ShinyText | `shiny-text` | Text with a sweeping gradient shine that renders plain when motion is reduced. |
+| Highlighter | `highlighter` | Hand-drawn highlight, underline, box or circle marks that draw on mount or scroll. |
+| TextType | `text-type` | Typewriter that types, pauses and deletes a list of lines with a blinking cursor. |
 
 ### Sections
 
@@ -181,16 +205,13 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | SidewaysScroll | `sideways-scroll` | Row of cards that pins to the viewport and pans sideways with vertical scroll, falling back to a snap scroller. |
 | ScrollFlipDeck | `scroll-flip-deck` | Pinned deck of images that turn away one at a time as the page scrolls, with a plain-column fallback. |
 | TypingHero | `typing-hero` | Hero section with a typewriter-animated subtitle and CTA that fades in after typing completes. |
+| ParallaxProductStage | `parallax-product-stage` | Lit product shelf where three items settle in and drift at different depths. |
 
 ### Overlays
 
 | Component | Slug | Description |
 |---|---|---|
-
-### E-commerce
-
-| Component | Slug | Description |
-|---|---|---|
+| FilmGrainOverlay | `film-grain-overlay` | Faint animated film grain drawn on a low-resolution canvas and blended over surfaces. |
 
 ### Hooks
 
@@ -208,21 +229,25 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 
 | Component | Slug | Description |
 |---|---|---|
-| CalloutBox | `callout-box` | Amber warning-style callout box with title, intro text, and a symbol checklist. |
+| CalloutBox | `callout-box` | Callout with an amber spine, a serif title, a labelled symbol list and a closing line. |
+| SketchArrow | `sketch-arrow` | Drawn arrow between two elements that measures both ends and redraws itself whenever either moves. |
 
 ### Lists
 
 | Component | Slug | Description |
 |---|---|---|
-| NumberedStepsList | `numbered-steps-list` | Ordered list with monospace step numbers and serif titles, single-column on mobile. |
-| Checklist | `checklist` | Card-row checklist with a circular accent badge per item; supports rich JSX content. |
+| NumberedStepsList | `numbered-steps-list` | Ordered list with a mono number column, serif titles and a rule between steps. |
+| Checklist | `checklist` | Card-row checklist with a solid round accent marker per item; supports rich JSX content. |
 
 ### Display
 
 | Component | Slug | Description |
 |---|---|---|
-| FormulaBlock | `formula-block` | Monospace formula display in an accent-bordered, horizontally scrollable box. |
+| FormulaBlock | `formula-block` | Monospace formula on a tinted plate, with a ruled-off caption beneath it. |
 | ParticleQrCode | `particle-qr-code` | Scannable QR code, encoded with no dependency, that assembles from grains and re-forms when its value changes. |
+| DepthText | `depth-text` | Extruded 3D type made of stacked layers that tilts to follow the pointer. |
+| ShinyGradientText | `shiny-gradient-text` | Text filled with a narrow metal sweep, legible on both light and dark grounds. |
+| CircularText | `circular-text` | Letters set around a spinning ring that speeds up, slows or pauses on hover. |
 
 ## Gallery App
 

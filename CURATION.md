@@ -15,6 +15,20 @@ DiagnosticGrid, FeatureCardGrid, PrincipleCardGrid and SignalCardGrid.
 CalloutBox was not folded in and still ships on its own. The rows below are left
 as written, so the reasoning stays readable next to what was done.
 
+Six of them were rebuilt on 20 September rather than merged or cut: CalloutBox,
+Checklist, FormulaBlock, NumberedStepsList, ScrollReveal and SiteFooter. They
+now pick their colours off the tokens with `light-dark()` instead of carrying
+light-only literals, so the sizes and the "17 lines wrapping a `<code>` element"
+reading of FormulaBlock below no longer describe the files. The merge calls
+still stand as calls.
+
+**The library now holds 89 components.** A later pass the same day carried out
+the animated-border merge proposed below (ConicBorderButton and StarBorder are
+now the jade fill and the star ring of `BorderBeamButton`, three rows becoming
+one), removed MessageForm, and added two drawn-annotation components,
+SketchHighlight and SketchArrow. The counts in the list below are the
+proposal's own and are not restated against that total.
+
 - **KEEP: 38** clear the quality bar
 - **MERGE: 26** fold into a component that is kept, as a variant or prop
 - **CUT: 33** remove from the library
@@ -89,11 +103,9 @@ in the library now has a visible focus indicator, so it no longer separates them
 
 | Component | Call | Reasoning |
 |---|---|---|
-| `BorderBeamButton.tsx` | MERGE | `[dup]` One of three animated-border buttons; shares the exact mask-composite trick with `ConicBorderButton`. |
+| `BorderBeamButton.tsx` | KEEP | The animated-border button. It took in `ConicBorderButton` as the jade fill and `StarBorder` as the star ring, so every border treatment is one prop. |
 | `CircleCTA.tsx` | CUT | Distinctive, but a GSAP stroke-draw bound to `mouseenter` on a wrapper div — the ring never draws for keyboard users. |
-| `ConicBorderButton.tsx` | MERGE | `[dup]` Same border-ring trick as `BorderBeamButton`, different gradient. A variant. |
 | `PinchedButton.tsx` | KEEP | The best-built component in the library: full state set, `:focus-visible`, `@media (hover:hover)`, complete reduced-motion block. The `Button`. |
-| `StarBorder.tsx` | KEEP | The animated-border button, and the only one of the three with a proper focus ring. Absorbs the other two. |
 | `TextDisperseLink.tsx` | CUT | Lovely effect, but per-character `<span>` splitting wrecks screen-reader pronunciation and the scatter is `mouseenter`-only. |
 | `ToolbarButton.tsx` | KEEP | 21 lines and the closest thing the system has to an `IconButton`. Needs a required `aria-label`. |
 | `WhatsAppFAB.tsx` | CUT | A single vendor's brand button. `#25D366` is 1.98:1 against white and the tooltip is hover-only. |
@@ -183,7 +195,7 @@ system at all.
 | `CustomCursor.tsx` | MERGE | `[dup]` The weaker of the two cursors — no reduced-motion gate, no pointer-type gate, not `aria-hidden`. Its crosshair becomes a variant of `JewelryCursor`. |
 | `GlareHover.tsx` | MERGE | `[dup]` A pointer-tracked sheen; `PointerGlowCard` is the same mechanism with a masked border. One pointer-effect primitive, two variants. |
 | `JewelryCursor.tsx` | KEEP | The better cursor: `quickSetter` perf, gated on `(hover:hover) and (pointer:fine)` and reduced motion, both layers `aria-hidden`. |
-| `Magnet.tsx` | KEEP | The magnetic-CTA primitive. Zero dependencies, reduced-motion and coarse-pointer gated. Move its `pointermove` listener off `window` per instance. |
+| `Magnet.tsx` | KEEP | The magnetic-CTA primitive. Zero dependencies, reduced-motion and coarse-pointer gated. The suggestion here to move its `pointermove` listener off `window` per instance was declined on 20 September, when the pull radius was widened to 196px: the field is deliberately much larger than the element, so a listener on the element cannot see a cursor travelling past it. |
 | `ScratchFoilReveal.tsx` | CUT | `[a11y]` Gates content behind a mouse drag with no keyboard alternative whatsoever. The worst accessibility case in the library. |
 
 ## layout/
@@ -269,8 +281,9 @@ themselves duplicate pairs.
 ## The proposed core: 26 components
 
 **Controls (5)**
-`PinchedButton` (Button, absorbing GlassButton) · `StarBorder` (absorbing
-BorderBeamButton, ConicBorderButton) · `ToolbarButton` (IconButton) ·
+`PinchedButton` (Button, absorbing GlassButton) · `BorderBeamButton` (absorbing
+StarBorder as a ring variant, and already carrying ConicBorderButton as a fill) ·
+`ToolbarButton` (IconButton) ·
 `TextInput` · `MD3Switch`
 
 **Feedback (6)**
@@ -364,7 +377,9 @@ So `dependencies` goes from six packages to three (`gsap`, `@gsap/react`,
 Worth stating plainly, because curation will not solve these on its own:
 
 - **54 of 90 animated files still ignore `prefers-reduced-motion`**, and three
-  of those run infinite loops.
+  of those run infinite loops. That count was taken before the September
+  removals and has not been re-measured; it is a count of animated files, not
+  of components, so it does not track the library total.
 - **No component implements a focus trap.** Five full-screen overlays leave the
   background tabbable.
 - **No form component sets `aria-invalid` or `aria-describedby`**, so every

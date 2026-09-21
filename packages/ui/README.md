@@ -90,7 +90,7 @@ export function Hero() {
       </ScrollReveal>
 
       <ScrollReveal variant="scale" delay={400}>
-        <Magnet magnetStrength={4}>
+        <Magnet>
           <button className="rounded-full border px-6 py-2.5">
             Get started
           </button>
@@ -101,7 +101,7 @@ export function Hero() {
 }
 ```
 
-`ScrollReveal` uses an `IntersectionObserver` and injects its own keyframes, so it works without extra CSS, and it respects `prefers-reduced-motion`, falling back to no animation at all.
+`ScrollReveal` uses an `IntersectionObserver` and carries its own rules, so it works without extra CSS. It takes its duration and easing from `--bz-duration-slower` and `--bz-ease-out`, and it respects `prefers-reduced-motion`, falling back to no animation at all.
 
 ### Importing a single component
 

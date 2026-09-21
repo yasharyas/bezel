@@ -8,7 +8,10 @@ audit the owner removed ten of them over two rounds (recorded under
 them replacing FAQAccordion, brought the library to 105 (see
 [Additions, September 2026](#additions-september-2026)). Twelve more came out on
 20 September and four card grids merged into one, leaving 90 (see
-[Removals, 20 September 2026](#removals-20-september-2026)).
+[Removals, 20 September 2026](#removals-20-september-2026)). A later pass the
+same day removed MessageForm, folded ConicBorderButton and StarBorder into
+BorderBeamButton, and added SketchHighlight and SketchArrow, which is where the
+current count of **89** comes from.
 
 - [Summary](#summary)
 - [Owner decisions](#owner-decisions)
@@ -29,8 +32,15 @@ them replacing FAQAccordion, brought the library to 105 (see
 | Rating | Count | Components |
 |---|---:|---|
 | **Showcase** | 7 | DepthText, CinematicWaterBackground, ScrollUnfurlPreloader, ScratchFoilReveal, MagicRings, MorphDialog, ParticleQrCode |
-| **Solid** | 27 | ToastContainer, TubelightNavBar, MD3Switch, SiteHeader, ElasticLineDivider, TextDisperseLink, useThemeRipple, ScrollReveal, Magnet, ConicBorderButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, StarBorder, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel |
-| **Ordinary** | 56 | Everything else. Each row says what would make it worth keeping. |
+| **Solid** | 28 | ToastContainer, TubelightNavBar, MD3Switch, SiteHeader, ElasticLineDivider, TextDisperseLink, useThemeRipple, ScrollReveal, Magnet, BorderBeamButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel, SketchHighlight, SketchArrow |
+| **Ordinary** | 54 | Everything else. Each row says what would make it worth keeping. |
+
+Three of those moves are from the 20 September consolidation rather than a
+re-reading of the table. ConicBorderButton and StarBorder were both rated Solid
+and are now the jade fill and the star ring of `BorderBeamButton`, which held
+the Ordinary rating on its own and takes the Solid one now that it carries all
+three border treatments. SketchHighlight and SketchArrow are new. MessageForm,
+rated Ordinary, was removed.
 
 - **Showcase**: genuinely strong, the kind of thing that makes a reviewer stop.
 - **Solid**: well made, earns its place.
@@ -85,7 +95,9 @@ stay inert at card size until the pointer enters, and mount client-side only,
 which removed the hydration errors caused by 45 components injecting
 `<style>` tags. Hover-only effects get a slow synthetic pointer while idle,
 which pauses when a real pointer arrives or reduced motion is set. Effects
-that play once get a replay button.
+that play once replay themselves on an interval suited to how long they take,
+under the same idle rule, and keep a replay button for anyone who wants one
+sooner.
 
 **P1, visual consistency.** Every stage uses one of three tones (void, paper,
 cream) drawn from the Bezel tokens. The shadcn semantic colours that 17
@@ -215,7 +227,11 @@ A second review brought these changes.
 ## Additions, September 2026
 
 Nine components were added after the owner's second round, rated on the same
-scale as the table below. One of them replaces an existing component.
+scale as the table below. One of them replaces an existing component. Two of
+the nine have since been removed again: AccordionList on 20 September, whose
+row is kept below because the FAQAccordion replacement it records is part of
+the history, and MessageForm in the pass after it, whose row is gone. The table
+therefore lists eight.
 
 | Component | Rating | Why |
 |---|---|---|
@@ -227,9 +243,8 @@ scale as the table below. One of them replaces an existing component.
 | SidewaysScroll | Solid | A pinned row that pans sideways as the page scrolls. |
 | AutoplayCarousel | Solid | A carousel that never crops, with a pause button. |
 | AccordionList | Solid | Replaces FAQAccordion; see below. |
-| MessageForm | Ordinary | Closes the form-level, announced-error and announced-loading gaps. |
 
-All nine are single files with no new dependencies. Each renders its
+All eight are single files with no new dependencies. Each renders its
 stylesheet as a fixed string through `dangerouslySetInnerHTML`, so it
 server-renders without the hydration mismatch listed under library bugs, and
 each honours reduced motion itself, follows changes to it live, pauses ambient
@@ -252,14 +267,23 @@ commit before the replacement, then remove `accordion-list`.
 
 - **Focus trap:** MorphDialog is the first overlay with an inert background, a
   Tab loop, Escape handling and focus return.
-- **Announced errors, announced loading and a form-level pattern:** MessageForm.
 
 ### Totals and the first screen
 
-The library now holds 90 components: 7 Showcase, 27 Solid and 56 Ordinary.
-"Start with these" is unchanged. ParticleQrCode is the only new piece with a
-case against ParallaxProductStage; at card size the code is small, so the swap
-is left to the owner.
+The library now holds 89 components: 7 Showcase, 28 Solid and 54 Ordinary.
+
+"Start with these" no longer stands still: the strip cycles one card at a time
+through the pool in `apps/gallery/src/lib/featured.ts`, and the opening six
+have changed. ScratchFoilReveal and CinematicWaterBackground came out, the
+newest deck (ScrollFlipDeck), ParticleQrCode and SketchHighlight went in, and
+MagicRings (still slot one) and ParallaxProductStage stayed: the ParticleQrCode
+case left to the owner above was settled by giving it a permanent slot and a
+void stage rather than by dropping the shelf. ScrollUnfurlPreloader gave up
+its opening slot and is the first card the rotation brings in.
+
+MagicRings carries a `hero` tag: it is built to sit behind a hero section, so
+searching "hero" finds it and its card and page show a Hero chip. The gallery
+home page keeps its own two-column hero; it does not use MagicRings.
 
 ## Removals, 20 September 2026
 
@@ -462,7 +486,7 @@ the token gate measures it on all three paper surfaces.
 | SignalCardGrid, SiteFooter | `#8a8a8e` as text, 3.29 and 3.44 | `--bz-ink-subtle` | 5.08, 5.30 |
 | MD3Switch | Unchecked track edge 1.29 | `border-muted-foreground`, the muted text colour, instead of the hairline | 5.08 |
 | TubelightNavBar | Brick focus ring on a dark bar, 2.17 | `outline-ring`, the theme's ring colour | 17.58 |
-| StarBorder | Focus ring at 55% alpha, 2.77 | Full `--bz-focus-ring` | 7.35 |
+| StarBorder (now the star ring of BorderBeamButton) | Focus ring at 55% alpha, 2.77 | Full `--bz-focus-ring` | 7.35 |
 | CheckboxVariants | Unchecked Pulse, a grey dot at 1.18 | 1px `--bz-line-control` edge; Pop gets the same, and its dead `border-1` class became `border` | 3.29 |
 | CircularText | Ring letters 2.94 | `--bz-gold` | 5.41 |
 | MultiStepLoader | Pending steps 1.70 to 1.82, pending icons 1.41 | Ink, with the row fade floored at 0.6 | 5.11 to 5.51, worst case |
@@ -488,19 +512,23 @@ echo row ran at 30% opacity (2.73:1 at 68px) and now runs at 40% (3.83:1).
   measured. Where the same defect sat in an unshown state of a fixed component
   (TextInput's placeholder, CheckboxVariants' unchecked Pop, BlenderUpload's
   later states), it was fixed with the rest.
-- **73 pairs are not measurable** and are printed on every build: text over
-  photos and gradients (SiteHeader, ContactSection, CalloutBox,
-  ParallaxProductStage, DamaskTileBackdrop, GlareHover, the AutoplayCarousel
+- **64 pairs are not measurable** and are printed on every build: text over
+  photos and gradients (SiteHeader, ContactSection, ParallaxProductStage,
+  ScrollParallaxLayer, DamaskTileBackdrop, GlareHover, the AutoplayCarousel
   caption and controls), gradient text (ShinyBadge, ShinyGradientText), blend
   modes (MobileMenu's logo, FilmGrainOverlay, ScratchFoilReveal), the confetti
-  canvas over CelebrationOverlay and Highlighter's hand-drawn SVG.
+  canvas over CelebrationOverlay and the hand-drawn SVG in Highlighter and
+  SketchHighlight. The figure was 73 before the 20 September rework: CalloutBox
+  dropped the gradient wash that made all seven of its pairs unreadable, and
+  the six-component rework moved the rest of that cluster onto measurable
+  ground.
 - **Marquee's default opacity is 0.08,** a watermark. The preview does not use
   it and the component was not changed; anyone using the default should mark it
   decorative.
 - **Browser default focus rings.** A few component controls still show only
   the browser's ring: the SiteHeader and MobileMenu logo links, the StickyNav and
   StickyNavbar brand links and ProductCard's quantity buttons. So do demo
-  controls in the ToastContainer, ErrorBoundary, EcomEmptyState, StickyCartBar,
+  controls in the ToastContainer, EcomEmptyState, StickyCartBar,
   UseThemeRipple, TypingHero, Magnet and JewelryCursor previews. That ring is
   two-tone and visible, so it is reported rather than failed, but it is not the
   2px outline Principle 3 asks for.
@@ -533,6 +561,15 @@ audit would fix them, not cut them.
 MobileBottomNav are proposed as variants of BorderBeamButton and
 TubelightNavBar. Merging is fine, but in both pairs the component being merged
 away is the better-looking one, so the merged result should keep its look.
+
+The button half was done on 20 September, and StarBorder went in with it. Both
+looks survived as presets rather than as approximations: `fill="jade"` is
+ConicBorderButton's teal pill, its grain, its uppercase tracked label and its
+spinning conic ring, and `ring="star"` is StarBorder's two sweeping glints with
+its cream, crimson and gold fills. The surviving slug is `border-beam-button`,
+against CURATION's proposal of StarBorder, because keeping it means every
+existing call still compiles. MobileBottomNav was removed on 20 September
+rather than merged, so that half of the proposal is moot.
 
 **CURATION keeps 19 components rated Ordinary.** TextInput, Stepper,
 ToolbarButton, SidePanel, EmptyState, LoadingSpinner, Pagination, Preloader,
@@ -612,29 +649,28 @@ needs, and a rewritten description.
 | `whatsapp-fab` | No: mock | A mock of the button | A 390px frame over a product page; an idle hover shows the tooltip | Ordinary | A floating chat button for one messaging app.<br>**Worth keeping if** it became a general contact button with the channel as a prop. |
 | `image-placeholder` | Index only | Legible | A cover and two thumbnails, one labelled | Ordinary | A grey box with a slow sheen, drawn from the surrounding text colour so it reads on light and dark grounds (see [Component fixes](#component-fixes-september-2026)).<br>**Worth keeping if** merged into `SkeletonCard`. |
 | `sticky-navbar` | Broken: collisions, covered the gallery header, index only | Scaled, with the brand colliding with the links and the bar sticky over the site header | A phone-width frame whose drawer opens on a loop, with an active link | Ordinary | A shop navbar with an announcement bar and a drawer.<br>**Worth keeping if** the drawer trapped focus and closed on Escape, and it absorbed `AppHeader`. |
-| `error-boundary` | No: mock, unreadable | A mock scaled to 50% | A frame with a Healthy and Caught toggle; the caught state starts inside the boundary without throwing, so no real error is logged | Ordinary | A class boundary with a refresh screen.<br>**Worth keeping if** it reported errors through `componentDidCatch` and offered an inline fallback for part of a page. |
+| `error-boundary` | No: mock, unreadable | A mock scaled to 50% | A frame whose child throws for real on its first render; Try again clears the error and the chart mounts again | Ordinary | Rebuilt on 20 September: stacked planes, a cracked seal across the panel's top edge, a code tag and fragments thrown past the boundary, played in once and then left at rest. It reports through `componentDidCatch`, retries in place instead of reloading, and `fullScreen={false}` wraps one region of a page, so the row's original conditions are met; the rating above predates the rebuild. |
 | `sticky-nav` | Broken: covered the gallery header, index only | A grey slab, sticky over the site header | A frame with a scrolling page under the frosted bar | Ordinary | Its theme button swaps only its own icon; the bar never changes palette.<br>**Worth keeping if** the toggle actually themed the bar. |
 | `use-theme-ripple` | No: no preview | The word "Preview" | A frame where an idle loop presses the toggle from its own centre, so the circular wipe is visible | Solid | A clip-path wipe from the click point is a memorable theme switch. No reduced-motion check, and keyboard presses start the wipe from the corner. |
 | `shiny-badge` | Broken: near invisible, index only | A light badge on the dark stage | Paper stage with a headline under the badge | Ordinary | A badge with a light sweep.<br>**Worth keeping if** merged with `ShinyText` into one shimmer. |
-| `border-beam-button` | Broken: white slab, index only | A white slab | Primary and ghost buttons on paper | Ordinary | A beam circling the border, the third animated-border button.<br>**Worth keeping if** merged with `ConicBorderButton`. |
+| `border-beam-button` | Broken: white slab, index only | A white slab | Six fills on paper in two rows, each captioned with its fill and its ring | Solid | A beam circling the border. The rating was Ordinary when this was the third of three animated-border buttons; it holds the Solid rating the other two carried now that it is the only one. `ConicBorderButton` merged into it as the jade fill, keeping the spinning conic ring over grain that gave that button its material presence. `StarBorder` followed as the star ring, keeping its glints and its cream, crimson and gold fills, so the light along the edges that read as quality is still there. |
 | `typing-hero` | Broken: cropped, index only | A giant cropped "Build" | A 900px frame replaying every nine seconds | Ordinary | A serif hero whose subtitle types itself.<br>**Worth keeping if** it fixed its interval leak and became an example built on `TextType`. |
 | `feature-card-grid` | Broken: cropped, index only | A cropped fragment, one word per line | Laid out at 640px under a section heading | Ordinary | Three bordered cards.<br>**Worth keeping if** merged into one `CardGrid`. |
-| `numbered-steps-list` | Broken: cropped, index only | A cropped fragment | Laid out at 560px under a section heading | Ordinary | An ordered list, well set.<br>**Worth keeping if** it revealed step by step on scroll. |
-| `formula-block` | Broken: overflowing, index only | A white slab overflowing its card | Laid out at 460px | Ordinary | A monospace formula on a tint.<br>**Worth keeping if** it typeset real maths. |
+| `numbered-steps-list` | Broken: cropped, index only | A cropped fragment | Laid out at 560px on the void stage, no section heading | Ordinary | An ordered list, well set.<br>**Worth keeping if** it revealed step by step on scroll.<br>Reworked on 20 September: the palette is picked with `light-dark()` off the tokens, so it reads on paper and on void; the number column is a 3rem gutter with an accent rule under each number, the first step lost its orphan rule, and the title is a clamp. The rating above predates the rework. |
+| `formula-block` | Broken: overflowing, index only | A white slab overflowing its card | Laid out at 560px on the void stage | Ordinary | A monospace formula on a tint.<br>**Worth keeping if** it typeset real maths.<br>Reworked on 20 September: a `figure` on a tinted plate whose tint and edge come from the tokens through `light-dark()`, with the caption ruled off as an eyebrow. The rating above predates the rework. |
 | `signal-card-grid` | Broken: cropped, index only | A tiny cropped fragment | Laid out at 640px under a section heading | Ordinary | Four definition cards for one framework.<br>**Worth keeping if** merged into `CardGrid`. |
 | `principle-card-grid` | Broken: overlapping, index only | Overlapping titles | Laid out at 760px under a section heading | Ordinary | Four principle cards.<br>**Worth keeping if** merged into `CardGrid`. |
 | `diagnostic-grid` | Broken: cropped, index only | A cropped fragment | Laid out at 600px under a section heading | Ordinary | Tagged diagnosis cards.<br>**Worth keeping if** merged into `CardGrid`. |
-| `callout-box` | Broken: cropped, index only | A cropped fragment | Laid out at 480px with real content | Ordinary | An amber callout with a symbol list.<br>**Worth keeping if** it absorbed `Checklist` as one callout with list styles. |
-| `checklist` | Broken: overflowing, index only | A white slab overflowing its card | Laid out at 440px | Ordinary | Hairline rows with check marks.<br>**Worth keeping if** merged into `CalloutBox`. |
-| `scroll-reveal` | Index only | Tiny chips that had finished revealing before anyone looked | Three cards showing the up, left and scale variants, with replay | Solid | The reveal wrapper most pages need, with zero dependencies and a real reduced-motion fallback. |
-| `site-footer` | Broken: unreadable, index only | Scaled to 55% | Laid out at 900px with columns and a legal row | Ordinary | A well-set footer.<br>**Worth keeping if** it carried the brand further than a glowing dot. |
+| `callout-box` | Broken: cropped, index only | A cropped fragment | Laid out at 480px on the void stage with real content | Ordinary | An amber callout with a symbol list.<br>**Worth keeping if** it absorbed `Checklist` as one callout with list styles.<br>Reworked on 20 September: the amber gradient wash is gone, which is why it no longer appears in the unmeasurable list above. Amber is now structural (spine, ruled label, solid markers) over a neutral surface, so every pair in it is measurable on both grounds. The rating above predates the rework. |
+| `checklist` | Broken: overflowing, index only | A white slab overflowing its card | Laid out at 440px on the void stage | Ordinary | Hairline rows with check marks.<br>**Worth keeping if** merged into `CalloutBox`.<br>Reworked on 20 September: the 10% emerald marker, which disappears on a dark ground, became a solid disc carrying the ink its fill declares. The rating above predates the rework. |
+| `scroll-reveal` | Index only | Tiny chips that had finished revealing before anyone looked | Three labelled panels on the void stage showing the up, left and scale variants, replaying while idle and on demand | Solid | The reveal wrapper most pages need, with zero dependencies and a real reduced-motion fallback.<br>Reworked on 20 September: timing comes from `--bz-duration-slower` and `--bz-ease-out`, `will-change` is withdrawn once the reveal lands, and a `scripting: none` rule keeps the content visible where no script can reveal it. |
+| `site-footer` | Broken: unreadable, index only | Scaled to 55% | Laid out at 560px on the void stage, brand over three columns and a legal row | Ordinary | A well-set footer.<br>**Worth keeping if** it carried the brand further than a glowing dot.<br>Reworked on 20 September: the fixed `2fr 1fr...` track list, which had no way to collapse and crushed the columns at phone width, became two levels of wrapping. Links now carry the ink and the mono headings the accent, which is the right way round, and the focus ring changes colour with the ground. The rating above predates the rework. |
 | `depth-text` | Index only | Legible and strong | Brand colours and a "Move" hint | Showcase | Extruded type that tilts with the pointer, and still behaves: layers hidden from assistive tech, pointer-gated, with a full reduced-motion path. It stops people. |
 | `magnet` | Index only | Legible | A real button inside, with a generous pull radius | Solid | The pull and spring-back feel right and reduced motion is respected. Small, and exactly what it should be. |
 | `glare-hover` | Broken: a green block, index only | A flat green block with no hint | A photo print with a caption; an idle sweep shows the glare | Ordinary | A glare that follows the pointer.<br>**Worth keeping if** merged into `PointerGlowCard` as a glare mode. |
 | `cinematic-water-background` | Index only | Legible and strong | Hero copy over it | Showcase | Turbulent water, light shafts and rising bubbles in SVG and CSS set a mood no stock background does. Two always-on turbulence filters make it expensive. |
-| `conic-border-button` | Index only | Legible | Textured and plain variants side by side | Solid | The spinning conic ring over grain has real material presence; of the animated-border buttons, this is the one to keep. |
 | `pointer-glow-card` | Broken: white slab, index only | A white slab | A product card on paper; the glow follows the pointer or keyboard focus | Solid | A spotlight on the border and surface that follows the pointer or keyboard focus. The rating was of the idea: measured later, the lit ring had been clipped down to its corners, and the preview had nothing to focus (see [Component fixes](#component-fixes-september-2026)). |
-| `shiny-gradient-text` | Index only | Legible but small | A large display line with a subline | Ordinary | Gradient-filled text.<br>**Worth keeping if** merged with `ShinyText`. |
+| `shiny-gradient-text` | Index only | Legible but small | Both tones stacked and captioned: gold foil on void, ink with a brick highlight on paper | Ordinary | Text filled with a narrow metal sweep. The rainbow ramp is gone; every stop now clears 7:1 on the ground it sits on.<br>**Worth keeping if** merged with `ShinyText`. |
 | `blur-in-reveal` | Broken: near invisible, index only | `neutral-700` text on the dark stage | Paper stage; eyebrow, headline and body blur in, with replay | Ordinary | ScrollReveal with a blur.<br>**Worth keeping if** it became a `blur` variant of `ScrollReveal`. |
 | `section-progress-rail` | No: mock dots | A drawing of dots | The real rail stepping through five sections while idle; clicking a dot selects it | Ordinary | Dots with a pill for the current section. It hides below 1180px and its targets are 8px.<br>**Worth keeping if** it worked on smaller screens with 24px targets. |
 | `edge-fade-marquee` | Broken: visible edges, index only | The fade colour did not match the stage, so boxes showed at both ends | Fade set to the stage token; chips under a heading | Solid | A marquee done properly: pure CSS, pauses on hover, stops for reduced motion. |
@@ -647,10 +683,9 @@ needs, and a rewritten description.
 | `film-grain-overlay` | Broken: a black rectangle, index only | Grain at 4% alpha was invisible, leaving a black box | A split view: the grain as shipped, and the same canvas over mid-grey with contrast raised so the texture shows | Ordinary | Grain so faint it is invisible unless you know it is there.<br>**Worth keeping if** it shipped presets strong enough to see. |
 | `scratch-foil-reveal` | Index only | Legible and strong | A card underneath, replay and a "Scratch" hint | Showcase | Scratching gold foil away with the pointer is delightful and instantly understood. It has no keyboard path, which must be fixed before it ships. |
 | `pixel-demorph-image` | Broken: effect already played, index only | A flat orange rectangle | Replay on demand, resolving over 1.5 s from five blocks | Solid | A distinctive pixel-to-sharp reveal, built right: the canvas sits over a real `img` with alt text and reduced motion is respected. |
-| `scroll-parallax-layer` | Broken: mostly empty, index only | Only the bundled petal field showed, as a single petal | Three layers at different speeds and rotations over the petal field, with a "Scroll" hint | Ordinary | A ScrollTrigger depth primitive; a card gives it very little to scroll.<br>**Worth keeping if** `FallingPetalField` were split out and the primitive shown in a scrolling page. |
+| `scroll-parallax-layer` | Broken: mostly empty, index only | Only the bundled petal field showed, as a single petal | A layered scene in its own scroll container, planes drifting, swelling and pulling into focus at different rates, with a "Scroll" hint; it walks itself while idle | Ordinary | A ScrollTrigger depth primitive. Planes now take scale, blur, fade and sideways drift as well as depth, and the range is measured from the scroll container rather than the viewport, so the same composition reads in a card and on a full page.<br>**Worth keeping if** `FallingPetalField` were split out. |
 | `till-receipt-print` | Broken: cropped, index only | Scaled to 50% and cropped | Laid out at 380px on cream, with replay | Solid | A receipt printing from a slot and stamping PAID is specific and fun. 2.4 s of choreography with no way to skip. |
 | `magic-rings` | Index only | Legible, but the rings were cut to two arcs | Centred, with pointer parallax, click burst and a "Move" hint | Showcase | Two-colour WebGL rings that answer the pointer and a click: the strongest first impression in the gallery. It pulls in `three` for one background. |
-| `star-border` | Index only | A legible cream slab | Outline, primary and gold tones side by side | Solid | Light glints along the edges read as quality, in three well-judged tones. |
 | `shiny-text` | Index only | Legible | A status line over a short checklist | Solid | The best of the shimmer implementations, falling back to plain text under reduced motion. |
 | `circular-text` | Broken: illegible, index only | Tiny and unreadable | A larger ring around a serif initial that speeds up on hover | Ordinary | Text on a spinning ring, a common agency flourish.<br>**Worth keeping if** the ring answered scroll or pointer direction. |
 | `pinched-button` | Index only | A legible cream slab | Filled and ghost buttons side by side | Solid | The asymmetric pinched corner is an original shape and the hover lift is well tuned. |
@@ -667,7 +702,8 @@ needs, and a rewritten description.
 | `docking-card` | New | n/a | Laid out at 760px: two case-study cards that dock in turn while idle | Solid | A hover that rearranges the card rather than tinting it, with the heading kept above the rising panel so keyboard focus is never covered. |
 | `sideways-scroll` | New | n/a | A 720px frame that scrolls itself through the pinned row and back while idle | Solid | The pinned pan needs no scroll library and brings a tabbed-to card into view. Short, narrow and reduced-motion views get a snap scroller. |
 | `autoplay-carousel` | New | n/a | Laid out at 680px: four photographs, one portrait and one square, on 3.5 s | Solid | Photos never crop, the bar is the timer, and it holds for hover, keyboard focus, touch, off-screen and hidden tabs, with a pause button. |
-| `message-form` | New | n/a | Laid out at 560px inside a card, with a link field whose check is simulated | Ordinary | A quiet form, but the library's only form-level pattern: errors linked and announced, focus to the first one, and honest sending, failure and timeout states.<br>**Worth keeping if** it gained a visual signature of its own; today it earns its place by closing three open gaps. |
+| `sketch-highlight` | New (20 September) | n/a | Laid out at 420px: one sentence carrying a wash, an underline and a strike, with a "Hover" hint that re-rolls the stroke | Solid | The mark never finishes: three seeded takes cycle, so the ink boils the way cel animation does. It generates its own stroke geometry, so unlike `Highlighter` it carries no drawing library behind it. |
+| `sketch-arrow` | New (20 September) | n/a | Laid out at 460px: a chip at the bottom left with an arrow curving up to a Publish button | Solid | It measures both ends and redraws whenever either moves, so it stays attached through reflow and inside the gallery's scaled stage. Hidden from assistive technology unless it is given a `label`. |
 
 ---
 
@@ -697,7 +733,8 @@ Not fixed, because they change component behaviour rather than the gallery.
 - **AppHeader** renders an `h1`.
 - **SidePanel**'s `PanelField` label is not associated with its input.
 - **TextInput** shows its error visually only.
-- **ErrorBoundary** has no `componentDidCatch`.
+- **ErrorBoundary** had no `componentDidCatch`; the rebuild on 20 September
+  reports every catch and hands `onError` a logger hook.
 - **CanvasPetalField** spawns every petal above the canvas, so each mount starts
   blank for a few seconds, and its jasmine petals nearly vanish on white.
 - **Highlighter**, **MagicRings** and **CelebrationOverlay** each pull in a

@@ -53,8 +53,9 @@ offset, clearing 3:1 against its own ground. `outline-none` without a replacemen
 is a defect, not a preference. `:focus-visible` is used rather than `:focus`, so
 the ring appears for keyboard users and not on mouse click.
 
-`buttons/PinchedButton.tsx` and `buttons/StarBorder.tsx` are the reference: both
-were written with `:focus-visible` outlines from the start.
+`buttons/PinchedButton.tsx` and the star ring inside
+`buttons/BorderBeamButton.tsx` are the reference: both were written with
+`:focus-visible` outlines from the start.
 
 **Where it did not hold:** at the start of this pass, 15 of 43 interactive files
 had any focus handling, and three of those had removed the default with
@@ -80,6 +81,13 @@ A colour that cannot meet the bar is renamed, not excused. Three did:
 - `#c9a227` is 2.42:1 against white. It is a fill that carries dark ink, never a
   text colour, and never a fill under white.
 - `red-500` is 3.76:1. It stays as the error *mark*; error *text* is `#b91c1c`.
+
+The same rule runs the other way on a dark ground, where `--bz-emerald` is
+3.1:1 and `--bz-amber` 2.6:1 against `--bz-void-raised`. The void half of each
+family is its own token, `--bz-emerald-on-void` and `--bz-amber-on-void`, and
+as a fill it carries `--bz-on-void-fill` rather than white. Components choose
+between the halves with `light-dark()`, so one copy-paste file reads correctly
+on whichever ground the host declares.
 
 Control edges have their own token, `--bz-line-control` (`#8a8a8e`, 3.4:1 on
 paper), because the hairlines separate surfaces and cannot identify a control.
@@ -128,14 +136,17 @@ radii for the same primary CTA.
 
 | Principle | Holds | Does not yet |
 |---|---|---|
-| 1. The file is the interface | 89 of 90 files are standalone | `MultiStepLoader` (excluded from the CLI) |
+| 1. The file is the interface | 88 of 89 files are standalone | `MultiStepLoader` (excluded from the CLI) |
 | 2. Motion is refusable | 36 of 90 animated files | 54 files, 3 of them infinite loops |
 | 3. Focus is visible | every interactive file, after this pass | maintain it; `:focus` should become `:focus-visible` in 6 older files |
-| 4. Contrast is a gate | all tokens, and every measurable pair the 105 previews render | 73 rendered pairs sit on images, gradients, canvases or blend modes and are reported, not measured; components still carry pre-token literals |
+| 4. Contrast is a gate | all tokens, and every measurable pair the 89 previews render: 562 at the last run, 0 failing | 65 rendered pairs sit on images, gradients, canvases or blend modes and are reported, not measured; components still carry pre-token literals |
 | 5. One curve, one ladder | the token set | components carry 5 curves and 4 springs |
 | 6. Pills on paper | the token set | 6 card radii, 3 CTA radii in components |
 
-The motion and radius counts were measured before the September 2026 removals:
-seven components first, then twelve more on 20 September, when four card grids
-also merged into `CardGrid`. They have not been re-measured since. The nine
-components added in September each gate their own motion on reduced motion.
+Rows 2, 5 and 6 are counts of animated files and of radii, not of components,
+and they were measured before the September 2026 removals: seven components
+first, then twelve more on 20 September, when four card grids also merged into
+`CardGrid`, and then a last pass that took the library to 89. They have not
+been re-measured since, so they do not track the library total. The components
+added in September each gate their own motion on reduced motion, including the
+two annotation components added last, `SketchHighlight` and `SketchArrow`.
