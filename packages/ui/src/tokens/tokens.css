@@ -36,7 +36,7 @@
   /* Paper surfaces */
   --bz-paper: #ffffff;         /* the default ground */
   --bz-paper-sunken: #fafafa;  /* the opaque form of bg-black/[0.02], used in 5 card grids */
-  --bz-paper-raised: #f7f3ee;  /* the cream in PinchedButton / StarBorder / CelebrationOverlay */
+  --bz-paper-raised: #f7f3ee;  /* the cream in PinchedButton / BorderBeamButton / CelebrationOverlay */
 
   /* Hairlines. Opaque equivalents are given so contrast can be reasoned about. */
   --bz-line: rgba(10, 10, 10, 0.06);          /* border-black/[0.06], 4 files */
@@ -66,7 +66,7 @@
    * ------------------------------------------------------------------- */
 
   /* Brick — the house accent. Used by the newest and best-built components
-   * (PinchedButton, StarBorder, ShinyText, MagicRings, CelebrationOverlay).
+   * (PinchedButton, BorderBeamButton, ShinyText, MagicRings, CelebrationOverlay).
    * Safe both as text on paper and as a fill under white. */
   --bz-accent: #912c22;
   --bz-accent-fill: #912c22;
@@ -97,6 +97,24 @@
   --bz-danger: #b91c1c;           /* AA-CORRECTED for error text.  5.9:1 */
   --bz-danger-fill: #b91c1c;
   --bz-danger-on-fill: #ffffff;   /* 5.9:1 */
+
+  /* Accents on a dark ground.
+   *
+   * The accents above were measured against paper and are too dark to carry
+   * small text on the void surfaces, where the emerald is 3.1:1 and the amber
+   * 2.6:1. These two are the same families lightened until they clear AA on
+   * both, and they take ink rather than white when they are used as a fill.
+   * Components pick between the pairs with light-dark(), so a consumer that
+   * declares a dark color-scheme gets them and everyone else keeps the paper
+   * values.
+   *
+   * As text or a mark on void, then on void-raised: emerald 10.2 then 9.1
+   *                                                 amber   11.7 then 10.4
+   * Carrying ink as a fill:                         emerald 10.3
+   *                                                 amber   11.9 */
+  --bz-emerald-on-void: #34d399;
+  --bz-amber-on-void: #fbbf24;
+  --bz-on-void-fill: #0a0a0a;
 
   /* ---------------------------------------------------------------------
    * FOCUS

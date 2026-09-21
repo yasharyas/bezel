@@ -61,6 +61,12 @@ export const color = {
   dangerFill: "#b91c1c",
   dangerOnFill: "#ffffff",
 
+  /** The same accent families lightened for a dark ground, where the paper
+   *  emerald is 3.1:1 and the paper amber 2.6:1. Both take ink as a fill. */
+  emeraldOnVoid: "#34d399",
+  amberOnVoid: "#fbbf24",
+  onVoidFill: "#0a0a0a",
+
   focusRing: "#912c22",
   focusRingVoid: "#ffffff",
 } as const;
