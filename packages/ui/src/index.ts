@@ -108,7 +108,6 @@ export { DepthText } from "./display/DepthText";
 export { Magnet } from "./interaction/Magnet";
 export { GlareHover } from "./interaction/GlareHover";
 export { CinematicWaterBackground } from "./media/CinematicWaterBackground";
-export { ConicBorderButton } from "./buttons/ConicBorderButton";
 export { PointerGlowCard } from "./cards/PointerGlowCard";
 export { ShinyGradientText } from "./display/ShinyGradientText";
 export { BlurInReveal } from "./animation/BlurInReveal";
@@ -130,7 +129,6 @@ export { TillReceiptPrint } from "./feedback/TillReceiptPrint";
 
 // WebGL and editorial motion components
 export { MagicRings, LOADER_MAGIC_RINGS } from "./animation/MagicRings";
-export { StarBorder } from "./buttons/StarBorder";
 export { ShinyText } from "./animation/ShinyText";
 export { CircularText } from "./display/CircularText";
 export { PinchedButton } from "./buttons/PinchedButton";
@@ -149,6 +147,11 @@ export { GlyphField } from "./animation/GlyphField";
 export { DockingCard } from "./cards/DockingCard";
 export { SidewaysScroll } from "./sections/SidewaysScroll";
 export { AutoplayCarousel } from "./media/AutoplayCarousel";
-export { MessageForm } from "./forms/MessageForm";
 export { ScrollFlipDeck } from "./sections/ScrollFlipDeck";
 export type { ScrollFlipItem } from "./sections/ScrollFlipDeck";
+
+// Drawn annotation: strokes generated from a seed, no sketch library behind them
+export { SketchHighlight } from "./animation/SketchHighlight";
+export type { SketchHighlightProps, SketchMark } from "./animation/SketchHighlight";
+export { SketchArrow } from "./callouts/SketchArrow";
+export type { SketchArrowProps, SketchArrowTarget } from "./callouts/SketchArrow";

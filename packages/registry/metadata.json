@@ -456,12 +456,12 @@
   "error-boundary": {
     "name": "ErrorBoundary",
     "category": "feedback",
-    "description": "Class error boundary that swaps a crashed tree for a full-page refresh screen.",
+    "description": "Class boundary that catches a crash and offers a composed, in-place recovery screen.",
     "tags": [
       "error-boundary",
       "fallback",
       "crash",
-      "full-screen",
+      "recovery",
       "class-component"
     ]
   },
@@ -506,13 +506,14 @@
   "border-beam-button": {
     "name": "BorderBeamButton",
     "category": "buttons",
-    "description": "Button with a gradient beam that circles its border along a CSS offset path.",
+    "description": "Button ringed by a travelling beam, spinning conic or sweeping glints, in six fills.",
     "tags": [
       "button",
       "border-beam",
-      "animated",
-      "gradient",
-      "offset-path"
+      "conic-gradient",
+      "radial-gradient",
+      "ring-variants",
+      "fill-variants"
     ]
   },
   "typing-hero": {
@@ -558,7 +559,7 @@
   "formula-block": {
     "name": "FormulaBlock",
     "category": "display",
-    "description": "Centred monospace formula on an emerald tint, with an optional spaced caption.",
+    "description": "Centred monospace formula on a tinted plate, with a ruled-off spaced caption.",
     "tags": [
       "formula",
       "code",
@@ -571,21 +572,21 @@
   "callout-box": {
     "name": "CalloutBox",
     "category": "callouts",
-    "description": "Amber callout with a serif title, labelled symbol list and closing line.",
+    "description": "Amber-spined callout with a serif title, labelled symbol list and closing line.",
     "tags": [
       "callout",
       "warning",
       "alert",
       "checklist",
       "amber",
-      "gradient",
+      "notice",
       "diagnosis"
     ]
   },
   "checklist": {
     "name": "Checklist",
     "category": "lists",
-    "description": "Checklist of hairline cards, each led by a round emerald marker.",
+    "description": "Checklist of hairline cards, each led by a solid round emerald marker.",
     "tags": [
       "checklist",
       "list",
@@ -612,7 +613,7 @@
   "site-footer": {
     "name": "SiteFooter",
     "category": "layout",
-    "description": "Site footer with a glowing brand dot, mono column headings and a legal row.",
+    "description": "Wrapping site footer with a haloed brand dot, mono headings and a legal row.",
     "tags": [
       "footer",
       "grid",
@@ -674,18 +675,6 @@
       "cinematic"
     ]
   },
-  "conic-border-button": {
-    "name": "ConicBorderButton",
-    "category": "buttons",
-    "description": "Uppercase pill button ringed by a spinning conic-gradient border over grain.",
-    "tags": [
-      "conic-gradient",
-      "spinning-border",
-      "mask-composite",
-      "noise-texture",
-      "cta"
-    ]
-  },
   "pointer-glow-card": {
     "name": "PointerGlowCard",
     "category": "cards",
@@ -701,7 +690,7 @@
   "shiny-gradient-text": {
     "name": "ShinyGradientText",
     "category": "display",
-    "description": "Inline text filled with a sliding gradient that holds still under reduced motion.",
+    "description": "Text filled with a narrow metal sweep, legible on both light and dark grounds.",
     "tags": [
       "shiny-text",
       "gradient",
@@ -858,7 +847,7 @@
   "scroll-parallax-layer": {
     "name": "ScrollParallaxLayer",
     "category": "animation",
-    "description": "Scroll-scrubbed parallax wrapper that drifts and rotates children, with a petal field.",
+    "description": "Scroll-scrubbed depth plane that drifts, scales, blurs and fades, with a petal field.",
     "tags": [
       "parallax",
       "scrolltrigger",
@@ -889,19 +878,8 @@
       "shader",
       "rings",
       "parallax",
-      "loader-backdrop"
-    ]
-  },
-  "star-border": {
-    "name": "StarBorder",
-    "category": "buttons",
-    "description": "Button with light glints sweeping its top and bottom edges, in three tones.",
-    "tags": [
-      "border-beam",
-      "radial-gradient",
-      "cta",
-      "hover-lift",
-      "css-keyframes"
+      "loader-backdrop",
+      "hero"
     ]
   },
   "shiny-text": {
@@ -1107,19 +1085,6 @@
       "pause"
     ]
   },
-  "message-form": {
-    "name": "MessageForm",
-    "category": "forms",
-    "description": "Form with announced errors, focus to the first one and honest sending states.",
-    "tags": [
-      "form",
-      "validation",
-      "aria-invalid",
-      "live-region",
-      "async",
-      "accessible"
-    ]
-  },
   "scroll-flip-deck": {
     "name": "ScrollFlipDeck",
     "category": "sections",
@@ -1131,6 +1096,33 @@
       "pinned",
       "sticky",
       "gallery",
+      "reduced-motion"
+    ]
+  },
+  "sketch-highlight": {
+    "name": "SketchHighlight",
+    "category": "animation",
+    "description": "Seeded marker wash, underline or strike whose ink boils between three takes.",
+    "tags": [
+      "annotation",
+      "highlight",
+      "underline",
+      "hand-drawn",
+      "svg",
+      "colors",
+      "reduced-motion"
+    ]
+  },
+  "sketch-arrow": {
+    "name": "SketchArrow",
+    "category": "callouts",
+    "description": "Hand-drawn arrow between two elements that re-measures when either one moves.",
+    "tags": [
+      "annotation",
+      "arrow",
+      "callout",
+      "hand-drawn",
+      "svg",
       "reduced-motion"
     ]
   }

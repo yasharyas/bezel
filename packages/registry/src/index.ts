@@ -3411,57 +3411,435 @@ export function StickyNavbar({
     slug: "error-boundary",
     path: "feedback/ErrorBoundary.tsx",
     category: "feedback",
-    code: `import { Component, type ReactNode } from "react";
+    code: `"use client";
 
-interface Props {
+import { Component, Fragment, type CSSProperties, type ErrorInfo, type ReactNode } from "react";
+
+type FallbackArgs = { error: Error | null; reset: () => void };
+
+export interface ErrorBoundaryProps {
   children: ReactNode;
-  icon?: string;
+  /** The mark inside the broken seal. Defaults to a crack that draws itself. */
+  icon?: ReactNode;
+  /** The eyebrow above the headline. */
+  eyebrow?: string;
   title?: string;
   description?: string;
   buttonLabel?: string;
+  /** Stamped on the tag that hangs off the corner. */
+  code?: string;
+  /** The technical line under the message. Defaults to the caught error's own. */
+  detail?: string;
+  /** Replaces the whole fallback, and is handed the error and the reset. */
+  fallback?: ReactNode | ((args: FallbackArgs) => ReactNode);
+  /** Runs once the boundary has cleared the error and remounted its children. */
+  onReset?: () => void;
+  /** Runs on the catch. Without it the error is logged, never swallowed. */
+  onError?: (error: Error, info: ErrorInfo) => void;
+  /** Fill the viewport. Turn it off to wrap one region of a page. */
+  fullScreen?: boolean;
+  className?: string;
 }
 
 interface State {
-  hasError: boolean;
+  error: Error | null;
+  /** Bumped on every reset so the subtree remounts clean instead of resuming. */
+  attempt: number;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
+/*
+ * The fallback is styled here rather than in a stylesheet so the file stays a
+ * single copy-paste unit. Every colour reads a --bz-* token first, so the same
+ * markup themes to paper or to dark without a variant prop.
+ *
+ * Resting styles are the composed, finished state. Motion is added only inside
+ * the prefers-reduced-motion: no-preference block, and every animation is
+ * one-shot: an error screen that pulses is exhausting to sit in front of.
+ */
+const STYLES = \`
+.bz-eb {
+  --bz-eb-ease: var(--bz-ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+  --bz-eb-spring: var(--bz-ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+  /* How far the loose pieces sit outside the panel. Always smaller than the
+     ground padding below, so nothing can reach an edge and start a scrollbar. */
+  --bz-eb-out: clamp(12px, 4vw, 34px);
+  position: relative;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: clamp(36px, 6.5vw, 72px) clamp(30px, 7vw, 72px);
+  background: var(--bz-paper-sunken, #fafafa);
+  color: var(--bz-ink, #0a0a0a);
+  font-family: var(--bz-font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+}
+.bz-eb--screen { min-height: 100vh; }
+.bz-eb::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(118% 80% at 50% 34%, var(--bz-paper, #ffffff) 0%, transparent 62%);
+}
+.bz-eb *, .bz-eb *::before, .bz-eb *::after { box-sizing: border-box; }
+
+.bz-eb__stage {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* Offset planes. They read as the pages stacked under the one that failed. */
+.bz-eb__plane {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: var(--bz-radius-2xl, 24px);
+  border: 1px solid var(--bz-line, rgba(10, 10, 10, 0.06));
+  background: var(--bz-eb-bg, var(--bz-paper, #ffffff));
+  box-shadow: 0 12px 26px -20px rgba(10, 10, 10, 0.55);
+  transform: translateY(var(--bz-eb-y, 0)) rotate(var(--bz-eb-rot, 0deg));
+}
+
+.bz-eb__panel {
+  position: relative;
+  z-index: 2;
+  border-radius: var(--bz-radius-2xl, 24px);
+  border: 1px solid var(--bz-line-strong, rgba(10, 10, 10, 0.13));
+  background: var(--bz-paper, #ffffff);
+  padding: clamp(42px, 8vw, 52px) clamp(22px, 5vw, 34px) clamp(24px, 5vw, 32px);
+  box-shadow: 0 1px 1px rgba(10, 10, 10, 0.04), 0 28px 54px -30px rgba(10, 10, 10, 0.6);
+}
+
+/* The broken seal, sitting half above the panel's top edge. */
+.bz-eb__seal {
+  position: absolute;
+  z-index: 3;
+  top: -28px;
+  left: clamp(22px, 5vw, 34px);
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid var(--bz-line-strong, rgba(10, 10, 10, 0.13));
+  background: var(--bz-paper-raised, #f7f3ee);
+  box-shadow: 0 10px 22px -14px rgba(10, 10, 10, 0.65);
+}
+.bz-eb__seal svg { width: 30px; height: 30px; display: block; }
+.bz-eb__ring { fill: none; stroke: var(--bz-line-control, #8a8a8e); stroke-width: 1.25; }
+.bz-eb__crack { fill: none; stroke: var(--bz-danger, #b91c1c); stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The tag hanging off the top-right corner. */
+.bz-eb__tag {
+  position: absolute;
+  z-index: 3;
+  top: calc(var(--bz-eb-out) * -0.5);
+  right: calc(var(--bz-eb-out) * -1);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--bz-ink, #0a0a0a);
+  color: var(--bz-paper, #ffffff);
+  font-family: var(--bz-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: var(--bz-text-2xs, 0.6875rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 12px 24px -14px rgba(10, 10, 10, 0.8);
+  transform: rotate(5deg);
+}
+.bz-eb__tag i {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--bz-danger-decor, #ef4444);
+}
+
+/* Fragments thrown clear of the right edge. */
+.bz-eb__shard {
+  position: absolute;
+  z-index: 3;
+  /* A negative push straddles the edge, so the piece reads as broken off the
+     panel rather than as decoration parked beside it. */
+  right: calc(var(--bz-eb-out) * var(--bz-eb-push, -1));
+  top: var(--bz-eb-y, 40%);
+  width: var(--bz-eb-size, 30px);
+  height: var(--bz-eb-size, 30px);
+  border-radius: var(--bz-eb-radius, 8px);
+  background: var(--bz-eb-fill, var(--bz-paper, #ffffff));
+  border: 1px solid var(--bz-eb-edge, var(--bz-line-strong, rgba(10, 10, 10, 0.13)));
+  box-shadow: 0 10px 20px -14px rgba(10, 10, 10, 0.7);
+  transform: rotate(var(--bz-eb-rot, 0deg));
+}
+
+/* The boundary itself, drawn as a dashed arc through the bottom-left corner. */
+.bz-eb__arc {
+  position: absolute;
+  z-index: 1;
+  left: calc(var(--bz-eb-out) * -1);
+  bottom: calc(var(--bz-eb-out) * -1);
+  width: 158px;
+  height: 158px;
+  border-radius: 999px;
+  border: 2px dashed var(--bz-line-strong, rgba(10, 10, 10, 0.13));
+}
+
+.bz-eb__eyebrow {
+  margin: 0;
+  font-family: var(--bz-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: var(--bz-text-2xs, 0.6875rem);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--bz-ink-subtle, #6b6b70);
+}
+.bz-eb__title {
+  margin: 10px 0 0;
+  font-family: var(--bz-font-serif, Georgia, "Times New Roman", serif);
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 1.875rem);
+  font-weight: var(--bz-weight-medium, 500);
+  line-height: var(--bz-leading-tight, 1.15);
+  letter-spacing: -0.01em;
+  color: var(--bz-ink, #0a0a0a);
+}
+.bz-eb__body {
+  margin: 12px 0 0;
+  font-size: var(--bz-text-sm, 0.875rem);
+  line-height: var(--bz-leading-normal, 1.55);
+  color: var(--bz-ink-muted, #4a4a4c);
+}
+.bz-eb__detail {
+  margin: 18px 0 0;
+  padding: 10px 12px 10px 14px;
+  border-radius: var(--bz-radius-md, 10px);
+  border: 1px solid var(--bz-line, rgba(10, 10, 10, 0.06));
+  border-left: 3px solid var(--bz-danger-decor, #ef4444);
+  background: var(--bz-paper-sunken, #fafafa);
+  font-family: var(--bz-font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: var(--bz-text-xs, 0.75rem);
+  line-height: var(--bz-leading-snug, 1.35);
+  color: var(--bz-ink-muted, #4a4a4c);
+  overflow-wrap: anywhere;
+}
+.bz-eb__actions { margin: 22px 0 0; }
+.bz-eb__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: var(--bz-target-min, 48px);
+  padding: 0 24px;
+  border: 0;
+  border-radius: var(--bz-radius-full, 999px);
+  background: var(--bz-accent-fill, #912c22);
+  color: var(--bz-accent-on-fill, #ffffff);
+  font-family: inherit;
+  font-size: var(--bz-text-sm, 0.875rem);
+  font-weight: var(--bz-weight-semibold, 600);
+  cursor: pointer;
+}
+.bz-eb__button:hover { filter: saturate(1.08) brightness(0.9); }
+.bz-eb__button:focus-visible {
+  outline: var(--bz-focus-width, 2px) solid var(--bz-focus-ring, #912c22);
+  outline-offset: var(--bz-focus-offset, 2px);
+}
+.bz-eb__button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .bz-eb__button { transition: filter var(--bz-duration-fast, 150ms) var(--bz-eb-ease); }
+  .bz-eb__button:active { transform: scale(0.97); }
+
+  .bz-eb__plane { animation: bz-eb-plane 620ms var(--bz-eb-ease) both; animation-delay: var(--bz-eb-delay, 0ms); }
+  .bz-eb__panel { animation: bz-eb-panel 560ms var(--bz-eb-ease) both 70ms; }
+  .bz-eb__arc { animation: bz-eb-arc 700ms var(--bz-eb-ease) both 170ms; }
+  .bz-eb__seal { animation: bz-eb-seal 480ms var(--bz-eb-spring) both 170ms; }
+  .bz-eb__crack { animation: bz-eb-crack 560ms var(--bz-eb-ease) both 300ms; }
+  .bz-eb__tag { animation: bz-eb-tag 520ms var(--bz-eb-spring) both 210ms; }
+  .bz-eb__shard { animation: bz-eb-shard 600ms var(--bz-eb-spring) both; animation-delay: var(--bz-eb-delay, 0ms); }
+  .bz-eb__line { animation: bz-eb-line 460ms var(--bz-eb-ease) both; animation-delay: var(--bz-eb-delay, 0ms); }
+
+  @keyframes bz-eb-plane {
+    from { opacity: 0; transform: translateY(0) rotate(0deg); }
+    to { opacity: 1; transform: translateY(var(--bz-eb-y, 0)) rotate(var(--bz-eb-rot, 0deg)); }
+  }
+  @keyframes bz-eb-panel {
+    from { opacity: 0; transform: translateY(20px) scale(0.965); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes bz-eb-arc {
+    from { opacity: 0; transform: scale(0.72) rotate(-26deg); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes bz-eb-seal {
+    from { opacity: 0; transform: translateY(8px) scale(0.6); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes bz-eb-crack {
+    from { stroke-dashoffset: 1; }
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes bz-eb-tag {
+    from { opacity: 0; transform: translate(-22px, 10px) rotate(-10deg) scale(0.8); }
+    to { opacity: 1; transform: rotate(5deg); }
+  }
+  @keyframes bz-eb-shard {
+    from { opacity: 0; transform: translate(calc(var(--bz-eb-out) * -1.6), 14px) rotate(0deg) scale(0.4); }
+    to { opacity: 1; transform: rotate(var(--bz-eb-rot, 0deg)); }
+  }
+  @keyframes bz-eb-line {
+    from { opacity: 0; transform: translateY(9px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+\`;
+
+/** Rotation, offset and fill for the three fragments flung past the right edge. */
+const SHARDS = [
+  { size: "46px", radius: "13px", top: "19%", rot: "14deg", push: "-0.45", delay: "250ms", fill: "var(--bz-paper, #ffffff)" },
+  { size: "20px", radius: "6px", top: "45%", rot: "-20deg", push: "-1", delay: "300ms", fill: "var(--bz-danger-decor, #ef4444)", edge: "transparent" },
+  { size: "13px", radius: "4px", top: "62%", rot: "28deg", push: "-0.2", delay: "350ms", fill: "var(--bz-ink, #0a0a0a)", edge: "transparent" },
+];
+
+function CrackMark() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden focusable="false">
+      <circle className="bz-eb__ring" cx="16" cy="16" r="13.5" />
+      <path className="bz-eb__crack" d="M18.5 5.5 12.6 15h5.6L13 26.5" pathLength={1} strokeDasharray={1} />
+    </svg>
+  );
+}
+
+/**
+ * Catches a render error anywhere below it and puts up a composed recovery
+ * screen: stacked planes, a cracked seal across the panel's top edge, a code
+ * tag and fragments thrown past the boundary. The retry clears the error and
+ * remounts the subtree, so recovery happens in place rather than by reload.
+ */
+export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
+  state: State = { error: null, attempt: 0 };
+
+  static getDerivedStateFromError(error: Error): Partial<State> {
+    return { error };
   }
 
-  static getDerivedStateFromError(): State {
-    return { hasError: true };
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    if (this.props.onError) this.props.onError(error, info);
+    else console.error("ErrorBoundary caught an error below it.", error, info.componentStack);
   }
+
+  reset = () => {
+    this.setState((prev) => ({ error: null, attempt: prev.attempt + 1 }));
+    this.props.onReset?.();
+  };
 
   render() {
-    if (this.state.hasError) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-6">
-          <div className="text-center max-w-md">
-            <span className="text-6xl block mb-4">{this.props.icon ?? "⚠️"}</span>
-            <h1 className="text-2xl font-bold text-neutral-900 mb-3">
-              {this.props.title ?? "Something went wrong"}
-            </h1>
-            <p className="text-neutral-500 text-sm mb-6 leading-relaxed">
-              {this.props.description ?? "An unexpected error occurred. Please try refreshing the page."}
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-neutral-900 text-white px-8 py-3 rounded-full font-medium text-sm hover:bg-neutral-700 transition-colors cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
-            >
-              {this.props.buttonLabel ?? "Refresh Page"}
-            </button>
-          </div>
-        </div>
-      );
+    const { error, attempt } = this.state;
+
+    // The key remounts the subtree, so a child that failed half way through
+    // starts again rather than resuming from whatever state it died in.
+    if (!error) return <Fragment key={attempt}>{this.props.children}</Fragment>;
+
+    const {
+      icon,
+      eyebrow = "Boundary caught it",
+      title = "Something went wrong",
+      description = "This part of the page stopped rendering. Everything around it kept working.",
+      buttonLabel = "Try again",
+      code = "Error 500",
+      detail,
+      fallback,
+      fullScreen = true,
+      className,
+    } = this.props;
+
+    if (fallback) {
+      return <>{typeof fallback === "function" ? fallback({ error, reset: this.reset }) : fallback}</>;
     }
-    return this.props.children;
+
+    const line = detail ?? error.message;
+
+    return (
+      <div className={\`bz-eb\${fullScreen ? " bz-eb--screen" : ""}\${className ? \` \${className}\` : ""}\`}>
+        <style>{STYLES}</style>
+
+        <div className="bz-eb__stage">
+          <div
+            className="bz-eb__plane"
+            aria-hidden
+            style={{ "--bz-eb-y": "24px", "--bz-eb-rot": "-2.6deg", "--bz-eb-bg": "var(--bz-paper-raised, #f7f3ee)", "--bz-eb-delay": "0ms" } as CSSProperties}
+          />
+          <div
+            className="bz-eb__plane"
+            aria-hidden
+            style={{ "--bz-eb-y": "12px", "--bz-eb-rot": "1.8deg", "--bz-eb-delay": "55ms" } as CSSProperties}
+          />
+          <div className="bz-eb__arc" aria-hidden />
+
+          <div className="bz-eb__panel" role="alert">
+            <span className="bz-eb__seal" aria-hidden>
+              {icon ?? <CrackMark />}
+            </span>
+
+            <p className="bz-eb__eyebrow bz-eb__line" style={{ "--bz-eb-delay": "190ms" } as CSSProperties}>
+              {eyebrow}
+            </p>
+            <h2 className="bz-eb__title bz-eb__line" style={{ "--bz-eb-delay": "240ms" } as CSSProperties}>
+              {title}
+            </h2>
+            <p className="bz-eb__body bz-eb__line" style={{ "--bz-eb-delay": "290ms" } as CSSProperties}>
+              {description}
+            </p>
+            {line ? (
+              <p className="bz-eb__detail bz-eb__line" style={{ "--bz-eb-delay": "340ms" } as CSSProperties}>
+                {line}
+              </p>
+            ) : null}
+            <div className="bz-eb__actions bz-eb__line" style={{ "--bz-eb-delay": "390ms" } as CSSProperties}>
+              <button type="button" className="bz-eb__button" onClick={this.reset}>
+                <svg viewBox="0 0 24 24" aria-hidden focusable="false">
+                  <path d="M20 11a8 8 0 1 0-2.3 6.3" />
+                  <path d="M20 4.5V11h-6.5" />
+                </svg>
+                {buttonLabel}
+              </button>
+            </div>
+          </div>
+
+          {code ? (
+            <span className="bz-eb__tag" aria-hidden>
+              <i />
+              {code}
+            </span>
+          ) : null}
+
+          {SHARDS.map((shard) => (
+            <span
+              key={shard.top}
+              className="bz-eb__shard"
+              aria-hidden
+              style={
+                {
+                  "--bz-eb-size": shard.size,
+                  "--bz-eb-radius": shard.radius,
+                  "--bz-eb-y": shard.top,
+                  "--bz-eb-rot": shard.rot,
+                  "--bz-eb-push": shard.push,
+                  "--bz-eb-fill": shard.fill,
+                  "--bz-eb-edge": shard.edge ?? "var(--bz-line-strong, rgba(10, 10, 10, 0.13))",
+                  "--bz-eb-delay": shard.delay,
+                } as CSSProperties
+              }
+            />
+          ))}
+        </div>
+      </div>
+    );
   }
 }`,
-    description: "Class error boundary that swaps a crashed tree for a full-page refresh screen.",
-    tags: ["error-boundary", "fallback", "crash", "full-screen", "class-component"],
+    description: "Class boundary that catches a crash and offers a composed, in-place recovery screen.",
+    tags: ["error-boundary", "fallback", "crash", "recovery", "class-component"],
   },
   {
     name: "StickyNav",
@@ -3645,77 +4023,449 @@ export function ShinyBadge({ spark = "✦", text }: Props) {
     slug: "border-beam-button",
     path: "buttons/BorderBeamButton.tsx",
     category: "buttons",
-    code: `import { useEffect, useRef } from "react";
+    code: `"use client";
 
-type Props = {
-  label: string;
-  variant?: "primary" | "ghost";
-  onClick?: () => void;
-  href?: string;
+import { useEffect, useState } from "react";
+import type {
+  AnchorHTMLAttributes,
+  ButtonHTMLAttributes,
+  CSSProperties,
+  ReactNode,
+} from "react";
+
+function cn(...parts: Array<string | false | null | undefined>) {
+  return parts.filter(Boolean).join(" ");
+}
+
+/**
+ * The surface under the label: its colour, radius and label case. This is the
+ * variant axis, so a new surface is one entry in the union and one CSS block.
+ */
+export type BorderBeamFill = "ink" | "ghost" | "jade" | "cream" | "crimson" | "gold";
+
+/**
+ * How the border is drawn. All three treatments share one ring layer, so a new
+ * treatment only has to fill that layer differently: a beam travelling an
+ * offset path, a spinning conic ring, or glints sweeping the long edges.
+ */
+export type BorderBeamRing = "beam" | "conic" | "star";
+
+/** Each fill keeps the ring it shipped with. Pass \`ring\` to mix them. */
+const FILL_RING: Record<BorderBeamFill, BorderBeamRing> = {
+  ink: "beam",
+  ghost: "beam",
+  jade: "conic",
+  cream: "star",
+  crimson: "star",
+  gold: "star",
 };
 
-const beamStyle = \`
-  @keyframes border-beam-travel { to { offset-distance: 100%; } }
-  .beam-btn { position: relative; isolation: isolate; overflow: hidden; }
-  .beam-btn:focus-visible { outline: 2px solid #912c22; outline-offset: 2px; }
-  .beam-border {
-    position: absolute; inset: 0; border-radius: inherit;
-    pointer-events: none; z-index: 1; padding: 1px;
-    background: rgba(255,255,255,0.09);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-  }
-  .beam-dot {
-    position: absolute; width: 80px; aspect-ratio: 1;
-    background: linear-gradient(to left, #ffaa40, #9c40ff, transparent);
-    offset-path: rect(0 100% 100% 0 round 10px);
-    offset-distance: 0%;
-    animation: border-beam-travel 4s linear infinite;
-  }
-  @media (prefers-reduced-motion: reduce) { .beam-dot { animation: none; } }
-\`;
+type Shared = {
+  children?: ReactNode;
+  /** Label text. \`children\` wins when both are given. */
+  label?: string;
+  fill?: BorderBeamFill;
+  /** The earlier name for the two flat fills: primary is \`ink\`. */
+  variant?: "primary" | "ghost";
+  ring?: BorderBeamRing;
+  /** Three ring stops. The beam takes the first two, the glints the first. */
+  colors?: [string, string, string];
+  /** Seconds for one pass of the ring. */
+  spinDuration?: number;
+  /** Pixels of bare surface the star glints sweep through, top and bottom. */
+  thickness?: number;
+  /** Grain over the surface. On under the jade fill, off under the others. */
+  textured?: boolean;
+  className?: string;
+  style?: CSSProperties;
+};
 
-export function BorderBeamButton({ label, variant = "primary", onClick, href }: Props) {
-  const ref = useRef<HTMLButtonElement & HTMLAnchorElement>(null);
+type AsButton = Shared &
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className" | "style" | "children"> & {
+    href?: undefined;
+  };
 
+type AsLink = Shared &
+  Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "className" | "style" | "children" | "href"> & {
+    href: string;
+  };
+
+export type BorderBeamButtonProps = AsButton | AsLink;
+
+const GRAIN =
+  "data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E";
+
+export function BorderBeamButton(props: BorderBeamButtonProps) {
+  const {
+    children,
+    label,
+    fill,
+    variant,
+    ring,
+    colors,
+    spinDuration,
+    thickness,
+    textured,
+    className,
+    style,
+    href,
+    ...rest
+  } = props;
+
+  const resolvedFill: BorderBeamFill = fill ?? (variant === "ghost" ? "ghost" : "ink");
+  const resolvedRing: BorderBeamRing = ring ?? FILL_RING[resolvedFill];
+  const grain = textured ?? resolvedFill === "jade";
+  const [c0, c1, c2] = colors ?? [];
+
+  // A backgrounded tab paints nothing, but the ring keeps its place in the
+  // timeline, so it would jump on return. Park it instead.
+  const [running, setRunning] = useState(true);
   useEffect(() => {
-    const btn = ref.current;
-    if (!btn) return;
-    const border = document.createElement("span");
-    border.className = "beam-border";
-    border.setAttribute("aria-hidden", "true");
-    const dot = document.createElement("span");
-    dot.className = "beam-dot";
-    border.appendChild(dot);
-    btn.appendChild(border);
-    return () => border.remove();
+    const sync = () => setRunning(document.visibilityState !== "hidden");
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
   }, []);
 
-  const base =
-    "beam-btn inline-flex items-center justify-center px-5 py-[11px] rounded-[10px] text-sm font-medium tracking-[0.01em] border cursor-pointer transition-[transform,filter] duration-200 relative overflow-hidden no-underline active:scale-[0.97]";
-  const primary = "bg-[#0a0a0a] text-[#fafafa] border-[#0a0a0a] hover:-translate-y-px hover:brightness-105";
-  const ghost = "bg-transparent text-[#1a1a1a] border-black/[0.13] hover:bg-transparent";
+  const mergedStyle = {
+    ...style,
+    ...(colors
+      ? {
+          ["--border-btn-0" as string]: c0,
+          ["--border-btn-1" as string]: c1,
+          ["--border-btn-2" as string]: c2,
+          ["--border-btn-beam-a" as string]: c0,
+          ["--border-btn-beam-b" as string]: c1,
+          ["--border-btn-glint" as string]: c0,
+        }
+      : null),
+    ...(spinDuration ? { ["--border-btn-dur" as string]: \`\${spinDuration}s\` } : null),
+    ...(thickness ? { ["--border-btn-star-thickness" as string]: \`\${thickness}px\` } : null),
+  } as CSSProperties;
 
-  const cls = \`\${base} \${variant === "primary" ? primary : ghost}\`;
+  const classes = cn(
+    "border-btn",
+    \`border-btn--\${resolvedFill}\`,
+    \`border-btn--ring-\${resolvedRing}\`,
+    grain && "border-btn--textured",
+    className,
+  );
+
+  const body = (
+    <>
+      <span
+        className={cn("border-btn__ring", \`border-btn__ring--\${resolvedRing}\`)}
+        aria-hidden="true"
+      >
+        {resolvedRing === "beam" ? <span className="border-btn__beam" /> : null}
+        {resolvedRing === "star" ? (
+          <>
+            <span className="border-btn__glint border-btn__glint--top" />
+            <span className="border-btn__glint border-btn__glint--bottom" />
+          </>
+        ) : null}
+      </span>
+      {/* The star ring shows through a surface that pulls back from the long
+       * edges, so only that ring needs one. */}
+      {resolvedRing === "star" ? <span className="border-btn__surface" aria-hidden="true" /> : null}
+      <span className="border-btn__label">{children ?? label}</span>
+    </>
+  );
 
   return (
     <>
-      <style>{beamStyle}</style>
-      {href ? (
-        <a href={href} className={cls} ref={ref as React.Ref<HTMLAnchorElement>}>
-          {label}
+      <style>{\`
+        @property --border-btn-ang {
+          syntax: "<angle>";
+          inherits: false;
+          initial-value: 0deg;
+        }
+        .border-btn {
+          --border-btn-radius: var(--bz-radius-md, 10px);
+          --border-btn-ring-width: 1px;
+          --border-btn-0: #b8701c;
+          --border-btn-1: #4b3a8f;
+          --border-btn-2: #4f7d10;
+          --border-btn-glint: hsl(38 45% 52%);
+          /* One curve and one state-flip duration for every treatment, taken
+           * from the tokens: the library collapsed its five near-identical
+           * editorial ease-outs to this one. */
+          --border-btn-ease: var(--bz-ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+          --border-btn-flip: var(--bz-duration-fast, 150ms);
+          position: relative;
+          isolation: isolate;
+          overflow: hidden;
+          box-sizing: border-box;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          min-height: 2.75rem;
+          padding: 0 1.25rem;
+          border: 0;
+          border-radius: var(--border-btn-radius);
+          /* The fill is a variable so the star ring can hand it to its inset
+           * surface instead, and one hover rule serves both. */
+          background: var(--border-btn-fill, transparent);
+          font: inherit;
+          font-size: 0.875rem;
+          font-weight: 500;
+          letter-spacing: 0.01em;
+          text-decoration: none;
+          cursor: pointer;
+          transition: transform var(--border-btn-flip) var(--border-btn-ease),
+            background-color var(--border-btn-flip) var(--border-btn-ease);
+        }
+        .border-btn--ink {
+          --border-btn-fill: var(--bz-ink, #0a0a0a);
+          color: var(--bz-paper-sunken, #fafafa);
+        }
+        .border-btn--ghost {
+          --border-btn-fill: transparent;
+          color: var(--bz-ink, #0a0a0a);
+        }
+        .border-btn--jade {
+          --border-btn-radius: var(--bz-radius-full, 999px);
+          --border-btn-ring-width: 2px;
+          --border-btn-fill: linear-gradient(135deg, #00706a, #004b46);
+          color: #f5fff9;
+          font-size: 0.78125rem;
+          font-weight: 700;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+        }
+        .border-btn--cream,
+        .border-btn--crimson,
+        .border-btn--gold { letter-spacing: 0.02em; }
+        .border-btn--cream {
+          --border-btn-fill: var(--bz-paper-raised, #f7f3ee);
+          --border-btn-edge: hsl(40 12% 82%);
+          color: hsl(20 8% 18%);
+        }
+        .border-btn--crimson {
+          --border-btn-fill: hsl(5 62% 35%);
+          --border-btn-edge: hsl(5 62% 35% / 0.3);
+          --border-btn-glint: hsl(5 62% 35%);
+          color: var(--bz-paper-raised, #f7f3ee);
+        }
+        .border-btn--gold {
+          --border-btn-fill: hsl(38 45% 52%);
+          --border-btn-edge: hsl(38 45% 52% / 0.35);
+          color: #1c1917;
+        }
+        .border-btn__ring {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          border-radius: inherit;
+          pointer-events: none;
+        }
+        .border-btn__ring--beam,
+        .border-btn__ring--conic {
+          padding: var(--border-btn-ring-width);
+          -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          -webkit-mask-composite: xor;
+                  mask-composite: exclude;
+        }
+        .border-btn__ring--beam { background: rgba(255, 255, 255, 0.09); }
+        /* Ghost has no surface and cream barely separates from paper, so for
+         * both the ring carries the control boundary and has to be seen:
+         * 3.4:1 on paper. */
+        .border-btn--ghost .border-btn__ring--beam,
+        .border-btn--cream .border-btn__ring--beam {
+          background: var(--bz-line-control, #8a8a8e);
+        }
+        .border-btn__ring--conic {
+          opacity: 0.9;
+          background: conic-gradient(
+            from var(--border-btn-ang, 0deg),
+            var(--border-btn-0),
+            var(--border-btn-1),
+            var(--border-btn-2),
+            var(--border-btn-0)
+          );
+          animation: border-btn-spin var(--border-btn-dur, 3.2s) linear infinite;
+        }
+        .border-btn__beam {
+          position: absolute;
+          width: 80px;
+          aspect-ratio: 1;
+          background: linear-gradient(
+            to left,
+            var(--border-btn-beam-a, #ffaa40),
+            var(--border-btn-beam-b, #9c40ff),
+            transparent
+          );
+          offset-path: rect(0 100% 100% 0 round var(--border-btn-radius));
+          offset-distance: 0%;
+          animation: border-btn-travel var(--border-btn-dur, 4s) linear infinite;
+        }
+        /* The star ring reads as light escaping past the surface, so the ring
+         * and the surface both sit behind, glints first. */
+        .border-btn--ring-star {
+          --border-btn-radius: 0.625rem;
+          background: transparent;
+          min-height: calc(2.75rem + 2 * var(--border-btn-star-thickness, 2px));
+          padding: 0 calc(1.25rem + 1px);
+          transition: transform var(--border-btn-flip) var(--border-btn-ease);
+        }
+        .border-btn__ring--star { z-index: -1; }
+        .border-btn__surface {
+          position: absolute;
+          inset: var(--border-btn-star-thickness, 2px) 0;
+          z-index: -1;
+          box-sizing: border-box;
+          border: 1px solid var(--border-btn-edge, transparent);
+          /* Inset from the button box by the ring thickness, so the surface
+           * keeps the box's radius off the scale rather than picking its own. */
+          border-radius: calc(var(--border-btn-radius) - var(--border-btn-star-thickness, 2px));
+          background: var(--border-btn-fill, transparent);
+          box-shadow: 0 4px 14px -10px hsl(5 62% 22% / 0.2);
+          pointer-events: none;
+          transition: background-color var(--border-btn-flip) var(--border-btn-ease),
+            border-color var(--border-btn-flip) var(--border-btn-ease),
+            box-shadow var(--border-btn-flip) var(--border-btn-ease);
+        }
+        .border-btn__glint {
+          position: absolute;
+          width: 300%;
+          height: 50%;
+          opacity: 0.65;
+          border-radius: 50%;
+          pointer-events: none;
+          background: radial-gradient(circle, var(--border-btn-glint), transparent 10%);
+        }
+        .border-btn__glint--top {
+          top: -12px;
+          left: -250%;
+          animation: border-btn-glint-top var(--border-btn-dur, 5s) linear infinite alternate;
+        }
+        .border-btn__glint--bottom {
+          bottom: -12px;
+          right: -250%;
+          animation: border-btn-glint-bottom var(--border-btn-dur, 5s) linear infinite alternate;
+        }
+        .border-btn--textured::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          border-radius: inherit;
+          pointer-events: none;
+          opacity: 0.22;
+          mix-blend-mode: soft-light;
+          background-image: url("\${GRAIN}");
+        }
+        .border-btn--ring-star.border-btn--textured::before {
+          inset: var(--border-btn-star-thickness, 2px) 0;
+          border-radius: 0.5rem;
+        }
+        .border-btn__label {
+          position: relative;
+          z-index: 2;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          white-space: nowrap;
+        }
+        .border-btn__label svg {
+          transition: transform var(--border-btn-flip) var(--border-btn-ease);
+        }
+        /* The button clips its own ring, so the focus indicator is drawn as two
+         * shadows rather than an outline. The gap and the ring still come off
+         * the focus tokens, so it is the system's 2px at 2px offset. */
+        .border-btn:focus-visible {
+          outline: none;
+          box-shadow: 0 0 0 var(--bz-focus-offset, 2px) var(--bz-paper, #ffffff),
+            0 0 0 calc(var(--bz-focus-offset, 2px) + var(--bz-focus-width, 2px))
+              var(--bz-focus-ring, #912c22);
+        }
+        .border-btn:disabled { cursor: not-allowed; opacity: 0.5; }
+        .border-btn:disabled .border-btn__beam,
+        .border-btn:disabled .border-btn__ring--conic { animation-play-state: paused; }
+        .border-btn:disabled .border-btn__glint {
+          animation-play-state: paused;
+          opacity: 0.25;
+        }
+        .border-btn[data-running="false"] .border-btn__beam,
+        .border-btn[data-running="false"] .border-btn__ring--conic,
+        .border-btn[data-running="false"] .border-btn__glint {
+          animation-play-state: paused;
+        }
+        .border-btn:active:not(:disabled) { transform: scale(0.97); }
+        @media (hover: hover) and (pointer: fine) {
+          .border-btn:hover:not(:disabled) { transform: translateY(-2px); }
+          .border-btn--ring-star:hover:not(:disabled) { transform: translateY(-3px); }
+          .border-btn--ink:hover:not(:disabled) {
+            --border-btn-fill: var(--bz-void-raised, #1a1a1a);
+          }
+          .border-btn--ghost:hover:not(:disabled) {
+            --border-btn-fill: var(--bz-paper-sunken, #fafafa);
+          }
+          .border-btn--cream:hover:not(:disabled) {
+            --border-btn-fill: #efe9e1;
+            --border-btn-edge: hsl(38 45% 52% / 0.4);
+          }
+          .border-btn--crimson:hover:not(:disabled) .border-btn__surface,
+          .border-btn--gold:hover:not(:disabled) .border-btn__surface {
+            filter: brightness(1.03);
+          }
+          .border-btn--ring-star:hover:not(:disabled) .border-btn__surface {
+            box-shadow: 0 14px 28px -12px hsl(5 62% 22% / 0.38);
+          }
+          .border-btn--ring-star:hover:not(:disabled) .border-btn__label svg:last-child {
+            transform: translateX(3px);
+          }
+          .border-btn:active:not(:disabled) { transform: translateY(-1px) scale(0.97); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .border-btn,
+          .border-btn__surface,
+          .border-btn__label svg { transition: none; }
+          .border-btn:hover:not(:disabled),
+          .border-btn:active:not(:disabled) { transform: none; }
+          .border-btn__beam,
+          .border-btn__ring--conic { animation: none; }
+          .border-btn__glint { animation: none; opacity: 0.35; }
+        }
+        @keyframes border-btn-travel { to { offset-distance: 100%; } }
+        @keyframes border-btn-spin { to { --border-btn-ang: 360deg; } }
+        @keyframes border-btn-glint-top {
+          0% { transform: translate(0%, 0%); opacity: 1; }
+          100% { transform: translate(100%, 0%); opacity: 0; }
+        }
+        @keyframes border-btn-glint-bottom {
+          0% { transform: translate(0%, 0%); opacity: 1; }
+          100% { transform: translate(-100%, 0%); opacity: 0; }
+        }
+      \`}</style>
+      {typeof href === "string" ? (
+        <a
+          className={classes}
+          style={mergedStyle}
+          data-running={running ? "true" : "false"}
+          {...(rest as AsLink)}
+          href={href}
+        >
+          {body}
         </a>
       ) : (
-        <button className={cls} onClick={onClick} ref={ref as React.Ref<HTMLButtonElement>}>
-          {label}
+        <button
+          type={(rest as AsButton).type ?? "button"}
+          className={classes}
+          style={mergedStyle}
+          data-running={running ? "true" : "false"}
+          {...(rest as AsButton)}
+        >
+          {body}
         </button>
       )}
     </>
   );
 }`,
-    description: "Button with a gradient beam that circles its border along a CSS offset path.",
-    tags: ["button", "border-beam", "animated", "gradient", "offset-path"],
+    description: "Button ringed by a travelling beam, spinning conic or sweeping glints, in six fills.",
+    tags: ["button", "border-beam", "conic-gradient", "radial-gradient", "ring-variants", "fill-variants"],
   },
   {
     name: "TypingHero",
@@ -3939,7 +4689,9 @@ export function CardGrid({
     slug: "numbered-steps-list",
     path: "lists/NumberedStepsList.tsx",
     category: "lists",
-    code: `type Step = {
+    code: `import type { CSSProperties } from "react";
+
+type Step = {
   number: string;
   title: string;
   description: string;
@@ -3949,23 +4701,80 @@ type Props = {
   steps: Step[];
 };
 
+/**
+ * Both halves of every pair come from tokens.css and are picked with
+ * light-dark(), so the list reads on paper and on a dark ground with no prop:
+ * a host that declares \`color-scheme: dark\` gets the void half. Override any
+ * of these four variables to retheme without touching the file.
+ */
+const theme = {
+  "--nsl-ink": "light-dark(var(--bz-ink, #0a0a0a), var(--bz-void-ink, #ffffff))",
+  "--nsl-muted": "light-dark(var(--bz-ink-muted, #4a4a4c), rgba(255, 255, 255, 0.78))",
+  "--nsl-accent": "light-dark(var(--bz-emerald, #047857), var(--bz-emerald-on-void, #34d399))",
+  "--nsl-line": "light-dark(rgba(10, 10, 10, 0.1), rgba(255, 255, 255, 0.13))",
+} as CSSProperties;
+
 export function NumberedStepsList({ steps }: Props) {
   return (
-    <ol className="mt-12 flex flex-col gap-2 list-none p-0">
-      {steps.map((step) => (
+    <ol className="m-0 flex list-none flex-col p-0" style={theme}>
+      {steps.map((step, i) => (
         <li
           key={step.number}
-          className="grid gap-8 py-8 border-t border-black/[0.06]"
-          style={{ gridTemplateColumns: "90px 1fr" }}
+          className="grid items-start"
+          style={{
+            gridTemplateColumns: "3rem minmax(0, 1fr)",
+            columnGap: "clamp(0.875rem, 4%, 1.75rem)",
+            // The first step opens the list, so it carries no rule above it.
+            borderTop: i === 0 ? undefined : "1px solid var(--nsl-line)",
+            paddingTop: i === 0 ? 0 : "1.5rem",
+            paddingBottom: "1.5rem",
+          }}
         >
-          <div className="font-mono text-sm text-[color:var(--bz-emerald,#047857)] tracking-[0.2em]">
-            {step.number}
-          </div>
           <div>
-            <h3 className="font-serif font-medium text-[28px] text-[#0a0a0a] mt-0 mb-2.5">
+            <div
+              className="font-mono tabular-nums"
+              style={{
+                color: "var(--nsl-accent)",
+                fontSize: "0.8125rem",
+                letterSpacing: "0.2em",
+                lineHeight: 1,
+                // Sits the digits on the serif title's cap line.
+                paddingTop: "0.45rem",
+              }}
+            >
+              {step.number}
+            </div>
+            <div
+              aria-hidden
+              style={{ background: "var(--nsl-accent)", height: "1px", marginTop: "0.65rem", width: "1.75rem" }}
+            />
+          </div>
+
+          <div className="min-w-0">
+            <h3
+              className="m-0 font-serif"
+              style={{
+                color: "var(--nsl-ink)",
+                fontSize: "clamp(1.25rem, 1.05rem + 0.95vw, 1.6rem)",
+                fontWeight: "var(--bz-weight-medium, 500)",
+                letterSpacing: "-0.012em",
+                lineHeight: "var(--bz-leading-tight, 1.15)",
+              }}
+            >
               {step.title}
             </h3>
-            <p className="text-[#4a4a4c] m-0 text-base">{step.description}</p>
+            <p
+              className="mb-0"
+              style={{
+                color: "var(--nsl-muted)",
+                fontSize: "0.9375rem",
+                lineHeight: "var(--bz-leading-normal, 1.55)",
+                marginTop: "0.6rem",
+                maxWidth: "46ch",
+              }}
+            >
+              {step.description}
+            </p>
           </div>
         </li>
       ))}
@@ -3980,24 +4789,77 @@ export function NumberedStepsList({ steps }: Props) {
     slug: "formula-block",
     path: "display/FormulaBlock.tsx",
     category: "display",
-    code: `type Props = {
+    code: `import type { CSSProperties } from "react";
+
+type Props = {
   formula: string;
   caption?: string;
 };
 
+/**
+ * Picked with light-dark() from tokens.css: the paper emerald is too dark to
+ * carry a tint on a dark ground, so the void half uses --bz-emerald-on-void.
+ * A host that declares \`color-scheme: dark\` gets it with no prop.
+ */
+const theme = {
+  "--fb-ink": "light-dark(var(--bz-ink, #0a0a0a), var(--bz-void-ink, #ffffff))",
+  "--fb-muted": "light-dark(var(--bz-ink-muted, #4a4a4c), rgba(255, 255, 255, 0.78))",
+  "--fb-tint": "light-dark(rgba(4, 120, 87, 0.07), rgba(52, 211, 153, 0.1))",
+  "--fb-edge": "light-dark(rgba(4, 120, 87, 0.28), rgba(52, 211, 153, 0.3))",
+  "--fb-rule": "light-dark(rgba(4, 120, 87, 0.22), rgba(52, 211, 153, 0.24))",
+} as CSSProperties;
+
 export function FormulaBlock({ formula, caption }: Props) {
   return (
-    <div className="my-8 p-6 text-center bg-[rgba(5,150,105,0.1)] border border-[#059669] rounded-xl font-mono text-[#0a0a0a] overflow-x-auto break-words"
-      style={{ fontSize: "clamp(14px, 4vw, 20px)" }}
+    <figure
+      style={{
+        ...theme,
+        background: "var(--fb-tint)",
+        border: "1px solid var(--fb-edge)",
+        borderRadius: "var(--bz-radius-lg, 12px)",
+        margin: "2rem 0",
+        padding: "1.5rem 1.25rem",
+      }}
     >
-      <code className="font-[inherit] bg-transparent p-0">{formula}</code>
+      <div className="overflow-x-auto text-center">
+        <code
+          className="font-mono"
+          style={{
+            background: "transparent",
+            color: "var(--fb-ink)",
+            display: "inline-block",
+            fontSize: "clamp(0.9375rem, 0.78rem + 1.1vw, 1.375rem)",
+            letterSpacing: "-0.01em",
+            lineHeight: 1.45,
+            padding: 0,
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+          }}
+        >
+          {formula}
+        </code>
+      </div>
+
       {caption && (
-        <div className="mt-2.5 text-xs text-[#4a4a4c] tracking-[0.1em]">{caption}</div>
+        <figcaption
+          className="font-mono text-center uppercase"
+          style={{
+            borderTop: "1px solid var(--fb-rule)",
+            color: "var(--fb-muted)",
+            fontSize: "var(--bz-text-2xs, 0.6875rem)",
+            letterSpacing: "0.24em",
+            lineHeight: 1.5,
+            marginTop: "1.25rem",
+            paddingTop: "0.875rem",
+          }}
+        >
+          {caption}
+        </figcaption>
       )}
-    </div>
+    </figure>
   );
 }`,
-    description: "Centred monospace formula on an emerald tint, with an optional spaced caption.",
+    description: "Centred monospace formula on a tinted plate, with a ruled-off spaced caption.",
     tags: ["formula", "code", "equation", "monospace", "accent", "callout"],
   },
   {
@@ -4005,7 +4867,7 @@ export function FormulaBlock({ formula, caption }: Props) {
     slug: "callout-box",
     path: "callouts/CalloutBox.tsx",
     category: "callouts",
-    code: `import { ReactNode } from "react";
+    code: `import type { CSSProperties, ReactNode } from "react";
 
 type CheckItem = {
   symbol: string;
@@ -4020,50 +4882,141 @@ type Props = {
   footer?: string;
 };
 
+/**
+ * The amber is structural (the spine, the label, the markers) rather than a
+ * wash, because an amber field that reads on white turns to mud on a dark
+ * ground. The surface is neutral on both and the pairs are picked with
+ * light-dark(), so a host that declares \`color-scheme: dark\` needs no prop.
+ */
+const theme = {
+  "--cb-ink": "light-dark(var(--bz-ink, #0a0a0a), var(--bz-void-ink, #ffffff))",
+  "--cb-muted": "light-dark(var(--bz-ink-muted, #4a4a4c), rgba(255, 255, 255, 0.78))",
+  "--cb-surface": "light-dark(rgba(10, 10, 10, 0.02), rgba(255, 255, 255, 0.05))",
+  "--cb-line": "light-dark(rgba(10, 10, 10, 0.1), rgba(255, 255, 255, 0.13))",
+  "--cb-accent": "light-dark(var(--bz-amber, #b45309), var(--bz-amber-on-void, #fbbf24))",
+  "--cb-on-accent": "light-dark(var(--bz-amber-on-fill, #ffffff), var(--bz-on-void-fill, #0a0a0a))",
+} as CSSProperties;
+
 export function CalloutBox({ title, intro, label, items = [], footer }: Props) {
   return (
     <div
-      className="mt-8 p-8 border border-[#b45309] rounded-[14px]"
       style={{
-        background: "linear-gradient(180deg, rgba(234,179,8,0.2), rgba(0,0,0,0.02))",
+        ...theme,
+        background: "var(--cb-surface)",
+        border: "1px solid var(--cb-line)",
+        // The spine is what makes it read as a callout rather than a card.
+        borderLeft: "3px solid var(--cb-accent)",
+        borderRadius: "var(--bz-radius-lg, 12px)",
+        marginTop: "2rem",
+        padding: "clamp(1.25rem, 4%, 1.75rem)",
       }}
     >
-      <h3 className="font-serif font-medium text-[#0a0a0a] text-2xl mt-0 mb-2.5">
+      <h3
+        className="m-0 font-serif"
+        style={{
+          color: "var(--cb-ink)",
+          fontSize: "clamp(1.125rem, 1rem + 0.6vw, 1.45rem)",
+          fontWeight: "var(--bz-weight-medium, 500)",
+          letterSpacing: "-0.012em",
+          lineHeight: "var(--bz-leading-tight, 1.15)",
+        }}
+      >
         {title}
       </h3>
-      {intro && <p className="text-[#4a4a4c] mt-0 mb-4">{intro}</p>}
+
+      {intro && (
+        <p
+          className="mb-0"
+          style={{
+            color: "var(--cb-muted)",
+            fontSize: "0.9375rem",
+            lineHeight: "var(--bz-leading-normal, 1.55)",
+            marginTop: "0.625rem",
+            maxWidth: "56ch",
+          }}
+        >
+          {intro}
+        </p>
+      )}
+
       {label && (
-        <div className="font-mono text-[11px] tracking-[0.3em] text-[#b45309] mt-5 mb-2 uppercase">
-          {label}
+        <div className="flex items-center" style={{ gap: "0.75rem", marginTop: "1.5rem" }}>
+          <span
+            className="font-mono uppercase"
+            style={{
+              color: "var(--cb-accent)",
+              fontSize: "var(--bz-text-2xs, 0.6875rem)",
+              letterSpacing: "0.28em",
+              lineHeight: 1,
+            }}
+          >
+            {label}
+          </span>
+          <span aria-hidden className="flex-1" style={{ background: "var(--cb-line)", height: "1px" }} />
         </div>
       )}
+
       {items.length > 0 && (
-        <ul className="list-none p-0 m-0 flex flex-col gap-2">
+        <ul
+          className="list-none p-0"
+          style={{ display: "flex", flexDirection: "column", gap: "0.625rem", margin: label ? "0.875rem 0 0" : "1.25rem 0 0" }}
+        >
           {items.map((item, i) => (
-            <li key={i} className="flex gap-2.5 items-start text-[15px] text-[#1a1a1a]">
-              <span className="inline-flex w-[22px] h-[22px] items-center justify-center rounded-full bg-[rgba(234,179,8,0.2)] text-[#b45309] text-xs shrink-0">
+            <li
+              key={i}
+              className="flex items-start"
+              style={{ color: "var(--cb-ink)", fontSize: "0.9375rem", gap: "0.75rem", lineHeight: "var(--bz-leading-snug, 1.35)" }}
+            >
+              <span
+                aria-hidden
+                className="inline-flex shrink-0 items-center justify-center rounded-full font-mono"
+                style={{
+                  background: "var(--cb-accent)",
+                  color: "var(--cb-on-accent)",
+                  fontSize: "var(--bz-text-2xs, 0.6875rem)",
+                  fontWeight: "var(--bz-weight-semibold, 600)",
+                  height: "1.375rem",
+                  lineHeight: 1,
+                  marginTop: "0.0625rem",
+                  width: "1.375rem",
+                }}
+              >
                 {item.symbol}
               </span>
-              <span>{item.content}</span>
+              <span style={{ minWidth: 0 }}>{item.content}</span>
             </li>
           ))}
         </ul>
       )}
+
       {footer && (
-        <p className="text-[#4a4a4c] mt-4 mb-0 font-medium">{footer}</p>
+        <p
+          className="mb-0"
+          style={{
+            borderTop: "1px solid var(--cb-line)",
+            color: "var(--cb-ink)",
+            fontSize: "0.9375rem",
+            fontWeight: "var(--bz-weight-medium, 500)",
+            lineHeight: "var(--bz-leading-snug, 1.35)",
+            marginTop: "1.125rem",
+            paddingTop: "1.125rem",
+          }}
+        >
+          {footer}
+        </p>
       )}
     </div>
   );
 }`,
-    description: "Amber callout with a serif title, labelled symbol list and closing line.",
-    tags: ["callout", "warning", "alert", "checklist", "amber", "gradient", "diagnosis"],
+    description: "Amber-spined callout with a serif title, labelled symbol list and closing line.",
+    tags: ["callout", "warning", "alert", "checklist", "amber", "notice", "diagnosis"],
   },
   {
     name: "Checklist",
     slug: "checklist",
     path: "lists/Checklist.tsx",
     category: "lists",
-    code: `import { ReactNode } from "react";
+    code: `import type { CSSProperties, ReactNode } from "react";
 
 type CheckItem = {
   symbol: string;
@@ -4074,24 +5027,66 @@ type Props = {
   items: CheckItem[];
 };
 
+/**
+ * The marker is a solid disc rather than a tint, because a 10% emerald wash
+ * disappears on a dark ground and the glyph on it drops under AA. Solid takes
+ * the ink each fill declares in tokens.css, which holds either way. Pairs are
+ * picked with light-dark(), so a host that declares \`color-scheme: dark\` needs
+ * no prop.
+ */
+const theme = {
+  "--cl-ink": "light-dark(var(--bz-ink, #0a0a0a), var(--bz-void-ink, #ffffff))",
+  "--cl-surface": "light-dark(rgba(10, 10, 10, 0.025), rgba(255, 255, 255, 0.05))",
+  "--cl-line": "light-dark(rgba(10, 10, 10, 0.09), rgba(255, 255, 255, 0.12))",
+  "--cl-marker": "light-dark(var(--bz-emerald-fill, #047857), var(--bz-emerald-on-void, #34d399))",
+  "--cl-on-marker": "light-dark(var(--bz-emerald-on-fill, #ffffff), var(--bz-on-void-fill, #0a0a0a))",
+} as CSSProperties;
+
 export function Checklist({ items }: Props) {
   return (
-    <ul className="list-none p-0 my-6 flex flex-col gap-2.5">
+    <ul
+      className="list-none p-0"
+      style={{ ...theme, display: "flex", flexDirection: "column", gap: "0.5rem", margin: "1.5rem 0" }}
+    >
       {items.map((item, i) => (
         <li
           key={i}
-          className="flex gap-3 items-start px-4 py-[14px] bg-black/[0.02] border border-black/[0.06] rounded-[10px] text-[#1a1a1a] text-[15px]"
+          className="flex items-start"
+          style={{
+            background: "var(--cl-surface)",
+            border: "1px solid var(--cl-line)",
+            borderRadius: "var(--bz-radius-md, 10px)",
+            color: "var(--cl-ink)",
+            fontSize: "0.9375rem",
+            gap: "0.75rem",
+            lineHeight: "var(--bz-leading-snug, 1.35)",
+            padding: "0.8125rem 1rem",
+          }}
         >
-          <span className="inline-flex w-[22px] h-[22px] items-center justify-center rounded-full bg-[rgba(5,150,105,0.1)] text-[color:var(--bz-emerald,#047857)] text-xs shrink-0">
+          <span
+            aria-hidden
+            className="inline-flex shrink-0 items-center justify-center rounded-full font-mono"
+            style={{
+              background: "var(--cl-marker)",
+              color: "var(--cl-on-marker)",
+              fontSize: "var(--bz-text-2xs, 0.6875rem)",
+              fontWeight: "var(--bz-weight-semibold, 600)",
+              height: "1.375rem",
+              lineHeight: 1,
+              // Optically centres the disc on the first line of the label.
+              marginTop: "0.0625rem",
+              width: "1.375rem",
+            }}
+          >
             {item.symbol}
           </span>
-          <span>{item.text}</span>
+          <span style={{ minWidth: 0 }}>{item.text}</span>
         </li>
       ))}
     </ul>
   );
 }`,
-    description: "Checklist of hairline cards, each led by a round emerald marker.",
+    description: "Checklist of hairline cards, each led by a solid round emerald marker.",
     tags: ["checklist", "list", "badge", "check", "accent", "card-row"],
   },
   {
@@ -4111,15 +5106,29 @@ type Props = {
   className?: string;
 };
 
+/**
+ * Timing comes from tokens.css, so a host that retimes the system retimes the
+ * reveal. The hidden state is only ever reached when a script can undo it:
+ * \`scripting: none\` and reduced motion both land the content visible, which is
+ * the state anything that cannot animate must end in.
+ *
+ * The rules ship in the element rather than the head so a server render is
+ * already correct and nothing flashes in before the observer attaches.
+ */
 const revealStyle = \`
-  .sr-up    { opacity:0; transform:translateY(32px) scale(.97); transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1); will-change:opacity,transform; }
-  .sr-up.in { opacity:1; transform:translateY(0) scale(1); }
-  .sr-left    { opacity:0; transform:translateX(-40px) scale(.97); transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1); will-change:opacity,transform; }
-  .sr-left.in { opacity:1; transform:translateX(0) scale(1); }
-  .sr-right    { opacity:0; transform:translateX(40px) scale(.97); transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1); will-change:opacity,transform; }
-  .sr-right.in { opacity:1; transform:translateX(0) scale(1); }
-  .sr-scale    { opacity:0; transform:scale(.88); transition:opacity .9s cubic-bezier(.16,1,.3,1),transform .9s cubic-bezier(.16,1,.3,1); will-change:opacity,transform; }
-  .sr-scale.in { opacity:1; transform:scale(1); }
+  .sr-up,.sr-left,.sr-right,.sr-scale {
+    opacity:0;
+    transition:opacity var(--bz-duration-slower,800ms) var(--bz-ease-out,cubic-bezier(.23,1,.32,1)),
+               transform var(--bz-duration-slower,800ms) var(--bz-ease-out,cubic-bezier(.23,1,.32,1));
+    will-change:opacity,transform;
+  }
+  .sr-up    { transform:translateY(24px); }
+  .sr-left  { transform:translateX(-28px); }
+  .sr-right { transform:translateX(28px); }
+  .sr-scale { transform:scale(.94); }
+  .sr-up.in,.sr-left.in,.sr-right.in,.sr-scale.in { opacity:1; transform:none; }
+  /* Once it has landed the hint costs a layer for nothing. */
+  .sr-rest { will-change:auto; }
   .sr-d1 { transition-delay:.1s; }
   .sr-d2 { transition-delay:.2s; }
   .sr-d3 { transition-delay:.3s; }
@@ -4127,6 +5136,9 @@ const revealStyle = \`
   .sr-d5 { transition-delay:.5s; }
   @media (prefers-reduced-motion:reduce) {
     .sr-up,.sr-left,.sr-right,.sr-scale { opacity:1; transform:none; transition:none; }
+  }
+  @media (scripting:none) {
+    .sr-up,.sr-left,.sr-right,.sr-scale { opacity:1; transform:none; }
   }
 \`;
 
@@ -4143,21 +5155,31 @@ export function ScrollReveal({ children, variant = "up", delay = 0, className = 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (!("IntersectionObserver" in window)) {
-      el.classList.add("in");
-      return;
+
+    // will-change is a promise to the compositor; it is withdrawn once the
+    // reveal has landed, or straight away when nothing will animate.
+    const rest = () => el.classList.add("sr-rest");
+    el.addEventListener("transitionend", rest);
+
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduced || !("IntersectionObserver" in window)) {
+      el.classList.add("in", "sr-rest");
+      return () => el.removeEventListener("transitionend", rest);
     }
+
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
-          el.classList.add("in");
-          io.disconnect();
-        }
+        if (!entry.isIntersecting) return;
+        el.classList.add("in");
+        io.disconnect();
       },
-      { threshold: 0.1, rootMargin: "0px 0px -60px 0px" }
+      { threshold: 0.1, rootMargin: "0px 0px -60px 0px" },
     );
     io.observe(el);
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      el.removeEventListener("transitionend", rest);
+    };
   }, []);
 
   const delayClass = delay ? \`sr-d\${delay / 100}\` : "";
@@ -4180,7 +5202,9 @@ export function ScrollReveal({ children, variant = "up", delay = 0, className = 
     slug: "site-footer",
     path: "layout/SiteFooter.tsx",
     category: "layout",
-    code: `type FooterColumn = {
+    code: `import type { CSSProperties } from "react";
+
+type FooterColumn = {
   heading: string;
   links: { label: string; href: string }[];
 };
@@ -4193,6 +5217,25 @@ type Props = {
   publishedBy?: { label: string; href: string };
 };
 
+/**
+ * Pairs are picked with light-dark() from tokens.css, including the focus
+ * ring, which has to change colour with the ground or it stops being visible.
+ * A host that declares \`color-scheme: dark\` needs no prop.
+ */
+const theme = {
+  "--sf-ink": "light-dark(var(--bz-ink, #0a0a0a), var(--bz-void-ink, #ffffff))",
+  "--sf-muted": "light-dark(var(--bz-ink-muted, #4a4a4c), rgba(255, 255, 255, 0.78))",
+  "--sf-subtle": "light-dark(var(--bz-ink-subtle, #6b6b70), rgba(255, 255, 255, 0.66))",
+  "--sf-line": "light-dark(rgba(10, 10, 10, 0.1), rgba(255, 255, 255, 0.13))",
+  "--sf-accent": "light-dark(var(--bz-emerald, #047857), var(--bz-emerald-on-void, #34d399))",
+  "--sf-halo": "light-dark(rgba(4, 120, 87, 0.16), rgba(52, 211, 153, 0.22))",
+  "--sf-ring": "light-dark(var(--bz-focus-ring, #912c22), var(--bz-focus-ring-void, #ffffff))",
+} as CSSProperties;
+
+/* Colour stays in classes, not the style attribute, or :hover could never win. */
+const linkClass =
+  "no-underline transition-colors hover:[color:var(--sf-accent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:[outline-color:var(--sf-ring)]";
+
 export function SiteFooter({
   brandName = "YASH",
   tagline = "",
@@ -4201,54 +5244,123 @@ export function SiteFooter({
   publishedBy,
 }: Props) {
   return (
-    <footer className="border-t border-black/[0.06] px-6 pt-16 pb-7 mt-10">
+    <footer
+      style={{
+        ...theme,
+        borderTop: "1px solid var(--sf-line)",
+        marginTop: "2.5rem",
+        padding: "clamp(2.5rem, 6vw, 4rem) clamp(1rem, 4vw, 1.5rem) 1.75rem",
+      }}
+    >
+      {/* Two levels of wrapping rather than a fixed track count: the brand and
+          the link block break apart first, then the columns break among
+          themselves. One column and five both land without a breakpoint.
+          The gaps are fixed rather than viewport-relative, so where the
+          footer breaks depends on the footer's own width and not on the
+          window it is being scaled inside. */}
       <div
-        className="max-w-[1200px] mx-auto grid gap-8"
-        style={{ gridTemplateColumns: \`2fr \${columns.map(() => "1fr").join(" ")}\` }}
+        className="mx-auto flex flex-wrap"
+        style={{ columnGap: "3rem", maxWidth: "1200px", rowGap: "2.5rem" }}
       >
-        {/* Brand column */}
-        <div>
-          <div className="flex items-center gap-2.5 font-semibold tracking-[0.08em] text-[#0a0a0a] text-[13px]">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#059669] shadow-[0_0_12px_#059669] shrink-0" />
+        <div style={{ flex: "1 1 18rem", minWidth: 0 }}>
+          <div
+            className="flex items-center"
+            style={{
+              color: "var(--sf-ink)",
+              fontSize: "0.9375rem",
+              fontWeight: "var(--bz-weight-semibold, 600)",
+              gap: "0.75rem",
+              letterSpacing: "0.08em",
+            }}
+          >
+            <span
+              aria-hidden
+              className="shrink-0 rounded-full"
+              style={{
+                background: "var(--sf-accent)",
+                boxShadow: "0 0 0 4px var(--sf-halo)",
+                height: "0.5rem",
+                width: "0.5rem",
+              }}
+            />
             {brandName}
           </div>
           {tagline && (
-            <p className="text-sm text-[color:var(--bz-ink-subtle,#6b6b70)] mt-2.5 max-w-[360px]">{tagline}</p>
+            <p
+              className="mb-0"
+              style={{
+                color: "var(--sf-muted)",
+                fontSize: "var(--bz-text-sm, 0.875rem)",
+                lineHeight: "var(--bz-leading-normal, 1.55)",
+                marginTop: "0.875rem",
+                maxWidth: "34ch",
+              }}
+            >
+              {tagline}
+            </p>
           )}
         </div>
 
-        {/* Link columns */}
-        {columns.map((col) => (
-          <div key={col.heading}>
-            <h4 className="font-mono text-[11px] tracking-[0.3em] text-[color:var(--bz-emerald,#047857)] mt-0 mb-3.5 uppercase">
-              {col.heading}
-            </h4>
-            <ul className="list-none p-0 m-0">
-              {col.links.map((l) => (
-                <li key={l.href} className="mb-2">
-                  <a
-                    href={l.href}
-                    className="text-[#4a4a4c] text-sm hover:text-[#0a0a0a] transition-colors no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
-                  >
-                    {l.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
+        {columns.length > 0 && (
+          <div
+            className="flex flex-wrap"
+            style={{ columnGap: "2rem", flex: "2 1 22rem", rowGap: "2rem" }}
+          >
+            {columns.map((col) => (
+              <div key={col.heading} style={{ flex: "1 1 7.5rem", minWidth: "7rem" }}>
+                <h4
+                  className="m-0 font-mono uppercase"
+                  style={{
+                    color: "var(--sf-accent)",
+                    fontSize: "var(--bz-text-2xs, 0.6875rem)",
+                    fontWeight: "var(--bz-weight-normal, 400)",
+                    letterSpacing: "0.24em",
+                    lineHeight: 1,
+                  }}
+                >
+                  {col.heading}
+                </h4>
+                <ul className="m-0 list-none p-0" style={{ marginTop: "0.5rem" }}>
+                  {col.links.map((l) => (
+                    <li key={l.href}>
+                      <a
+                        href={l.href}
+                        className={\`\${linkClass} [color:var(--sf-ink)]\`}
+                        style={{
+                          display: "inline-block",
+                          fontSize: "var(--bz-text-sm, 0.875rem)",
+                          lineHeight: 1.5,
+                          padding: "0.4375rem 0",
+                        }}
+                      >
+                        {l.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
 
-      {/* Bottom bar */}
-      <div className="max-w-[1200px] mx-auto flex justify-between flex-wrap gap-3 mt-12 pt-[22px] border-t border-black/[0.06] text-[color:var(--bz-ink-subtle,#6b6b70)] text-xs">
+      <div
+        className="mx-auto flex flex-wrap items-center justify-between"
+        style={{
+          borderTop: "1px solid var(--sf-line)",
+          color: "var(--sf-subtle)",
+          fontSize: "var(--bz-text-xs, 0.75rem)",
+          gap: "0.75rem",
+          marginTop: "2.5rem",
+          maxWidth: "1200px",
+          paddingTop: "1.375rem",
+        }}
+      >
         <span>{copyright}</span>
         {publishedBy && (
           <span>
             Published by{" "}
-            <a
-              href={publishedBy.href}
-              className="text-[#4a4a4c] hover:text-[#0a0a0a] no-underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]"
-            >
+            <a href={publishedBy.href} className={\`\${linkClass} [color:var(--sf-muted)]\`}>
               {publishedBy.label}
             </a>
           </span>
@@ -4257,7 +5369,7 @@ export function SiteFooter({
     </footer>
   );
 }`,
-    description: "Site footer with a glowing brand dot, mono column headings and a legal row.",
+    description: "Wrapping site footer with a haloed brand dot, mono headings and a legal row.",
     tags: ["footer", "grid", "links", "responsive", "brand", "copyright"],
   },
   {
@@ -4557,18 +5669,30 @@ import {
 
 type MagnetProps = HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
+  /** Pull radius measured outward from the element box, in px. */
   padding?: number;
   disabled?: boolean;
+  /** Divisor on the pointer offset: lower numbers pull harder. */
   magnetStrength?: number;
+  /** Ceiling on the offset in px, so the element stays near its layout box. */
+  maxOffset?: number;
   wrapperClassName?: string;
   innerClassName?: string;
 };
 
+// A spring just shy of critically damped: it catches the pointer quickly and
+// settles without a visible wobble.
+const STIFFNESS = 170;
+const DAMPING = 26;
+// Integration step, small enough that a long frame cannot make the spring blow up.
+const MAX_STEP = 1 / 120;
+
 export function Magnet({
   children,
-  padding = 72,
+  padding = 140,
   disabled = false,
-  magnetStrength = 5,
+  magnetStrength = 1.8,
+  maxOffset = 44,
   wrapperClassName = "",
   innerClassName = "",
   ...props
@@ -4580,47 +5704,168 @@ export function Magnet({
     const root = rootRef.current;
     const inner = innerRef.current;
     if (!root || !inner || disabled) return;
-    if (
-      window.matchMedia("(pointer: coarse), (prefers-reduced-motion: reduce)")
-        .matches
-    ) {
-      return;
-    }
 
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const strength = Math.max(1, magnetStrength);
+    const cap = Math.max(0, maxOffset);
+    const reach = Math.max(0, padding);
+
+    let pointerX = 0;
+    let pointerY = 0;
+    let tracking = false;
+    let painted = false;
+    let targetX = 0;
+    let targetY = 0;
+    let x = 0;
+    let y = 0;
+    let vx = 0;
+    let vy = 0;
     let frame = 0;
-    const settle = () => {
-      inner.style.transition = "transform 420ms cubic-bezier(.23,1,.32,1)";
-      inner.style.transform = "translate3d(0, 0, 0)";
-    };
-    const move = (event: PointerEvent) => {
-      window.cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(() => {
-        const rect = root.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const distanceX = Math.abs(event.clientX - centerX);
-        const distanceY = Math.abs(event.clientY - centerY);
-        const active =
-          distanceX < rect.width / 2 + padding &&
-          distanceY < rect.height / 2 + padding;
+    let last = 0;
 
-        inner.style.transition = active
-          ? "transform 140ms cubic-bezier(.23,1,.32,1)"
-          : "transform 420ms cubic-bezier(.23,1,.32,1)";
-        inner.style.transform = active
-          ? \`translate3d(\${(event.clientX - centerX) / magnetStrength}px, \${(event.clientY - centerY) / magnetStrength}px, 0)\`
-          : "translate3d(0, 0, 0)";
-      });
+    const rest = () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      frame = 0;
+      tracking = false;
+      targetX = 0;
+      targetY = 0;
+      x = 0;
+      y = 0;
+      vx = 0;
+      vy = 0;
+      if (painted) {
+        inner.style.transform = "";
+        inner.style.willChange = "";
+        painted = false;
+      }
+    };
+
+    const aim = () => {
+      // One layout read per frame, never one per event, and it happens before
+      // the write at the end of the tick.
+      const rect = root.getBoundingClientRect();
+      if (!rect.width || !rect.height) {
+        targetX = 0;
+        targetY = 0;
+        return;
+      }
+      const halfWidth = rect.width / 2;
+      const halfHeight = rect.height / 2;
+      // The wrapper is never transformed, so the centre it reports is the
+      // layout centre and the pull cannot chase its own output.
+      const dx = pointerX - (rect.left + halfWidth);
+      const dy = pointerY - (rect.top + halfHeight);
+      const reachX = halfWidth + reach;
+      const reachY = halfHeight + reach;
+      const spread =
+        (dx * dx) / (reachX * reachX) + (dy * dy) / (reachY * reachY);
+      if (spread >= 1) {
+        targetX = 0;
+        targetY = 0;
+        return;
+      }
+      // Fading the pull to nothing at the rim of the field means a cursor
+      // crossing the edge is eased in, not snapped.
+      const pull = (1 - spread) / strength;
+      let nextX = dx * pull;
+      let nextY = dy * pull;
+      const length = Math.hypot(nextX, nextY);
+      if (length > cap) {
+        nextX = (nextX / length) * cap;
+        nextY = (nextY / length) * cap;
+      }
+      targetX = nextX;
+      targetY = nextY;
+    };
+
+    const tick = (now: number) => {
+      frame = window.requestAnimationFrame(tick);
+      const elapsed = last ? Math.min((now - last) / 1000, 0.05) : MAX_STEP;
+      last = now;
+      if (tracking) aim();
+
+      let remaining = elapsed;
+      while (remaining > 0) {
+        const step = Math.min(remaining, MAX_STEP);
+        remaining -= step;
+        vx += (-STIFFNESS * (x - targetX) - DAMPING * vx) * step;
+        vy += (-STIFFNESS * (y - targetY) - DAMPING * vy) * step;
+        x += vx * step;
+        y += vy * step;
+      }
+
+      // Back home and still: drop the loop and the inline styles so an idle
+      // Magnet costs nothing.
+      if (
+        targetX === 0 &&
+        targetY === 0 &&
+        Math.hypot(x, y) < 0.05 &&
+        Math.hypot(vx, vy) < 2
+      ) {
+        rest();
+        return;
+      }
+      if (!painted) {
+        inner.style.willChange = "transform";
+        painted = true;
+      }
+      inner.style.transform = \`translate3d(\${x.toFixed(2)}px, \${y.toFixed(2)}px, 0)\`;
+    };
+
+    const start = () => {
+      if (frame) return;
+      last = 0;
+      frame = window.requestAnimationFrame(tick);
+    };
+
+    const move = (event: PointerEvent) => {
+      // Only a hovering mouse drives the pull. A finger has no hover to leave
+      // with, so it would park the element off centre with nothing to
+      // bring it back.
+      if (event.pointerType !== "mouse" || reduce.matches) return;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      tracking = true;
+      start();
+    };
+
+    const release = () => {
+      tracking = false;
+      targetX = 0;
+      targetY = 0;
+      if (frame || x !== 0 || y !== 0) start();
+    };
+
+    const drop = (event: PointerEvent) => {
+      if (event.pointerType !== "mouse") rest();
+    };
+
+    const visibility = () => {
+      // A hidden tab throttles frames, so stop rather than resume mid flight.
+      if (document.hidden) rest();
+    };
+
+    const preference = () => {
+      if (reduce.matches) rest();
     };
 
     window.addEventListener("pointermove", move, { passive: true });
-    root.addEventListener("pointerleave", settle);
+    window.addEventListener("pointerdown", drop, { passive: true });
+    window.addEventListener("blur", release);
+    document.documentElement.addEventListener("pointerleave", release);
+    document.addEventListener("visibilitychange", visibility);
+    reduce.addEventListener("change", preference);
+
     return () => {
-      window.cancelAnimationFrame(frame);
       window.removeEventListener("pointermove", move);
-      root.removeEventListener("pointerleave", settle);
+      window.removeEventListener("pointerdown", drop);
+      window.removeEventListener("blur", release);
+      document.documentElement.removeEventListener("pointerleave", release);
+      document.removeEventListener("visibilitychange", visibility);
+      reduce.removeEventListener("change", preference);
+      rest();
     };
-  }, [disabled, magnetStrength, padding]);
+  }, [disabled, magnetStrength, maxOffset, padding]);
 
   return (
     <div ref={rootRef} className={wrapperClassName} {...props}>
@@ -5052,128 +6297,6 @@ export function CinematicWaterBackground({
     tags: ["svg-filters", "turbulence", "displacement", "parallax-bg", "bubbles", "cinematic"],
   },
   {
-    name: "ConicBorderButton",
-    slug: "conic-border-button",
-    path: "buttons/ConicBorderButton.tsx",
-    category: "buttons",
-    code: `"use client";
-
-import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from "react";
-
-type ConicBorderButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  children: ReactNode;
-  colors?: [string, string, string];
-  spinDuration?: number;
-  textured?: boolean;
-};
-
-export function ConicBorderButton({
-  children,
-  className = "",
-  colors = ["#b8701c", "#4b3a8f", "#4f7d10"],
-  spinDuration = 3.2,
-  textured = true,
-  type = "button",
-  ...rest
-}: ConicBorderButtonProps) {
-  const [c0, c1, c2] = colors;
-  return (
-    <>
-      <style>{\`
-        @property --btn-ang {
-          syntax: "<angle>";
-          inherits: false;
-          initial-value: 0deg;
-        }
-        .cbb {
-          position: relative;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          isolation: isolate;
-          overflow: hidden;
-          border: 0;
-          border-radius: 999px;
-          padding: 0 1.35rem;
-          height: 46px;
-          cursor: pointer;
-          color: #f5fff9;
-          font: inherit;
-          font-size: 12.5px;
-          font-weight: 700;
-          letter-spacing: 0.13em;
-          text-transform: uppercase;
-          background: linear-gradient(135deg, #00706a, #004b46);
-          transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        .cbb:hover { transform: translateY(-2px); }
-        .cbb:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-        .cbb::after {
-          content: "";
-          position: absolute;
-          inset: -2px;
-          border-radius: inherit;
-          padding: 2px;
-          background: conic-gradient(
-            from var(--btn-ang, 0deg),
-            var(--cbb-0),
-            var(--cbb-1),
-            var(--cbb-2),
-            var(--cbb-0)
-          );
-          -webkit-mask:
-            linear-gradient(#fff 0 0) content-box,
-            linear-gradient(#fff 0 0);
-          mask:
-            linear-gradient(#fff 0 0) content-box,
-            linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          animation: cbb-spin var(--cbb-dur, 3.2s) linear infinite;
-          z-index: -1;
-          opacity: 0.9;
-        }
-        .cbb--textured::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          pointer-events: none;
-          opacity: 0.22;
-          mix-blend-mode: soft-light;
-          z-index: 0;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
-        }
-        .cbb__label { position: relative; z-index: 1; }
-        @keyframes cbb-spin { to { --btn-ang: 360deg; } }
-        @media (prefers-reduced-motion: reduce) {
-          .cbb::after { animation: none; }
-          .cbb:hover { transform: none; }
-        }
-      \`}</style>
-      <button
-        type={type}
-        className={\`cbb\${textured ? " cbb--textured" : ""} \${className}\`.trim()}
-        style={
-          {
-            ["--cbb-0" as string]: c0,
-            ["--cbb-1" as string]: c1,
-            ["--cbb-2" as string]: c2,
-            ["--cbb-dur" as string]: \`\${spinDuration}s\`,
-          } as CSSProperties
-        }
-        {...rest}
-      >
-        <span className="cbb__label">{children}</span>
-      </button>
-    </>
-  );
-}`,
-    description: "Uppercase pill button ringed by a spinning conic-gradient border over grain.",
-    tags: ["conic-gradient", "spinning-border", "mask-composite", "noise-texture", "cta"],
-  },
-  {
     name: "PointerGlowCard",
     slug: "pointer-glow-card",
     path: "cards/PointerGlowCard.tsx",
@@ -5315,53 +6438,91 @@ export function PointerGlowCard({
     category: "display",
     code: `"use client";
 
+import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, HTMLAttributes, ReactNode } from "react";
 
-type ShinyGradientTextProps = HTMLAttributes<HTMLSpanElement> & {
+/*
+ * ShinyGradientText: a line of text filled with a slow metal sweep.
+ *
+ * The ramp is deliberately narrow. Each tone is one warm family moving through
+ * value with a single specular band: "paper" is ink warming into the brick
+ * accent, "void" is champagne over gold peaking at white. Wide multi-hue
+ * gradients read cheap and, worse, go pale mid-sweep and lose the text.
+ *
+ * Legibility is the constraint, because this is type before it is ornament.
+ * Every stop clears 4.5:1 on its own ground, so no moment of the loop is
+ * harder to read than the still frame: the weakest paper stop is the brick at
+ * 8.1:1 on white, the weakest void stop the gold at 6.7:1 on --bz-void-raised.
+ *
+ * Colours resolve from the --bz-* tokens, so a themed app carries the sweep
+ * with it. For anything else, set --bz-sgt-base, --bz-sgt-halo or
+ * --bz-sgt-shine on the element.
+ *
+ * The image is twice the box wide and travels exactly one image width per
+ * cycle, so the loop closes without a seam. It pauses off screen and in hidden
+ * tabs. Reduced motion parks the specular mid-line instead of dropping the
+ * fill, which leaves a still line that still looks finished.
+ */
+
+const CSS = \`
+.bz-sgt{display:inline-block;color:var(--bz-sgt-base);background-image:linear-gradient(100deg,var(--bz-sgt-base) 0%,var(--bz-sgt-base) 12%,var(--bz-sgt-halo) 32%,var(--bz-sgt-shine) 50%,var(--bz-sgt-halo) 68%,var(--bz-sgt-base) 88%,var(--bz-sgt-base) 100%);background-size:200% 100%;background-position:0% center;animation:bz-sgt-sweep var(--bz-sgt-dur,6s) linear infinite}
+.bz-sgt[data-tone="paper"]{--bz-sgt-base:var(--bz-ink,#0a0a0a);--bz-sgt-halo:#541d17;--bz-sgt-shine:var(--bz-accent,#912c22)}
+.bz-sgt[data-tone="void"]{--bz-sgt-base:#ecdeb3;--bz-sgt-halo:var(--bz-gold-fill,#c9a227);--bz-sgt-shine:var(--bz-void-ink,#ffffff)}
+@supports (color:color-mix(in srgb,red 50%,blue)){.bz-sgt[data-tone="paper"]{--bz-sgt-halo:color-mix(in srgb,var(--bz-ink,#0a0a0a) 45%,var(--bz-accent,#912c22))}.bz-sgt[data-tone="void"]{--bz-sgt-base:color-mix(in srgb,var(--bz-gold-fill,#c9a227) 35%,var(--bz-void-ink,#ffffff))}}
+@supports ((-webkit-background-clip:text) or (background-clip:text)){.bz-sgt{-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}}
+@keyframes bz-sgt-sweep{from{background-position:200% center}to{background-position:0% center}}
+.bz-sgt[data-running="false"]{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){.bz-sgt{animation:none;background-position:50% center}}
+\`;
+
+export type ShinyGradientTextProps = HTMLAttributes<HTMLSpanElement> & {
   children: ReactNode;
-  colors?: string[];
+  /** The ground the line sits on. Paper is the library default surface. */
+  tone?: "paper" | "void";
+  /** Seconds for one pass of the specular. Slow reads considered, fast reads restless. */
   duration?: number;
 };
 
 export function ShinyGradientText({
   children,
   className = "",
-  colors = ["#b8701c", "#f0c27a", "#4f7d10", "#b8701c", "#f0c27a"],
-  duration = 4.5,
+  tone = "paper",
+  duration = 6,
   style,
   ...rest
 }: ShinyGradientTextProps) {
-  const gradient = \`linear-gradient(110deg, \${colors.join(", ")})\`;
+  const ref = useRef<HTMLSpanElement>(null);
+  const [onscreen, setOnscreen] = useState(false);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (!("IntersectionObserver" in window)) {
+      setOnscreen(true);
+      return;
+    }
+    const io = new IntersectionObserver(([entry]) => setOnscreen(entry.isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const sync = () => setVisible(document.visibilityState !== "hidden");
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, []);
+
   return (
     <>
-      <style>{\`
-        .sgt {
-          display: inline-block;
-          background-size: 220% auto;
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent !important;
-          animation: sgt-shine var(--sgt-dur, 4.5s) linear infinite;
-        }
-        @keyframes sgt-shine {
-          to { background-position: 220% center; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .sgt {
-            animation: none;
-            background-position: 40% center;
-          }
-        }
-      \`}</style>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
       <span
-        className={\`sgt \${className}\`.trim()}
-        style={
-          {
-            ...style,
-            backgroundImage: gradient,
-            ["--sgt-dur" as string]: \`\${duration}s\`,
-          } as CSSProperties
-        }
+        ref={ref}
+        className={\`bz-sgt \${className}\`.trim()}
+        data-tone={tone}
+        data-running={onscreen && visible ? "true" : "false"}
+        style={{ ...style, ["--bz-sgt-dur" as string]: \`\${duration}s\` } as CSSProperties}
         {...rest}
       >
         {children}
@@ -5369,7 +6530,7 @@ export function ShinyGradientText({
     </>
   );
 }`,
-    description: "Inline text filled with a sliding gradient that holds still under reduced motion.",
+    description: "Text filled with a narrow metal sweep, legible on both light and dark grounds.",
     tags: ["shiny-text", "gradient", "background-clip", "kinetic", "typography"],
   },
   {
@@ -7121,20 +8282,50 @@ export function PixelDemorphImage({
     category: "animation",
     code: `"use client";
 
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+/** A scroll container, however the consumer happens to have it to hand. */
+type ScrollerSource = "auto" | "window" | Element | RefObject<Element | null>;
+
 type ScrollParallaxLayerProps = {
-  /** Depth of travel; 1 ≈ 100px total drift across the viewport */
+  /**
+   * Drift along the scroll axis. 1 moves the layer a quarter of the distance
+   * it travels through the frame, so on an 800px viewport 0.25 is about 50px.
+   * Positive reads as near (it outruns the scroll), negative as far.
+   */
   speed?: number;
-  /** Total degrees swept across the viewport */
+  /** Sideways drift over the same range, in the same units as \`speed\`. */
+  drift?: number;
+  /** Total degrees swept across the range. */
   rotate?: number;
+  /** Scale gained across the range, so a near plane grows as it comes past. */
+  scale?: number;
+  /** Blur in px at both ends of the range, pulling into focus at the centre. */
+  blur?: number;
+  /** Opacity at both ends of the range. 1 keeps the layer solid throughout. */
+  fade?: number;
+  /**
+   * Which scroll container the range is measured against. "auto" walks up to
+   * the nearest scrolling ancestor and falls back to the window, so the same
+   * layer works in a 200px panel and on a full page.
+   */
+  scroller?: ScrollerSource;
+  /** Seconds of catch-up between the scrollbar and the layer. */
+  scrub?: number;
   className?: string;
-  style?: React.CSSProperties;
-  children: React.ReactNode;
+  style?: CSSProperties;
+  children: ReactNode;
 };
 
 type FallingPetalFieldProps = {
@@ -7143,50 +8334,136 @@ type FallingPetalFieldProps = {
   className?: string;
 };
 
-/** Scroll-scrubbed depth / rotate parallax wrapper (GSAP ScrollTrigger). */
+/** Nearest ancestor that actually scrolls; null means the window does. */
+function nearestScroller(el: HTMLElement): Element | null {
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const overflow = getComputedStyle(node).overflowY;
+    const scrolls = overflow === "auto" || overflow === "scroll" || overflow === "overlay";
+    if (scrolls && node.scrollHeight > node.clientHeight + 1) return node;
+  }
+  return null;
+}
+
+/**
+ * One plane of a scroll-scrubbed parallax composition (GSAP ScrollTrigger).
+ *
+ * Depth is more than different speeds, so a layer can also gain scale, take a
+ * little rotation, and pull into focus out of blur and fade as it crosses the
+ * middle of the range. Stack three or four with different values and the
+ * planes read as distance rather than as things sliding at different rates.
+ *
+ * The range is measured from the scroll container, not the viewport, so the
+ * composition holds together in a small panel as well as on a full page. Only
+ * transform, opacity and filter are touched, and every layer rides the single
+ * scroll listener ScrollTrigger keeps per container.
+ */
 export function ScrollParallaxLayer({
   speed = 0.25,
+  drift = 0,
   rotate = 0,
+  scale = 0,
+  blur = 0,
+  fade = 1,
+  scroller = "auto",
+  scrub = 0.6,
   className,
   style,
   children,
 }: ScrollParallaxLayerProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const planeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    const plane = planeRef.current;
+    if (!el || !plane) return;
 
     const mm = gsap.matchMedia();
+    // Reduced motion never enters this branch, so the layer stays exactly as
+    // the markup left it: in place, sharp, fully opaque.
     mm.add("(prefers-reduced-motion: no-preference)", () => {
-      const depth = speed * 100;
-      const tween = gsap.fromTo(
-        el,
-        { y: depth, rotation: -rotate / 2 },
-        {
-          y: -depth,
-          rotation: rotate / 2,
-          ease: "none",
-          scrollTrigger: {
-            trigger: el,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 0.6,
-          },
+      const box =
+        scroller === "window"
+          ? null
+          : scroller === "auto"
+            ? nearestScroller(el)
+            : "current" in scroller
+              ? scroller.current
+              : scroller;
+
+      // The sweep is how far the layer travels through the frame, so the same
+      // speed reads the same at any container size.
+      const span = () => (box ? box.clientHeight : window.innerHeight) + el.offsetHeight;
+      const sweep = (amount: number, sign: number) => () => (sign * amount * span()) / 8;
+
+      const tl = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: el,
+          scroller: box ?? undefined,
+          start: "top bottom",
+          end: "bottom top",
+          scrub,
+          invalidateOnRefresh: true,
         },
+      });
+
+      tl.fromTo(
+        plane,
+        {
+          y: sweep(speed, 1),
+          x: sweep(drift, 1),
+          rotation: -rotate / 2,
+          scale: 1 - scale / 2,
+        },
+        {
+          y: sweep(speed, -1),
+          x: sweep(drift, -1),
+          rotation: rotate / 2,
+          scale: 1 + scale / 2,
+          force3D: true,
+          duration: 1,
+        },
+        0,
       );
+
+      // Arrive, settle, leave: the plane resolves as it reaches the middle.
+      if (fade < 1 || blur > 0) {
+        const ends = blur > 0 ? { opacity: fade, filter: \`blur(\${blur}px)\` } : { opacity: fade };
+        const settled = blur > 0 ? { opacity: 1, filter: "blur(0px)" } : { opacity: 1 };
+        tl.fromTo(plane, { ...ends }, { ...settled, duration: 0.5 }, 0);
+        tl.to(plane, { ...ends, duration: 0.5 }, 0.5);
+      }
+
+      // ScrollTrigger refreshes itself on window resize; a panel that changes
+      // size on its own has to say so.
+      let queued = 0;
+      const remeasure = () => {
+        cancelAnimationFrame(queued);
+        queued = requestAnimationFrame(() => tl.scrollTrigger?.refresh());
+      };
+      const ro = new ResizeObserver(remeasure);
+      ro.observe(el);
+      if (box) ro.observe(box);
+
       return () => {
-        tween.scrollTrigger?.kill();
-        tween.kill();
+        ro.disconnect();
+        cancelAnimationFrame(queued);
+        tl.scrollTrigger?.kill();
+        tl.kill();
       };
     });
 
     return () => mm.revert();
-  }, [speed, rotate]);
+  }, [speed, drift, rotate, scale, blur, fade, scroller, scrub]);
 
   return (
     <div ref={ref} className={className} style={style}>
-      {children}
+      {/* The wrapper is the trigger and the plane is what moves, so a layer's
+          own transform can never feed back into the measurement driving it. */}
+      <div ref={planeRef} style={{ height: "100%" }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -7217,24 +8494,51 @@ const PETALS = [
   { left: 92, size: 10, delay: 7.0, dur: 13, drift: -30, spin: 260, o: 0.6 },
 ];
 
+/** The fall the delays and durations below were authored against. */
+const PETAL_BASIS = 900;
+
 /**
  * Deterministic CSS falling petal field (no Math.random → no hydration drift).
  * Ships with ScrollParallaxLayer as the ambient companion.
+ *
+ * The fall is measured from the field itself rather than the viewport, so a
+ * petal crosses a short panel in the same sort of time it crosses a page
+ * instead of streaking past in the first second.
  */
 export function FallingPetalField({
   colors,
   count = 10,
   className = "inset-x-0 top-0 h-[110vh]",
 }: FallingPetalFieldProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setHeight(el.clientHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const fall = height ? height + 40 : 0;
+  const pace = fall ? Math.min(1.25, Math.max(0.45, fall / PETAL_BASIS)) : 1;
+
   return (
-    <div className={\`pointer-events-none absolute select-none overflow-hidden \${className}\`} aria-hidden>
+    <div
+      ref={ref}
+      className={\`pointer-events-none absolute select-none overflow-hidden \${className}\`}
+      aria-hidden
+    >
       <style>{\`
         @keyframes petal-fall {
           0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
           6% { opacity: var(--petal-o, 0.7); }
           85% { opacity: var(--petal-o, 0.7); }
           100% {
-            transform: translate3d(var(--petal-drift, 40px), 112vh, 0)
+            transform: translate3d(var(--petal-drift, 40px), var(--petal-fall, 112vh), 0)
               rotate(var(--petal-spin, 300deg));
             opacity: 0;
           }
@@ -7262,9 +8566,10 @@ export function FallingPetalField({
               "--petal-drift": \`\${p.drift}px\`,
               "--petal-spin": \`\${p.spin}deg\`,
               "--petal-o": p.o,
-              animationDuration: \`\${p.dur}s\`,
-              animationDelay: \`\${p.delay}s\`,
-            } as React.CSSProperties
+              "--petal-fall": fall ? \`\${fall}px\` : "112vh",
+              animationDuration: \`\${(p.dur * pace).toFixed(2)}s\`,
+              animationDelay: \`\${(p.delay * pace).toFixed(2)}s\`,
+            } as CSSProperties
           }
         >
           <PetalShape variant={i} color={colors[i % colors.length]} />
@@ -7273,7 +8578,7 @@ export function FallingPetalField({
     </div>
   );
 }`,
-    description: "Scroll-scrubbed parallax wrapper that drifts and rotates children, with a petal field.",
+    description: "Scroll-scrubbed depth plane that drifts, scales, blurs and fades, with a petal field.",
     tags: ["parallax", "scrolltrigger", "petals", "gsap", "ambient"],
   },
   {
@@ -7862,223 +9167,7 @@ export const LOADER_MAGIC_RINGS = {
   clickBurst: false,
 } as const;`,
     description: "WebGL rings that expand in two colours, with optional mouse parallax and click burst.",
-    tags: ["webgl", "three", "shader", "rings", "parallax", "loader-backdrop"],
-  },
-  {
-    name: "StarBorder",
-    slug: "star-border",
-    path: "buttons/StarBorder.tsx",
-    category: "buttons",
-    code: `"use client";
-
-import {
-  createElement,
-  type ComponentPropsWithoutRef,
-  type CSSProperties,
-  type ElementType,
-  type ReactNode,
-} from "react";
-
-function cn(...parts: Array<string | false | null | undefined>) {
-  return parts.filter(Boolean).join(" ");
-}
-
-export type StarBorderTone = "outline" | "primary" | "gold";
-
-export type StarBorderProps<T extends ElementType = "button"> = {
-  as?: T;
-  className?: string;
-  innerClassName?: string;
-  tone?: StarBorderTone;
-  color?: string;
-  speed?: string;
-  thickness?: number;
-  children?: ReactNode;
-} & Omit<ComponentPropsWithoutRef<T>, "as" | "children" | "className" | "color">;
-
-const TONE_COLOR: Record<StarBorderTone, string> = {
-  outline: "hsl(38 45% 52%)",
-  primary: "hsl(5 62% 35%)",
-  gold: "hsl(38 45% 52%)",
-};
-
-export function StarBorder<T extends ElementType = "button">({
-  as,
-  className = "",
-  innerClassName,
-  tone = "outline",
-  color,
-  speed = "5s",
-  thickness = 2,
-  children,
-  style,
-  ...rest
-}: StarBorderProps<T>) {
-  const Component = (as ?? "button") as ElementType;
-  const glow = color ?? TONE_COLOR[tone];
-
-  return (
-    <>
-      <style>{\`
-        .star-border-container {
-          display: inline-block;
-          position: relative;
-          border-radius: 0.625rem;
-          overflow: hidden;
-          border: none;
-          background: transparent;
-          padding: 0;
-          cursor: pointer;
-          font: inherit;
-          text-align: inherit;
-          transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
-        }
-        .star-border-container:disabled { cursor: not-allowed; opacity: 0.5; }
-        .star-border-container:focus-visible { outline: none; }
-        .star-border-container:focus-visible .star-border-inner {
-          outline: none;
-          box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--bz-focus-ring, #912c22);
-        }
-        .star-border-container:disabled .border-gradient-bottom,
-        .star-border-container:disabled .border-gradient-top {
-          animation-play-state: paused;
-          opacity: 0.25;
-        }
-        .star-border-container:active:not(:disabled) { transform: scale(0.97); }
-        .border-gradient-bottom,
-        .border-gradient-top {
-          position: absolute;
-          width: 300%;
-          height: 50%;
-          opacity: 0.65;
-          border-radius: 50%;
-          z-index: 0;
-          pointer-events: none;
-        }
-        .border-gradient-bottom {
-          bottom: -12px;
-          right: -250%;
-          animation: star-movement-bottom linear infinite alternate;
-        }
-        .border-gradient-top {
-          top: -12px;
-          left: -250%;
-          animation: star-movement-top linear infinite alternate;
-        }
-        .star-border-inner {
-          position: relative;
-          z-index: 1;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          border-radius: 0.5rem;
-          border: 1px solid hsl(40 12% 82%);
-          background: #f7f3ee;
-          color: hsl(20 8% 18%);
-          font-size: 0.875rem;
-          font-weight: 500;
-          letter-spacing: 0.02em;
-          padding: 0.625rem 1.25rem;
-          min-height: 2.75rem;
-          box-shadow: 0 4px 14px -10px hsl(5 62% 22% / 0.2);
-          transition: background-color 150ms ease, border-color 150ms ease,
-            color 150ms ease, box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1);
-        }
-        .star-border-inner svg {
-          transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
-        }
-        .star-border-inner--outline:hover {
-          border-color: hsl(38 45% 52% / 0.4);
-          background: #efe9e1;
-        }
-        .star-border-inner--primary {
-          border-color: hsl(5 62% 35% / 0.3);
-          background: hsl(5 62% 35%);
-          color: #f7f3ee;
-        }
-        .star-border-inner--primary:hover { filter: brightness(1.03); }
-        .star-border-inner--gold {
-          border-color: hsl(38 45% 52% / 0.35);
-          background: hsl(38 45% 52%);
-          color: #1c1917;
-        }
-        .star-border-inner--gold:hover { filter: brightness(1.03); }
-        @media (hover: hover) and (pointer: fine) {
-          .star-border-container:hover:not(:disabled) { transform: translateY(-3px); }
-          .star-border-container:hover:not(:disabled) .star-border-inner {
-            box-shadow: 0 14px 28px -12px hsl(5 62% 22% / 0.38);
-          }
-          .star-border-container:hover:not(:disabled) .star-border-inner svg:last-child {
-            transform: translateX(3px);
-          }
-          .star-border-container:active:not(:disabled) {
-            transform: translateY(-1px) scale(0.97);
-          }
-        }
-        @keyframes star-movement-bottom {
-          0% { transform: translate(0%, 0%); opacity: 1; }
-          100% { transform: translate(-100%, 0%); opacity: 0; }
-        }
-        @keyframes star-movement-top {
-          0% { transform: translate(0%, 0%); opacity: 1; }
-          100% { transform: translate(100%, 0%); opacity: 0; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .star-border-container,
-          .star-border-inner,
-          .star-border-inner svg { transition: none; }
-          .star-border-container:hover:not(:disabled),
-          .star-border-container:active:not(:disabled) { transform: none; }
-          .border-gradient-bottom,
-          .border-gradient-top { animation: none !important; opacity: 0.35; }
-        }
-      \`}</style>
-      {createElement(
-        Component,
-        {
-          className: cn("star-border-container", className),
-          style: {
-            padding: \`\${thickness}px 0\`,
-            ...(style as CSSProperties | undefined),
-          },
-          ...rest,
-        },
-        <>
-          <div
-            className="border-gradient-bottom"
-            style={{
-              background: \`radial-gradient(circle, \${glow}, transparent 10%)\`,
-              animationDuration: speed,
-            }}
-            aria-hidden
-          />
-          <div
-            className="border-gradient-top"
-            style={{
-              background: \`radial-gradient(circle, \${glow}, transparent 10%)\`,
-              animationDuration: speed,
-            }}
-            aria-hidden
-          />
-          <div
-            className={cn(
-              "star-border-inner",
-              tone === "outline" && "star-border-inner--outline",
-              tone === "primary" && "star-border-inner--primary",
-              tone === "gold" && "star-border-inner--gold",
-              innerClassName,
-            )}
-          >
-            {children}
-          </div>
-        </>,
-      )}
-    </>
-  );
-}`,
-    description: "Button with light glints sweeping its top and bottom edges, in three tones.",
-    tags: ["border-beam", "radial-gradient", "cta", "hover-lift", "css-keyframes"],
+    tags: ["webgl", "three", "shader", "rings", "parallax", "loader-backdrop", "hero"],
   },
   {
     name: "ShinyText",
@@ -13087,504 +14176,6 @@ export function AutoplayCarousel({
     tags: ["carousel", "autoplay", "images", "swipe", "accessible", "pause"],
   },
   {
-    name: "MessageForm",
-    slug: "message-form",
-    path: "forms/MessageForm.tsx",
-    category: "forms",
-    code: `"use client";
-
-import { useEffect, useId, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
-
-/*
- * MessageForm: a complete form pattern, not just fields.
- *
- * - Validation runs on submit. Every invalid field gets \`aria-invalid\` and an
- *   error message tied to it with \`aria-describedby\`, and focus moves to the
- *   first one after the errors have rendered, so it is read out with its message.
- * - One polite live region, always mounted, says what happened: how many fields
- *   need attention, that details are being checked, that the message is being
- *   sent, that it was sent, or that it was not.
- * - A field can carry an asynchronous \`check\`, such as whether a link opens.
- *   Checks are cancelled if the form is submitted again or unmounted, time out,
- *   and let the message through when they cannot run at all.
- * - Sending is honest: the form only says "sent" when \`onSend\` resolved. A
- *   failure or a timeout keeps what was typed and can offer another way to reach
- *   you. The submit button keeps its width while its label changes.
- */
-
-const CSS = \`
-.bz-mf{container-type:inline-size;color:var(--bz-ink,#0a0a0a);font-family:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif)}
-.bz-mf *,.bz-mf *::before,.bz-mf *::after{box-sizing:border-box}
-.bz-mf-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
-@container (min-width:520px){.bz-mf-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.bz-mf-field[data-span="half"]{grid-column:span 1}}
-.bz-mf-field{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}
-.bz-mf-label{font-size:0.875rem;font-weight:600;line-height:1.4}
-.bz-mf-req{margin-left:3px;color:var(--bz-danger,#b91c1c)}
-.bz-mf-control{width:100%;min-height:48px;margin:0;padding:11px 14px;border:1px solid var(--bz-ink-disabled,#8a8a8e);border-radius:12px;background:var(--bz-paper,#ffffff);color:inherit;font:inherit;font-size:1rem;line-height:1.5;transition:border-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),box-shadow 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
-textarea.bz-mf-control{min-height:120px;resize:vertical}
-.bz-mf-control::placeholder{color:var(--bz-ink-subtle,#6b6b70)}
-@media (hover:hover){.bz-mf-control:hover{border-color:var(--bz-ink-muted,#4a4a4c)}}
-.bz-mf-control:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px;border-color:var(--bz-ink,#0a0a0a)}
-.bz-mf-control[aria-invalid="true"]{border-color:var(--bz-danger-decor,#ef4444);box-shadow:inset 0 0 0 1px var(--bz-danger-decor,#ef4444)}
-.bz-mf-hint{margin:0;font-size:0.8125rem;line-height:1.45;color:var(--bz-ink-subtle,#6b6b70)}
-.bz-mf-error{display:flex;align-items:flex-start;gap:6px;margin:0;font-size:0.8125rem;font-weight:500;line-height:1.45;color:var(--bz-danger,#b91c1c)}
-.bz-mf-error svg{flex:none;width:14px;height:14px;margin-top:2px}
-.bz-mf-check{display:flex;align-items:center;gap:6px;min-height:1.2em;margin:0;font-size:0.8125rem;font-weight:500;line-height:1.45;color:var(--bz-ink-muted,#4a4a4c)}
-.bz-mf-check:empty{display:none}
-.bz-mf-check[data-result="ok"]{color:var(--bz-emerald,#047857)}
-.bz-mf-check[data-result="blocked"]{color:var(--bz-danger,#b91c1c)}
-.bz-mf-check svg{flex:none;width:14px;height:14px}
-.bz-mf-spin{animation:bz-mf-turn 900ms linear infinite}
-@keyframes bz-mf-turn{to{transform:rotate(360deg)}}
-.bz-mf-skip{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
-.bz-mf-alert{display:flex;gap:10px;margin:18px 0 0;padding:12px 14px;border:1px solid var(--bz-danger-decor,#ef4444);border-radius:12px;background:#fef2f2;color:var(--bz-danger,#b91c1c);font-size:0.875rem;line-height:1.5}
-.bz-mf-alert a{color:inherit;font-weight:600;text-underline-offset:3px}
-.bz-mf-alert a:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px;border-radius:2px}
-.bz-mf-alert svg{flex:none;width:16px;height:16px;margin-top:2px}
-.bz-mf-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin-top:22px}
-.bz-mf-submit{display:inline-grid;align-items:center;min-height:48px;padding:0 22px;border:0;border-radius:999px;background:var(--bz-ink,#0a0a0a);color:#ffffff;font:inherit;font-size:0.9375rem;font-weight:600;cursor:pointer;transition:background-color 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1)),transform 150ms var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1))}
-.bz-mf-submit>span{display:flex;grid-area:1/1;align-items:center;justify-content:center;gap:8px}
-.bz-mf-submit>span[aria-hidden="true"]{visibility:hidden}
-@media (hover:hover){.bz-mf-submit:hover{background:#2b2b2e}}
-.bz-mf-submit:focus-visible,.bz-mf-secondary:focus-visible{outline:2px solid var(--bz-focus-ring,#912c22);outline-offset:2px}
-.bz-mf-submit:active{transform:scale(0.97)}
-.bz-mf-submit[aria-disabled="true"]{cursor:progress;background:#3a3a3e}
-.bz-mf-submit svg{width:16px;height:16px}
-.bz-mf-note{margin:0;font-size:0.8125rem;line-height:1.45;color:var(--bz-ink-subtle,#6b6b70)}
-.bz-mf-done{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
-.bz-mf-mark{display:grid;place-items:center;width:44px;height:44px;border-radius:999px;background:#ecfdf5;color:var(--bz-emerald,#047857)}
-.bz-mf-mark svg{width:20px;height:20px}
-.bz-mf-done-title{margin:4px 0 0;font-size:1.25rem;font-weight:600;letter-spacing:-0.01em;outline:none}
-.bz-mf-done-body{margin:0;max-width:30rem;font-size:0.9375rem;line-height:1.55;color:var(--bz-ink-muted,#4a4a4c)}
-.bz-mf-secondary{min-height:48px;margin-top:6px;padding:0 18px;border:1px solid var(--bz-ink-disabled,#8a8a8e);border-radius:999px;background:transparent;color:inherit;font:inherit;font-size:0.9375rem;font-weight:600;cursor:pointer}
-@media (hover:hover){.bz-mf-secondary:hover{background:rgba(10,10,10,0.05)}}
-.bz-mf-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
-@media (prefers-reduced-motion:reduce){.bz-mf-spin{animation:none}.bz-mf-control,.bz-mf-submit{transition:none}.bz-mf-submit:active{transform:none}}
-\`;
-
-export type MessageFormField = {
-  name: string;
-  label: string;
-  type?: "text" | "email" | "tel" | "url" | "textarea";
-  required?: boolean;
-  placeholder?: string;
-  hint?: string;
-  autoComplete?: string;
-  minLength?: number;
-  maxLength?: number;
-  /** Half width beside another half-width field when the form is wide enough. */
-  span?: "half" | "full";
-  /** Extra rule. Return a message to show, or null. */
-  validate?: (value: string, values: Record<string, string>) => string | null;
-  /**
-   * Asynchronous check run before sending, only when the field has a value.
-   * Resolve \`{ ok: false, message }\` to stop the send, \`{ ok: true, message }\`
-   * to confirm, or null when the check could not run.
-   */
-  check?: (value: string, signal: AbortSignal) => Promise<{ ok: boolean; message: string } | null>;
-};
-
-export type MessageFormResult = void | { fieldErrors?: Record<string, string>; error?: string };
-
-export type MessageFormProps = {
-  /** Send the message. Resolve when it arrived; reject or return \`error\` when it did not. */
-  onSend: (values: Record<string, string>, signal: AbortSignal) => Promise<MessageFormResult>;
-  fields?: MessageFormField[];
-  defaultValues?: Record<string, string>;
-  submitLabel?: string;
-  sendingLabel?: string;
-  checkingLabel?: string;
-  note?: ReactNode;
-  successTitle?: ReactNode;
-  successBody?: ReactNode | ((values: Record<string, string>) => ReactNode);
-  /** Another way to get in touch, offered when sending fails. */
-  fallback?: { href: string; label: string };
-  timeoutMs?: number;
-  checkTimeoutMs?: number;
-  /** Name of a hidden field that people leave empty and bots fill in. \`false\` turns it off. */
-  trapName?: string | false;
-  className?: string;
-};
-
-const DEFAULT_FIELDS: MessageFormField[] = [
-  { name: "name", label: "Name", required: true, autoComplete: "name", span: "half", minLength: 2 },
-  { name: "email", label: "Email", type: "email", required: true, autoComplete: "email", span: "half" },
-  { name: "message", label: "Message", type: "textarea", required: true, minLength: 20, hint: "A few sentences is plenty." },
-];
-
-const EMAIL = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/;
-const PHONE = /^\\+?[\\d\\s().-]{7,20}$/;
-const LINK = /^https?:\\/\\/[^\\s/.]+\\.[^\\s]{2,}/i;
-
-type Status = "idle" | "checking" | "sending" | "sent" | "failed";
-type CheckView = { result: "checking" | "ok" | "blocked" | "unavailable"; message: string };
-
-function validateField(field: MessageFormField, value: string, values: Record<string, string>) {
-  const trimmed = value.trim();
-  if (field.required && !trimmed) return \`\${field.label} is required.\`;
-  if (!trimmed) return null;
-  if (field.type === "email" && !EMAIL.test(trimmed)) return "Enter an email address like name@example.com.";
-  if (field.type === "tel" && !PHONE.test(trimmed)) return "Enter a phone number of 7 to 20 digits.";
-  if (field.type === "url" && !LINK.test(trimmed)) return "Enter a link that starts with https://";
-  if (field.minLength && trimmed.length < field.minLength) return \`Use at least \${field.minLength} characters.\`;
-  if (field.maxLength && value.length > field.maxLength) return \`Use \${field.maxLength} characters or fewer.\`;
-  return field.validate?.(value, values) ?? null;
-}
-
-function withTimeout<T>(promise: Promise<T>, ms: number, controller: AbortController) {
-  return new Promise<T>((resolve, reject) => {
-    const timer = window.setTimeout(() => {
-      controller.abort();
-      reject(new Error("timeout"));
-    }, ms);
-    promise.then(
-      (value) => {
-        window.clearTimeout(timer);
-        resolve(value);
-      },
-      (error) => {
-        window.clearTimeout(timer);
-        reject(error);
-      },
-    );
-  });
-}
-
-const Spinner = () => (
-  <svg className="bz-mf-spin" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <circle cx="8" cy="8" r="6" stroke="currentColor" strokeOpacity="0.3" strokeWidth="2" />
-    <path d="M14 8a6 6 0 0 0-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  </svg>
-);
-
-const Alert = () => (
-  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <path d="M8 1.8 15 14H1L8 1.8Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-    <path d="M8 6.2v3.4M8 11.8v.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-  </svg>
-);
-
-const Tick = () => (
-  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-    <path d="m3.5 8.5 3 3 6-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-export function MessageForm({
-  onSend,
-  fields = DEFAULT_FIELDS,
-  defaultValues = {},
-  submitLabel = "Send message",
-  sendingLabel = "Sending",
-  checkingLabel = "Checking",
-  note,
-  successTitle = "Message sent",
-  successBody = "Thanks for writing. You will hear back soon.",
-  fallback,
-  timeoutMs = 15000,
-  checkTimeoutMs = 6000,
-  trapName = "leave_this_empty",
-  className = "",
-}: MessageFormProps) {
-  const uid = useId().replace(/:/g, "");
-  const [status, setStatus] = useState<Status>("idle");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [checks, setChecks] = useState<Record<string, CheckView>>({});
-  const [failure, setFailure] = useState<string | null>(null);
-  const [announcement, setAnnouncement] = useState("");
-  const [sentValues, setSentValues] = useState<Record<string, string>>({});
-  const [formKey, setFormKey] = useState(0);
-  const formRef = useRef<HTMLFormElement>(null);
-  const doneRef = useRef<HTMLHeadingElement>(null);
-  const busy = useRef(false);
-  const controllerRef = useRef<AbortController | null>(null);
-  const pendingFocus = useRef<string | null>(null);
-  const flip = useRef(false);
-
-  const announce = (message: string) => {
-    // A trailing zero-width space forces a repeat of the same words to be read again.
-    flip.current = !flip.current;
-    setAnnouncement(flip.current ? message : \`\${message}​\`);
-  };
-
-  useEffect(() => () => controllerRef.current?.abort(), []);
-
-  // Focus after the errors are in the DOM, so the field is read with its message.
-  useEffect(() => {
-    const name = pendingFocus.current;
-    if (!name) return;
-    pendingFocus.current = null;
-    const el = formRef.current?.elements.namedItem(name);
-    if (el instanceof HTMLElement) el.focus();
-  }, [errors]);
-
-  useEffect(() => {
-    if (status === "sent") doneRef.current?.focus();
-  }, [status]);
-
-  const report = (found: Record<string, string>) => {
-    const names = fields.map((f) => f.name).filter((name) => found[name]);
-    pendingFocus.current = names[0] ?? null;
-    setErrors(found);
-    setStatus("idle");
-    const labels = names.map((name) => fields.find((f) => f.name === name)?.label ?? name);
-    announce(\`\${names.length} \${names.length === 1 ? "field needs" : "fields need"} attention: \${labels.join(", ")}.\`);
-  };
-
-  const onFieldChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name } = event.currentTarget;
-    if (errors[name]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[name];
-        return next;
-      });
-    }
-    if (checks[name]) {
-      setChecks((prev) => {
-        const next = { ...prev };
-        delete next[name];
-        return next;
-      });
-    }
-  };
-
-  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (busy.current) return;
-    const data = new FormData(event.currentTarget);
-
-    if (trapName && String(data.get(trapName) ?? "")) {
-      setSentValues({});
-      setStatus("sent");
-      return;
-    }
-
-    const values = Object.fromEntries(fields.map((f) => [f.name, String(data.get(f.name) ?? "")]));
-    const found: Record<string, string> = {};
-    for (const field of fields) {
-      const message = validateField(field, values[field.name], values);
-      if (message) found[field.name] = message;
-    }
-    if (Object.keys(found).length) {
-      report(found);
-      return;
-    }
-
-    busy.current = true;
-    setErrors({});
-    setFailure(null);
-    controllerRef.current?.abort();
-    const controller = new AbortController();
-    controllerRef.current = controller;
-
-    try {
-      const toCheck = fields.filter((f) => f.check && values[f.name].trim());
-      if (toCheck.length) {
-        setStatus("checking");
-        announce(\`\${checkingLabel} your details.\`);
-        const blocked: Record<string, string> = {};
-        await Promise.all(
-          toCheck.map(async (field) => {
-            setChecks((prev) => ({ ...prev, [field.name]: { result: "checking", message: \`\${checkingLabel}…\` } }));
-            const own = new AbortController();
-            const relay = () => own.abort();
-            controller.signal.addEventListener("abort", relay);
-            try {
-              const result = await withTimeout(field.check!(values[field.name], own.signal), checkTimeoutMs, own);
-              if (controller.signal.aborted) return;
-              if (!result) throw new Error("unavailable");
-              setChecks((prev) => ({ ...prev, [field.name]: { result: result.ok ? "ok" : "blocked", message: result.message } }));
-              if (!result.ok) blocked[field.name] = result.message;
-            } catch {
-              if (controller.signal.aborted) return;
-              setChecks((prev) => ({
-                ...prev,
-                [field.name]: { result: "unavailable", message: "This could not be checked, so it will be sent as it is." },
-              }));
-            } finally {
-              controller.signal.removeEventListener("abort", relay);
-            }
-          }),
-        );
-        if (controller.signal.aborted) return;
-        if (Object.keys(blocked).length) {
-          report(blocked);
-          return;
-        }
-      }
-
-      setStatus("sending");
-      announce(\`\${sendingLabel} your message.\`);
-      const result = await withTimeout(onSend(values, controller.signal), timeoutMs, controller);
-      if (result && result.fieldErrors && Object.keys(result.fieldErrors).length) {
-        report(result.fieldErrors);
-        return;
-      }
-      if (result && result.error) throw new Error(result.error);
-      setSentValues(values);
-      setStatus("sent");
-      announce(typeof successTitle === "string" ? successTitle : "Message sent.");
-    } catch (error) {
-      const message =
-        error instanceof Error && error.message === "timeout"
-          ? "Sending took too long, so it was stopped. Nothing you typed was lost."
-          : error instanceof Error && error.message
-            ? error.message
-            : "The message could not be sent.";
-      setFailure(message);
-      setStatus("failed");
-      announce(\`Not sent. \${message}\`);
-    } finally {
-      busy.current = false;
-    }
-  };
-
-  const reset = () => {
-    setErrors({});
-    setChecks({});
-    setFailure(null);
-    setStatus("idle");
-    setFormKey((k) => k + 1);
-    announce("Form cleared.");
-  };
-
-  const working = status === "checking" || status === "sending";
-  const liveRegion = (
-    <p className="bz-mf-sr" aria-live="polite">
-      {announcement}
-    </p>
-  );
-
-  if (status === "sent") {
-    return (
-      <>
-        <style dangerouslySetInnerHTML={{ __html: CSS }} />
-        <div className={\`bz-mf \${className}\`.trim()}>
-          <div className="bz-mf-done">
-            <span className="bz-mf-mark" aria-hidden="true">
-              <Tick />
-            </span>
-            <h3 ref={doneRef} tabIndex={-1} className="bz-mf-done-title">
-              {successTitle}
-            </h3>
-            <p className="bz-mf-done-body">{typeof successBody === "function" ? successBody(sentValues) : successBody}</p>
-            <button type="button" className="bz-mf-secondary" onClick={reset}>
-              Write another
-            </button>
-          </div>
-          {liveRegion}
-        </div>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
-      <form key={formKey} ref={formRef} className={\`bz-mf \${className}\`.trim()} noValidate onSubmit={onSubmit} aria-busy={working || undefined}>
-        <div className="bz-mf-grid">
-          {fields.map((field) => {
-            const id = \`\${uid}-\${field.name}\`;
-            const error = errors[field.name];
-            const check = checks[field.name];
-            const describedBy = [field.hint ? \`\${id}-hint\` : null, error ? \`\${id}-error\` : null, field.check ? \`\${id}-check\` : null]
-              .filter(Boolean)
-              .join(" ");
-            const common = {
-              id,
-              name: field.name,
-              className: "bz-mf-control",
-              placeholder: field.placeholder,
-              autoComplete: field.autoComplete,
-              defaultValue: defaultValues[field.name],
-              "aria-invalid": error ? true : undefined,
-              "aria-required": field.required || undefined,
-              "aria-describedby": describedBy || undefined,
-              onChange: onFieldChange,
-            };
-            return (
-              <div key={field.name} className="bz-mf-field" data-span={field.span ?? "full"}>
-                <label htmlFor={id} className="bz-mf-label">
-                  {field.label}
-                  {field.required ? (
-                    <span className="bz-mf-req" aria-hidden="true">
-                      *
-                    </span>
-                  ) : null}
-                </label>
-                {field.type === "textarea" ? (
-                  <textarea {...common} rows={5} />
-                ) : (
-                  <input {...common} type={field.type ?? "text"} inputMode={field.type === "url" ? "url" : undefined} />
-                )}
-                {field.hint ? (
-                  <p id={\`\${id}-hint\`} className="bz-mf-hint">
-                    {field.hint}
-                  </p>
-                ) : null}
-                {error ? (
-                  <p id={\`\${id}-error\`} className="bz-mf-error">
-                    <Alert />
-                    {error}
-                  </p>
-                ) : null}
-                {field.check ? (
-                  <p id={\`\${id}-check\`} className="bz-mf-check" role="status" data-result={check?.result}>
-                    {check ? (
-                      <>
-                        {check.result === "checking" ? <Spinner /> : check.result === "ok" ? <Tick /> : check.result === "blocked" ? <Alert /> : null}
-                        {check.message}
-                      </>
-                    ) : null}
-                  </p>
-                ) : null}
-              </div>
-            );
-          })}
-        </div>
-
-        {trapName ? (
-          <div className="bz-mf-skip" aria-hidden="true">
-            <label htmlFor={\`\${uid}-skip\`}>Leave this field empty</label>
-            <input id={\`\${uid}-skip\`} name={trapName} tabIndex={-1} autoComplete="off" defaultValue="" />
-          </div>
-        ) : null}
-
-        {status === "failed" && failure ? (
-          <div className="bz-mf-alert" role="alert">
-            <Alert />
-            <p style={{ margin: 0 }}>
-              {failure}
-              {fallback ? (
-                <>
-                  {" "}
-                  <a href={fallback.href}>{fallback.label}</a>
-                </>
-              ) : null}
-            </p>
-          </div>
-        ) : null}
-
-        <div className="bz-mf-actions">
-          <button type="submit" className="bz-mf-submit" aria-disabled={working || undefined}>
-            <span aria-hidden={working || undefined}>{submitLabel}</span>
-            <span aria-hidden={working ? undefined : true}>
-              <Spinner />
-              {status === "checking" ? checkingLabel : sendingLabel}
-            </span>
-          </button>
-          {note ? <p className="bz-mf-note">{note}</p> : null}
-        </div>
-        {liveRegion}
-      </form>
-    </>
-  );
-}`,
-    description: "Form with announced errors, focus to the first one and honest sending states.",
-    tags: ["form", "validation", "aria-invalid", "live-region", "async", "accessible"],
-  },
-  {
     name: "ScrollFlipDeck",
     slug: "scroll-flip-deck",
     path: "sections/ScrollFlipDeck.tsx",
@@ -13665,11 +14256,12 @@ const STEP = 0.85;
 const HOLD = 0.25;
 
 /*
- * Cards spend the middle third of their step face on rather than passing
- * through it. Without the dwell every card is mid-turn at every scroll
- * position, and the deck never resolves into something you can look at.
+ * Cards rest face on for a share of their step rather than turning the whole
+ * way through it, so the deck resolves into something you can look at. Keep it
+ * small: most of the step should be the turn, or the motion is over in a
+ * flick and the deck reads as a still image that jumps.
  */
-const DWELL = 0.3;
+const DWELL = 0.14;
 const dwell = (offset: number) => {
   const sign = offset < 0 ? -1 : 1;
   const size = Math.abs(offset);
@@ -13897,6 +14489,847 @@ export function ScrollFlipDeck({
 }`,
     description: "Pinned deck of images that turn away one at a time as you scroll.",
     tags: ["scroll", "3d", "images", "pinned", "sticky", "gallery", "reduced-motion"],
+  },
+  {
+    name: "SketchHighlight",
+    slug: "sketch-highlight",
+    path: "animation/SketchHighlight.tsx",
+    category: "animation",
+    code: `"use client";
+
+import {
+  isValidElement,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+
+export type SketchMark = "highlight" | "underline" | "strike";
+
+/**
+ * The highlighter set. A wash sits behind the words and a pen line crosses
+ * them, so each colour carries two values: a wash the text stays legible on
+ * and an ink that reads as a confident stroke. Each is a [paper, void] pair
+ * picked by light-dark(), the same switch the rest of the library uses, so a
+ * host that declares \`color-scheme: dark\` gets the void values with no prop.
+ * On paper the wash is opaque and pale enough for dark text (13:1 or better).
+ * On void it is the saturated colour at partial alpha: the page keeps its
+ * light text and the ground darkens the tint enough to hold 4.8:1 or better.
+ * Pen inks clear 3:1 as marks on paper, paper-raised, void and void-raised.
+ */
+export const SKETCH_PALETTE = {
+  yellow: {
+    wash: ["#fff04d", "rgba(255, 226, 40, 0.44)"],
+    ink: ["#b38400", "#ffe14d"],
+  },
+  lime: {
+    wash: ["#c8f560", "rgba(190, 240, 60, 0.4)"],
+    ink: ["#4f9a00", "#bef264"],
+  },
+  purple: {
+    wash: ["#ecc6ff", "rgba(214, 110, 255, 0.42)"],
+    ink: ["#a31fc9", "#e27cff"],
+  },
+  violet: {
+    wash: ["#d7d0ff", "rgba(140, 110, 255, 0.46)"],
+    ink: ["#6a3cf0", "#a996ff"],
+  },
+} as const;
+
+export type SketchColor = keyof typeof SKETCH_PALETTE;
+
+const isPreset = (value: string): value is SketchColor =>
+  Object.prototype.hasOwnProperty.call(SKETCH_PALETTE, value);
+
+type Layer = { stroke: string; blend?: CSSProperties["mixBlendMode"] };
+
+/**
+ * The layers a mark is painted in. A plain colour, or a preset pen line, is one
+ * layer. A preset wash is two, because its overshoot reaches into the words on
+ * either side and those words are painted underneath it. On paper the wash
+ * multiplies, the way highlighter ink does, so a neighbouring letter stays
+ * black instead of vanishing under an opaque pastel. On void it paints
+ * normally: it is already translucent there, and multiplying it into a dark
+ * ground would erase it. light-dark() cannot switch a blend mode, so each layer
+ * carries the other ground's value as transparent.
+ */
+function resolveLayers(color: string, mark: SketchMark): { layers: Layer[]; preset: boolean } {
+  if (!isPreset(color)) return { layers: [{ stroke: color }], preset: false };
+  const [paper, dark] = SKETCH_PALETTE[color][mark === "highlight" ? "wash" : "ink"];
+  if (mark !== "highlight") return { layers: [{ stroke: \`light-dark(\${paper}, \${dark})\` }], preset: true };
+  return {
+    layers: [
+      { stroke: \`light-dark(\${paper}, transparent)\`, blend: "multiply" },
+      { stroke: \`light-dark(transparent, \${dark})\` },
+    ],
+    preset: true,
+  };
+}
+
+export type SketchHighlightProps = {
+  children: ReactNode;
+  /** highlight lays a marker wash behind the words; the other two draw over them. */
+  mark?: SketchMark;
+  /**
+   * yellow, lime, purple or violet for the tuned highlighter set, or any CSS
+   * colour. The default takes the text colour, so it works on any ground.
+   */
+  color?: SketchColor | (string & {});
+  /**
+   * 0 to 1. A preset is already mixed for its ground, so it defaults to 1. A
+   * plain colour defaults to 0.3 for the wash and 1 for a pen line.
+   */
+  opacity?: number;
+  /** Hand wobble in the stroke: 0 is a ruler, 2 is a bad pen. */
+  roughness?: number;
+  /**
+   * How far the ink shifts between takes, 0 to 1. Above 0 the mark is redrawn
+   * three ways and cycles between them, the way hand-drawn animation boils.
+   * 0 pins it to one still take and runs no timer at all.
+   */
+  boil?: number;
+  /** How long each take holds. Drawn animation sits around 2 to 3 frames a second. */
+  boilMs?: number;
+  /**
+   * Fixes which sketch you get. The default is a hash of the words, so the
+   * same phrase is always marked the same way; change it to shuffle.
+   */
+  seed?: number;
+  /** Re-roll the sketch while a pointer rests on the words. */
+  resketchOnHover?: boolean;
+  /** Overrides the width derived from the line height. */
+  strokeWidth?: number;
+  className?: string;
+  style?: CSSProperties;
+};
+
+type Line = { x: number; y: number; w: number; h: number };
+type Stroke = { d: string; width: number };
+/** One drawing of a mark: every pass of the pen, in order. */
+type Take = Stroke[];
+
+const TAKES = 3;
+
+/** Sub-pixel moves are noise, not a new layout. */
+const near = (a: number, b: number) => Math.abs(a - b) < 0.5;
+
+/**
+ * The block the words are laid out in. ResizeObserver skips non-replaced
+ * inline elements, so watching the marked span itself would never fire: it is
+ * this box getting narrower that rewraps the line.
+ */
+function blockAncestor(element: HTMLElement | null) {
+  let node = element;
+  while (node && getComputedStyle(node).display === "inline") node = node.parentElement;
+  return node ?? document.body;
+}
+
+const sameBox = (a: { left: number; top: number; w: number; h: number }, b: typeof a) =>
+  near(a.left, b.left) && near(a.top, b.top) && near(a.w, b.w) && near(a.h, b.h);
+
+const sameLines = (a: Line[], b: Line[]) =>
+  a.length === b.length &&
+  a.every(
+    (line, i) =>
+      near(line.x, b[i].x) && near(line.y, b[i].y) && near(line.w, b[i].w) && near(line.h, b[i].h),
+  );
+
+/* --------------------------------------------------------------- the hand */
+
+/** xorshift32. Small, fast, and the same seed always draws the same stroke. */
+function makeRandom(seed: number) {
+  let state = seed >>> 0 || 0x9e3779b9;
+  return () => {
+    state ^= state << 13;
+    state >>>= 0;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    state >>>= 0;
+    return state / 0x100000000;
+  };
+}
+
+/** FNV-1a, so a phrase can be its own seed without the caller passing one. */
+function hashSeed(text: string) {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return hash >>> 0;
+}
+
+/** The words inside, so the seed can come from what is being marked. */
+function textOf(node: ReactNode): string {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (isValidElement(node)) return textOf((node.props as { children?: ReactNode }).children);
+  return "";
+}
+
+/** Smooth a polyline into quadratics: every point becomes a control point. */
+function toPath(points: Array<[number, number]>) {
+  if (points.length < 2) return "";
+  const r = (n: number) => Math.round(n * 100) / 100;
+  let d = \`M\${r(points[0][0])} \${r(points[0][1])}\`;
+  for (let i = 1; i < points.length - 1; i += 1) {
+    const [cx, cy] = points[i];
+    const [nx, ny] = points[i + 1];
+    d += \`Q\${r(cx)} \${r(cy)} \${r((cx + nx) / 2)} \${r((cy + ny) / 2)}\`;
+  }
+  const end = points[points.length - 1];
+  return \`\${d}L\${r(end[0])} \${r(end[1])}\`;
+}
+
+/**
+ * One pass of the pen over one line of text.
+ *
+ * The wash is a marker sweep: it leans forward up the box and back down it, so
+ * the legs overlap and the edges come out ragged rather than boxed. A pen line
+ * is a single shallow bow, drawn twice with different wobble for an underline
+ * because nobody lands the same line on the second go.
+ */
+function penPass(line: Line, mark: SketchMark, roughness: number, pass: number, rand: () => number) {
+  const { x, y, w, h } = line;
+  const wobble = (amount: number) => (rand() - 0.5) * 2 * amount * roughness;
+  const points: Array<[number, number]> = [];
+
+  if (mark === "highlight") {
+    // Legs about a third of the line height apart, leaning far enough that the
+    // return stroke runs backwards. Any wider and the sweep reads as a zigzag
+    // rather than one pass of a marker.
+    const legWidth = Math.max(h * 0.29, 7);
+    const legs = Math.max(4, Math.round(w / legWidth)) * 2;
+    const overhang = h * 0.24;
+    const step = (w + overhang * 2) / legs;
+    const lean = step * 0.9;
+    const top = y + h * 0.1;
+    const bottom = y + h * 0.96;
+    for (let i = 0; i <= legs; i += 1) {
+      const up = i % 2 === 0;
+      points.push([
+        x - overhang + i * step + (up ? -lean : lean) + wobble(h * 0.08),
+        (up ? top : bottom) + wobble(h * 0.07),
+      ]);
+    }
+    return points;
+  }
+
+  const baseline = mark === "underline" ? y + h * (0.93 + pass * 0.045) : y + h * 0.57;
+  const overhang = h * (pass === 0 ? 0.14 : 0.04);
+  const span = w + overhang * 2;
+  const steps = Math.max(4, Math.round(span / 24));
+  // A hand-drawn line bows: the middle drifts off the straight by a hair.
+  const bow = h * 0.09 * (rand() - 0.35);
+  for (let i = 0; i <= steps; i += 1) {
+    const t = i / steps;
+    points.push([
+      x - overhang + t * span + wobble(h * 0.05),
+      baseline + Math.sin(t * Math.PI) * bow + wobble(h * 0.045),
+    ]);
+  }
+  return points;
+}
+
+/** Every take of every pass for one line, ready to drop into an \`<svg>\`. */
+function drawLine(
+  line: Line,
+  mark: SketchMark,
+  { roughness, boil, seed, strokeWidth, takes }: {
+    roughness: number;
+    boil: number;
+    seed: number;
+    strokeWidth?: number;
+    takes: number;
+  },
+): Take[] {
+  const passes = mark === "underline" ? 2 : 1;
+  const width =
+    strokeWidth ??
+    (mark === "highlight"
+      ? Math.min(24, Math.max(5, line.h * 0.36))
+      : Math.max(1.6, line.h * 0.07));
+
+  // One base shape per pass, then each take nudges it. Keeping the base means
+  // the mark stays recognisably itself while the ink moves.
+  const bases = Array.from({ length: passes }, (_, pass) =>
+    penPass(line, mark, roughness, pass, makeRandom(seed + pass * 104729)),
+  );
+
+  const drift = line.h * 0.05 * boil;
+  return Array.from({ length: takes }, (_, take) => {
+    const rand = makeRandom(seed + (take + 1) * 7919);
+    return bases.map((base) => ({
+      width,
+      d: toPath(
+        base.map(([px, py]) => [
+          px + (rand() - 0.5) * 2 * drift,
+          py + (rand() - 0.5) * 2 * drift,
+        ] as [number, number]),
+      ),
+    }));
+  });
+}
+
+/* ------------------------------------------------------------- the marker */
+
+/**
+ * A marker mark on a run of words, drawn as its own SVG strokes rather than
+ * handed to a sketch library.
+ *
+ * The mark does not play an entrance and stop. It is redrawn three ways from
+ * one seed and cycles between them, so the ink keeps boiling the way cel
+ * animation does, and it survives wrapping: each line of a wrapped phrase gets
+ * its own sweep. Reduced motion holds the first take still, a hidden tab
+ * pauses the cycle, and \`boil={0}\` opts out of the timer entirely.
+ */
+export function SketchHighlight({
+  children,
+  mark = "highlight",
+  color = "currentColor",
+  opacity,
+  roughness = 1,
+  boil = 0.3,
+  boilMs = 420,
+  seed,
+  resketchOnHover = false,
+  strokeWidth,
+  className = "",
+  style,
+}: SketchHighlightProps) {
+  const probeRef = useRef<HTMLSpanElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const [box, setBox] = useState<{ left: number; top: number; w: number; h: number } | null>(null);
+  const [lines, setLines] = useState<Line[]>([]);
+  const [roll, setRoll] = useState(0);
+  const [frame, setFrame] = useState(0);
+
+  const words = textOf(children);
+  const takeCount = boil > 0 ? TAKES : 1;
+  const baseSeed = ((seed ?? hashSeed(words || mark)) + roll * 0x9e3779b1) >>> 0;
+
+  const measure = useCallback(() => {
+    const probe = probeRef.current;
+    const text = textRef.current;
+    if (!probe || !text) return;
+    const rects = Array.from(text.getClientRects()).filter((r) => r.width > 0 && r.height > 0);
+    if (rects.length === 0) {
+      setLines((previous) => (previous.length === 0 ? previous : []));
+      setBox(null);
+      return;
+    }
+    const origin = probe.getBoundingClientRect();
+    const union = text.getBoundingClientRect();
+    // getBoundingClientRect reports screen pixels. Inside a scaled ancestor
+    // those are not the pixels the SVG is laid out in, so divide them back.
+    const block = probe.offsetParent as HTMLElement | null;
+    const ratio = block?.offsetWidth ? block.getBoundingClientRect().width / block.offsetWidth : 1;
+    const scale = Number.isFinite(ratio) && ratio > 0.01 ? ratio : 1;
+    const next = {
+      left: (union.left - origin.left) / scale,
+      top: (union.top - origin.top) / scale,
+      w: union.width / scale,
+      h: union.height / scale,
+    };
+    const nextLines = rects.map((r) => ({
+      x: (r.left - union.left) / scale,
+      y: (r.top - union.top) / scale,
+      w: r.width / scale,
+      h: r.height / scale,
+    }));
+    // A ResizeObserver on the page fires for things that never moved these
+    // words. Dropping the no-op keeps the strokes from being rebuilt for free.
+    setBox((previous) => (previous && sameBox(previous, next) ? previous : next));
+    setLines((previous) => (sameLines(previous, nextLines) ? previous : nextLines));
+  }, []);
+
+  useLayoutEffect(() => {
+    measure();
+    const text = textRef.current;
+    if (!text) return;
+    const observer = new ResizeObserver(measure);
+    observer.observe(blockAncestor(text));
+    observer.observe(document.body);
+    // Web fonts land after first paint and move every word on the line.
+    void document.fonts?.ready.then(measure);
+    return () => observer.disconnect();
+  }, [measure, words]);
+
+  useEffect(() => {
+    if (takeCount < 2) {
+      setFrame(0);
+      return;
+    }
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let timer = 0;
+    const stop = () => {
+      if (timer) window.clearInterval(timer);
+      timer = 0;
+    };
+    const sync = () => {
+      stop();
+      if (query.matches) {
+        setFrame(0);
+        return;
+      }
+      if (document.hidden) return;
+      timer = window.setInterval(() => setFrame((f) => (f + 1) % takeCount), boilMs);
+    };
+    sync();
+    query.addEventListener("change", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      stop();
+      query.removeEventListener("change", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, [takeCount, boilMs]);
+
+  const ink = resolveLayers(color, mark);
+  const defaultOpacity = ink.preset || mark !== "highlight" ? 1 : 0.3;
+
+  const takes = useMemo(
+    () =>
+      lines.map((line, index) =>
+        drawLine(line, mark, {
+          roughness,
+          boil,
+          seed: baseSeed + index * 131071,
+          strokeWidth,
+          takes: takeCount,
+        }),
+      ),
+    [lines, mark, roughness, boil, baseSeed, strokeWidth, takeCount],
+  );
+
+  const drawing = ink.layers.map((layer, layerIndex) => (
+    <svg
+      key={layerIndex}
+      aria-hidden="true"
+      focusable="false"
+      width={box?.w ?? 0}
+      height={box?.h ?? 0}
+      viewBox={box ? \`0 0 \${box.w} \${box.h}\` : undefined}
+      style={{
+        position: "absolute",
+        left: box?.left ?? 0,
+        top: box?.top ?? 0,
+        overflow: "visible",
+        pointerEvents: "none",
+        opacity: box ? (opacity ?? defaultOpacity) : 0,
+        transition: "opacity var(--bz-duration-fast, 150ms) linear",
+        mixBlendMode: layer.blend,
+      }}
+    >
+      {takes.map((line, lineIndex) =>
+        line.map((passes, take) =>
+          passes.map((pass, passIndex) => (
+            <path
+              key={\`\${lineIndex}-\${take}-\${passIndex}\`}
+              d={pass.d}
+              fill="none"
+              strokeWidth={pass.width}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              // Set as a style so a preset's light-dark() pair resolves in the cascade.
+              style={{ stroke: layer.stroke, visibility: take === frame ? "visible" : "hidden" }}
+            />
+          )),
+        ),
+      )}
+    </svg>
+  ));
+
+  const hoverProps = resketchOnHover
+    ? { onPointerEnter: () => setRoll((r) => r + 1) }
+    : undefined;
+
+  return (
+    <span className={className} style={style} data-mark={mark} {...hoverProps}>
+      {/* Zero-size probe. Absolutely positioned children of this span share its
+          containing block, so reading the probe gives that block's origin
+          exactly, whichever ancestor turns out to be positioned. */}
+      <span
+        ref={probeRef}
+        aria-hidden="true"
+        style={{ position: "absolute", left: 0, top: 0, width: 0, height: 0 }}
+      />
+      {/* Document order is the whole z-order story here: the wash is painted
+          before the words, a pen line after them. */}
+      {mark === "highlight" ? drawing : null}
+      <span ref={textRef} style={{ position: "relative" }}>
+        {children}
+      </span>
+      {mark === "highlight" ? null : drawing}
+    </span>
+  );
+}`,
+    description: "Seeded marker wash, underline or strike whose ink boils between three takes.",
+    tags: ["annotation", "highlight", "underline", "hand-drawn", "svg", "colors", "reduced-motion"],
+  },
+  {
+    name: "SketchArrow",
+    slug: "sketch-arrow",
+    path: "callouts/SketchArrow.tsx",
+    category: "callouts",
+    code: `"use client";
+
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from "react";
+
+/** A ref to the element, or a CSS selector looked up inside the container. */
+export type SketchArrowTarget = RefObject<HTMLElement | null> | string;
+
+export type SketchArrowProps = {
+  from: SketchArrowTarget;
+  to: SketchArrowTarget;
+  /** How far the line bows off the straight, as a fraction of its length. The sign picks the side. */
+  bend?: number;
+  /** Which ends get a head. */
+  head?: "end" | "start" | "both" | "none";
+  /** Any CSS colour. The default takes the surrounding text colour. */
+  color?: string;
+  /** Hand wobble in the stroke: 0 is a ruler, 2 is a bad pen. */
+  roughness?: number;
+  /**
+   * How far the ink shifts between takes, 0 to 1. Above 0 the arrow is drawn
+   * three ways and cycles between them, the way hand-drawn animation boils.
+   * 0 pins it to one still take and runs no timer at all.
+   */
+  boil?: number;
+  /** How long each take holds. Drawn animation sits around 2 to 3 frames a second. */
+  boilMs?: number;
+  /** Fixes which sketch you get. Change it to shuffle. */
+  seed?: number;
+  strokeWidth?: number;
+  /** Clearance left between each box and the end of the line. */
+  gap?: number;
+  /**
+   * What the arrow says, for a screen reader. Without one the arrow is treated
+   * as decoration and hidden, which is right when the copy already says it.
+   */
+  label?: string;
+  className?: string;
+  style?: CSSProperties;
+};
+
+type Point = [number, number];
+type Box = { cx: number; cy: number; hw: number; hh: number };
+
+const TAKES = 3;
+/** Any fixed value will do: it only has to be stable, so the arrow does not
+ *  redraw itself differently on every render. */
+const DEFAULT_SEED = 0x51ed270b;
+
+/* --------------------------------------------------------------- the hand */
+
+/* These four are deliberately carried in the file rather than imported: every
+   Bezel component is copied out on its own. */
+
+/** xorshift32. Small, fast, and the same seed always draws the same stroke. */
+function makeRandom(seed: number) {
+  let state = seed >>> 0 || 0x9e3779b9;
+  return () => {
+    state ^= state << 13;
+    state >>>= 0;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    state >>>= 0;
+    return state / 0x100000000;
+  };
+}
+
+/** Smooth a polyline into quadratics: every point becomes a control point. */
+function toPath(points: Point[]) {
+  if (points.length < 2) return "";
+  const r = (n: number) => Math.round(n * 100) / 100;
+  let d = \`M\${r(points[0][0])} \${r(points[0][1])}\`;
+  for (let i = 1; i < points.length - 1; i += 1) {
+    const [cx, cy] = points[i];
+    const [nx, ny] = points[i + 1];
+    d += \`Q\${r(cx)} \${r(cy)} \${r((cx + nx) / 2)} \${r((cy + ny) / 2)}\`;
+  }
+  const end = points[points.length - 1];
+  return \`\${d}L\${r(end[0])} \${r(end[1])}\`;
+}
+
+/** Walk a quadratic curve as a polyline, wobbling each sample off the ideal. */
+function penCurve(a: Point, control: Point, b: Point, steps: number, spread: number, rand: () => number): Point[] {
+  const points: Point[] = [];
+  for (let i = 0; i <= steps; i += 1) {
+    const t = i / steps;
+    const u = 1 - t;
+    // Ends are pinned: a stroke that misses its own target reads as a mistake.
+    const grip = Math.sin(t * Math.PI);
+    points.push([
+      u * u * a[0] + 2 * u * t * control[0] + t * t * b[0] + (rand() - 0.5) * 2 * spread * grip,
+      u * u * a[1] + 2 * u * t * control[1] + t * t * b[1] + (rand() - 0.5) * 2 * spread * grip,
+    ]);
+  }
+  return points;
+}
+
+/** Where a ray from the middle of a box toward \`target\` leaves the box. */
+function edgeToward(box: Box, target: Point, gap: number): Point {
+  const dx = target[0] - box.cx;
+  const dy = target[1] - box.cy;
+  const length = Math.hypot(dx, dy) || 1;
+  const tx = dx === 0 ? Infinity : box.hw / Math.abs(dx);
+  const ty = dy === 0 ? Infinity : box.hh / Math.abs(dy);
+  const t = Math.min(tx, ty, 1e6) + gap / length;
+  return [box.cx + dx * t, box.cy + dy * t];
+}
+
+/** The two short strokes of a head, pointing back up the line. */
+function headStrokes(tip: Point, towards: Point, size: number, spread: number, rand: () => number) {
+  const angle = Math.atan2(tip[1] - towards[1], tip[0] - towards[0]);
+  return [0.52, -0.52].map((turn) => {
+    const a = angle + Math.PI + turn;
+    const end: Point = [tip[0] + Math.cos(a) * size, tip[1] + Math.sin(a) * size];
+    const mid: Point = [
+      (tip[0] + end[0]) / 2 + (rand() - 0.5) * 2 * spread,
+      (tip[1] + end[1]) / 2 + (rand() - 0.5) * 2 * spread,
+    ];
+    return toPath([tip, mid, end]);
+  });
+}
+
+/* -------------------------------------------------------------- the arrow */
+
+/** Sub-pixel moves are noise, not a new layout. */
+const near = (a: number, b: number) => Math.abs(a - b) < 0.5;
+
+const sameBox = (a: Box | null, b: Box | null) =>
+  a === b ||
+  (!!a && !!b && near(a.cx, b.cx) && near(a.cy, b.cy) && near(a.hw, b.hw) && near(a.hh, b.hh));
+
+/**
+ * The block an element is laid out in. ResizeObserver skips non-replaced
+ * inline elements, and an endpoint often moves because the box around it
+ * changed rather than because the endpoint itself did.
+ */
+function blockAncestor(element: HTMLElement | null) {
+  let node = element;
+  while (node && getComputedStyle(node).display === "inline") node = node.parentElement;
+  return node ?? document.body;
+}
+
+function resolve(target: SketchArrowTarget, root: Element | Document): HTMLElement | null {
+  if (typeof target === "string") return root.querySelector<HTMLElement>(target);
+  return target.current ?? null;
+}
+
+/**
+ * A drawn arrow between two elements on the page, for pointing at a control in
+ * a walkthrough or tying a note to the thing it is about.
+ *
+ * It measures both ends and redraws itself whenever either one moves, so it
+ * stays attached through a resize or a reflow rather than being a fixed
+ * picture. The stroke is generated from a seed, and with \`boil\` above 0 it
+ * cycles between three takes so the ink keeps moving the way cel animation
+ * does. Reduced motion holds the first take still, a hidden tab pauses the
+ * cycle, and \`boil={0}\` runs no timer at all.
+ *
+ * Put it inside the same positioned container as the two elements: it fills
+ * that container, ignores the pointer, and a selector string is looked up
+ * inside it.
+ */
+export function SketchArrow({
+  from,
+  to,
+  bend = 0.16,
+  head = "end",
+  color = "currentColor",
+  roughness = 1,
+  boil = 0.3,
+  boilMs = 420,
+  seed = DEFAULT_SEED,
+  strokeWidth = 2,
+  gap = 8,
+  label,
+  className = "",
+  style,
+}: SketchArrowProps) {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  const [ends, setEnds] = useState<{ a: Box; b: Box } | null>(null);
+  const [frame, setFrame] = useState(0);
+
+  const takeCount = boil > 0 ? TAKES : 1;
+
+  const measure = useCallback(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    const root = host.offsetParent ?? host.ownerDocument;
+    const a = resolve(from, root);
+    const b = resolve(to, root);
+    const frameBox = host.getBoundingClientRect();
+    if (!a || !b || frameBox.width === 0) {
+      setEnds(null);
+      return;
+    }
+    // getBoundingClientRect reports screen pixels. Inside a scaled ancestor
+    // those are not the pixels the SVG is laid out in, so divide them back.
+    const ratio = host.offsetWidth ? frameBox.width / host.offsetWidth : 1;
+    const scale = Number.isFinite(ratio) && ratio > 0.01 ? ratio : 1;
+    const boxOf = (element: HTMLElement): Box => {
+      const r = element.getBoundingClientRect();
+      return {
+        cx: (r.left - frameBox.left + r.width / 2) / scale,
+        cy: (r.top - frameBox.top + r.height / 2) / scale,
+        hw: r.width / 2 / scale,
+        hh: r.height / 2 / scale,
+      };
+    };
+    const next = { a: boxOf(a), b: boxOf(b) };
+    const w = host.offsetWidth || frameBox.width;
+    const h = host.offsetHeight || frameBox.height;
+    setSize((previous) =>
+      previous && near(previous.w, w) && near(previous.h, h) ? previous : { w, h },
+    );
+    setEnds((previous) =>
+      previous && sameBox(previous.a, next.a) && sameBox(previous.b, next.b) ? previous : next,
+    );
+  }, [from, to]);
+
+  useLayoutEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(host);
+    const root = host.offsetParent ?? host.ownerDocument;
+    for (const target of [resolve(from, root), resolve(to, root)]) {
+      if (!target) continue;
+      observer.observe(target);
+      observer.observe(blockAncestor(target));
+    }
+    // Both ends can move without either box changing size, so watch the page too.
+    observer.observe(document.body);
+    void document.fonts?.ready.then(measure);
+    return () => observer.disconnect();
+  }, [measure, from, to]);
+
+  useEffect(() => {
+    if (takeCount < 2) {
+      setFrame(0);
+      return;
+    }
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let timer = 0;
+    const stop = () => {
+      if (timer) window.clearInterval(timer);
+      timer = 0;
+    };
+    const sync = () => {
+      stop();
+      if (query.matches) {
+        setFrame(0);
+        return;
+      }
+      if (document.hidden) return;
+      timer = window.setInterval(() => setFrame((f) => (f + 1) % takeCount), boilMs);
+    };
+    sync();
+    query.addEventListener("change", sync);
+    document.addEventListener("visibilitychange", sync);
+    return () => {
+      stop();
+      query.removeEventListener("change", sync);
+      document.removeEventListener("visibilitychange", sync);
+    };
+  }, [takeCount, boilMs]);
+
+  const takes = useMemo(() => {
+    if (!ends) return [];
+    const { a, b } = ends;
+    const dx = b.cx - a.cx;
+    const dy = b.cy - a.cy;
+    const length = Math.hypot(dx, dy);
+    if (length < 4) return [];
+    // The bow is a control point pushed off the midline at a right angle.
+    const control: Point = [
+      (a.cx + b.cx) / 2 - dy * bend,
+      (a.cy + b.cy) / 2 + dx * bend,
+    ];
+    const start = edgeToward(a, control, gap);
+    const end = edgeToward(b, control, gap);
+    const steps = Math.max(6, Math.min(28, Math.round(length / 18)));
+    const spread = Math.min(6, Math.max(1.2, length * 0.012)) * roughness;
+    const headSize = Math.max(12, strokeWidth * 5.5, length * 0.07);
+    const drift = spread * boil * 1.6;
+
+    return Array.from({ length: takeCount }, (_, take) => {
+      const rand = makeRandom(seed + (take + 1) * 7919);
+      // Two passes: nobody lands the same line twice, and the overlap is the
+      // whole reason a drawn arrow reads as drawn.
+      const shaft = [
+        toPath(penCurve(start, control, end, steps, spread, rand)),
+        toPath(penCurve(start, control, end, steps, spread * 0.8, rand)),
+      ];
+      const heads: string[] = [];
+      if (head === "end" || head === "both") heads.push(...headStrokes(end, control, headSize, drift + 1, rand));
+      if (head === "start" || head === "both") heads.push(...headStrokes(start, control, headSize, drift + 1, rand));
+      const wobble = (): Point => [(rand() - 0.5) * 2 * drift, (rand() - 0.5) * 2 * drift];
+      const [ox, oy] = wobble();
+      return { d: [...shaft, ...heads].join(""), ox, oy };
+    });
+  }, [ends, bend, gap, roughness, strokeWidth, head, seed, boil, takeCount]);
+
+  return (
+    <div
+      ref={hostRef}
+      className={className}
+      style={{ position: "absolute", inset: 0, pointerEvents: "none", ...style }}
+    >
+      <svg
+        width={size?.w ?? 0}
+        height={size?.h ?? 0}
+        viewBox={size ? \`0 0 \${size.w} \${size.h}\` : undefined}
+        role={label ? "img" : undefined}
+        aria-hidden={label ? undefined : "true"}
+        focusable="false"
+        style={{
+          display: "block",
+          overflow: "visible",
+          opacity: takes.length > 0 ? 1 : 0,
+          transition: "opacity var(--bz-duration-fast, 150ms) linear",
+        }}
+      >
+        {label ? <title>{label}</title> : null}
+        {takes.map((take, index) => (
+          <path
+            key={index}
+            d={take.d}
+            transform={\`translate(\${take.ox.toFixed(2)} \${take.oy.toFixed(2)})\`}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ visibility: index === frame ? "visible" : "hidden" }}
+          />
+        ))}
+      </svg>
+    </div>
+  );
+}`,
+    description: "Hand-drawn arrow between two elements that re-measures when either one moves.",
+    tags: ["annotation", "arrow", "callout", "hand-drawn", "svg", "reduced-motion"],
   },
 ];
 

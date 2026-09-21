@@ -99,7 +99,6 @@ const COMPONENT_MAP = {
   magnet: "interaction/Magnet.tsx",
   "glare-hover": "interaction/GlareHover.tsx",
   "cinematic-water-background": "media/CinematicWaterBackground.tsx",
-  "conic-border-button": "buttons/ConicBorderButton.tsx",
   "pointer-glow-card": "cards/PointerGlowCard.tsx",
   "shiny-gradient-text": "display/ShinyGradientText.tsx",
   "blur-in-reveal": "animation/BlurInReveal.tsx",
@@ -117,7 +116,6 @@ const COMPONENT_MAP = {
   "scroll-parallax-layer": "animation/ScrollParallaxLayer.tsx",
   "till-receipt-print": "feedback/TillReceiptPrint.tsx",
   "magic-rings": "animation/MagicRings.tsx",
-  "star-border": "buttons/StarBorder.tsx",
   "shiny-text": "animation/ShinyText.tsx",
   "circular-text": "display/CircularText.tsx",
   "pinched-button": "buttons/PinchedButton.tsx",
@@ -136,8 +134,9 @@ const COMPONENT_MAP = {
   "docking-card": "cards/DockingCard.tsx",
   "sideways-scroll": "sections/SidewaysScroll.tsx",
   "scroll-flip-deck": "sections/ScrollFlipDeck.tsx",
+  "sketch-highlight": "animation/SketchHighlight.tsx",
+  "sketch-arrow": "callouts/SketchArrow.tsx",
   "autoplay-carousel": "media/AutoplayCarousel.tsx",
-  "message-form": "forms/MessageForm.tsx",
 };
 
 function showHelp() {
@@ -187,24 +186,23 @@ function showHelp() {
     testimonial-card     Testimonial card with star rating and avatar
     image-placeholder    Image skeleton placeholder with shimmer overlay
     sticky-navbar        Sticky navbar with frosted-glass scroll effect
-    error-boundary       Class-based error boundary with fallback UI
+    error-boundary       Class error boundary with a layered, retryable fallback
     sticky-nav           Glassmorphism sticky nav with theme toggle
     use-theme-ripple     Dark/light toggle hook with ripple reveal animation
     shiny-badge          Pill badge with shimmering gradient-sweep text
-    border-beam-button   Button with animated gradient border beam
+    border-beam-button   Button with a beam, conic or star ring, in six fills
     typing-hero          Hero section with typewriter-animated subtitle
     card-grid            Card grid with label, number, letter or tag eyebrows
-    numbered-steps-list  Ordered list with monospace step numbers
-    formula-block        Monospace formula display in accent-bordered box
-    callout-box          Amber warning-style callout box
-    checklist            Card-row checklist with circular accent badges
+    numbered-steps-list  Ordered list, mono number column, serif titles
+    formula-block        Monospace formula on a tinted plate, with caption
+    callout-box          Amber-spined callout with a labelled symbol list
+    checklist            Card-row checklist with solid round markers
     scroll-reveal        IntersectionObserver reveal wrapper, 4 variants
-    site-footer          4-column responsive footer with copyright bar
+    site-footer          Footer that wraps from four columns down to one
     depth-text           Extruded 3D text with pointer-tilt and auto-orbit
     magnet               Magnetic pointer-attraction wrapper for CTAs
     glare-hover          Pointer-following specular glare overlay
     cinematic-water-background  Layered SVG underwater parallax background
-    conic-border-button  Pill button with a spinning conic-gradient border
     pointer-glow-card    Card with a pointer-following glowing border ring
     shiny-gradient-text  Animated shimmering gradient text sweep
     blur-in-reveal       Scroll-triggered blur + fade + slide-up reveal
@@ -219,10 +217,9 @@ function showHelp() {
     film-grain-overlay    Fixed full-viewport animated film-grain noise
     scratch-foil-reveal   Canvas scratch-off foil revealing content beneath
     pixel-demorph-image   Scroll-triggered pixel-block to sharp image reveal
-    scroll-parallax-layer GSAP ScrollTrigger depth/rotate parallax wrapper
+    scroll-parallax-layer GSAP ScrollTrigger depth plane: drift, scale, blur
     till-receipt-print    Clip-path receipt print-out with PAID stamp
     magic-rings           Three.js shader backdrop of expanding rings
-    star-border            Button with sliding radial-gradient border beams
     shiny-text             Motion-driven gradient text shine sweep
     circular-text          Characters orbiting a ring, hover speed control
     pinched-button         Asymmetric-radius editorial CTA with hover lift
@@ -239,7 +236,8 @@ function showHelp() {
     sideways-scroll         Row of cards that pins and pans sideways on scroll
     scroll-flip-deck     Pinned image deck that tips card by card on scroll
     autoplay-carousel       Never-cropping photo carousel with a pause button
-    message-form            Form with announced errors and honest sending states
+    sketch-highlight        Marker wash on a phrase, drawn stroke by stroke
+    sketch-arrow            Drawn arrow that stays attached to two elements
 
   Not in the CLI (copy by hand from the gallery):
     multi-step-loader       Imports MagicRings and ShinyText
