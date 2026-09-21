@@ -53,7 +53,6 @@ import { ProjectCard } from "bezel-ui/cards/ProjectCard";
 import { ImageWithFallback } from "bezel-ui/media/ImageWithFallback";
 import { SkeletonCard } from "bezel-ui/loaders/SkeletonCard";
 import { TestimonialCard } from "bezel-ui/cards/TestimonialCard";
-import { MessageForm } from "bezel-ui/forms/MessageForm";
 import { ImagePlaceholder } from "bezel-ui/feedback/ImagePlaceholder";
 import { ShinyBadge } from "bezel-ui/badges/ShinyBadge";
 import { BorderBeamButton } from "bezel-ui/buttons/BorderBeamButton";
@@ -68,7 +67,6 @@ import { DepthText } from "bezel-ui/display/DepthText";
 import { Magnet } from "bezel-ui/interaction/Magnet";
 import { GlareHover } from "bezel-ui/interaction/GlareHover";
 import { CinematicWaterBackground } from "bezel-ui/media/CinematicWaterBackground";
-import { ConicBorderButton } from "bezel-ui/buttons/ConicBorderButton";
 import { PointerGlowCard } from "bezel-ui/cards/PointerGlowCard";
 import { ShinyGradientText } from "bezel-ui/display/ShinyGradientText";
 import { BlurInReveal } from "bezel-ui/animation/BlurInReveal";
@@ -81,7 +79,6 @@ import { FilmGrainOverlay } from "bezel-ui/overlays/FilmGrainOverlay";
 import { ScratchFoilReveal } from "bezel-ui/interaction/ScratchFoilReveal";
 import { PixelDemorphImage } from "bezel-ui/media/PixelDemorphImage";
 import { TillReceiptPrint } from "bezel-ui/feedback/TillReceiptPrint";
-import { StarBorder } from "bezel-ui/buttons/StarBorder";
 import { PinchedButton } from "bezel-ui/buttons/PinchedButton";
 import { MetallicLogoShimmer } from "bezel-ui/media/MetallicLogoShimmer";
 import { ParticleQrCode } from "bezel-ui/display/ParticleQrCode";
@@ -89,6 +86,8 @@ import { TimedTabs } from "bezel-ui/navigation/TimedTabs";
 import { GlyphField } from "bezel-ui/animation/GlyphField";
 import { DockingCard } from "bezel-ui/cards/DockingCard";
 import { AutoplayCarousel } from "bezel-ui/media/AutoplayCarousel";
+import { SketchHighlight } from "bezel-ui/animation/SketchHighlight";
+import { SketchArrow } from "bezel-ui/callouts/SketchArrow";
 
 import {
   Caption,
@@ -97,6 +96,7 @@ import {
   WORDMARK,
   sweep,
   useIdleInterval,
+  useLoopKey,
 } from "../kit";
 import type { PreviewModule } from "../types";
 
@@ -572,53 +572,6 @@ function TestimonialCardPreview() {
   );
 }
 
-/** Resolve after `ms`, or give up quietly when the form cancels. */
-function wait(ms: number, signal: AbortSignal) {
-  return new Promise<void>((resolve, reject) => {
-    const timer = window.setTimeout(resolve, ms);
-    signal.addEventListener("abort", () => {
-      window.clearTimeout(timer);
-      reject(new Error("cancelled"));
-    });
-  });
-}
-
-function MessageFormPreview() {
-  return (
-    <div className="rounded-2xl border border-black/[0.06] bg-white p-6 text-left">
-      <h3 className="text-lg font-semibold text-[#0a0a0a]">Start a conversation</h3>
-      <p className="mt-1 text-sm text-[#4a4a4c]">Tell us about the project. A person reads every message.</p>
-      <div className="mt-5">
-        <MessageForm
-          fields={[
-            { name: "name", label: "Name", required: true, autoComplete: "name", span: "half", minLength: 2 },
-            { name: "email", label: "Email", type: "email", required: true, autoComplete: "email", span: "half" },
-            {
-              name: "site",
-              label: "Current site",
-              type: "url",
-              placeholder: "https://example.com",
-              hint: "Optional. We check that it opens before sending.",
-              check: async (value, signal) => {
-                await wait(900, signal);
-                return /example\.(com|org)|vercel\.app/.test(value)
-                  ? { ok: true, message: "That page opens." }
-                  : { ok: false, message: "That page could not be reached. Check the address." };
-              },
-            },
-            { name: "message", label: "Message", type: "textarea", required: true, minLength: 20 },
-          ]}
-          defaultValues={{ name: "Ada Park", email: "ada@" }}
-          onSend={(_values, signal) => wait(1400, signal)}
-          note="Replies usually arrive within two working days."
-          fallback={{ href: "mailto:hello@example.com", label: "Email hello@example.com instead." }}
-          successBody={(values) => `We will reply to ${values.email}.`}
-        />
-      </div>
-    </div>
-  );
-}
-
 function ShinyBadgePreview() {
   return (
     <Center>
@@ -632,12 +585,25 @@ function ShinyBadgePreview() {
   );
 }
 
+const BORDER_BEAM_VARIANTS = [
+  { fill: "ink", label: "Get started", caption: "Ink, beam" },
+  { fill: "ghost", label: "Read the docs", caption: "Ghost, beam" },
+  { fill: "jade", label: "Shop the box", caption: "Jade, conic" },
+  { fill: "cream", label: "Save draft", caption: "Cream, star" },
+  { fill: "crimson", label: "Continue", caption: "Crimson, star" },
+  { fill: "gold", label: "Upgrade", caption: "Gold, star" },
+] as const;
+
 function BorderBeamButtonPreview() {
   return (
     <Center>
-      <div className="flex items-center gap-3">
-        <BorderBeamButton label="Get started" />
-        <BorderBeamButton label="Read the docs" variant="ghost" />
+      <div className="grid grid-cols-3 items-end justify-items-center gap-x-6 gap-y-6">
+        {BORDER_BEAM_VARIANTS.map((item) => (
+          <div key={item.fill} className="flex flex-col items-center gap-2">
+            <BorderBeamButton fill={item.fill} label={item.label} />
+            <Caption className="text-ink-muted">{item.caption}</Caption>
+          </div>
+        ))}
       </div>
     </Center>
   );
@@ -687,8 +653,7 @@ function CardGridPreview() {
 
 function NumberedStepsListPreview() {
   return (
-    <div className="bg-white px-8 pb-2 pt-8">
-      <SectionHeading eyebrow="How it works" title="Three steps, no surprises" />
+    <div className="px-8 py-7">
       <NumberedStepsList
         steps={[
           { number: "01", title: "Discovery", description: "Map goals and constraints before writing code." },
@@ -702,7 +667,7 @@ function NumberedStepsListPreview() {
 
 function FormulaBlockPreview() {
   return (
-    <div className="bg-white px-8 py-2">
+    <div className="px-8 py-2">
       <FormulaBlock formula="conversion = signups ÷ visitors" caption="Weekly conversion rate" />
     </div>
   );
@@ -710,7 +675,7 @@ function FormulaBlockPreview() {
 
 function CalloutBoxPreview() {
   return (
-    <div className="bg-white px-8 pb-8">
+    <div className="px-8 pb-7">
       <CalloutBox
         title="Why launches slip"
         intro="Teams optimise for speed and quietly drop review."
@@ -728,7 +693,7 @@ function CalloutBoxPreview() {
 
 function ChecklistPreview() {
   return (
-    <div className="bg-white px-8 py-2">
+    <div className="px-8 py-2">
       <Checklist
         items={[
           { symbol: "✓", text: "Every control shows keyboard focus" },
@@ -743,12 +708,12 @@ function ChecklistPreview() {
 
 function SiteFooterPreview() {
   return (
-    <div className="bg-white">
+    <div>
       <SiteFooter
         brandName="Bezel"
-        tagline="Components with motion, craft and a contrast gate."
+        tagline="Motion, craft and a contrast gate."
         columns={[
-          { heading: "Product", links: [{ label: "Components", href: "#c" }, { label: "Principles", href: "#p" }, { label: "Changelog", href: "#l" }] },
+          { heading: "Product", links: [{ label: "Components", href: "#c" }, { label: "Principles", href: "#p" }] },
           { heading: "Company", links: [{ label: "About", href: "#a" }, { label: "Journal", href: "#j" }] },
           { heading: "Contact", links: [{ label: "hello@bezel.dev", href: "#m" }, { label: "GitHub", href: "#g" }] },
         ]}
@@ -801,19 +766,29 @@ function ElasticLineDividerPreview() {
 }
 
 function ScrollRevealPreview() {
-  const card = "rounded-xl border border-black/[0.06] bg-white px-4 py-3 text-sm text-[#0a0a0a] shadow-sm";
+  // The entrance plays once per mount, so the card replays it while idle.
+  const loop = useLoopKey(4200);
+  // The stage is void, and the gallery's own chrome vocabulary is the void
+  // tokens, so the panel is written in those rather than in the shadcn
+  // semantics the stage defines for components that need them.
+  const panel = "rounded-xl border border-void-line bg-void-raised px-4 py-3 text-void-ink";
   return (
     <Center>
-      <div className="flex w-[240px] flex-col gap-3">
-        <ScrollReveal variant="up">
-          <div className={card}>Fades up on entry</div>
-        </ScrollReveal>
-        <ScrollReveal variant="left" delay={100}>
-          <div className={card}>Slides in from the left</div>
-        </ScrollReveal>
-        <ScrollReveal variant="scale" delay={200}>
-          <div className={card}>Scales up into place</div>
-        </ScrollReveal>
+      <div key={loop} className="flex w-[248px] flex-col gap-2.5">
+        {[
+          { variant: "up", label: "Fades up", note: "on entry" },
+          { variant: "left", label: "Slides in", note: "from the left" },
+          { variant: "scale", label: "Scales up", note: "into place" },
+        ].map((row, i) => (
+          <ScrollReveal key={row.variant} variant={row.variant as "up" | "left" | "scale"} delay={(i * 100) as 0 | 100 | 200}>
+            <div className={panel}>
+              <Caption>{row.variant}</Caption>
+              <p className="mt-1 text-sm">
+                {row.label} <span className="opacity-70">{row.note}</span>
+              </p>
+            </div>
+          </ScrollReveal>
+        ))}
       </div>
     </Center>
   );
@@ -830,10 +805,10 @@ function DepthTextPreview() {
 function MagnetPreview() {
   return (
     <Center>
-      <Magnet padding={80} magnetStrength={4}>
+      <Magnet>
         <button
           type="button"
-          className="grid h-28 w-28 place-items-center rounded-full bg-[#f7f3ee] text-sm font-semibold text-[#912c22] shadow-[0_18px_40px_-18px_rgba(0,0,0,0.8)]"
+          className={`grid h-28 w-28 place-items-center rounded-full bg-[#f7f3ee] text-sm font-semibold text-[#912c22] shadow-[0_18px_40px_-18px_rgba(0,0,0,0.8)] ${voidRing}`}
         >
           Say hello
         </button>
@@ -877,27 +852,22 @@ function CinematicWaterBackgroundPreview() {
   );
 }
 
-function ConicBorderButtonPreview() {
-  return (
-    <Center>
-      <div className="flex flex-wrap items-center justify-center gap-4">
-        <ConicBorderButton>Shop the box</ConicBorderButton>
-        <ConicBorderButton textured={false} colors={["#912c22", "#c9a227", "#f7f3ee"]} spinDuration={4.5}>
-          Book a call
-        </ConicBorderButton>
-      </div>
-    </Center>
-  );
-}
-
 function ShinyGradientTextPreview() {
   return (
     <Center>
-      <div className="text-center">
-        <p className="text-5xl font-black tracking-tight">
-          <ShinyGradientText>Fresh batch</ShinyGradientText>
-        </p>
-        <p className="mt-3 text-sm text-white/80">Every Friday, while it lasts</p>
+      <div className="flex w-full max-w-[300px] flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-1">
+          <p className="font-serif text-[34px] font-semibold leading-tight tracking-tight">
+            <ShinyGradientText tone="void">Limited run</ShinyGradientText>
+          </p>
+          <Caption className="text-white">On void</Caption>
+        </div>
+        <div className="flex w-full flex-col items-center gap-1 rounded-xl bg-paper px-4 py-3">
+          <p className="font-serif text-[34px] font-semibold leading-tight tracking-tight">
+            <ShinyGradientText tone="paper">Limited run</ShinyGradientText>
+          </p>
+          <Caption className="text-ink-muted">On paper</Caption>
+        </div>
       </div>
     </Center>
   );
@@ -1030,9 +1000,27 @@ function FilmGrainOverlayPreview() {
 }
 
 function ScratchFoilRevealPreview() {
+  const [run, setRun] = useState(0);
+  const [scratched, setScratched] = useState(false);
+  // Paint the foil back on once the visitor has moved away, so the next person
+  // to arrive gets a card to scratch. Repainting an untouched card would only
+  // reshuffle its sparkle, so the loop waits for a reveal to undo.
+  useIdleInterval(
+    () => {
+      setRun((r) => r + 1);
+      setScratched(false);
+    },
+    2800,
+    scratched,
+  );
   return (
     <Center>
-      <ScratchFoilReveal className="h-40 w-64 overflow-hidden rounded-xl" label="Scratch to reveal">
+      <ScratchFoilReveal
+        key={run}
+        onReveal={() => setScratched(true)}
+        className="h-40 w-64 overflow-hidden rounded-xl"
+        label="Scratch to reveal"
+      >
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#f5f0e8] text-center text-[#3a2a1a]">
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#7a6015]">You&rsquo;re invited</p>
           <p className="mt-2 font-serif text-2xl">Dinner at eight</p>
@@ -1048,18 +1036,6 @@ function PixelDemorphImagePreview() {
     <Center>
       <div className="w-60">
         <PixelDemorphImage src={IMAGES.lake} alt="A mountain lake at dusk" className="aspect-[4/3] w-full rounded-xl" durationMs={1500} startBlocks={5} />
-      </div>
-    </Center>
-  );
-}
-
-function StarBorderPreview() {
-  return (
-    <Center>
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <StarBorder tone="outline">Save draft</StarBorder>
-        <StarBorder tone="primary">Continue</StarBorder>
-        <StarBorder tone="gold">Upgrade</StarBorder>
       </div>
     </Center>
   );
@@ -1098,24 +1074,32 @@ const QR_ITEMS = QR_LINKS.map((link) => ({
   label: link.label,
   caption: (
     <>
-      {link.title}
-      <span className="mt-0.5 block font-mono text-[11px] font-medium tracking-normal text-[#4a4a4c]">
+      <span className="text-void-ink">{link.title}</span>
+      <span className="mt-0.5 block font-mono text-[11px] font-medium tracking-normal text-void-muted">
         {link.value.replace("https://", "").replace("www.", "")}
       </span>
     </>
   ),
 }));
 
+/**
+ * The component is built for paper and the code itself has to stay there: a
+ * scanner wants a light quiet zone and dark modules. The showcase stage is
+ * void, so the caption column is relit and the code reads as a white tile on
+ * the dark ground, the way a dark site would print one.
+ */
 function ParticleQrCodePreview() {
   const ref = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(0);
-  // The code takes the width the 12rem caption column leaves, so the pair sits side by side at every stage size.
+  // The code takes the width the 12rem caption column leaves, so the pair sits
+  // side by side at every stage size. The ceiling is high enough that the
+  // expanded view and the component page do not leave it adrift in the middle.
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const measure = () => {
       const room = Math.min(el.clientWidth - 192 - 20 - 12, el.clientHeight);
-      setSize(Math.max(104, Math.min(184, Math.floor(room))));
+      setSize(Math.max(104, Math.min(260, Math.floor(room))));
     };
     measure();
     const ro = new ResizeObserver(measure);
@@ -1123,7 +1107,10 @@ function ParticleQrCodePreview() {
     return () => ro.disconnect();
   }, []);
   return (
-    <div className="h-full w-full px-3 py-4">
+    <div
+      className="h-full w-full px-3 py-4 [&_.bz-qr-count]:text-void-muted [&_.bz-qr-fill]:bg-white [&_.bz-qr-groove]:bg-white/15"
+      style={{ "--bz-focus-ring": "var(--bz-focus-ring-void)" } as CSSProperties}
+    >
       <div ref={ref} className="flex h-full w-full items-center justify-center">
         {size ? <ParticleQrCode value={QR_ITEMS} size={size} hold={4500} /> : null}
       </div>
@@ -1196,6 +1183,13 @@ function GlyphFieldPreview() {
 
 const cardRing =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#912c22]";
+
+/** The same ring for a control standing on a void stage, where the brick would
+    measure about 2:1. Same geometry, the white the token set names for dark
+    surfaces. Demo controls need it spelled out: they are preview furniture, so
+    no library focus rule reaches them and the browser default would win. */
+const voidRing =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffffff]";
 
 function RetentionChart() {
   const bars = [62, 70, 66, 84, 96, 108, 122];
@@ -1320,6 +1314,8 @@ function AutoplayCarouselPreview() {
 }
 
 export const previews: PreviewModule = {
+  "sketch-highlight": SketchHighlightPreview,
+  "sketch-arrow": SketchArrowPreview,
   "docking-card": DockingCardPreview,
   "autoplay-carousel": AutoplayCarouselPreview,
   "particle-qr-code": ParticleQrCodePreview,
@@ -1346,7 +1342,6 @@ export const previews: PreviewModule = {
   "image-with-fallback": ImageWithFallbackPreview,
   "skeleton-card": SkeletonCardPreview,
   "testimonial-card": TestimonialCardPreview,
-  "message-form": MessageFormPreview,
   "image-placeholder": ImagePlaceholderPreview,
   "shiny-badge": ShinyBadgePreview,
   "border-beam-button": BorderBeamButtonPreview,
@@ -1361,7 +1356,6 @@ export const previews: PreviewModule = {
   magnet: MagnetPreview,
   "glare-hover": GlareHoverPreview,
   "cinematic-water-background": CinematicWaterBackgroundPreview,
-  "conic-border-button": ConicBorderButtonPreview,
   "pointer-glow-card": PointerGlowCardPreview,
   "shiny-gradient-text": ShinyGradientTextPreview,
   "blur-in-reveal": BlurInRevealPreview,
@@ -1374,7 +1368,6 @@ export const previews: PreviewModule = {
   "scratch-foil-reveal": ScratchFoilRevealPreview,
   "pixel-demorph-image": PixelDemorphImagePreview,
   "till-receipt-print": TillReceiptPrintPreview,
-  "star-border": StarBorderPreview,
   "pinched-button": PinchedButtonPreview,
   "metallic-logo-shimmer": MetallicLogoShimmerPreview,
 };
@@ -1400,3 +1393,64 @@ function ToolbarButtonPreview() {
   );
 }
 
+function SketchHighlightPreview() {
+  return (
+    <Center>
+      <p className="max-w-[330px] text-center font-serif text-[26px] leading-[1.75] text-ink">
+        A mark that is{" "}
+        <SketchHighlight color="yellow" resketchOnHover>
+          still moving
+        </SketchHighlight>{" "}
+        reads as{" "}
+        <SketchHighlight mark="underline" color="lime">
+          drawn
+        </SketchHighlight>
+        , not{" "}
+        <SketchHighlight mark="strike" color="violet">
+          printed
+        </SketchHighlight>
+        , in{" "}
+        <SketchHighlight color="purple" resketchOnHover>
+          any ink
+        </SketchHighlight>
+        .
+      </p>
+    </Center>
+  );
+}
+
+function SketchArrowPreview() {
+  const noteRef = useRef<HTMLSpanElement>(null);
+  const targetRef = useRef<HTMLButtonElement>(null);
+  return (
+    <Center>
+      <div className="relative h-[230px] w-[400px] rounded-2xl border border-black/[0.06] bg-paper p-5 text-ink shadow-sm">
+        <Caption className="text-ink-muted">Draft</Caption>
+        <p className="mt-2 max-w-[210px] font-serif text-lg leading-snug">
+          Three photographs and a paragraph of notes.
+        </p>
+        <button
+          ref={targetRef}
+          type="button"
+          onClick={noop}
+          className={`${cardRing} absolute right-5 top-5 rounded-full bg-ink px-4 py-2 text-sm font-medium text-paper`}
+        >
+          Publish
+        </button>
+        <span
+          ref={noteRef}
+          className="absolute bottom-5 left-5 rounded-full border border-black/[0.13] bg-paper-sunken px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] text-ink-muted"
+        >
+          Everything is in
+        </span>
+        <SketchArrow
+          from={noteRef}
+          to={targetRef}
+          bend={0.24}
+          color="#912c22"
+          label="Points from the note up to the publish button"
+        />
+      </div>
+    </Center>
+  );
+}

@@ -16,6 +16,14 @@ type BaseSpec = {
   /** Offer a replay control, for entrances that only play once. */
   replay?: boolean;
   /**
+   * Replay the entrance by itself every `ms` while the preview is idle, so
+   * nobody has to press anything to see it. Pick a number that leaves the
+   * settled state on screen for a beat: roughly the run time plus three
+   * seconds. The stage pauses the loop on pointer or focus, on a hidden tab
+   * and under reduced motion.
+   */
+  replayMs?: number;
+  /**
    * Replay through the component's own API instead of remounting the preview:
    * the preview reads the replay count from `usePreviewEnv().replay`.
    */

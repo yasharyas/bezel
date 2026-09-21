@@ -13,7 +13,7 @@ import {
 import { MousePointer2, RotateCcw } from "lucide-react";
 import { loadPreview } from "@/previews/load";
 import { specs } from "@/previews/specs";
-import { PreviewEnvContext, useReducedMotion } from "@/previews/kit";
+import { PreviewEnvContext, useIdleLoop, useReducedMotion } from "@/previews/kit";
 import type { InlineSpec, PreviewComponent, StageSize } from "@/previews/types";
 import { PreviewFrame } from "./PreviewFrame";
 
@@ -43,6 +43,9 @@ type Props = {
  *   component links, and get the fully interactive preview on the component
  *   page. Focus that lands inside while pointing keeps it live.
  * - Links inside a preview never navigate.
+ * - A one-shot entrance replays itself on the spec's `replayMs` while the
+ *   stage is idle, so nobody has to press anything to see what a component
+ *   does. The Replay control stays for anyone who wants it now.
  */
 export function PreviewStage({ slug, name, size = "card", eager = false, className = "" }: Props) {
   const spec = specs[slug];
@@ -51,9 +54,11 @@ export function PreviewStage({ slug, name, size = "card", eager = false, classNa
   const pointerInside = useRef(false);
   const [near, setNear] = useState(eager);
   const [engaged, setEngaged] = useState(false);
+  const [settled, setSettled] = useState(false);
   const [replayToken, setReplayToken] = useState(0);
   const reducedMotion = useReducedMotion();
   const inertUntilPointer = size === "card";
+  const replayMs = spec?.replayMs ?? 0;
 
   useEffect(() => {
     if (eager) return;
@@ -73,6 +78,24 @@ export function PreviewStage({ slug, name, size = "card", eager = false, classNa
     if (inertUntilPointer && !engaged) el.setAttribute("inert", "");
     else el.removeAttribute("inert");
   }, [engaged, inertUntilPointer, near]);
+
+  // The chunk still has to arrive and the first entrance still has to play.
+  // Waiting for that means every cycle the loop starts is a whole cycle, from
+  // a preview that is already settled on screen.
+  useEffect(() => {
+    if (!near || !replayMs) return;
+    const id = window.setTimeout(() => setSettled(true), 1600);
+    return () => {
+      window.clearTimeout(id);
+      setSettled(false);
+    };
+  }, [near, replayMs]);
+
+  useIdleLoop(() => setReplayToken((t) => t + 1), replayMs, {
+    engaged,
+    reducedMotion,
+    enabled: near && settled,
+  });
 
   const release = useCallback(() => {
     const root = rootRef.current;
@@ -111,9 +134,7 @@ export function PreviewStage({ slug, name, size = "card", eager = false, classNa
               {spec.kind === "frame" ? (
                 <PreviewFrame slug={slug} name={name} spec={spec} size={size} replayToken={replayToken} />
               ) : (
-                // Remounting replays one-shot entrances; a component with its own
-                // replay API gets the count instead and redraws in place.
-                <InlinePreview key={spec.replayInPlace ? "in-place" : replayToken} slug={slug} spec={spec} />
+                <InlinePreview slug={slug} spec={spec} replayToken={replayToken} />
               )}
             </PreviewBoundary>
           </PreviewEnvContext.Provider>
@@ -158,7 +179,20 @@ export function PreviewStage({ slug, name, size = "card", eager = false, classNa
 
 /* ------------------------------------------------------------------ inline */
 
-function InlinePreview({ slug, spec }: { slug: string; spec: InlineSpec }) {
+/**
+ * The loader and the fit box stay mounted across a replay, so a restart swaps
+ * only the component itself. Remounting the whole wrapper would re-await the
+ * module and re-measure the scale, which costs a blank frame every cycle.
+ */
+function InlinePreview({
+  slug,
+  spec,
+  replayToken,
+}: {
+  slug: string;
+  spec: InlineSpec;
+  replayToken: number;
+}) {
   const [Preview, setPreview] = useState<PreviewComponent | null>(null);
   const [failed, setFailed] = useState(false);
 
@@ -174,14 +208,19 @@ function InlinePreview({ slug, spec }: { slug: string; spec: InlineSpec }) {
 
   if (failed) return <PreviewError />;
   if (!Preview) return null;
+
+  // Remounting replays a one-shot entrance; a component with its own replay
+  // API gets the count through the env instead and redraws in place.
+  const run = spec.replayInPlace ? 0 : replayToken;
+
   if (spec.fit) {
     return (
       <FitBox width={spec.fit}>
-        <Preview />
+        <Preview key={run} />
       </FitBox>
     );
   }
-  return <Preview />;
+  return <Preview key={run} />;
 }
 
 /**

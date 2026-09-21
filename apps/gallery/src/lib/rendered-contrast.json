@@ -1,5 +1,5 @@
 {
-  "fingerprint": "ec5eabda91f5126e",
+  "fingerprint": "6fc22ac45bc9da65",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -244,14 +244,14 @@
       {"kind":"focus","element":"button.p-2.text-neutral-900.cursor-pointer.focus-visible:outline","min":3,"text":"Open menu (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12}
     ]},
     {"slug":"error-boundary","kind":"frame","tone":"paper","textNodes":{"textNodes":6,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"button.rounded-full.px-3.py-1.text-xs","text":"Healthy","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
-      {"kind":"text","element":"button.rounded-full.px-3.py-1.text-xs","text":"Caught an error","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8},
-      {"kind":"text","element":"span.text-6xl.block.mb-4","text":"⚠️","size":60,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
-      {"kind":"text","element":"h1.text-2xl.font-bold.text-neutral-900.mb-3","text":"This chart could not load","size":24,"weight":700,"min":3,"status":"measured","why":null,"fg":"#171717","bg":"#fafafa","ratio":17.18},
-      {"kind":"text","element":"p.text-neutral-500.text-sm.mb-6.leading-relaxed","text":"Something went wrong while drawing it. Refreshi…","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#737373","bg":"#fafafa","ratio":4.54},
-      {"kind":"text","element":"button.bg-neutral-900.text-white.px-8.py-3","text":"Refresh","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#171717","ratio":17.93},
-      {"kind":"focus","element":"button.rounded-full.px-3.py-1.text-xs","min":3,"text":"Healthy","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null,"n":2},
-      {"kind":"focus","element":"button.bg-neutral-900.text-white.px-8.py-3","min":3,"text":"Refresh (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78}
+      {"kind":"text","element":"p.bz-eb__eyebrow.bz-eb__line","text":"Boundary caught it","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
+      {"kind":"text","element":"h2.bz-eb__title.bz-eb__line","text":"This chart stopped drawing","size":30,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"p.bz-eb__body.bz-eb__line","text":"The boundary caught it here, so the rest of the…","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"p.bz-eb__detail.bz-eb__line","text":"Cannot read properties of undefined (reading 'p…","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
+      {"kind":"text","element":"button.bz-eb__button","text":"Try again","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12},
+      {"kind":"text","element":"span.bz-eb__tag","text":"Error 500","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#ffffff","bg":"#912c22","ratio":8.12,"moving":[5.86,8.12],"n":2},
+      {"kind":"focus","element":"button.bz-eb__button","min":3,"text":"Try again (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12}
     ]},
     {"slug":"sticky-nav","kind":"frame","tone":"paper","textNodes":{"textNodes":7,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"span.text-[13px]","text":"SIGNAL","size":13,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#f5f5f7","ratio":18.18},
@@ -276,10 +276,20 @@
       {"kind":"text","element":"span.shiny-badge-text","text":"Keyboard focus on every control","size":13,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient text","fg":null,"bg":null,"ratio":null},
       {"kind":"text","element":"h3.max-w-[260px].font-serif.text-2xl.font-medium","text":"Components with a point of view","size":24,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97}
     ]},
-    {"slug":"border-beam-button","kind":"inline","tone":"paper","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"button.beam-btn.inline-flex.items-center.justify-center","text":"Get started","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#fafafa","bg":"#0a0a0a","ratio":18.97},
-      {"kind":"text","element":"button.beam-btn.inline-flex.items-center.justify-center","text":"Read the docs","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#1a1a1a","bg":"#fafafa","ratio":16.67},
-      {"kind":"focus","element":"button.beam-btn.inline-flex.items-center.justify-center","min":3,"text":"Get started (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":2}
+    {"slug":"border-beam-button","kind":"inline","tone":"paper","textNodes":{"textNodes":12,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"span.border-btn__label","text":"Get started","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#fafafa","bg":"#202020","ratio":15.61},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"Ink, beam","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6d6d6f","bg":"#fafafa","ratio":4.95,"n":6},
+      {"kind":"text","element":"span.border-btn__label","text":"Read the docs","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#8a8a8e","ratio":5.76},
+      {"kind":"text","element":"span.border-btn__label","text":"Shop the box","size":12.5,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.border-btn__label","text":"Save draft","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#322d2a","bg":"#f7f3ee","ratio":12.31},
+      {"kind":"text","element":"span.border-btn__label","text":"Continue","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#f7f3ee","bg":"#912b22","ratio":7.39},
+      {"kind":"text","element":"span.border-btn__label","text":"Upgrade","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#1c1917","bg":"#bc934e","ratio":6.18},
+      {"kind":"focus","element":"button.border-btn.border-btn--ink.border-btn--ring-beam","min":3,"text":"Get started (ring)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78},
+      {"kind":"focus","element":"button.border-btn.border-btn--ghost.border-btn--ring-beam","min":3,"text":"Read the docs (ring)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78},
+      {"kind":"focus","element":"button.border-btn.border-btn--jade.border-btn--ring-conic.border-btn--textured","min":3,"text":"Shop the box (ring)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78},
+      {"kind":"focus","element":"button.border-btn.border-btn--cream.border-btn--ring-star","min":3,"text":"Save draft (ring)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78},
+      {"kind":"focus","element":"button.border-btn.border-btn--crimson.border-btn--ring-star","min":3,"text":"Continue (ring)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78},
+      {"kind":"focus","element":"button.border-btn.border-btn--gold.border-btn--ring-star","min":3,"text":"Upgrade (ring)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78}
     ]},
     {"slug":"typing-hero","kind":"frame","tone":"paper","textNodes":{"textNodes":5,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"h1.font-serif.font-medium.leading-none.mb-[18px]","text":"Automation you can","size":81,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#f5f5f7","ratio":18.18},
@@ -301,42 +311,42 @@
       {"kind":"text","element":"span.self-start.px-2.5.py-1.mb-1","text":"Overload","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#b45309","bg":"#ffffff","ratio":5.02,"n":2},
       {"kind":"text","element":"h3.m-0.font-medium.text-[color:var(--bz-ink,#0a0a0a)].font-serif","text":"Too many channels","size":22,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":2}
     ]},
-    {"slug":"numbered-steps-list","kind":"inline","tone":"paper","textNodes":{"textNodes":11,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.2em]","text":"How it works","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#ffffff","ratio":5.48},
-      {"kind":"text","element":"h3.mt-2.font-serif.text-3xl.font-medium","text":"Three steps, no surprises","size":30,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"div.font-mono.text-sm.text-[color:var(--bz-emerald,#047857)].tracking-[0.2em]","text":"01","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#ffffff","ratio":5.48,"n":3},
-      {"kind":"text","element":"h3.font-serif.font-medium.text-[28px].text-[#0a0a0a]","text":"Discovery","size":28,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3},
-      {"kind":"text","element":"p.text-[#4a4a4c].m-0.text-base","text":"Map goals and constraints before writing code.","size":16,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84,"n":3}
+    {"slug":"numbered-steps-list","kind":"inline","tone":"void","textNodes":{"textNodes":9,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"div.font-mono.tabular-nums","text":"01","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#34d399","bg":"#1a1a1a","ratio":9.05,"n":3},
+      {"kind":"text","element":"h3.m-0.font-serif","text":"Discovery","size":25.6,"weight":500,"min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":3,"at":[1440]},
+      {"kind":"text","element":"p.mb-0","text":"Map goals and constraints before writing code.","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#cdcdcd","bg":"#1a1a1a","ratio":10.95,"n":3},
+      {"kind":"text","element":"h3.m-0.font-serif","text":"Discovery","size":20.5,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":3,"at":[390]}
     ]},
-    {"slug":"formula-block","kind":"inline","tone":"paper","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"code.font-[inherit].bg-transparent.p-0","text":"conversion = signups ÷ visitors","size":20,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#e6f5f0","ratio":17.61},
-      {"kind":"text","element":"div.mt-2.5.text-xs.text-[#4a4a4c].tracking-[0.1em]","text":"Weekly conversion rate","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#e6f5f0","ratio":7.87}
+    {"slug":"formula-block","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"code.font-mono","text":"conversion = signups ÷ visitors","size":22,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1d2d27","ratio":14.41},
+      {"kind":"text","element":"figcaption.font-mono.text-center.uppercase","text":"Weekly conversion rate","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#cdd1cf","bg":"#1d2d27","ratio":9.35}
     ]},
-    {"slug":"callout-box","kind":"inline","tone":"paper","textNodes":{"textNodes":13,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"h3.font-serif.font-medium.text-[#0a0a0a].text-2xl","text":"Why launches slip","size":24,"weight":500,"min":3,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"p.text-[#4a4a4c].mt-0.mb-4","text":"Teams optimise for speed and quietly drop revie…","size":16,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"div.font-mono.text-[11px].tracking-[0.3em].text-[#b45309]","text":"Diagnosis","size":11,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"span.inline-flex.w-[22px].h-[22px].items-center","text":"!","size":12,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":3},
-      {"kind":"text","element":"b","text":"Scope","size":15,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":3},
-      {"kind":"text","element":"span","text":"grows after the estimate.","size":15,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":3},
-      {"kind":"text","element":"p.text-[#4a4a4c].mt-4.mb-0.font-medium","text":"Better tooling is not the fix. A smaller loop i…","size":16,"weight":500,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null}
+    {"slug":"callout-box","kind":"inline","tone":"void","textNodes":{"textNodes":13,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"h3.m-0.font-serif","text":"Why launches slip","size":23.2,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#252525","ratio":15.33},
+      {"kind":"text","element":"p.mb-0","text":"Teams optimise for speed and quietly drop revie…","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#cfcfcf","bg":"#252525","ratio":9.84},
+      {"kind":"text","element":"span.font-mono.uppercase","text":"Diagnosis","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#fbbf24","bg":"#252525","ratio":9.18},
+      {"kind":"text","element":"span.inline-flex.shrink-0.items-center.justify-center","text":"!","size":11,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fbbf24","ratio":11.86,"n":3},
+      {"kind":"text","element":"b","text":"Scope","size":15,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#252525","ratio":15.33,"n":3},
+      {"kind":"text","element":"span","text":"grows after the estimate.","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#252525","ratio":15.33,"n":3},
+      {"kind":"text","element":"p.mb-0","text":"Better tooling is not the fix. A smaller loop i…","size":15,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#252525","ratio":15.33}
     ]},
-    {"slug":"checklist","kind":"inline","tone":"paper","textNodes":{"textNodes":8,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"span.inline-flex.w-[22px].h-[22px].items-center","text":"✓","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#e1f0eb","ratio":4.67,"n":4},
-      {"kind":"text","element":"span","text":"Every control shows keyboard focus","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#1a1a1a","bg":"#fafafa","ratio":16.67,"n":4}
+    {"slug":"checklist","kind":"inline","tone":"void","textNodes":{"textNodes":8,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"span.inline-flex.shrink-0.items-center.justify-center","text":"✓","size":11,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#34d399","ratio":10.3,"n":4},
+      {"kind":"text","element":"span","text":"Every control shows keyboard focus","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#252525","ratio":15.33,"n":4}
     ]},
-    {"slug":"scroll-reveal","kind":"inline","tone":"paper","textNodes":{"textNodes":3,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"div.rounded-xl.border.border-black/[0.06].bg-white","text":"Fades up on entry","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3}
+    {"slug":"scroll-reveal","kind":"inline","tone":"void","textNodes":{"textNodes":9,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"up","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4,"n":3},
+      {"kind":"text","element":"p.mt-1.text-sm","text":"Fades up","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":3},
+      {"kind":"text","element":"span.opacity-70","text":"on entry","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#bababa","bg":"#1a1a1a","ratio":8.97,"n":3}
     ]},
-    {"slug":"site-footer","kind":"inline","tone":"paper","textNodes":{"textNodes":15,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"div.flex.items-center.gap-2.5.font-semibold","text":"Bezel","size":13,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"p.text-sm.text-[color:var(--bz-ink-subtle,#6b6b70)].mt-2.5.max-w-[360px]","text":"Components with motion, craft and a contrast ga…","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"text","element":"h4.font-mono.text-[11px].tracking-[0.3em].text-[color:var(--bz-emerald,#047857)]","text":"Product","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#ffffff","ratio":5.48,"n":3},
-      {"kind":"text","element":"a.text-[#4a4a4c].text-sm.transition-colors.no-underline","text":"Components","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84,"n":7},
-      {"kind":"text","element":"span","text":"© 2026 Bezel","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3,"n":2},
-      {"kind":"text","element":"a.text-[#4a4a4c].no-underline.focus-visible:outline.focus-visible:outline-2","text":"Yash Arya","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
-      {"kind":"focus","element":"a.text-[#4a4a4c].text-sm.transition-colors.no-underline","min":3,"text":"Components (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12,"n":7},
-      {"kind":"focus","element":"a.text-[#4a4a4c].no-underline.focus-visible:outline.focus-visible:outline-2","min":3,"text":"Yash Arya (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12}
+    {"slug":"site-footer","kind":"inline","tone":"void","textNodes":{"textNodes":14,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"div.flex.items-center","text":"Bezel","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"p.mb-0","text":"Motion, craft and a contrast gate.","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#cdcdcd","bg":"#1a1a1a","ratio":10.95},
+      {"kind":"text","element":"h4.m-0.font-mono.uppercase","text":"Product","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#34d399","bg":"#1a1a1a","ratio":9.05,"n":3},
+      {"kind":"text","element":"a.no-underline.transition-colors.focus-visible:outline.focus-visible:outline-2","text":"Components","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":6},
+      {"kind":"text","element":"span","text":"© 2026 Bezel","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#b1b1b1","bg":"#1a1a1a","ratio":8.12,"n":2},
+      {"kind":"text","element":"a.no-underline.transition-colors.focus-visible:outline.focus-visible:outline-2","text":"Yash Arya","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#cdcdcd","bg":"#1a1a1a","ratio":10.95},
+      {"kind":"focus","element":"a.no-underline.transition-colors.focus-visible:outline.focus-visible:outline-2","min":3,"text":"Components (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":7}
     ]},
     {"slug":"depth-text","kind":"inline","tone":"void","textNodes":{"textNodes":31,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"span.depth-text__layer","text":"Bezel","size":80,"weight":900,"min":3,"status":"decorative","why":"filter: saturate(0.95)","fg":null,"bg":null,"ratio":null,"n":30},
@@ -344,7 +354,7 @@
     ]},
     {"slug":"magnet","kind":"inline","tone":"void","textNodes":{"textNodes":1,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"button.grid.h-28.w-28.place-items-center","text":"Say hello","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#912c22","bg":"#f7f3ee","ratio":7.35},
-      {"kind":"focus","element":"button.grid.h-28.w-28.place-items-center","min":3,"text":"Say hello","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null}
+      {"kind":"focus","element":"button.grid.h-28.w-28.place-items-center","min":3,"text":"Say hello (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4}
     ]},
     {"slug":"glare-hover","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"p.text-sm.font-semibold.text-white","text":"Ridge line","size":14,"weight":600,"min":4.5,"status":"unmeasurable","why":"image","fg":null,"bg":null,"ratio":null},
@@ -354,11 +364,6 @@
       {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.24em]","text":"Plant-based","size":11,"weight":400,"min":4.5,"status":"unmeasurable","why":"mix-blend-mode: screen","fg":null,"bg":null,"ratio":null},
       {"kind":"text","element":"h3.mt-2.font-serif.text-3xl.font-medium","text":"Clean, from the source","size":30,"weight":500,"min":3,"status":"unmeasurable","why":"mix-blend-mode: screen","fg":null,"bg":null,"ratio":null}
     ]},
-    {"slug":"conic-border-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"span.cbb__label","text":"Shop the box","size":12.5,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":2},
-      {"kind":"focus","element":"button.cbb.cbb--textured","min":3,"text":"Shop the box (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
-      {"kind":"focus","element":"button.cbb","min":3,"text":"Book a call (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4}
-    ]},
     {"slug":"pointer-glow-card","kind":"inline","tone":"paper","textNodes":{"textNodes":4,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.18em]","text":"Notebook","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#912c22","bg":"#fdfdfd","ratio":7.98},
       {"kind":"text","element":"h4.mt-2.text-lg.font-semibold.text-[#0a0a0a]","text":"Field notes","size":18,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fdfdfd","ratio":19.46},
@@ -366,9 +371,10 @@
       {"kind":"text","element":"a.-mb-2.mt-1.inline-flex.min-h-[48px]","text":"Open the notebook","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#912c22","bg":"#fdfdfd","ratio":7.98},
       {"kind":"focus","element":"a.-mb-2.mt-1.inline-flex.min-h-[48px]","min":3,"text":"Open the notebook (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fefefe","ratio":8.05}
     ]},
-    {"slug":"shiny-gradient-text","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"span.sgt","text":"Fresh batch","size":48,"weight":900,"min":3,"status":"unmeasurable","why":"gradient text","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"p.mt-3.text-sm.text-white/80","text":"Every Friday, while it lasts","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4}
+    {"slug":"shiny-gradient-text","kind":"inline","tone":"void","textNodes":{"textNodes":4,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"span.bz-sgt","text":"Limited run","size":34,"weight":600,"min":3,"status":"unmeasurable","why":"gradient text","fg":null,"bg":null,"ratio":null,"n":2},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"On void","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"On paper","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6e6e70","bg":"#ffffff","ratio":5.09}
     ]},
     {"slug":"blur-in-reveal","kind":"inline","tone":"paper","textNodes":{"textNodes":3,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"p.bir.font-mono.text-[11px].uppercase","text":"New range","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#047857","bg":"#fafafa","ratio":5.25},
@@ -424,9 +430,14 @@
     ]},
     {"slug":"pixel-demorph-image","kind":"inline","tone":"void","textNodes":{"textNodes":0,"hidden":0,"offscreen":0}, "items": [
     ]},
-    {"slug":"scroll-parallax-layer","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.3em]","text":"Scroll the page","size":11,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"p.mt-2.font-serif.text-3xl","text":"Layers drift apart","size":30,"weight":400,"min":3,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null}
+    {"slug":"scroll-parallax-layer","kind":"inline","tone":"void","textNodes":{"textNodes":9,"hidden":3,"offscreen":3}, "items": [
+      {"kind":"text","element":"p.font-mono.uppercase.text-[#e8d5a3].text-[12px]","text":"Parallax","size":12,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"at":[1440]},
+      {"kind":"text","element":"p.mt-1.5.font-serif.leading-[1.08].text-[#f5f0e8]","text":"Depth is not speed","size":40,"weight":400,"min":3,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"at":[1440]},
+      {"kind":"text","element":"p.mt-1.5.text-[#e8d5a3].text-[14px]","text":"Each plane at its own rate.","size":14,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"at":[1440]},
+      {"kind":"focus","element":"div.focus-ring.no-scrollbar.h-full.w-full","min":3,"text":"Parallax scene","status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"p.font-mono.uppercase.text-[#e8d5a3].text-[9px]","text":"Parallax","size":9,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"at":[390]},
+      {"kind":"text","element":"p.mt-1.5.font-serif.leading-[1.08].text-[#f5f0e8]","text":"Depth is not speed","size":20,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"at":[390]},
+      {"kind":"text","element":"p.mt-1.5.text-[#e8d5a3].text-[10px]","text":"Each plane at its own rate.","size":10,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"at":[390]}
     ]},
     {"slug":"till-receipt-print","kind":"inline","tone":"cream","textNodes":{"textNodes":13,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"p.font-serif.text-2xl.font-medium.tracking-tight","text":"Bezel","size":24,"weight":500,"min":3,"status":"measured","why":null,"fg":"#261725","bg":"#fdfcf9","ratio":16.62},
@@ -441,12 +452,6 @@
       {"kind":"text","element":"p.till-item.mt-4.text-center.text-[10px]","text":"Thank you for your order.","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6e666d","bg":"#fdfcf9","ratio":5.41}
     ]},
     {"slug":"magic-rings","kind":"inline","tone":"void","textNodes":{"textNodes":0,"hidden":0,"offscreen":0}, "items": [
-    ]},
-    {"slug":"star-border","kind":"inline","tone":"cream","textNodes":{"textNodes":3,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"div.star-border-inner.star-border-inner--outline","text":"Save draft","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#322d2a","bg":"#f7f3ee","ratio":12.31},
-      {"kind":"text","element":"div.star-border-inner.star-border-inner--primary","text":"Continue","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#f7f3ee","bg":"#912b22","ratio":7.39},
-      {"kind":"text","element":"div.star-border-inner.star-border-inner--gold","text":"Upgrade","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#1c1917","bg":"#bc934e","ratio":6.18},
-      {"kind":"focus","element":"button.star-border-container","min":3,"text":"Save draft (on div, ring)","status":"measured","why":null,"fg":"#912c22","bg":"#f7f3ee","ratio":7.35,"n":3}
     ]},
     {"slug":"shiny-text","kind":"inline","tone":"cream","textNodes":{"textNodes":3,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"span.inline-block.text-2xl.font-medium","text":"Reviewing your documents","size":24,"weight":500,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#f7f3ee","ratio":17.92},
@@ -505,13 +510,13 @@
       {"kind":"text","element":"p.text-xs.font-semibold","text":"Brief","size":12,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3},
       {"kind":"focus","element":"button.inline-flex.h-12.items-center.rounded-full","min":3,"text":"Share (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78}
     ]},
-    {"slug":"particle-qr-code","kind":"inline","tone":"paper","textNodes":{"textNodes":8,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.bz-qr-caption","text":"Browse the gallery","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
-      {"kind":"text","element":"span.mt-0.5.block.font-mono.text-[11px]","text":"bezel-ui.vercel.app","size":11,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
-      {"kind":"text","element":"p.bz-qr-count","text":"Code 1 of 4","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
+    {"slug":"particle-qr-code","kind":"inline","tone":"void","textNodes":{"textNodes":8,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"span.text-void-ink","text":"Browse the gallery","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"span.mt-0.5.block.font-mono.text-[11px]","text":"bezel-ui.vercel.app","size":11,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"p.bz-qr-count","text":"Code 1 of 4","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
       {"kind":"text","element":"button.bz-qr-button","text":"Play","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":2},
       {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":2},
-      {"kind":"focus","element":"button.bz-qr-button","min":3,"text":"Play code rotation (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":2}
+      {"kind":"focus","element":"button.bz-qr-button","min":3,"text":"Play code rotation (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":2}
     ]},
     {"slug":"timed-tabs","kind":"inline","tone":"paper","textNodes":{"textNodes":11,"hidden":3,"offscreen":0}, "items": [
       {"kind":"text","element":"span.bz-tt-name","text":"Build","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#c0c0c1","bg":"#0c0c0f","ratio":10.74,"n":2},
@@ -571,26 +576,23 @@
       {"kind":"focus","element":"button.bz-ac-toggle","min":3,"text":"Pause slideshow (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78},
       {"kind":"focus","element":"button.bz-ac-dot","min":3,"text":"Show photo 1: Ridge line at dawn (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":4}
     ]},
-    {"slug":"message-form","kind":"inline","tone":"paper","textNodes":{"textNodes":14,"hidden":2,"offscreen":0}, "items": [
-      {"kind":"text","element":"h3.text-lg.font-semibold.text-[#0a0a0a]","text":"Start a conversation","size":18,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
-      {"kind":"text","element":"p.mt-1.text-sm.text-[#4a4a4c]","text":"Tell us about the project. A person reads every…","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
-      {"kind":"text","element":"label.bz-mf-label","text":"Name","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":4},
-      {"kind":"text","element":"span.bz-mf-req","text":"*","size":14,"weight":600,"min":4.5,"status":"decorative","why":null,"fg":"#b91c1c","bg":"#ffffff","ratio":6.47,"n":3},
-      {"kind":"text","element":"p.bz-mf-hint","text":"Optional. We check that it opens before sending.","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"text","element":"span","text":"Send message","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8},
-      {"kind":"text","element":"p.bz-mf-note","text":"Replies usually arrive within two working days.","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"text","element":"input.bz-mf-control","text":"Ada Park","size":16,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":2},
-      {"kind":"text","element":"input.bz-mf-control::placeholder","text":"https://example.com","size":16,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b6b70","bg":"#ffffff","ratio":5.3},
-      {"kind":"boundary","element":"input.bz-mf-control","min":3,"text":"text (border-top)","status":"measured","why":null,"fg":"#8a8a8e","bg":"#ffffff","ratio":3.44,"n":3},
-      {"kind":"boundary","element":"textarea.bz-mf-control","min":3,"text":"textarea (border-top)","status":"measured","why":null,"fg":"#8a8a8e","bg":"#ffffff","ratio":3.44},
-      {"kind":"focus","element":"input.bz-mf-control","min":3,"text":"input (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12,"n":3},
-      {"kind":"focus","element":"textarea.bz-mf-control","min":3,"text":"textarea (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
-      {"kind":"focus","element":"button.bz-mf-submit","min":3,"text":"Send messageSending (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12}
-    ]},
     {"slug":"scroll-flip-deck","kind":"frame","tone":"paper","textNodes":{"textNodes":7,"hidden":0,"offscreen":4}, "items": [
       {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.16em]","text":"Selected work","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
       {"kind":"text","element":"p.mt-2.max-w-xs.font-serif.text-2xl","text":"Keep scrolling. The deck turns one card at a ti…","size":24,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
       {"kind":"text","element":"figcaption.bz-sfd-caption","text":"Kiln · Studio identity","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47}
+    ]},
+    {"slug":"sketch-highlight","kind":"inline","tone":"paper","textNodes":{"textNodes":9,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"p.max-w-[330px].text-center.font-serif.text-[26px]","text":"A mark that is reads as , not , in .","size":26,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
+      {"kind":"text","element":"span","text":"still moving","size":26,"weight":400,"min":3,"status":"unmeasurable","why":"mix-blend-mode: multiply","fg":null,"bg":null,"ratio":null,"n":2},
+      {"kind":"text","element":"span","text":"drawn","size":26,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":2},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#4f9a00","bg":"#fafafa","ratio":3.38,"at":[390]}
+    ]},
+    {"slug":"sketch-arrow","kind":"inline","tone":"paper","textNodes":{"textNodes":4,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"Draft","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6e6e70","bg":"#ffffff","ratio":5.09},
+      {"kind":"text","element":"p.mt-2.max-w-[210px].font-serif.text-lg","text":"Three photographs and a paragraph of notes.","size":18,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"button.focus-visible:outline.focus-visible:outline-2.focus-visible:outline-offset-2.focus-visible:outline-[#912c22]","text":"Publish","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8},
+      {"kind":"text","element":"span.absolute.bottom-5.left-5.rounded-full","text":"Everything is in","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
+      {"kind":"focus","element":"button.focus-visible:outline.focus-visible:outline-2.focus-visible:outline-offset-2.focus-visible:outline-[#912c22]","min":3,"text":"Publish (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12}
     ]}
   ]
 }

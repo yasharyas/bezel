@@ -44,6 +44,36 @@ export function useReducedMotion() {
 
 /* -------------------------------------------------------------------- loops */
 
+type IdleLoopEnv = {
+  engaged: boolean;
+  reducedMotion: boolean;
+  enabled?: boolean;
+};
+
+/**
+ * The one idle timer. Calls `tick` every `ms` while nobody is interacting,
+ * motion is allowed and the tab is visible. It takes its environment as an
+ * argument so the stage, which is the thing that provides that environment,
+ * can drive its own replay loop through the same timer a preview uses. An
+ * `ms` of zero means no loop, so a caller can pass an optional interval
+ * straight through.
+ */
+export function useIdleLoop(
+  tick: () => void,
+  ms: number,
+  { engaged, reducedMotion, enabled = true }: IdleLoopEnv,
+) {
+  const ref = useRef(tick);
+  ref.current = tick;
+  useEffect(() => {
+    if (!enabled || ms <= 0 || engaged || reducedMotion) return;
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") ref.current();
+    }, ms);
+    return () => window.clearInterval(id);
+  }, [enabled, engaged, reducedMotion, ms]);
+}
+
 /**
  * Call `tick` every `ms` while nobody is interacting with the preview, motion
  * is allowed and the tab is visible. Used to demonstrate behaviour that would
@@ -51,15 +81,7 @@ export function useReducedMotion() {
  */
 export function useIdleInterval(tick: () => void, ms: number, enabled = true) {
   const { engaged, reducedMotion } = usePreviewEnv();
-  const ref = useRef(tick);
-  ref.current = tick;
-  useEffect(() => {
-    if (!enabled || engaged || reducedMotion) return;
-    const id = window.setInterval(() => {
-      if (document.visibilityState === "visible") ref.current();
-    }, ms);
-    return () => window.clearInterval(id);
-  }, [enabled, engaged, reducedMotion, ms]);
+  useIdleLoop(tick, ms, { engaged, reducedMotion, enabled });
 }
 
 /** A key that changes every `ms` while idle, to replay one-shot entrances. */
