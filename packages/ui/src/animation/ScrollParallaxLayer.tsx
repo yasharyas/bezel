@@ -1,19 +1,49 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+/** A scroll container, however the consumer happens to have it to hand. */
+type ScrollerSource = "auto" | "window" | Element | RefObject<Element | null>;
+
 type ScrollParallaxLayerProps = {
-  /** Depth of travel; 1 ≈ 100px total drift across the viewport */
+  /**
+   * Drift along the scroll axis. 1 moves the layer a quarter of the distance
+   * it travels through the frame, so on an 800px viewport 0.25 is about 50px.
+   * Positive reads as near (it outruns the scroll), negative as far.
+   */
   speed?: number;
-  /** Total degrees swept across the viewport */
+  /** Sideways drift over the same range, in the same units as `speed`. */
+  drift?: number;
+  /** Total degrees swept across the range. */
   rotate?: number;
+  /** Scale gained across the range, so a near plane grows as it comes past. */
+  scale?: number;
+  /** Blur in px at both ends of the range, pulling into focus at the centre. */
+  blur?: number;
+  /** Opacity at both ends of the range. 1 keeps the layer solid throughout. */
+  fade?: number;
+  /**
+   * Which scroll container the range is measured against. "auto" walks up to
+   * the nearest scrolling ancestor and falls back to the window, so the same
+   * layer works in a 200px panel and on a full page.
+   */
+  scroller?: ScrollerSource;
+  /** Seconds of catch-up between the scrollbar and the layer. */
+  scrub?: number;
   className?: string;
-  style?: React.CSSProperties;
-  children: React.ReactNode;
+  style?: CSSProperties;
+  children: ReactNode;
 };
 
 type FallingPetalFieldProps = {
@@ -22,50 +52,136 @@ type FallingPetalFieldProps = {
   className?: string;
 };
 
-/** Scroll-scrubbed depth / rotate parallax wrapper (GSAP ScrollTrigger). */
+/** Nearest ancestor that actually scrolls; null means the window does. */
+function nearestScroller(el: HTMLElement): Element | null {
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const overflow = getComputedStyle(node).overflowY;
+    const scrolls = overflow === "auto" || overflow === "scroll" || overflow === "overlay";
+    if (scrolls && node.scrollHeight > node.clientHeight + 1) return node;
+  }
+  return null;
+}
+
+/**
+ * One plane of a scroll-scrubbed parallax composition (GSAP ScrollTrigger).
+ *
+ * Depth is more than different speeds, so a layer can also gain scale, take a
+ * little rotation, and pull into focus out of blur and fade as it crosses the
+ * middle of the range. Stack three or four with different values and the
+ * planes read as distance rather than as things sliding at different rates.
+ *
+ * The range is measured from the scroll container, not the viewport, so the
+ * composition holds together in a small panel as well as on a full page. Only
+ * transform, opacity and filter are touched, and every layer rides the single
+ * scroll listener ScrollTrigger keeps per container.
+ */
 export function ScrollParallaxLayer({
   speed = 0.25,
+  drift = 0,
   rotate = 0,
+  scale = 0,
+  blur = 0,
+  fade = 1,
+  scroller = "auto",
+  scrub = 0.6,
   className,
   style,
   children,
 }: ScrollParallaxLayerProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const planeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    const plane = planeRef.current;
+    if (!el || !plane) return;
 
     const mm = gsap.matchMedia();
+    // Reduced motion never enters this branch, so the layer stays exactly as
+    // the markup left it: in place, sharp, fully opaque.
     mm.add("(prefers-reduced-motion: no-preference)", () => {
-      const depth = speed * 100;
-      const tween = gsap.fromTo(
-        el,
-        { y: depth, rotation: -rotate / 2 },
-        {
-          y: -depth,
-          rotation: rotate / 2,
-          ease: "none",
-          scrollTrigger: {
-            trigger: el,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 0.6,
-          },
+      const box =
+        scroller === "window"
+          ? null
+          : scroller === "auto"
+            ? nearestScroller(el)
+            : "current" in scroller
+              ? scroller.current
+              : scroller;
+
+      // The sweep is how far the layer travels through the frame, so the same
+      // speed reads the same at any container size.
+      const span = () => (box ? box.clientHeight : window.innerHeight) + el.offsetHeight;
+      const sweep = (amount: number, sign: number) => () => (sign * amount * span()) / 8;
+
+      const tl = gsap.timeline({
+        defaults: { ease: "none" },
+        scrollTrigger: {
+          trigger: el,
+          scroller: box ?? undefined,
+          start: "top bottom",
+          end: "bottom top",
+          scrub,
+          invalidateOnRefresh: true,
         },
+      });
+
+      tl.fromTo(
+        plane,
+        {
+          y: sweep(speed, 1),
+          x: sweep(drift, 1),
+          rotation: -rotate / 2,
+          scale: 1 - scale / 2,
+        },
+        {
+          y: sweep(speed, -1),
+          x: sweep(drift, -1),
+          rotation: rotate / 2,
+          scale: 1 + scale / 2,
+          force3D: true,
+          duration: 1,
+        },
+        0,
       );
+
+      // Arrive, settle, leave: the plane resolves as it reaches the middle.
+      if (fade < 1 || blur > 0) {
+        const ends = blur > 0 ? { opacity: fade, filter: `blur(${blur}px)` } : { opacity: fade };
+        const settled = blur > 0 ? { opacity: 1, filter: "blur(0px)" } : { opacity: 1 };
+        tl.fromTo(plane, { ...ends }, { ...settled, duration: 0.5 }, 0);
+        tl.to(plane, { ...ends, duration: 0.5 }, 0.5);
+      }
+
+      // ScrollTrigger refreshes itself on window resize; a panel that changes
+      // size on its own has to say so.
+      let queued = 0;
+      const remeasure = () => {
+        cancelAnimationFrame(queued);
+        queued = requestAnimationFrame(() => tl.scrollTrigger?.refresh());
+      };
+      const ro = new ResizeObserver(remeasure);
+      ro.observe(el);
+      if (box) ro.observe(box);
+
       return () => {
-        tween.scrollTrigger?.kill();
-        tween.kill();
+        ro.disconnect();
+        cancelAnimationFrame(queued);
+        tl.scrollTrigger?.kill();
+        tl.kill();
       };
     });
 
     return () => mm.revert();
-  }, [speed, rotate]);
+  }, [speed, drift, rotate, scale, blur, fade, scroller, scrub]);
 
   return (
     <div ref={ref} className={className} style={style}>
-      {children}
+      {/* The wrapper is the trigger and the plane is what moves, so a layer's
+          own transform can never feed back into the measurement driving it. */}
+      <div ref={planeRef} style={{ height: "100%" }}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -96,24 +212,51 @@ const PETALS = [
   { left: 92, size: 10, delay: 7.0, dur: 13, drift: -30, spin: 260, o: 0.6 },
 ];
 
+/** The fall the delays and durations below were authored against. */
+const PETAL_BASIS = 900;
+
 /**
  * Deterministic CSS falling petal field (no Math.random → no hydration drift).
  * Ships with ScrollParallaxLayer as the ambient companion.
+ *
+ * The fall is measured from the field itself rather than the viewport, so a
+ * petal crosses a short panel in the same sort of time it crosses a page
+ * instead of streaking past in the first second.
  */
 export function FallingPetalField({
   colors,
   count = 10,
   className = "inset-x-0 top-0 h-[110vh]",
 }: FallingPetalFieldProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => setHeight(el.clientHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const fall = height ? height + 40 : 0;
+  const pace = fall ? Math.min(1.25, Math.max(0.45, fall / PETAL_BASIS)) : 1;
+
   return (
-    <div className={`pointer-events-none absolute select-none overflow-hidden ${className}`} aria-hidden>
+    <div
+      ref={ref}
+      className={`pointer-events-none absolute select-none overflow-hidden ${className}`}
+      aria-hidden
+    >
       <style>{`
         @keyframes petal-fall {
           0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
           6% { opacity: var(--petal-o, 0.7); }
           85% { opacity: var(--petal-o, 0.7); }
           100% {
-            transform: translate3d(var(--petal-drift, 40px), 112vh, 0)
+            transform: translate3d(var(--petal-drift, 40px), var(--petal-fall, 112vh), 0)
               rotate(var(--petal-spin, 300deg));
             opacity: 0;
           }
@@ -141,9 +284,10 @@ export function FallingPetalField({
               "--petal-drift": `${p.drift}px`,
               "--petal-spin": `${p.spin}deg`,
               "--petal-o": p.o,
-              animationDuration: `${p.dur}s`,
-              animationDelay: `${p.delay}s`,
-            } as React.CSSProperties
+              "--petal-fall": fall ? `${fall}px` : "112vh",
+              animationDuration: `${(p.dur * pace).toFixed(2)}s`,
+              animationDelay: `${(p.delay * pace).toFixed(2)}s`,
+            } as CSSProperties
           }
         >
           <PetalShape variant={i} color={colors[i % colors.length]} />
