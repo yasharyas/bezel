@@ -1,6 +1,6 @@
 {
   "name": "bezel-add",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Copy a Bezel component's source file into your project, shadcn-style. Requires bezel-ui to be installed.",
   "keywords": [
     "cli",
@@ -36,7 +36,7 @@
     "build": "echo 'cli ready'"
   },
   "peerDependencies": {
-    "bezel-ui": ">=0.3.0"
+    "bezel-ui": ">=0.3.1"
   },
   "peerDependenciesMeta": {
     "bezel-ui": {
