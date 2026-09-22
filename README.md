@@ -63,7 +63,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 |---|---|---|
 | TextInput | `text-input` | A reusable pill-shaped text input with label, validation error, mandatory asterisk, uppercase mode, and disabled state. |
 | MD3Switch | `md3-switch` | Material Design 3 toggle switch with spring-easing physics, a hover/press halo, rotating check/X icons, two sizes, and optional haptic click sound. |
-| BlenderUpload | `blender-upload` | Drag-and-drop upload with a playful blender animation — fruits fall in, liquid blends while uploading, then it becomes a smoothie glass. |
+| BlenderUpload | `blender-upload` | Drag-and-drop image upload staged as a blender: fruit drops in, the lid goes on, the rig shakes and the blade spins while the chunks swirl and the colours mix, then it pours into a smoothie glass. |
 | CheckboxVariants | `checkbox-variants` | Four stylized Tailwind-only checkbox variants: ripple, rainbow glow, morphing border, and pulsing circle. |
 
 ### Navigation

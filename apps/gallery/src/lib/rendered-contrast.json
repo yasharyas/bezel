@@ -1,5 +1,5 @@
 {
-  "fingerprint": "020b4b977a1b7d9f",
+  "fingerprint": "d0fb7c7f81ee73b6",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -117,7 +117,7 @@
       {"kind":"text","element":"h3.text-xl.font-bold.transition-colors.text-gray-800","text":"Drop files to upload","size":20,"weight":700,"min":3,"status":"measured","why":null,"fg":"#1f2937","bg":"#ffffff","ratio":14.68},
       {"kind":"text","element":"p.mt-2.text-gray-500","text":"or to choose a file","size":16,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#6b7280","bg":"#ffffff","ratio":4.83},
       {"kind":"text","element":"span.text-[#5f6e55].font-semibold","text":"browse","size":16,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#5f6e55","bg":"#ffffff","ratio":5.46},
-      {"kind":"focus","element":"div.relative.overflow-hidden.rounded-xl.transition-transform","min":3,"text":"Drop files to uploador browse to choose  (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78}
+      {"kind":"focus","element":"div.bz-bl.relative.overflow-hidden.rounded-xl","min":3,"text":"Drop files to uploador browse to choose  (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78}
     ]},
     {"slug":"empty-state","kind":"inline","tone":"paper","textNodes":{"textNodes":3,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"h3.text-lg.font-semibold.mb-2","text":"No projects yet","size":18,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},

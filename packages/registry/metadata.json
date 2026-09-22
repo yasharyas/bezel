@@ -167,7 +167,7 @@
   "blender-upload": {
     "name": "BlenderUpload",
     "category": "forms",
-    "description": "Image drop zone illustrated as a blender, with fruit that bounces while dragging.",
+    "description": "Image drop zone as a blender: fruit drops in, the jar shakes and blends.",
     "tags": [
       "upload",
       "drag-drop",

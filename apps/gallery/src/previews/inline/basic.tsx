@@ -191,8 +191,50 @@ function MD3SwitchPreview() {
   );
 }
 
+/** A small generated PNG, so the demo can run the real upload path. */
+function demoImage(): Promise<File | null> {
+  const canvas = document.createElement("canvas");
+  canvas.width = 160;
+  canvas.height = 100;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return Promise.resolve(null);
+  const g = ctx.createLinearGradient(0, 0, 160, 100);
+  g.addColorStop(0, "#F97316");
+  g.addColorStop(1, "#92A086");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 160, 100);
+  return new Promise((resolve) =>
+    canvas.toBlob((blob) => resolve(blob ? new File([blob], "smoothie.png", { type: "image/png" }) : null), "image/png"),
+  );
+}
+
 function BlenderUploadPreview() {
-  return <BlenderUpload onFileSelect={noop} maxSizeMB={5} />;
+  // While idle, feed the real file input a generated image, let it blend,
+  // hold the glass, then reset: the blend is the component, so show it.
+  const ref = useRef<HTMLDivElement>(null);
+  useIdleInterval(() => {
+    const root = ref.current;
+    if (!root) return;
+    const reset = root.querySelector<HTMLButtonElement>("button[type=button]");
+    if (reset) {
+      reset.click();
+      return;
+    }
+    const input = root.querySelector<HTMLInputElement>("input[type=file]");
+    if (!input) return;
+    void demoImage().then((file) => {
+      if (!file) return;
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  }, 4200);
+  return (
+    <div ref={ref}>
+      <BlenderUpload onFileSelect={noop} maxSizeMB={5} />
+    </div>
+  );
 }
 
 const CHECKBOX_VARIANTS = [
