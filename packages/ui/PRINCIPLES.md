@@ -139,7 +139,7 @@ radii for the same primary CTA.
 | 1. The file is the interface | 89 of 90 files are standalone | `MultiStepLoader` (excluded from the CLI) |
 | 2. Motion is refusable | 36 of 90 animated files | 54 files, 3 of them infinite loops |
 | 3. Focus is visible | every interactive file, after this pass | maintain it; `:focus` should become `:focus-visible` in 6 older files |
-| 4. Contrast is a gate | all tokens, and every measurable pair the 90 previews render: 563 at the last run, 0 failing | 65 rendered pairs sit on images, gradients, canvases or blend modes and are reported, not measured; components still carry pre-token literals |
+| 4. Contrast is a gate | all tokens, and every measurable pair the 90 previews render: 574 at the last run, 0 failing | 65 rendered pairs sit on images, gradients, canvases or blend modes and are reported, not measured; components still carry pre-token literals |
 | 5. One curve, one ladder | the token set | components carry 5 curves and 4 springs |
 | 6. Pills on paper | the token set | 6 card radii, 3 CTA radii in components |
 

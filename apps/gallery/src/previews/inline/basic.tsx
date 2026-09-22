@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
   Bold,
   Clock,
@@ -87,7 +87,7 @@ import { GlyphField } from "bezel-ui/animation/GlyphField";
 import { DockingCard } from "bezel-ui/cards/DockingCard";
 import { AutoplayCarousel } from "bezel-ui/media/AutoplayCarousel";
 import { SketchHighlight } from "bezel-ui/animation/SketchHighlight";
-import { PixelAvatar, buildCreature, creatureMap, type PixelAvatarPaletteName } from "bezel-ui/display/PixelAvatar";
+import { PixelAvatar, type PixelAvatarPaletteName, type PixelAvatarSpecies } from "bezel-ui/display/PixelAvatar";
 import { SketchArrow } from "bezel-ui/callouts/SketchArrow";
 
 import {
@@ -1421,45 +1421,38 @@ function SketchHighlightPreview() {
   );
 }
 
-const AVATAR_FEATURED = "ada@example.com";
-const AVATAR_CAST: Array<{ seed: string; palette: PixelAvatarPaletteName; idle: "none" | "blink" | "bob" | "glance" }> = [
-  { seed: "mira", palette: "marigold", idle: "blink" },
-  { seed: "ko@example.com", palette: "jade", idle: "none" },
-  { seed: "juno", palette: "lilac", idle: "bob" },
-  { seed: "rafa", palette: "rose", idle: "none" },
-  { seed: "sol@example.com", palette: "sky", idle: "glance" },
-  { seed: "pip", palette: "dmg", idle: "none" },
-  { seed: "noor", palette: "jade", idle: "none" },
-  { seed: "otto@example.com", palette: "marigold", idle: "glance" },
-  { seed: "wren", palette: "sky", idle: "none" },
-  { seed: "ines", palette: "dmg", idle: "bob" },
-  { seed: "lumi@example.com", palette: "rose", idle: "blink" },
-  { seed: "taz", palette: "lilac", idle: "none" },
+const AVATAR_CAST: Array<{ seed: string; species: PixelAvatarSpecies; idle: "none" | "blink" | "bob" | "glance"; palette?: PixelAvatarPaletteName }> = [
+  { seed: "ghost@example.com", species: "ghost", idle: "glance" },
+  { seed: "mira", species: "cat", idle: "blink" },
+  { seed: "juno", species: "bunny", idle: "none" },
+  { seed: "ko", species: "frog", idle: "bob" },
+  { seed: "otto", species: "bear", idle: "blink" },
+  { seed: "pip", species: "slime", idle: "bob" },
+  { seed: "sol@example.com", species: "robot", idle: "glance" },
+  { seed: "lumi", species: "heart", idle: "none" },
+  { seed: "noor", species: "octopus", idle: "blink" },
+  { seed: "taz", species: "chick", idle: "none" },
+  { seed: "ada@example.com", species: "creature", idle: "none" },
+  { seed: "wren", species: "creature", idle: "glance", palette: "dmg" },
 ];
 
 function PixelAvatarPreview() {
   // One creature hops at a time, walking the grid, so every one gets its turn
-  // without a hover. Each gets its own counter that moves only on its turn.
+  // without a hover. Each has its own counter that moves only on its turn.
   const [tick, setTick] = useState(0);
   useIdleInterval(() => setTick((t) => t + 1), 700);
-  const map = useMemo(() => creatureMap(buildCreature(AVATAR_FEATURED)), []);
-  const n = AVATAR_CAST.length + 1;
+  const n = AVATAR_CAST.length;
   const turn = (i: number) => Math.floor((tick + n - i) / n);
   return (
     <Center>
-      <div className="flex items-center gap-8">
-        <div className="flex flex-col items-center gap-4">
-          <PixelAvatar seed={AVATAR_FEATURED} size={96} idle="blink" playKey={turn(0)} label={`Pixel creature for ${AVATAR_FEATURED}`} />
-          <pre aria-label="The same creature as an 8 by 8 text map" className="font-mono text-[12px] leading-[1.3] tracking-[0.35em] text-void-muted">
-            {map}
-          </pre>
-        </div>
-        <div className="grid grid-cols-4 gap-x-3 gap-y-4">
-          {AVATAR_CAST.map((a, i) => (
-            <PixelAvatar key={a.seed} seed={a.seed} size={48} palette={a.palette} idle={a.idle} playKey={turn(i + 1)} />
-          ))}
-        </div>
-      </div>
+      <ul className="grid grid-cols-6 gap-x-4 gap-y-5">
+        {AVATAR_CAST.map((a, i) => (
+          <li key={a.seed} className="flex flex-col items-center gap-2">
+            <PixelAvatar seed={a.seed} species={a.species} palette={a.palette} idle={a.idle} size={56} playKey={turn(i)} />
+            <Caption className="text-void-ink">{a.species}</Caption>
+          </li>
+        ))}
+      </ul>
     </Center>
   );
 }

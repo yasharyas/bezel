@@ -1,5 +1,5 @@
 {
-  "fingerprint": "b3d7d819a809298a",
+  "fingerprint": "85ef244aea6a89dc",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -594,10 +594,9 @@
       {"kind":"text","element":"span.absolute.bottom-5.left-5.rounded-full","text":"Everything is in","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
       {"kind":"focus","element":"button.focus-visible:outline.focus-visible:outline-2.focus-visible:outline-offset-2.focus-visible:outline-[#912c22]","min":3,"text":"Publish (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12}
     ]},
-    {"slug":"pixel-avatar","kind":"inline","tone":"void","textNodes":{"textNodes":1,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"pre.font-mono.text-[12px].leading-[1.3].tracking-[0.35em]","text":"..O..O.. .OLOOBO. OBBBBBBO OBEBBEBO OBBBBBBO OO…","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
-      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#0f172a","bg":"#f1eafe","ratio":15.25,"moving":[15.25,15.98],"n":10},
-      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#0f172a","bg":"#fde8ec","ratio":15.24,"n":2}
+    {"slug":"pixel-avatar","kind":"inline","tone":"void","textNodes":{"textNodes":12,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"ghost","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4,"n":12},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#0f380f","bg":"#e2f0c4","ratio":10.98,"moving":[10.98,14.3],"n":12}
     ]}
   ]
 }

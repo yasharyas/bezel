@@ -15351,9 +15351,9 @@ import {
 
 /**
  * One cell of a creature. Also the alphabet of its text map:
- * . empty, O outline, B body, L highlight, E eye, M mouth.
+ * . empty, O outline, B body, L highlight, E eye, M mouth, K cheek.
  */
-export type PixelCell = "." | "O" | "B" | "L" | "E" | "M";
+export type PixelCell = "." | "O" | "B" | "L" | "E" | "M" | "K";
 
 export type PixelCreature = {
   /** 8 rows of 8 cells, row 0 at the top. */
@@ -15367,28 +15367,73 @@ export type PixelAvatarPalette = {
   body: string;
   highlight: string;
   eye: string;
+  /** Cheek colour for species with blush. Falls back to the body tone. */
+  blush?: string;
 };
 
 /**
- * Six 3-tone ramps, each with a pale frame and a near-black face. Outline on
- * frame clears 3:1 and the face clears 3:1 on the body in every one, so the
- * silhouette and the eyes hold at 24px. None of them puts white on colour.
- * "dmg" is the four-green Game Boy screen.
+ * Ten 3-tone ramps, each with a pale frame, a near-black face and a cheek
+ * tone. Outline on frame clears 3:1 and the face clears 3:1 on the body in
+ * every one, so the silhouette and the eyes hold at 24px. "dmg" is the
+ * four-green Game Boy screen; "spirit" is the ghost's near-white.
  */
 export const PIXEL_AVATAR_PALETTES = {
-  marigold: { background: "#FDF1DD", outline: "#B45309", body: "#F4A522", highlight: "#FBBF24", eye: "#0F172A" },
-  jade: { background: "#E3F5EC", outline: "#047857", body: "#34D399", highlight: "#6EE7B7", eye: "#0F172A" },
-  lilac: { background: "#F1EAFE", outline: "#6D28D9", body: "#A78BFA", highlight: "#C4B5FD", eye: "#0F172A" },
-  rose: { background: "#FDE8EC", outline: "#BE123C", body: "#FB7185", highlight: "#FDA4AF", eye: "#0F172A" },
-  sky: { background: "#E3F1FD", outline: "#1D4ED8", body: "#60A5FA", highlight: "#93C5FD", eye: "#0F172A" },
-  dmg: { background: "#E2F0C4", outline: "#306230", body: "#8BAC0F", highlight: "#9BBC0F", eye: "#0F380F" },
+  marigold: { background: "#FDF1DD", outline: "#B45309", body: "#F4A522", highlight: "#FBBF24", eye: "#0F172A", blush: "#F87171" },
+  jade: { background: "#E3F5EC", outline: "#047857", body: "#34D399", highlight: "#6EE7B7", eye: "#0F172A", blush: "#FDA4AF" },
+  lilac: { background: "#F1EAFE", outline: "#6D28D9", body: "#A78BFA", highlight: "#C4B5FD", eye: "#0F172A", blush: "#F9A8D4" },
+  rose: { background: "#FDE8EC", outline: "#BE123C", body: "#FB7185", highlight: "#FDA4AF", eye: "#0F172A", blush: "#F43F5E" },
+  sky: { background: "#E3F1FD", outline: "#1D4ED8", body: "#60A5FA", highlight: "#93C5FD", eye: "#0F172A", blush: "#F9A8D4" },
+  dmg: { background: "#E2F0C4", outline: "#306230", body: "#8BAC0F", highlight: "#9BBC0F", eye: "#0F380F", blush: "#306230" },
+  spirit: { background: "#EEF2FF", outline: "#4338CA", body: "#E0E7FF", highlight: "#F8FAFF", eye: "#1E1B4B", blush: "#F9A8D4" },
+  peach: { background: "#FFF1E6", outline: "#C2410C", body: "#FDBA74", highlight: "#FED7AA", eye: "#0F172A", blush: "#FB7185" },
+  mint: { background: "#E6FFFA", outline: "#0F766E", body: "#5EEAD4", highlight: "#99F6E4", eye: "#0F172A", blush: "#FDA4AF" },
+  mocha: { background: "#F5EBE0", outline: "#7C4A2D", body: "#B7825A", highlight: "#D6A77A", eye: "#1C0F08", blush: "#F2A0A0" },
 } as const satisfies Record<string, PixelAvatarPalette>;
 
 export type PixelAvatarPaletteName = keyof typeof PIXEL_AVATAR_PALETTES;
 
+/**
+ * Hand-drawn silhouettes. Each is symmetric, stays inside the round mask and
+ * puts its eyes on row 3, columns 2 and 5, so blink, hop and glance work on
+ * every one. Shading, highlight, mouth and cheeks are worked out the same way
+ * as for the random creature.
+ */
+const SPECIES_SHAPES = {
+  ghost: ["..####..", ".######.", "########", "########", "########", "########", ".##..##.", "..#..#.."],
+  cat: ["..#..#..", ".##..##.", ".######.", "########", "########", ".######.", "..####..", "........"],
+  bunny: ["..#..#..", "..#..#..", ".######.", "########", "########", ".######.", "..####..", "........"],
+  frog: ["........", ".##..##.", "########", "########", "########", "########", ".######.", "........"],
+  bear: ["........", ".#....#.", ".######.", ".######.", "########", "########", ".######.", "........"],
+  slime: ["........", "...##...", "..####..", ".######.", "########", "########", ".######.", "........"],
+  robot: ["...##...", ".######.", ".######.", "########", "########", ".######.", ".######.", "........"],
+  heart: ["........", ".##..##.", "########", "########", "########", ".######.", "..####..", "...##..."],
+  octopus: ["..####..", ".######.", "########", "########", "########", ".######.", ".#.##.#.", "........"],
+  chick: ["...##...", "..####..", ".######.", ".######.", "########", "########", ".######.", "..#..#.."],
+} as const;
+
+export type PixelAvatarSpecies = "creature" | keyof typeof SPECIES_SHAPES;
+
+/** Every species, the random creature first. */
+export const PIXEL_AVATAR_SPECIES = ["creature", ...Object.keys(SPECIES_SHAPES)] as PixelAvatarSpecies[];
+
+const SPECIES_PALETTE: Record<PixelAvatarSpecies, PixelAvatarPaletteName> = {
+  creature: "marigold",
+  ghost: "spirit",
+  cat: "peach",
+  bunny: "lilac",
+  frog: "jade",
+  bear: "mocha",
+  slime: "mint",
+  robot: "sky",
+  heart: "rose",
+  octopus: "lilac",
+  chick: "marigold",
+};
+
 const GRID = 8;
 const EYES: ReadonlyArray<readonly [number, number]> = [[3, 2], [3, 5]];
 const MOUTH: ReadonlyArray<readonly [number, number]> = [[5, 3], [5, 4]];
+const CHEEKS: ReadonlyArray<readonly [number, number]> = [[4, 1], [4, 6]];
 const BLINK_MS = 140;
 
 /** xmur3: folds a string into a 32-bit seed. */
@@ -15419,19 +15464,33 @@ const inCircle = (r: number, c: number) => Math.hypot(c + 0.5 - 4, r + 0.5 - 4) 
 const inCore = (r: number, c: number) => r >= 2 && r <= 5 && c >= 1 && c <= 6;
 const NEIGHBOURS: ReadonlyArray<readonly [number, number]> = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 
-/** The same seed always builds the same creature. */
-export function buildCreature(seed: string): PixelCreature {
+/**
+ * The same seed always builds the same creature. "creature" grows a random
+ * mirrored body around a fixed core; the other species start from a drawn
+ * silhouette and let the seed decide the mouth.
+ */
+export function buildCreature(
+  seed: string,
+  species: PixelAvatarSpecies = "creature",
+  { blush = species !== "creature" }: { blush?: boolean } = {},
+): PixelCreature {
   const rand = mulberry32(hashSeed(seed));
   const filled = Array.from({ length: GRID }, () => Array<boolean>(GRID).fill(false));
 
-  // Decide the left half and mirror it, so the creature is symmetric.
-  for (let r = 0; r < GRID; r++) {
-    for (let c = 0; c < GRID / 2; c++) {
-      if (!inCircle(r, c)) continue;
-      const on = inCore(r, c) || rand() < 0.5;
-      filled[r][c] = on;
-      filled[r][GRID - 1 - c] = on;
+  if (species === "creature") {
+    // Decide the left half and mirror it, so the creature is symmetric.
+    for (let r = 0; r < GRID; r++) {
+      for (let c = 0; c < GRID / 2; c++) {
+        if (!inCircle(r, c)) continue;
+        const on = inCore(r, c) || rand() < 0.5;
+        filled[r][c] = on;
+        filled[r][GRID - 1 - c] = on;
+      }
     }
+  } else {
+    SPECIES_SHAPES[species].forEach((row, r) => {
+      for (let c = 0; c < GRID; c++) filled[r][c] = row[c] === "#";
+    });
   }
 
   // Keep only cells joined to the core through an edge: no floating dust.
@@ -15439,6 +15498,7 @@ export function buildCreature(seed: string): PixelCreature {
   const queue: Array<[number, number]> = [];
   for (let r = 2; r <= 5; r++) {
     for (let c = 1; c <= 6; c++) {
+      if (!filled[r][c]) continue;
       joined[r][c] = true;
       queue.push([r, c]);
     }
@@ -15471,8 +15531,8 @@ export function buildCreature(seed: string): PixelCreature {
   );
 
   for (const [r, c] of EYES) cells[r][c] = "E";
-  if (hasMouth) for (const [r, c] of MOUTH) cells[r][c] = "M";
-
+  if (hasMouth) for (const [r, c] of MOUTH) if (cells[r][c] !== ".") cells[r][c] = "M";
+  if (blush) for (const [r, c] of CHEEKS) if (cells[r][c] === "B") cells[r][c] = "K";
   // Light from the top left: the first body cell in the left half, reading down.
   highlight: for (let r = 0; r < GRID; r++) {
     for (let c = 0; c < GRID / 2; c++) {
@@ -15486,7 +15546,7 @@ export function buildCreature(seed: string): PixelCreature {
   return { cells, hasMouth };
 }
 
-/** The creature as eight lines of \`.OBLEM\`, for tests, logs and docs. */
+/** The creature as eight lines of \`.OBLEMK\`, for tests, logs and docs. */
 export function creatureMap(creature: PixelCreature) {
   return creature.cells.map((row) => row.join("")).join("\\n");
 }
@@ -15509,11 +15569,21 @@ export type PixelAvatarProps = {
   /** Any string: an email, a name, a user id. Same seed, same creature. */
   seed: string;
   /**
+   * "creature" is the random mirrored body; the rest are drawn silhouettes.
+   * "seed" picks one from the seed, so a list of people gets a mixed cast.
+   */
+  species?: PixelAvatarSpecies | "seed";
+  /** Rosy cheek cells. On by default for every species except "creature". */
+  blush?: boolean;
+  /**
    * Rendered size in px, rounded down to a multiple of 8 so every cell lands
    * on whole pixels. 24, 32, 48, 96 and 128 all stay crisp.
    */
   size?: number;
-  /** A named ramp, "seed" to pick one from the seed, or your own five colours. */
+  /**
+   * A named ramp, "seed" to pick one from the seed, or your own colours.
+   * Defaults to the species ramp: spirit for the ghost, mocha for the bear.
+   */
   palette?: PixelAvatarPaletteName | "seed" | PixelAvatarPalette;
   /** The pale shape behind the sprite. */
   frame?: "circle" | "square" | "none";
@@ -15536,8 +15606,10 @@ export type PixelAvatarProps = {
  */
 export function PixelAvatar({
   seed,
+  species = "creature",
+  blush,
   size = 48,
-  palette = "marigold",
+  palette,
   frame = "circle",
   hover = "hop",
   idle = "none",
@@ -15546,15 +15618,22 @@ export function PixelAvatar({
   className,
   style,
 }: PixelAvatarProps) {
-  const creature = useMemo(() => buildCreature(seed), [seed]);
+  const kind: PixelAvatarSpecies =
+    species === "seed"
+      ? PIXEL_AVATAR_SPECIES[hashSeed(\`\${seed}:species\`) % PIXEL_AVATAR_SPECIES.length]
+      : species;
+  const creature = useMemo(
+    () => buildCreature(seed, kind, blush === undefined ? undefined : { blush }),
+    [seed, kind, blush],
+  );
   const colours = useMemo<PixelAvatarPalette>(() => {
     if (typeof palette === "object") return palette;
     if (palette === "seed") {
       const names = Object.keys(PIXEL_AVATAR_PALETTES) as PixelAvatarPaletteName[];
       return PIXEL_AVATAR_PALETTES[names[hashSeed(\`\${seed}:palette\`) % names.length]];
     }
-    return PIXEL_AVATAR_PALETTES[palette];
-  }, [palette, seed]);
+    return PIXEL_AVATAR_PALETTES[palette ?? SPECIES_PALETTE[kind]];
+  }, [palette, seed, kind]);
 
   const px = Math.max(GRID, Math.floor(size / GRID) * GRID);
   const reduced = useReducedMotion();
@@ -15622,7 +15701,8 @@ export function PixelAvatar({
     cell === "O" ? colours.outline
       : cell === "B" ? colours.body
         : cell === "L" ? colours.highlight
-          : colours.eye;
+          : cell === "K" ? colours.blush ?? colours.body
+            : colours.eye;
 
   const rects: JSX.Element[] = [];
   creature.cells.forEach((row, r) =>
@@ -15685,8 +15765,8 @@ export function PixelAvatar({
     </span>
   );
 }`,
-    description: "Seeded 8x8 pixel creature avatars, mirrored and round, that blink and hop on hover.",
-    tags: ["avatar", "pixel-art", "seeded", "svg", "identicon", "sprite", "generative"],
+    description: "Seeded 8x8 pixel avatars: random creatures or ghosts, cats and bears that hop.",
+    tags: ["avatar", "pixel-art", "seeded", "svg", "identicon", "sprite", "kawaii", "ghost"],
   },
 ];
 

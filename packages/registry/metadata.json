@@ -1129,7 +1129,7 @@
   "pixel-avatar": {
     "name": "PixelAvatar",
     "category": "display",
-    "description": "Seeded 8x8 pixel creature avatars, mirrored and round, that blink and hop on hover.",
+    "description": "Seeded 8x8 pixel avatars: random creatures or ghosts, cats and bears that hop.",
     "tags": [
       "avatar",
       "pixel-art",
@@ -1137,7 +1137,8 @@
       "svg",
       "identicon",
       "sprite",
-      "generative"
+      "kawaii",
+      "ghost"
     ]
   }
 }
