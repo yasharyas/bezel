@@ -1437,22 +1437,47 @@ const AVATAR_CAST: Array<{ seed: string; species: PixelAvatarSpecies; idle: "non
 ];
 
 function PixelAvatarPreview() {
-  // One creature hops at a time, walking the grid, so every one gets its turn
-  // without a hover. Each has its own counter that moves only on its turn.
-  const [tick, setTick] = useState(0);
-  useIdleInterval(() => setTick((t) => t + 1), 700);
-  const n = AVATAR_CAST.length;
-  const turn = (i: number) => Math.floor((tick + n - i) / n);
+  // The stage on the left walks the cast one character at a time while idle;
+  // picking one in the grid brings it up there. Each arrival hops once.
+  const [active, setActive] = useState(0);
+  const [arrivals, setArrivals] = useState(0);
+  const show = (i: number) => {
+    setActive(i);
+    setArrivals((a) => a + 1);
+  };
+  useIdleInterval(() => show((active + 1) % AVATAR_CAST.length), 1800);
+  const current = AVATAR_CAST[active];
   return (
     <Center>
-      <ul className="grid grid-cols-6 gap-x-4 gap-y-5">
-        {AVATAR_CAST.map((a, i) => (
-          <li key={a.seed} className="flex flex-col items-center gap-2">
-            <PixelAvatar seed={a.seed} species={a.species} palette={a.palette} idle={a.idle} size={56} playKey={turn(i)} />
-            <Caption className="text-void-ink">{a.species}</Caption>
-          </li>
-        ))}
-      </ul>
+      <div className="flex items-center gap-8">
+        <div className="flex w-[128px] flex-col items-center gap-3">
+          <PixelAvatar
+            seed={current.seed}
+            species={current.species}
+            palette={current.palette}
+            idle={current.idle}
+            size={128}
+            playKey={arrivals}
+            label={`${current.species} avatar`}
+          />
+          <Caption className="text-void-ink">{current.species}</Caption>
+        </div>
+        <ul className="grid grid-cols-4 gap-3" aria-label="Pick a character">
+          {AVATAR_CAST.map((a, i) => (
+            <li key={a.seed}>
+              <button
+                type="button"
+                onClick={() => show(i)}
+                aria-pressed={i === active}
+                aria-label={`Show the ${a.species}`}
+                className={`${voidRing} block rounded-full transition-opacity duration-150 ${i === active ? "opacity-100" : "opacity-60 hover:opacity-100"}`}
+              >
+                <PixelAvatar seed={a.seed} species={a.species} palette={a.palette} idle={a.idle} size={48} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
     </Center>
   );
 }
