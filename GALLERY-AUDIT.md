@@ -10,8 +10,8 @@ them replacing FAQAccordion, brought the library to 105 (see
 20 September and four card grids merged into one, leaving 90 (see
 [Removals, 20 September 2026](#removals-20-september-2026)). A later pass the
 same day removed MessageForm, folded ConicBorderButton and StarBorder into
-BorderBeamButton, and added SketchHighlight and SketchArrow, which is where the
-current count of **89** comes from.
+BorderBeamButton, and added SketchHighlight and SketchArrow, which made 89.
+PixelAvatar, added on 22 September, makes the current count of **90**.
 
 - [Summary](#summary)
 - [Owner decisions](#owner-decisions)
@@ -32,15 +32,15 @@ current count of **89** comes from.
 | Rating | Count | Components |
 |---|---:|---|
 | **Showcase** | 7 | DepthText, CinematicWaterBackground, ScrollUnfurlPreloader, ScratchFoilReveal, MagicRings, MorphDialog, ParticleQrCode |
-| **Solid** | 28 | ToastContainer, TubelightNavBar, MD3Switch, SiteHeader, ElasticLineDivider, TextDisperseLink, useThemeRipple, ScrollReveal, Magnet, BorderBeamButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel, SketchHighlight, SketchArrow |
+| **Solid** | 29 | ToastContainer, TubelightNavBar, MD3Switch, SiteHeader, ElasticLineDivider, TextDisperseLink, useThemeRipple, ScrollReveal, Magnet, BorderBeamButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel, SketchHighlight, SketchArrow, PixelAvatar |
 | **Ordinary** | 54 | Everything else. Each row says what would make it worth keeping. |
 
 Three of those moves are from the 20 September consolidation rather than a
 re-reading of the table. ConicBorderButton and StarBorder were both rated Solid
 and are now the jade fill and the star ring of `BorderBeamButton`, which held
 the Ordinary rating on its own and takes the Solid one now that it carries all
-three border treatments. SketchHighlight and SketchArrow are new. MessageForm,
-rated Ordinary, was removed.
+three border treatments. SketchHighlight and SketchArrow are new, and so is
+PixelAvatar, added on 22 September. MessageForm, rated Ordinary, was removed.
 
 - **Showcase**: genuinely strong, the kind of thing that makes a reviewer stop.
 - **Solid**: well made, earns its place.
@@ -270,7 +270,7 @@ commit before the replacement, then remove `accordion-list`.
 
 ### Totals and the first screen
 
-The library now holds 89 components: 7 Showcase, 28 Solid and 54 Ordinary.
+The library now holds 90 components: 7 Showcase, 29 Solid and 54 Ordinary.
 
 "Start with these" no longer stands still: the strip cycles one card at a time
 through the pool in `apps/gallery/src/lib/featured.ts`, and the opening six

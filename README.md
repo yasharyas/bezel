@@ -246,6 +246,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | FormulaBlock | `formula-block` | Monospace formula on a tinted plate, with a ruled-off caption beneath it. |
 | ParticleQrCode | `particle-qr-code` | Scannable QR code, encoded with no dependency, that assembles from grains and re-forms when its value changes. |
 | DepthText | `depth-text` | Extruded 3D type made of stacked layers that tilts to follow the pointer. |
+| PixelAvatar | `pixel-avatar` | Seeded 8x8 pixel creature: mirrored, round, six palettes, and whole-frame blink, hop, bob and glance. |
 | ShinyGradientText | `shiny-gradient-text` | Text filled with a narrow metal sweep, legible on both light and dark grounds. |
 | CircularText | `circular-text` | Letters set around a spinning ring that speeds up, slows or pauses on hover. |
 

@@ -109,6 +109,7 @@ export const specs: Record<string, PreviewSpec> = {
   "autoplay-carousel": inline("basic", "paper", { fit: 680 }),
   "sketch-highlight": inline("basic", "paper", { fit: 420, hint: "Hover" }),
   "sketch-arrow": inline("basic", "paper", { fit: 460 }),
+  "pixel-avatar": inline("basic", "void", { fit: 440, hint: "Hover" }),
 };
 
 export const frameSlugs = Object.entries(specs)

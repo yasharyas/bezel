@@ -1125,5 +1125,19 @@
       "svg",
       "reduced-motion"
     ]
+  },
+  "pixel-avatar": {
+    "name": "PixelAvatar",
+    "category": "display",
+    "description": "Seeded 8x8 pixel creature avatars, mirrored and round, that blink and hop on hover.",
+    "tags": [
+      "avatar",
+      "pixel-art",
+      "seeded",
+      "svg",
+      "identicon",
+      "sprite",
+      "generative"
+    ]
   }
 }

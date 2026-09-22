@@ -22,11 +22,11 @@ light-only literals, so the sizes and the "17 lines wrapping a `<code>` element"
 reading of FormulaBlock below no longer describe the files. The merge calls
 still stand as calls.
 
-**The library now holds 89 components.** A later pass the same day carried out
+**The library now holds 90 components.** A later pass the same day carried out
 the animated-border merge proposed below (ConicBorderButton and StarBorder are
 now the jade fill and the star ring of `BorderBeamButton`, three rows becoming
 one), removed MessageForm, and added two drawn-annotation components,
-SketchHighlight and SketchArrow. The counts in the list below are the
+SketchHighlight and SketchArrow, with PixelAvatar added on 22 September. The counts in the list below are the
 proposal's own and are not restated against that total.
 
 - **KEEP: 38** clear the quality bar

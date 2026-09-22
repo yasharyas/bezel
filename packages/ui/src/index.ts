@@ -155,3 +155,7 @@ export { SketchHighlight } from "./animation/SketchHighlight";
 export type { SketchHighlightProps, SketchMark } from "./animation/SketchHighlight";
 export { SketchArrow } from "./callouts/SketchArrow";
 export type { SketchArrowProps, SketchArrowTarget } from "./callouts/SketchArrow";
+
+// Seeded pixel creatures: an 8x8 sprite built from a string, animated in whole frames
+export { PixelAvatar, PIXEL_AVATAR_PALETTES, buildCreature, creatureMap } from "./display/PixelAvatar";
+export type { PixelAvatarProps, PixelAvatarPalette, PixelAvatarPaletteName, PixelCreature, PixelCell } from "./display/PixelAvatar";

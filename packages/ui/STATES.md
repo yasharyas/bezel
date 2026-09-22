@@ -169,3 +169,18 @@ than being quietly dropped:
 - **A label is not associated with its input.** `SidePanel`'s `PanelField`
   renders a `<label>` that neither wraps its control nor carries `htmlFor`.
 - **`forms/CheckboxVariants`' four exports have no accessible name at all.**
+
+### Avatar
+
+| Component | default | hover | focus | active | disabled |
+|---|---|---|---|---|---|
+| `display/PixelAvatar` | + | + | n/a | n/a | n/a |
+
+An avatar is an image, not a control. Hover plays one frame, the eyes shut and
+the sprite lifts one cell, and changes nothing a reader relies on, so there is
+no keyboard counterpart to owe. A focusable parent, such as a row or a link, can
+play the same frame by changing `playKey`. The sprite is hidden from assistive
+technology unless it is given a `label`, since it usually sits next to the name
+it stands for. Under reduced motion the idle loop stops and hover keeps the
+blink but drops the hop; the idle loop also skips its turn while the tab is
+hidden.

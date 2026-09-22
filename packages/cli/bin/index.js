@@ -136,6 +136,7 @@ const COMPONENT_MAP = {
   "scroll-flip-deck": "sections/ScrollFlipDeck.tsx",
   "sketch-highlight": "animation/SketchHighlight.tsx",
   "sketch-arrow": "callouts/SketchArrow.tsx",
+  "pixel-avatar": "display/PixelAvatar.tsx",
   "autoplay-carousel": "media/AutoplayCarousel.tsx",
 };
 
@@ -238,6 +239,7 @@ function showHelp() {
     autoplay-carousel       Never-cropping photo carousel with a pause button
     sketch-highlight        Marker wash on a phrase, drawn stroke by stroke
     sketch-arrow            Drawn arrow that stays attached to two elements
+    pixel-avatar            Seeded 8x8 pixel creature that blinks and hops on hover
 
   Not in the CLI (copy by hand from the gallery):
     multi-step-loader       Imports MagicRings and ShinyText

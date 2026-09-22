@@ -136,17 +136,17 @@ radii for the same primary CTA.
 
 | Principle | Holds | Does not yet |
 |---|---|---|
-| 1. The file is the interface | 88 of 89 files are standalone | `MultiStepLoader` (excluded from the CLI) |
+| 1. The file is the interface | 89 of 90 files are standalone | `MultiStepLoader` (excluded from the CLI) |
 | 2. Motion is refusable | 36 of 90 animated files | 54 files, 3 of them infinite loops |
 | 3. Focus is visible | every interactive file, after this pass | maintain it; `:focus` should become `:focus-visible` in 6 older files |
-| 4. Contrast is a gate | all tokens, and every measurable pair the 89 previews render: 562 at the last run, 0 failing | 65 rendered pairs sit on images, gradients, canvases or blend modes and are reported, not measured; components still carry pre-token literals |
+| 4. Contrast is a gate | all tokens, and every measurable pair the 90 previews render: 563 at the last run, 0 failing | 65 rendered pairs sit on images, gradients, canvases or blend modes and are reported, not measured; components still carry pre-token literals |
 | 5. One curve, one ladder | the token set | components carry 5 curves and 4 springs |
 | 6. Pills on paper | the token set | 6 card radii, 3 CTA radii in components |
 
 Rows 2, 5 and 6 are counts of animated files and of radii, not of components,
 and they were measured before the September 2026 removals: seven components
 first, then twelve more on 20 September, when four card grids also merged into
-`CardGrid`, and then a last pass that took the library to 89. They have not
+`CardGrid`, and then a pass that took the library to 89, and PixelAvatar made it 90. They have not
 been re-measured since, so they do not track the library total. The components
 added in September each gate their own motion on reduced motion, including the
-two annotation components added last, `SketchHighlight` and `SketchArrow`.
+two annotation components, `SketchHighlight` and `SketchArrow`, and `PixelAvatar`, whose idle loop stops under reduced motion and whose hover keeps the blink and drops the hop.
