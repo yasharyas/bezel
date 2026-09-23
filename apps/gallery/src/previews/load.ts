@@ -30,6 +30,7 @@ const frames: Record<string, () => Promise<{ default: PreviewComponent }>> = {
   "typing-hero": () => import("./frames/typing-hero"),
   "jewelry-cursor": () => import("./frames/jewelry-cursor"),
   "scroll-unfurl-preloader": () => import("./frames/scroll-unfurl-preloader"),
+  "confetti-firecracker": () => import("./frames/confetti-firecracker"),
   "multi-step-loader": () => import("./frames/multi-step-loader"),
   "celebration-overlay": () => import("./frames/celebration-overlay"),
   "damask-tile-backdrop": () => import("./frames/damask-tile-backdrop"),

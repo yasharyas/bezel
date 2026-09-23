@@ -116,6 +116,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | ImagePlaceholder | `image-placeholder` | Image skeleton/placeholder with shimmer overlay and centered icon. |
 | ErrorBoundary | `error-boundary` | Class error boundary whose fallback arrives in layers and retries in place. |
 | TillReceiptPrint | `till-receipt-print` | Payment receipt that prints out of a till slot and stamps itself PAID. |
+| ConfettiFirecracker | `confetti-firecracker` | Canvas firework whose fragments are sampled from your rendered text, so they fall into place spelling it, hold, then drop out of frame. |
 | CelebrationOverlay | `celebration-overlay` | Blurred success dialog with three timed confetti bursts and a card that pops in. |
 
 ### Layout

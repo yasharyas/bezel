@@ -11,7 +11,8 @@ them replacing FAQAccordion, brought the library to 105 (see
 [Removals, 20 September 2026](#removals-20-september-2026)). A later pass the
 same day removed MessageForm, folded ConicBorderButton and StarBorder into
 BorderBeamButton, and added SketchHighlight and SketchArrow, which made 89.
-PixelAvatar, added on 22 September, makes the current count of **90**.
+PixelAvatar, added on 22 September, took it to 90, and ConfettiFirecracker on
+23 September makes the current count of **91**.
 
 - [Summary](#summary)
 - [Owner decisions](#owner-decisions)
@@ -32,7 +33,7 @@ PixelAvatar, added on 22 September, makes the current count of **90**.
 | Rating | Count | Components |
 |---|---:|---|
 | **Showcase** | 7 | DepthText, CinematicWaterBackground, ScrollUnfurlPreloader, ScratchFoilReveal, MagicRings, MorphDialog, ParticleQrCode |
-| **Solid** | 29 | ToastContainer, TubelightNavBar, MD3Switch, SiteHeader, ElasticLineDivider, TextDisperseLink, useThemeRipple, ScrollReveal, Magnet, BorderBeamButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel, SketchHighlight, SketchArrow, PixelAvatar |
+| **Solid** | 30 | ToastContainer, TubelightNavBar, MD3Switch, SiteHeader, ElasticLineDivider, TextDisperseLink, useThemeRipple, ScrollReveal, Magnet, BorderBeamButton, PointerGlowCard, EdgeFadeMarquee, ParallaxProductStage, JewelryCursor, CanvasPetalField, PixelDemorphImage, TillReceiptPrint, ShinyText, PinchedButton, MultiStepLoader, CelebrationOverlay, TimedTabs, GlyphField, DockingCard, SidewaysScroll, AutoplayCarousel, SketchHighlight, SketchArrow, PixelAvatar, ConfettiFirecracker |
 | **Ordinary** | 54 | Everything else. Each row says what would make it worth keeping. |
 
 Three of those moves are from the 20 September consolidation rather than a
@@ -270,7 +271,7 @@ commit before the replacement, then remove `accordion-list`.
 
 ### Totals and the first screen
 
-The library now holds 90 components: 7 Showcase, 29 Solid and 54 Ordinary.
+The library now holds 91 components: 7 Showcase, 30 Solid and 54 Ordinary.
 
 "Start with these" no longer stands still: the strip cycles one card at a time
 through the pool in `apps/gallery/src/lib/featured.ts`, and the opening six

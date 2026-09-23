@@ -131,3 +131,25 @@ Most of Bezel is interactive and carries the `"use client"` directive. In the Ne
 ## License
 
 MIT © [Yash Arya](https://yash-arya.com)
+
+### ConfettiFirecracker
+
+```tsx
+const cracker = useRef<FirecrackerHandle>(null);
+
+<button onClick={(e) => cracker.current?.fire(e.clientX, e.clientY)}>Ship it</button>
+<ConfettiFirecracker ref={cracker} text="Shipped" ground="#fafafa" />
+```
+
+`ground` is the surface it fires over and it decides the palette: fragments have
+to be darker than a light ground and lighter than a dark one, or the report is
+invisible. The defaults clear 3:1 either way. Pass `triggerRef` to arm the
+built-in trigger, which fires after `taps` presses inside a rolling `windowMs`.
+
+The word is sampled from whatever the canvas renders, so emoji, right-to-left
+text and CJK all assemble as long as the font you pass covers them. Two notes:
+colour emoji are sampled as shapes, so they arrive in fragment colours rather
+than their own, and the sampler reads the laid-out bitmap, so right-to-left
+strings assemble in the order the font shapes them rather than character by
+character. Sampling waits for `document.fonts`, so a webfont assembles as
+itself rather than as the fallback face.

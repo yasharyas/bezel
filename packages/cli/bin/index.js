@@ -137,6 +137,7 @@ const COMPONENT_MAP = {
   "sketch-highlight": "animation/SketchHighlight.tsx",
   "sketch-arrow": "callouts/SketchArrow.tsx",
   "pixel-avatar": "display/PixelAvatar.tsx",
+  "confetti-firecracker": "feedback/ConfettiFirecracker.tsx",
   "autoplay-carousel": "media/AutoplayCarousel.tsx",
 };
 
@@ -240,6 +241,7 @@ function showHelp() {
     sketch-highlight        Marker wash on a phrase, drawn stroke by stroke
     sketch-arrow            Drawn arrow that stays attached to two elements
     pixel-avatar            Seeded 8x8 pixel creatures and cute species that hop
+    confetti-firecracker    Firework whose fragments fall into place as your text
 
   Not in the CLI (copy by hand from the gallery):
     multi-step-loader       Imports MagicRings and ShinyText

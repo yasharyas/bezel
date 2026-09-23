@@ -1,5 +1,5 @@
 {
-  "fingerprint": "d0fb7c7f81ee73b6",
+  "fingerprint": "8ce0d1a95ec55961",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -598,6 +598,26 @@
       {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"ghost","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
       {"kind":"icon","element":"svg","text":"icon-only control","min":3,"status":"measured","why":null,"fg":"#132c13","bg":"#929a80","ratio":5.12,"moving":[5.12,14.3],"n":12},
       {"kind":"focus","element":"button.focus-visible:outline.focus-visible:outline-2.focus-visible:outline-offset-2.focus-visible:outline-[#ffffff]","min":3,"text":"Show the ghost (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":12}
+    ]},
+    {"slug":"confetti-firecracker","kind":"frame","tone":"paper","textNodes":{"textNodes":22,"hidden":3,"offscreen":0}, "items": [
+      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.18em]","text":"Confetti firecracker","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
+      {"kind":"text","element":"h1.mt-2.font-serif.text-3xl.text-ink","text":"Type a word, then set it off.","size":30,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"Text","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47,"n":4},
+      {"kind":"text","element":"button.h-9.rounded-lg.bg-[#912c22].px-4","text":"Fire","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#f7f3ee","bg":"#912c22","ratio":7.35},
+      {"kind":"text","element":"label.mt-3.flex.items-center.gap-2","text":"Reduced motion preview","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#fafafa","ratio":8.47},
+      {"kind":"text","element":"p.text-sm.text-ink","text":"Tap this panel 9 times inside 4.0 s","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"p.mt-2.font-mono.text-2xl.text-ink","text":"0 / 9","size":24,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"p.mt-1.text-xs.text-ink-muted","text":"Taps spread wider than the window never add up.…","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"a.underline","text":"link","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"input.h-9.rounded-lg.border.border-[#6b6b70]","text":"Bezel","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3},
+      {"kind":"text","element":"select.h-9.rounded-lg.border.border-[#6b6b70]","text":"normal","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"boundary","element":"input.h-9.rounded-lg.border.border-[#6b6b70]","min":3,"text":"input (border-top)","status":"measured","why":null,"fg":"#6b6b70","bg":"#fafafa","ratio":5.08,"n":3},
+      {"kind":"boundary","element":"select.h-9.rounded-lg.border.border-[#6b6b70]","min":3,"text":"select (border-top)","status":"measured","why":null,"fg":"#6b6b70","bg":"#fafafa","ratio":5.08},
+      {"kind":"focus","element":"input.h-9.rounded-lg.border.border-[#6b6b70]","min":3,"text":"input (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":3},
+      {"kind":"focus","element":"select.h-9.rounded-lg.border.border-[#6b6b70]","min":3,"text":"lownormaldense (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78},
+      {"kind":"focus","element":"button.h-9.rounded-lg.bg-[#912c22].px-4","min":3,"text":"Fire (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78},
+      {"kind":"focus","element":"input","min":3,"text":"input","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null},
+      {"kind":"focus","element":"a.underline","min":3,"text":"link","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null}
     ]}
   ]
 }

@@ -110,6 +110,7 @@ export const specs: Record<string, PreviewSpec> = {
   "sketch-highlight": inline("basic", "paper", { fit: 420, hint: "Hover" }),
   "sketch-arrow": inline("basic", "paper", { fit: 460 }),
   "pixel-avatar": inline("basic", "void", { fit: 440, hint: "Hover" }),
+  "confetti-firecracker": frame("paper", 900, 600, { hint: "Tap" }),
 };
 
 export const frameSlugs = Object.entries(specs)

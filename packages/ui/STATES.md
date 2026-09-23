@@ -184,3 +184,18 @@ technology unless it is given a `label`, since it usually sits next to the name
 it stands for. Under reduced motion the idle loop stops and hover keeps the
 blink but drops the hop; the idle loop also skips its turn while the tab is
 hidden.
+
+### Celebration
+
+| Component | default | hover | focus | active | disabled |
+|---|---|---|---|---|---|
+| `feedback/ConfettiFirecracker` | + | n/a | n/a | n/a | n/a |
+
+It renders no element of its own until it is fired, and what it then adds is a
+fixed canvas that is `aria-hidden`, takes no pointer events and is removed on
+the last frame, so there is nothing to hover, focus or disable. The word it
+spells is decoration and is never the only place a message appears. Its
+optional tap trigger ignores presses on anything matching
+`a, button, input, textarea, select, label, [role=button]`, so it cannot steal a
+control's press, and it counts only the primary pointer. Under reduced motion it
+still fires, with the word rendered at rest instead of thrown.

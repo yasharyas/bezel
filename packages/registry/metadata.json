@@ -1140,5 +1140,19 @@
       "kawaii",
       "ghost"
     ]
+  },
+  "confetti-firecracker": {
+    "name": "ConfettiFirecracker",
+    "category": "feedback",
+    "description": "Firework whose fragments fall into place spelling your text, then let go.",
+    "tags": [
+      "confetti",
+      "canvas",
+      "particles",
+      "easter-egg",
+      "celebration",
+      "text",
+      "reduced-motion"
+    ]
   }
 }
