@@ -19,6 +19,9 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
   },
+  // Search Console ownership, alongside public/googlee881d54c9b2c113d.html,
+  // so the property stays verified if either one is ever removed.
+  verification: { google: "cHvJs3S5wW3MtvgFFwfVlLhRVSmZiXQbsr5o4MGpYdk" },
 };
 
 export const viewport: Viewport = {
