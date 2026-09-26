@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { componentSchema, jsonLd } from "@/lib/structured-data";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -37,6 +38,7 @@ export default function ComponentPage({ params }: { params: { slug: string } }) 
 
   return (
     <main id="main" className="mx-auto max-w-6xl px-4 pb-8 pt-8 sm:px-6">
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(componentSchema(entry))} />
       <Link
         href={`/?category=${entry.category}#components`}
         className="focus-ring -ml-2 inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm text-void-muted hover:text-void-ink"

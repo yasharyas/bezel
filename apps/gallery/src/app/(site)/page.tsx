@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ArrowUpRight } from "lucide-react";
@@ -6,6 +7,11 @@ import { InstallCommand } from "@/components/InstallCommand";
 import { catalog, categories } from "@/lib/catalog";
 import { FEATURED, pinFirst } from "@/lib/featured";
 import { GITHUB_URL, NPM_URL } from "@/lib/site";
+import { jsonLd, siteSchema } from "@/lib/structured-data";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const RIGOUR = [
   {
@@ -29,6 +35,7 @@ export default function GalleryPage() {
   const indexProps = { entries: pinFirst(catalog), categories, featured: FEATURED };
   return (
     <main id="main">
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLd(siteSchema())} />
       <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-10 sm:gap-12 sm:px-6 sm:pb-14 sm:pt-20 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] lg:items-end">
         <div>
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-void-muted">
