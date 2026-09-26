@@ -17,13 +17,13 @@ export function generateStaticParams() {
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const entry = catalog.find((e) => e.slug === params.slug);
   if (!entry) return {};
-  const title = entry.name;
+  const title = `${entry.name} React component`;
   return {
     title,
     description: entry.description,
     alternates: { canonical: `/component/${entry.slug}` },
-    openGraph: { title: `${title} · Bezel`, description: entry.description, url: `/component/${entry.slug}` },
-    twitter: { title: `${title} · Bezel`, description: entry.description },
+    openGraph: { title: `${title} · Bezel UI`, description: entry.description, url: `/component/${entry.slug}` },
+    twitter: { title: `${title} · Bezel UI`, description: entry.description },
   };
 }
 
