@@ -1,5 +1,5 @@
 {
-  "fingerprint": "8ce0d1a95ec55961",
+  "fingerprint": "958969b06a0e0f94",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -388,16 +388,16 @@
       {"kind":"focus","element":"a.spr--on","min":3,"text":"Craft (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4}
     ]},
     {"slug":"edge-fade-marquee","kind":"inline","tone":"void","textNodes":{"textNodes":6,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.px-8.font-serif.text-2xl.font-medium","text":"Why people reorder","size":24,"weight":500,"min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
-      {"kind":"text","element":"span.whitespace-nowrap.rounded-full.border.border-white/15","text":"Free shipping over ₹499","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":5}
+      {"kind":"text","element":"p.px-8.font-serif.text-2xl.font-medium","text":"Built for teams that ship","size":24,"weight":500,"min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"span.whitespace-nowrap.rounded-full.border.border-white/15","text":"Keyboard first","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":5}
     ]},
     {"slug":"parallax-product-stage","kind":"inline","tone":"void","textNodes":{"textNodes":10,"hidden":0,"offscreen":0}, "items": [
-      {"kind":"text","element":"p.pps__note","text":"Three jobs. One flat-price box.","size":18.4,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Tap","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#073b34","bg":"#e6e6e6","ratio":9.99,"bound":"worst case over a gradient 10% visible","n":2},
-      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Floor","size":10,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"span","text":"Hard water","size":10.9,"weight":720,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":4},
-      {"kind":"text","element":"strong","text":"₹499","size":24.8,"weight":780,"min":3,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"small","text":"save ₹398","size":12,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null}
+      {"kind":"text","element":"p.pps__note","text":"Three teas. One tasting box.","size":18.4,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Green","size":10,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#073b34","bg":"#e6e6e6","ratio":9.99,"bound":"worst case over a gradient 10% visible","n":2},
+      {"kind":"text","element":"span.absolute.inset-x-[14%].bottom-[18%].rounded","text":"Mint","size":10,"weight":700,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span","text":"Morning green","size":10.9,"weight":720,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":4},
+      {"kind":"text","element":"strong","text":"$24","size":24.8,"weight":780,"min":3,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"small","text":"save $9","size":12,"weight":400,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null}
     ]},
     {"slug":"stagger-blur-text","kind":"inline","tone":"paper","textNodes":{"textNodes":8,"hidden":0,"offscreen":0}, "items": [
       {"kind":"text","element":"span","text":"Good","size":24,"weight":400,"min":3,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#fafafa","ratio":18.97,"n":8}

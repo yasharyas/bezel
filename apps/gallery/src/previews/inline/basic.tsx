@@ -967,9 +967,9 @@ function EdgeFadeMarqueePreview() {
   const chip = "whitespace-nowrap rounded-full border border-white/15 px-4 py-2 text-sm text-white";
   return (
     <div className="flex h-full w-full flex-col justify-center gap-5">
-      <p className="px-8 font-serif text-2xl font-medium text-white">Why people reorder</p>
+      <p className="px-8 font-serif text-2xl font-medium text-white">Built for teams that ship</p>
       <EdgeFadeMarquee duration={24} fadeColor="var(--bz-void-raised)" gap={12}>
-        {["Free shipping over ₹499", "Any 3 for ₹999", "Cash on delivery", "Plastic-free refills", "Made in small batches"].map(
+        {["Keyboard first", "Works offline", "Dark mode", "Open source", "No tracking"].map(
           (text) => (
             <span key={text} className={chip}>
               {text}

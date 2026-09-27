@@ -79,9 +79,9 @@ function ParallaxProductStagePreview() {
   return (
     <ParallaxProductStage
       items={[
-        { id: "tap", label: "Tap cleaner", media: <Bottle tint="rgba(125,211,252,0.55)" label="Tap" /> },
-        { id: "kitchen", label: "Kitchen cleaner", media: <Bottle tint="rgba(201,162,39,0.6)" label="Kitchen" /> },
-        { id: "floor", label: "Floor cleaner", media: <Bottle tint="rgba(167,139,250,0.55)" label="Floor" /> },
+        { id: "green", label: "Green tea", media: <Bottle tint="rgba(125,211,252,0.55)" label="Green" /> },
+        { id: "chai", label: "Spiced chai", media: <Bottle tint="rgba(201,162,39,0.6)" label="Chai" /> },
+        { id: "mint", label: "Mint tea", media: <Bottle tint="rgba(167,139,250,0.55)" label="Mint" /> },
       ]}
     />
   );
