@@ -532,7 +532,7 @@
   "card-grid": {
     "name": "CardGrid",
     "category": "cards",
-    "description": "One card grid with four eyebrow styles: label, number, serif letter or tag.",
+    "description": "One card grid with three eyebrow styles: label, serif letter or tag.",
     "tags": [
       "cards",
       "grid",

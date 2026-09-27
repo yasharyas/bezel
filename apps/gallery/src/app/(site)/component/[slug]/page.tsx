@@ -1,5 +1,19 @@
 import type { Metadata } from "next";
 import { componentSchema, jsonLd } from "@/lib/structured-data";
+import copy from "@/lib/component-copy.json";
+
+/** Copy uses `backticks` for code, as in the drafts it was written in. */
+function withCode(text: string) {
+  return text.split("`").map((part, i) =>
+    i % 2 ? (
+      <code key={i} className="rounded bg-void-raised px-1 py-0.5 font-mono text-[0.9em] text-void-ink">
+        {part}
+      </code>
+    ) : (
+      part
+    ),
+  );
+}
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -32,6 +46,7 @@ export default function ComponentPage({ params }: { params: { slug: string } }) 
   const entry = catalog.find((e) => e.slug === params.slug);
   if (!source || !entry) notFound();
 
+  const about = (copy as Record<string, { about: string; keyProps: string }>)[entry.slug];
   const index = catalog.findIndex((e) => e.slug === entry.slug);
   const previous = catalog[index - 1];
   const next = catalog[index + 1];
@@ -87,6 +102,21 @@ export default function ComponentPage({ params }: { params: { slug: string } }) 
       <section aria-label={`${entry.name} live preview`} className="mt-8">
         <PreviewStage slug={entry.slug} name={entry.name} size="large" eager className="rounded-2xl border border-void-line" />
       </section>
+
+      {about ? (
+        <section aria-labelledby="about-heading" className="mt-8 max-w-3xl">
+          <h2 id="about-heading" className="font-mono text-xs uppercase tracking-[0.18em] text-void-muted">
+            About
+          </h2>
+          <p className="mt-3 text-[15px] leading-relaxed text-void-ink">{withCode(about.about)}</p>
+          {about.keyProps ? (
+            <p className="mt-3 text-sm leading-relaxed text-void-muted">
+              <span className="text-void-ink">Key props: </span>
+              {withCode(about.keyProps)}
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <div className="mt-8">
         <CodeBlock code={source.code} filename={`packages/ui/src/${entry.path}`} />

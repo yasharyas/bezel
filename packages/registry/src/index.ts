@@ -4875,7 +4875,7 @@ export function CardGrid({
     </ul>
   );
 }`,
-    description: "One card grid with four eyebrow styles: label, number, serif letter or tag.",
+    description: "One card grid with three eyebrow styles: label, serif letter or tag.",
     tags: ["cards", "grid", "responsive", "label", "serif", "tag", "list"],
   },
   {
@@ -7055,11 +7055,11 @@ type ParallaxProductStageProps = {
 
 export function ParallaxProductStage({
   items,
-  note = "Three jobs. One flat-price box.",
-  jobs = ["Hard water", "Kitchen grease", "Everyday floors"],
-  tagLabel = "Any 3 box",
-  tagValue = "₹499",
-  tagMeta = "save ₹398",
+  note = "Three teas. One tasting box.",
+  jobs = ["Morning green", "Spiced chai", "Evening mint"],
+  tagLabel = "Tasting box",
+  tagValue = "$24",
+  tagMeta = "save $9",
   className = "",
 }: ParallaxProductStageProps) {
   const rootRef = useRef<HTMLDivElement>(null);

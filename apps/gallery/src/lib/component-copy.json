@@ -1,0 +1,366 @@
+{
+ "glass-button": {
+  "about": "A glassmorphism button for React that sits on dark or image backgrounds, using a backdrop blur, a translucent white fill and a thin border. Reach for it on hero sections or overlays where a solid button feels heavy. It spreads every native button attribute, scales down slightly on press, shows a visible focus ring and dims when disabled.",
+  "keyProps": "`children` (button label or content), `className` (extra classes appended to the glass styles), `disabled` (dims the button and cancels the press scale), `onClick` (any native button handler passes straight through)"
+ },
+ "card": {
+  "about": "A frosted glass card component for React: a rounded, translucent panel with a backdrop blur that lets the background show through softly. Use it to group content on dark pages, dashboards or image-backed sections. It stays deliberately small, with an optional heading and softened body text, so it drops into any layout without fighting your styles.",
+  "keyProps": "`title` (optional heading rendered above the content), `children` (panel body), `className` (extra classes for spacing or width)"
+ },
+ "text-input": {
+  "about": "A controlled React text input with a rounded pill shape, a linked label and inline validation text. Use it in forms where you want the label, required asterisk and error message handled in one component. It can force uppercase as the user types (useful for codes and IDs), switches to a red border when an error is set, and supports text, number and email types.",
+  "keyProps": "`onChange` (receives the new string value, already uppercased if requested), `error` (message shown under the field and turns the border red), `mandatory` (adds a required asterisk to the label), `uppercase` (converts input to capitals as you type)"
+ },
+ "md3-switch": {
+  "about": "A Material 3 style toggle switch for React, built on a real checkbox input so it works in forms and with refs. The handle grows when checked, stretches further while pressed and springs across the track, with a hover halo. It can show check and cross icons inside the handle and play an optional synthesised click sound through the Web Audio API.",
+  "keyProps": "`onCheckedChange` (called with the new boolean), `showIcons` (shows icons inside the handle), `haptic` (`\"heavy\"`, `\"light\"` or `\"none\"` sound feedback), `variant` / `size` (primary or destructive colour, default or small size)"
+ },
+ "blender-upload": {
+  "about": "An animated image upload drop zone for React where the file is \"blended\": fruit drops into a jar, the lid closes, the blender shakes and a smoothie glass appears with your preview. Underneath it is a practical uploader that checks JPG and PNG type and file size, and supports drag and drop, click or keyboard. Under prefers-reduced-motion the animation jumps straight to its end state.",
+  "keyProps": "`onFileSelect` (receives the File and its data URL), `onError` (receives validation or read error messages), `maxSizeMB` (size limit, default 1 MB), `disabled` (blocks new uploads)"
+ },
+ "checkbox-variants": {
+  "about": "Four animated checkbox styles for React, exported as separate components: `CustomCheckbox` (tick pop with a ripple), `GradientCheckbox` (multicolour glow when checked), `TransformerCheckbox` (the box morphs into a tick) and `AnimatedCheckbox` (a circle that turns into a pulsing square). Each is a real checkbox input with forwarded refs, styled only with Tailwind classes.",
+  "keyProps": "`checked` / `defaultChecked` (standard checkbox state), `onChange` (standard change handler), `className` (extra classes for the visual box)"
+ },
+ "stepper": {
+  "about": "A responsive multi-step form stepper for React that tracks progress through a wizard. On desktop it shows numbered circles joined by connector lines, with ticks for finished steps; on mobile it collapses to a \"Step X of Y\" progress bar with dots. Completion is tracked by step ID, so users can finish steps out of order.",
+  "keyProps": "`steps` (array of `{ id, title }`), `currentStepIndex` (zero-based index of the active step), `completedStepIds` (a Set of IDs that render as done)"
+ },
+ "collapsible-sidebar": {
+  "about": "A collapsible drag and drop sidebar for React, built as a node palette for workflow builders and canvas editors. Items are grouped by category, filtered by a live search box and draggable onto your canvas with custom data transfer keys. A header button collapses it to a thin icon rail to free up space.",
+  "keyProps": "`categories` (grouped items with label, icon, colour and optional drag data), `title` (heading shown above the list), `searchPlaceholder` (placeholder for the filter box), `dragTransferKey` (default MIME type used in the drag data)"
+ },
+ "tubelight-navbar": {
+  "about": "A floating pill navigation bar for React with a glowing \"tubelight\" indicator above the active link. The indicator glides between items with a Framer Motion spring. It sits at the top of the screen on desktop and moves to the bottom on mobile, where labels switch to icons, which makes it a compact app or portfolio nav.",
+  "keyProps": "`items` (array of name, url, icon and optional onClick), `activeItem` (name of the highlighted item), `onNavigate` (intercepts link clicks for client side routing)"
+ },
+ "pagination": {
+  "about": "Composable pagination components for React in the shadcn/ui style: a labelled nav wrapper with list items, page links, previous and next links and an ellipsis. The active page gets `aria-current=\"page\"` and a bordered look, and the ellipsis has screen reader text. You render the page numbers yourself, so it fits any routing or data fetching setup.",
+  "keyProps": "`isActive` (on `PaginationLink`, marks the current page), `href` (standard anchor link on each page, previous and next link), `className` (extra classes on any part)"
+ },
+ "site-header": {
+  "about": "A fixed portfolio header for React with hover effects on every link. Each nav link's text rolls up to reveal a copy while a white bubble fills the pill from below, and the call-to-action gets the same bubble fill. The header can slide down into view when you set it visible, so you can hold it back until a preloader finishes.",
+  "keyProps": "`navLinks` (array of label and href), `ctaLabel` / `ctaHref` (the pill button on the right), `visible` (slides the header in or out), `logo` (text for the home link)"
+ },
+ "mobile-menu": {
+  "about": "A full-screen mobile menu for React with an animated hamburger icon. The three bars rotate into a cross, and a black overlay fades in with large pill-shaped links. The header bar uses a difference blend mode, so the logo and burger stay readable over light or dark content. Clicking the backdrop or any link closes the menu.",
+  "keyProps": "`links` (array of label and href shown in the overlay), `logo` (text for the home link), `logoHref` (where the logo points)"
+ },
+ "sticky-navbar": {
+  "about": "A sticky e-commerce navbar for React with an optional announcement bar above it. After a short scroll it turns frosted with a shadow. On desktop it shows links with an active underline plus search, account and cart icons with a count badge. On mobile it becomes a Framer Motion drawer and locks page scroll while open.",
+  "keyProps": "`brand` (text or custom logo node), `links` (nav items), `cartCount` (number in the cart badge), `onCartClick` / `onSearchClick` / `onAccountClick` (each icon only renders when its handler is set)"
+ },
+ "sticky-nav": {
+  "about": "A minimal sticky header for React with a frosted, saturated backdrop, a small glowing dot beside the brand name, a row of text links and a round theme toggle that swaps between a moon and a sun icon. It is light and easy to restyle, which suits documentation sites, personal pages and small product sites.",
+  "keyProps": "`brandName` (text beside the dot), `links` (nav items), `onThemeToggle` (theme button handler), `isDark` (chooses the sun or moon icon)"
+ },
+ "section-progress-rail": {
+  "about": "A fixed scroll progress indicator for React long-form pages: a vertical column of dots on the right edge, one per section, where the active dot stretches into a glowing pill. Each dot is a labelled anchor link, the active one is marked with `aria-current`, and the rail only shows on wide screens (1180px and up). You supply the active index from your own scroll logic.",
+  "keyProps": "`links` (section href and label for each dot), `activeIndex` (which dot is current), `activeColor` (pill colour, default amber)"
+ },
+ "timed-tabs": {
+  "about": "Auto-rotating tabs for React where the progress bar under the active tab is the timer: when it fills, the next tab opens. A paper \"tongue\" slides across to join the active tab to its panel. It pauses when you press pause, when off screen, in a hidden tab or while keyboard focus is inside, supports arrow keys, and starts paused under prefers-reduced-motion.",
+  "keyProps": "`items` (tabs with id, label, icon and content), `label` (accessible name for the tab list), `interval` (ms per tab, default 6000), `onChange` (called with the new index)"
+ },
+ "submission-loader": {
+  "about": "A full-screen submission loading overlay for React that shows which stage a form submit has reached. It steps through verifying, validating, submitting and a green success state, with a spinner, a subtitle and progress dots. Use it when a submit takes a few seconds and users need to see it is working; rename every phase's text through config.",
+  "keyProps": "`phase` (current stage, or `null` to hide the overlay), `phases` (the ordered list of stages to show), `phaseConfig` (title and subtitle text for each stage)"
+ },
+ "typewriter-loader": {
+  "about": "A pure CSS typewriter loading animation for React: a small typewriter whose carriage slides across while the keys press and the paper feeds. It is a playful alternative to a spinner for writing tools, editors or content generation screens. There is no JavaScript animation loop, so it costs nothing to run, and a single prop scales it.",
+  "keyProps": "`size` (scale multiplier, anchored at the bottom centre)"
+ },
+ "toast-container": {
+  "about": "A lightweight React toast notification system: a `useToast` hook that queues messages and a container that portals them to the bottom right of the page. Each toast slides in and out with an interruptible CSS transition, so bursts of toasts stay smooth. Use it when you need simple status messages without adding a full notification library.",
+  "keyProps": "`toasts` (the list from `useToast`, passed to the container), `show` (hook function that takes a message and an optional duration in ms, default 2500)"
+ },
+ "empty-state": {
+  "about": "A simple empty state component for React to show when a list, table or dashboard has no data yet. It centres an optional icon, a heading and a short explanation, then offers one primary action button to create the first item. Use it to turn a blank screen into a clear next step without designing a new layout each time.",
+  "keyProps": "`title` (heading text), `description` (short explanation), `icon` (optional decorative icon), `onAction` / `actionLabel` (the button handler and its label, default \"Create\")"
+ },
+ "loading-spinner": {
+  "about": "A minimal CSS loading spinner for React in three sizes. It is a spinning ring with a gap, coloured from your theme's primary token, so it matches light and dark themes without extra setup. Use it inside buttons, cards or page sections when you need a plain loading indicator rather than an illustrated loader.",
+  "keyProps": "`size` (`\"sm\"`, `\"md\"` or `\"lg\"`), `className` (classes for the centring wrapper)"
+ },
+ "image-placeholder": {
+  "about": "An image loading placeholder for React that holds the aspect ratio of an image before it loads, so the layout does not jump. It draws every colour from the surrounding text colour, which makes it work on light and dark backgrounds without theming. A slow sheen pauses off screen and in hidden tabs, and is switched off under prefers-reduced-motion.",
+  "keyProps": "`aspectRatio` (box ratio, default \"4/3\"), `label` (optional caption and accessible name), `rounded` (Tailwind radius class, default \"rounded-xl\")"
+ },
+ "error-boundary": {
+  "about": "A React error boundary component with a designed recovery screen instead of a blank page. It catches render errors below it, shows a card with a cracked seal, an error code tag and the error message, and a \"Try again\" button that remounts the failed subtree in place. Entrance motion only runs when the user has not asked for reduced motion.",
+  "keyProps": "`fallback` (replace the screen, optionally as a function of error and reset), `onError` (report the error), `onReset` (runs after a retry), `fullScreen` (fill the viewport or wrap one region)"
+ },
+ "till-receipt-print": {
+  "about": "An animated payment receipt for React: the receipt prints down out of a till slot, line items appear one by one, and a PAID stamp lands with a textured ink mask. Use it on payment success or order confirmation screens. The edges are perforated with clip-path, and under prefers-reduced-motion the finished receipt shows with no animation.",
+  "keyProps": "`amount` (the headline figure), `rows` (label and value lines, optionally monospaced), `stamp` (stamp text, default \"Paid\"), `onContinue` (shows a continue button when set)"
+ },
+ "celebration-overlay": {
+  "about": "A success screen with confetti for React: a full-screen blurred dialog where three timed confetti bursts fire from the centre and both sides while a card with a check mark pops in. The bursts can replay on an interval. It is a modal dialog with a labelled title, and under prefers-reduced-motion the confetti is skipped and the card appears without animating.",
+  "keyProps": "`open` (shows the overlay), `title` / `description` (card text), `onContinue` (runs after the button fades the overlay out), `replayMs` (burst replay interval, 0 to turn off)"
+ },
+ "confetti-firecracker": {
+  "about": "A text firework effect for React: a shell climbs, bursts like an ordinary firework, then its fragments gather to spell your text, hold, and fall away. It draws on one temporary canvas with no confetti library. Fire it from a ref, or set it to go off after a number of taps on an element, as an easter egg. Reduced motion fades the word in at rest.",
+  "keyProps": "`text` (what the fragments spell), `ground` (background colour, used to pick visible colours), `triggerRef` / `taps` (fire after repeated taps on an element), `onDone` (called when it finishes)"
+ },
+ "toolbar-button": {
+  "about": "A compact icon button for React toolbars, editors and canvas controls. It gives an icon a rounded hit area, a soft hover background, a dimmed disabled state and a keyboard focus outline, with a native tooltip from the title. Use it for rows of undo, redo, zoom or layout actions where text labels would take too much space.",
+  "keyProps": "`icon` (the icon node to render), `onClick` (click handler), `disabled` (dims the button and blocks clicks), `title` (native tooltip text)"
+ },
+ "circle-cta": {
+  "about": "A circular call-to-action link for React whose outline draws itself around the label on hover, animated with GSAP stroke dash offsets, and undraws when the pointer leaves. It is a common pattern on portfolio and agency sites for \"view more\" or \"see project\" links. Line breaks in the label stack the text, and the size and stroke colour are configurable.",
+  "keyProps": "`href` (link target), `label` (text, use `\\n` for line breaks), `size` (diameter in rem, default 10), `strokeColor` (colour of the drawn circle)"
+ },
+ "text-disperse-link": {
+  "about": "A text scatter hover effect for React links: on hover each letter flies to its own offset and rotation, and on leave the letters regroup one after another. Built with GSAP, the scatter pattern is fixed rather than random, so it looks the same every time, and offsets scale with the font size. Use it for footer, social or navigation links that should feel playful.",
+  "keyProps": "`label` (link text), `href` (link target), `target` / `rel` (standard anchor attributes for external links)"
+ },
+ "border-beam-button": {
+  "about": "An animated border button for React with three ring styles: a light beam that travels around the edge, a spinning conic gradient, or glints sweeping the top and bottom edges. It comes in six fills and renders as a link when you pass `href`. The ring pauses in hidden tabs, and under prefers-reduced-motion the ring stops and hover lift is removed.",
+  "keyProps": "`fill` (`ink`, `ghost`, `jade`, `cream`, `crimson` or `gold`), `ring` (`beam`, `conic` or `star`, overrides the fill's default), `colors` (three custom ring colours), `spinDuration` (seconds per pass)"
+ },
+ "pinched-button": {
+  "about": "A call-to-action button for React with an asymmetric pinched shape: two opposite corners are square and two are strongly rounded. It lifts on hover, nudges its arrow forward and scales down slightly on press. It renders as a link when you pass `href`, comes in solid, ghost and soft tones, and drops the motion under prefers-reduced-motion.",
+  "keyProps": "`tone` (`\"solid\"`, `\"ghost\"` or `\"soft\"`), `arrow` (show the trailing arrow, default true), `href` (render as a link), `brick` / `cream` (the two colours)"
+ },
+ "side-panel": {
+  "about": "A right-hand inspector panel for React apps such as workflow editors, dashboards and settings views. It has a header with a close button, a scrolling body and an optional footer, and it slides in with a CSS transition. The file also exports small helpers (`PanelField`, `PanelInput`, `PanelTextarea`, `PanelDeleteButton`) so property forms inside it stay consistent.",
+  "keyProps": "`title` (uppercase header label), `onClose` (called by the close button), `footer` (optional content pinned to the bottom), `headerLeft` (slot before the title, such as an icon)"
+ },
+ "node-card": {
+  "about": "A workflow node card for React flow editors and pipeline builders. Each node shows an icon, a label and an optional description, with a coloured accent bar down the left side, and gets a ring in the accent colour when selected. It is keyboard operable (Enter or Space) and has slots for connection handles, so it fits React Flow style canvases.",
+  "keyProps": "`accentColor` (colour for the bar, icon tint and selected ring), `selected` (shows the ring and a stronger shadow), `onClick` (fires on click, Enter or Space), `topHandle` / `bottomHandle` (slots for connection handles)"
+ },
+ "price-breakdown": {
+  "about": "A price summary card for React that works out GST on a base price and shows the total in Indian rupees. It formats amounts with the en-IN locale to two decimals, shows a dash when GST is zero, and renders nothing if the price is missing or invalid. Use it on checkout, quote or listing pages where tax must be spelled out.",
+  "keyProps": "`price` (base amount in rupees), `gstPercent` (GST rate as a percentage), `priceLabel` (label for the base line, default \"Base Price\")"
+ },
+ "featured-project-card": {
+  "about": "A large featured project card for React portfolios: a wide rounded image that zooms slowly on hover, then an eyebrow, an oversized uppercase title and pill tags. It can align to the right with a narrower image, so you can alternate cards down a page for an editorial rhythm. The whole card is one link with a visible focus outline.",
+  "keyProps": "`title` (large heading), `imageSrc` (cover image), `tags` (pill labels under the title), `alignRight` (right-aligned layout with a 70% width image)"
+ },
+ "project-card": {
+  "about": "A portfolio project card for React grids and masonry layouts: a rounded 4:3 image that zooms slowly on hover, with an uppercase title and a small subtitle underneath. It avoids breaking across CSS columns, so it works in column-based masonry. A large variant bumps the title size for hero entries, and the whole card is one focusable link.",
+  "keyProps": "`title` (card heading), `subtitle` (small line under the title), `imageSrc` (cover image), `large` (bigger title for featured slots)"
+ },
+ "testimonial-card": {
+  "about": "A testimonial card for React that shows a star rating, the quoted review in italics and the reviewer's name with an optional role. The avatar is generated from the first letter of the name, so no photo is needed. The stars are exposed to screen readers as one image with a spoken rating, which suits review sections on landing and product pages.",
+  "keyProps": "`testimonial` (object with `rating`, `text`, `name` and optional `role`)"
+ },
+ "card-grid": {
+  "about": "A responsive feature card grid for React, rendered as a semantic list. Each card has an optional eyebrow line, a title, a subtitle and a description, and the eyebrow can read as a mono label (for text or step numbers), a large serif drop letter or an outlined pill tag. Cards have no hover state on purpose, so they never look clickable when they are not.",
+  "keyProps": "`items` (cards with eyebrow, title, subtitle and description), `columns` (1 to 4, or `\"fit\"` for one column per item up to five), `eyebrow` (`\"label\"`, `\"letter\"` or `\"tag\"`), `serifTitles` (serif headings)"
+ },
+ "pointer-glow-card": {
+  "about": "A spotlight card for React whose border and surface light up with a radial glow that follows the mouse. Keyboard users get the same effect: focus inside the card moves the spotlight to the focused element. Touch input is ignored so taps never leave a glow, and the surface wash is kept faint so text stays readable. Reduced motion removes the fade.",
+  "keyProps": "`glowColor` (ring colour under the pointer), `glowSecondary` (colour where the ring fades), `radius` (spotlight size in px, default 220)"
+ },
+ "docking-card": {
+  "about": "An interactive hover card for React: on hover or keyboard focus, the card's picture flies up into a small dock in the header while a detail panel rises into the space it left. The move is measured so the image scales without stretching. On touch screens and under prefers-reduced-motion it becomes a plain card that shows everything at once.",
+  "keyProps": "`media` (the picture that moves to the dock), `summary` (always visible text), `detail` (content that rises in on hover), `href` (makes the title a link)"
+ },
+ "custom-cursor": {
+  "about": "A custom crosshair cursor for React built with GSAP. Four small bars form a crosshair that eases after the pointer and uses a difference blend mode so it shows on any background. Add a `data-cursor-grow` attribute to links or cards and the cursor scales up over them. It hides when the pointer leaves the window and on screens 768px wide or less.",
+  "keyProps": "none (mount it once and mark hover targets with `data-cursor-grow`)"
+ },
+ "magnet": {
+  "about": "A magnetic hover effect for React that pulls its child toward a nearby mouse pointer and springs it back when the pointer leaves the field. The spring is tuned to settle without wobble, the pull fades in at the edge of the field, and the loop stops when idle. It ignores touch input, stops in hidden tabs and turns off under prefers-reduced-motion.",
+  "keyProps": "`padding` (reach of the pull outside the element, default 140px), `magnetStrength` (lower pulls harder), `maxOffset` (furthest the child can move, default 44px), `disabled` (turns the effect off)"
+ },
+ "glare-hover": {
+  "about": "A glare hover effect for React that lays a soft radial highlight over any card or image and moves it with the pointer, using CSS variables and a soft-light blend. It fades in on enter and out on leave, and inherits the border radius of what it wraps. The glare is hidden under prefers-reduced-motion. Use it to make product cards feel glossy.",
+  "keyProps": "`glareSize` (radius of the highlight in px, default 90), `glareColor` (centre colour of the glare), `className` (classes on the wrapper)"
+ },
+ "jewelry-cursor": {
+  "about": "A custom dot and ring cursor for React built with GSAP. A small dot tracks the pointer exactly while a thin ring follows with a slight lag and swells over links, buttons and any element you mark. It hides the native cursor only inside the scope you choose, and does nothing on touch devices or under prefers-reduced-motion, where the normal cursor stays.",
+  "keyProps": "`color` (dot and ring colour, default gold), `hoverSelector` (elements that make the ring grow), `scopeSelector` (where the native cursor is hidden, default `body`)"
+ },
+ "scratch-foil-reveal": {
+  "about": "A scratch card component for React: gold foil covers your content and the user scratches it off with a mouse, finger or pen. Progress is tracked on a coverage grid rather than by reading pixels, and once enough is cleared the rest dissolves and a callback fires. Under prefers-reduced-motion the content is revealed straight away. Good for rewards, coupons and invitations.",
+  "keyProps": "`threshold` (fraction to clear before auto reveal, default 0.55), `onReveal` (called when the foil clears), `label` (text printed on the foil), `foil` / `foilSoft` (foil gradient colours)"
+ },
+ "preloader": {
+  "about": "A full-screen GSAP page preloader for React: a percentage counter runs from 0 to 100 while the letters of your name or brand rise into view. The middle letters then fade out and the whole screen slides up to reveal the page. Use it as a portfolio or agency intro, and start your own entrance animation from its completion callback.",
+  "keyProps": "`name` (text revealed letter by letter, default \"LOADING\"), `onComplete` (called once the screen has wiped away)"
+ },
+ "scroll-unfurl-preloader": {
+  "about": "A full-screen intro preloader for React where two brass rods roll apart and a parchment scroll unfurls from the centre to reveal your brand, then the whole scene lifts and blurs away. It plays once per browser session by default, locks page scroll while running and has a safety timeout. Under prefers-reduced-motion it shows the opened scroll and simply fades out.",
+  "keyProps": "`brand` (name shown on the parchment), `onComplete` (called when the overlay hands off to the page), `onceKey` (sessionStorage key, or `null` to play every time), `durationMs` (expected length, used for the safety timeout)"
+ },
+ "multi-step-loader": {
+  "about": "A full-screen multi-step loading screen for React that walks through a list of stages, ticking each one off as it goes. The list scrolls so the active row stays in view, the active label gets a shine, and animated WebGL rings sit behind a frosted layer. It can loop or stop on the last step, then call back when finished.",
+  "keyProps": "`loadingStates` (array of `{ text }` steps), `loading` (shows or hides the overlay), `duration` (ms per step, default 2000), `loop` / `onComplete` (loop forever, or stop and call back)"
+ },
+ "elastic-line-divider": {
+  "about": "An interactive SVG section divider for React: a thin line that bends toward the cursor as you hover and springs back with damped physics when you leave. Below it sits a small row for a section index, an optional label and a total count, which suits numbered portfolio or case study sections. The line takes the current text colour.",
+  "keyProps": "`index` (left marker, default \"01/\"), `label` (optional centre text), `total` (right marker, default \"/04\")"
+ },
+ "animated-gradient-rule": {
+  "about": "An animated gradient divider for React: a two-pixel horizontal rule whose three-colour gradient slides slowly along its length and fades out at both ends. It is pure CSS, exposed to assistive tech as a separator, and stops under prefers-reduced-motion. Use it between sections of a landing page when a flat hairline feels too quiet.",
+  "keyProps": "`colors` (three gradient colours), `duration` (seconds per slide, default 8), `className` (spacing or width classes)"
+ },
+ "image-reveal": {
+  "about": "A scroll-triggered image reveal for React built with GSAP ScrollTrigger. As the image enters the viewport, a clip-path mask opens from the bottom up while the picture settles from a 1.4x zoom to its natural size. Scrolling back above it reverses the effect. Use it for portfolio case studies and editorial layouts where images should arrive with some weight.",
+  "keyProps": "`src` / `alt` (the image), `aspectRatio` (box ratio, default \"3/2\"), `borderRadius` (corner radius, default \"4rem\")"
+ },
+ "image-with-fallback": {
+  "about": "A React image component with a fallback for broken images. If the source fails to load it swaps in a neutral grey placeholder graphic while keeping your class names and inline styles, so layouts do not collapse or show the browser's broken image icon. It accepts every normal `img` attribute and stores the failed URL in a data attribute for debugging.",
+  "keyProps": "`src` (image URL to try), `alt` (alt text for the real image), `className` / `style` (applied to both the image and the fallback box)"
+ },
+ "cinematic-water-background": {
+  "about": "An animated underwater background for React made from SVG turbulence-displaced wave lines, drifting light shafts, a rippling surface and rising bubbles, all in CSS and SVG with no canvas. A scene prop darkens the gradient and fades the water as you move deeper, so it can follow scroll depth. Under prefers-reduced-motion the animation stops and the bubbles are hidden.",
+  "keyProps": "`scene` (depth tier 1 to 4), `bubbleCount` (number of rising bubbles, default 16), `className` (classes on the absolutely positioned layer)"
+ },
+ "pixel-demorph-image": {
+  "about": "A pixelated image reveal for React: when the image scrolls into view it starts as coarse pixel blocks and sharpens to the full photo over about a second. The effect is drawn on a canvas layered over a normal lazy-loaded `img`, so the real image and its alt text stay in the page. Under prefers-reduced-motion it renders sharp immediately.",
+  "keyProps": "`src` / `alt` (the image), `durationMs` (length of the sharpen, default 1100), `startBlocks` (block count across the width at the start, default 6)"
+ },
+ "metallic-logo-shimmer": {
+  "about": "A metallic shimmer effect for logos in React: your logo sits on a soft glowing plate while a slow champagne light sweep and glare pass over it, masked to the logo's own shape. You supply the image, so any transparent PNG or SVG works. It is pure CSS, and under prefers-reduced-motion the glow holds still and the sweep is hidden.",
+  "keyProps": "`src` (logo image, also used as the mask), `alt` (alt text), `maxWidth` (largest logo width, default `min(100%, 28rem)`)"
+ },
+ "autoplay-carousel": {
+  "about": "An accessible autoplay image carousel for React that never crops: each photo sits on a plate sized to its own shape over a blurred copy of itself. A progress bar is the timer, and it pauses on hover, focus, touch, off screen and in hidden tabs. It has arrows, dots, swipe and arrow keys, and starts paused under prefers-reduced-motion.",
+  "keyProps": "`slides` (src, alt, optional caption and size), `label` (accessible name), `interval` (ms per slide, default 5000), `aspect` (stage width divided by height, default 1.5)"
+ },
+ "marquee": {
+  "about": "An infinite scrolling text marquee for React built with GSAP. It clones your text until the track covers about three screen widths, then loops it at a steady speed with no visible seam. The defaults give a huge, faint uppercase background band, which works as a decorative strip between portfolio sections, and every size and opacity is adjustable.",
+  "keyProps": "`text` (the repeated phrase), `speed` (pixels per second), `fontSize` (default \"21rem\"), `opacity` (default 0.08)"
+ },
+ "scroll-reveal": {
+  "about": "A scroll reveal animation wrapper for React that fades its children in as they enter the viewport, sliding up, in from the left or right, or scaling up. It uses IntersectionObserver and CSS transitions with no animation library. Content stays visible when scripting is off and appears instantly under prefers-reduced-motion, so nothing can get stuck hidden.",
+  "keyProps": "`variant` (`\"up\"`, `\"left\"`, `\"right\"` or `\"scale\"`), `delay` (0 to 500 ms in steps of 100, for staggering), `className` (classes on the wrapper)"
+ },
+ "blur-in-reveal": {
+  "about": "A blur-in scroll animation for React: content fades up from 30px below while clearing a 7px blur as it enters the viewport. It runs once per element through IntersectionObserver and CSS transitions, can render as any HTML tag, and takes small stagger delays for sequencing. Under prefers-reduced-motion the content is simply shown.",
+  "keyProps": "`as` (element to render, default `div`), `delay` (stagger step from 0 to 4), `className` (extra classes)"
+ },
+ "edge-fade-marquee": {
+  "about": "A pure CSS infinite marquee for React that scrolls logos, cards or tags in a loop, with gradient fades on both edges so items drift in and out softly. It pauses on hover by default. Under prefers-reduced-motion it stops, drops the duplicate copy and removes the fades, leaving a static row.",
+  "keyProps": "`duration` (seconds per loop, default 40), `pauseOnHover` (default true), `fade` / `fadeColor` (edge fades and their colour, match your background), `gap` (space between items in px)"
+ },
+ "stagger-blur-text": {
+  "about": "A word-by-word text reveal for React: each word of a paragraph fades in out of a soft 6px blur, one slightly after the next, after a short start delay. It splits your string into words and staggers them with CSS transitions, so there is no animation library. Under prefers-reduced-motion the full paragraph shows at once. Good for hero intros and taglines.",
+  "keyProps": "`text` (the paragraph to reveal), `startDelay` (ms before the cascade begins, default 280), `className` (classes on the paragraph)"
+ },
+ "canvas-petal-field": {
+  "about": "A falling petals animation for React drawn on a canvas: marigold and jasmine shapes drift down, sway and rotate, and a mouse \"gust\" nudges them sideways. The petals are drawn with canvas paths, so there are no image assets to load. It can be limited to the lower part of its area, and nothing is drawn under prefers-reduced-motion.",
+  "keyProps": "`count` (number of petals, default 16), `heightFraction` (fraction of the canvas, from the bottom, that petals use), `className` (positioning classes for the canvas)"
+ },
+ "scroll-parallax-layer": {
+  "about": "A scroll parallax component for React built on GSAP ScrollTrigger. Each layer moves at its own speed and can also drift sideways, rotate, scale, and come into focus out of blur and fade as it crosses the middle, so stacked layers read as real depth. It measures against the nearest scrolling container, so it works inside panels. A `FallingPetalField` companion is included.",
+  "keyProps": "`speed` (vertical drift, negative reads as far away), `scale` / `rotate` (change across the scroll range), `blur` / `fade` (blur and opacity at the ends of the range), `scroller` (which container to measure)"
+ },
+ "magic-rings": {
+  "about": "An animated WebGL background for React: concentric rings expand outward in a blend of two colours, drawn by a Three.js shader. It can follow the mouse with a parallax offset, swell on hover and flash a burst on click. It needs WebGL2 and renders nothing under prefers-reduced-motion. A `LOADER_MAGIC_RINGS` preset is exported for full-screen loaders.",
+  "keyProps": "`color` / `colorTwo` (the two ring colours), `ringCount` (up to 10), `followMouse` (mouse parallax), `clickBurst` (flash on click)"
+ },
+ "shiny-text": {
+  "about": "An animated shiny text effect for React: a gradient highlight sweeps across the letters, built with Motion (Framer Motion) and background-clip text. You can set the sweep speed, direction, pause between passes, back and forth yoyo motion, and pause on hover. Under prefers-reduced-motion, or when disabled, it renders as plain text.",
+  "keyProps": "`text` (the string to render), `speed` (seconds per sweep, default 2), `shineColor` / `color` (highlight and base colours), `yoyo` (sweep back and forth)"
+ },
+ "highlighter": {
+  "about": "A hand-drawn text highlighter for React built on rough-notation. It wraps a phrase and draws a marker highlight, underline, box, circle, strike-through, cross-out or bracket around it, either on mount or when it scrolls into view. Changing `replayKey` redraws it, and layout changes redraw it in place without replaying. Under prefers-reduced-motion the finished mark appears without animating.",
+  "keyProps": "`action` (the mark type, default `\"highlight\"`), `color` (mark colour), `isView` (wait until scrolled into view), `replayKey` (change it to draw again)"
+ },
+ "text-type": {
+  "about": "A typewriter text animation for React that types a line, pauses, deletes it and moves on to the next, with a GSAP-blinking cursor. It can loop, start only once scrolled into view, vary its typing speed for a human feel, give each line its own colour and render as any tag. Under prefers-reduced-motion it shows the first line in full with no cursor.",
+  "keyProps": "`text` (a string or a list of lines), `typingSpeed` / `deletingSpeed` (ms per character), `pauseDuration` (ms to hold a finished line, default 2000), `startOnVisible` (wait until it scrolls into view)"
+ },
+ "glyph-field": {
+  "about": "An interactive ASCII-style 3D text effect for React: a word is rendered as a bevelled solid made of repeated glyphs on a canvas, shaded by a fixed light, and it turns toward the cursor while a \"torch\" lifts and recolours the glyphs under the pointer. With no pointer it sways slowly. Under prefers-reduced-motion it holds one fixed angle.",
+  "keyProps": "`text` (the word to draw), `glyph` (character used for every cell, default \"+\"), `tilt` (degrees it turns toward the pointer), `wander` (idle sway), `decorative` (hide from assistive tech)"
+ },
+ "sketch-highlight": {
+  "about": "A hand-drawn marker highlight for React that puts a wash behind words, or an underline or strike-through over them, with a slightly different wobble each time. The ink can \"boil\" between three takes like hand-drawn animation. Four highlighter colours are tuned for light and dark themes. Under prefers-reduced-motion it holds one still take.",
+  "keyProps": "`mark` (`\"highlight\"`, `\"underline\"` or `\"strike\"`), `color` (a preset such as `yellow` or any CSS colour), `roughness` (hand wobble), `boil` (how much the ink shifts between takes, 0 for still)"
+ },
+ "contact-section": {
+  "about": "A dark contact section for React portfolios with a spinning conic gradient border, a soft spotlight that follows the cursor and a huge two-line heading. The heading can be filled with an image through background-clip text. Underneath sits a circular \"write a message\" link. Use it as the closing call to action on a personal or studio site.",
+  "keyProps": "`heading` / `subheading` (the two lines of the big title), `eyebrow` (small line above), `ctaHref` (link target, default a mailto), `headingImageSrc` (image shown through the heading letters)"
+ },
+ "typing-hero": {
+  "about": "A React hero section with a typewriter subtitle: a large serif headline with an optional italic highlight, then a subtitle that types itself out behind a blinking cursor. The call-to-action buttons you pass as children fade in only once typing finishes. Under prefers-reduced-motion the subtitle appears in full straight away and the buttons show at once.",
+  "keyProps": "`title` / `titleHighlight` (headline and its italic phrase), `subtitle` (text that types out), `typingSpeed` (ms per character, default 28), `typingDelay` (ms before typing starts, default 480)"
+ },
+ "parallax-product-stage": {
+  "about": "A product showcase section for React: three product images stand on a lit shelf, settle into place with a GSAP entrance, then drift at different depths as the pointer moves. It includes a note, three short job labels and a price tag card. Pointer parallax only runs on fine pointers, and all motion is skipped under prefers-reduced-motion.",
+  "keyProps": "`items` (up to three products with label, media and rotation), `jobs` (three labels under the shelf), `tagLabel` / `tagValue` / `tagMeta` (the price tag text), `note` (italic line at the top)"
+ },
+ "sideways-scroll": {
+  "about": "A horizontal scroll section for React: a row of cards pins to the viewport and pans sideways as you scroll down, then holds on the last card before the page moves on. It uses one passive scroll listener and no scroll library. Tabbing to a hidden card scrolls it into view. On narrow or short screens and under reduced motion it becomes a snap scroller.",
+  "keyProps": "`label` (accessible name for the list), `heading` (content pinned above the row), `pinOffset` (space for a sticky header), `minWidth` / `minHeight` (smallest viewport that gets the pinned version)"
+ },
+ "scroll-flip-deck": {
+  "about": "A scroll-driven card stack for React: a deck of images pins to the viewport and, as you scroll, the front card lifts and turns away on its top edge to reveal the next one. It uses a single scroll listener and only changes transform and opacity. Images keep their alt text. Under reduced motion, on short screens or with one image it becomes a plain column.",
+  "keyProps": "`items` (src, alt and optional caption), `label` (accessible name), `mode` (`\"sequence\"` or `\"alternate\"` turn direction), `counter` (show \"02 / 05\" while pinned)"
+ },
+ "skeleton-card": {
+  "about": "Skeleton loading placeholders for React: a product card skeleton and a list row skeleton, drawn in your theme's own colours so they work in light and dark mode. A slow sheen sweeps across and pauses when off screen or in a hidden tab. Each one is a status region with `aria-busy` and a spoken label, and the sheen is removed under prefers-reduced-motion.",
+  "keyProps": "`label` (text announced to screen readers, default \"Loading\"); exports `SkeletonCard` and `SkeletonRow`"
+ },
+ "use-theme-ripple": {
+  "about": "A React hook for a dark mode toggle with a circular reveal animation. When you click the toggle, the old theme's background shrinks away in a circle centred on the click, using the Web Animations API and clip-path. It also saves the choice to localStorage and restores it on load. You keep full control of how the theme is applied.",
+  "keyProps": "`isDark` (current theme state), `onToggle` (called with the next dark value), `storageKey` (localStorage key, default \"theme\"); returns `toggle` for your button's onClick"
+ },
+ "shiny-badge": {
+  "about": "A small animated pill badge for React with a spark glyph and a light that sweeps across its text in a loop. It is a pure CSS gradient text effect, so it adds no JavaScript. Use it above hero headings for \"New\", release notes or feature announcements where a static label would be easy to miss.",
+  "keyProps": "`text` (badge label), `spark` (leading glyph, default a four-point star)"
+ },
+ "numbered-steps-list": {
+  "about": "A numbered steps list for React that lays out a process or how-it-works section as a semantic ordered list. Each step has a mono number with a short accent rule on the left and a serif title with a description on the right, separated by hairlines. Colours switch through CSS `light-dark()`, so it reads on light and dark pages without a prop.",
+  "keyProps": "`steps` (array of `number`, `title` and `description`)"
+ },
+ "checklist": {
+  "about": "A checklist component for React that renders each point as a hairline-bordered card led by a solid round marker holding a symbol such as a tick or a number. The marker is a solid disc rather than a tint, so it stays legible in dark mode, and colours switch automatically through `light-dark()`. Use it for requirements, feature lists or \"what you get\" sections.",
+  "keyProps": "`items` (array of `symbol` and `text`, where text can be any React node)"
+ },
+ "formula-block": {
+  "about": "A formula display block for React that centres a monospace equation on a softly tinted plate, with an optional uppercase caption ruled off underneath. Use it in documentation, pricing explainers or blog posts where a calculation needs to stand apart from body text. Long formulas wrap or scroll sideways, and colours adapt to light and dark schemes through `light-dark()`.",
+  "keyProps": "`formula` (the expression to show), `caption` (optional line under a divider)"
+ },
+ "depth-text": {
+  "about": "A 3D text effect for React that builds extruded lettering from up to 64 stacked, colour-blended layers and tilts it toward the pointer. When the pointer is away it drifts in a slow orbit. Pointer tracking only runs on fine pointers, and under prefers-reduced-motion the text holds a fixed angle. Use it for hero words, logos or 404 pages.",
+  "keyProps": "`text` (the word to extrude), `layers` / `depth` (layer count and spacing in px), `faceColor` / `depthColor` (front colour and extrusion colour), `tilt` (maximum tilt in degrees)"
+ },
+ "shiny-gradient-text": {
+  "about": "Animated shiny gradient text for React: a narrow metallic highlight sweeps slowly across the letters in a loop with no visible jump. Two tones are tuned so every colour stop keeps readable contrast, `paper` for light backgrounds and `void` for dark ones. The sweep pauses off screen and in hidden tabs, and under prefers-reduced-motion it holds a still highlight instead.",
+  "keyProps": "`tone` (`\"paper\"` or `\"void\"`), `duration` (seconds per sweep, default 6)"
+ },
+ "circular-text": {
+  "about": "A rotating circular text badge for React: the letters of your text are spaced evenly around a ring that spins continuously with Motion. On hover the ring can speed up, slow down, pause or spin wildly, and you can put a logo or icon in the centre. It measures its own size to place the letters. Under prefers-reduced-motion the ring does not rotate.",
+  "keyProps": "`text` (letters placed around the ring), `onHover` (`\"speedUp\"`, `\"slowDown\"`, `\"pause\"` or `\"goBonkers\"`), `spinDuration` (seconds per turn, default 20), `size` (`\"sm\"`, `\"md\"` or `\"lg\"`)"
+ },
+ "particle-qr-code": {
+  "about": "An animated QR code generator for React that encodes the value itself, with no dependency, so the code always scans. When it scrolls into view each module flies in as a cloud of grains or a streak and settles onto the grid. Pass a list and it cycles between codes, with visible Pause and Next buttons. Under prefers-reduced-motion it fades instead and starts paused.",
+  "keyProps": "`value` (text or URL, or a list of codes to cycle), `size` (width in px, default 240), `mode` (`\"dust\"` or `\"beam\"`), `hold` (ms each code rests in a list, default 4500)"
+ },
+ "pixel-avatar": {
+  "about": "A pixel art avatar generator for React: any string such as a user ID or email seeds a unique 8x8 sprite, either a random mirrored creature or a drawn species (ghost, cat, bear and more), in one of ten colour ramps. The same seed always gives the same avatar. It hops and blinks on hover, with optional idle loops that stop under reduced motion.",
+  "keyProps": "`seed` (string that decides the avatar), `species` (a species name, `\"creature\"` or `\"seed\"`), `size` (px, rounded to a multiple of 8), `palette` (a named ramp, `\"seed\"` or custom colours)"
+ },
+ "callout-box": {
+  "about": "A callout box component for React articles and docs, marked by a thick amber spine on the left. It holds a serif title, an optional intro, an optional mono label with a rule, a list of points each led by a round symbol marker, and a closing footer line. The surface stays neutral and colours switch with `light-dark()`, so it works on both light and dark pages.",
+  "keyProps": "`title` (heading), `intro` (paragraph under the title), `items` (list of `symbol` and `content`), `footer` (closing line under a divider)"
+ },
+ "sketch-arrow": {
+  "about": "A hand-drawn SVG arrow for React that connects two elements, pointed at by refs or CSS selectors, and redraws itself when either element moves or resizes. The line bows by an amount you set, can have heads on either or both ends, and can \"boil\" between three sketchy takes. It is hidden from screen readers unless you give it a label, and stays still under reduced motion.",
+  "keyProps": "`from` / `to` (refs or selectors for the two ends), `bend` (how far the line bows), `head` (`\"end\"`, `\"start\"`, `\"both\"` or `\"none\"`), `label` (accessible description)"
+ },
+ "site-footer": {
+  "about": "A responsive site footer for React with a brand name beside a haloed accent dot, an optional tagline, link columns with mono headings, and a bottom row for copyright and an optional \"Published by\" credit. It wraps with flexbox rather than breakpoints, so one column or five both lay out cleanly, and colours adapt to dark mode through `light-dark()`.",
+  "keyProps": "`brandName` (text beside the dot), `tagline` (short line under the brand), `columns` (headings with link lists), `copyright` (text in the bottom row)"
+ },
+ "damask-tile-backdrop": {
+  "about": "A fixed patterned page background for React that repeats an ornamental tile behind all your content under a soft veil. Pass your own tile image, or leave it out and get a CSS-only lattice of radial dots. The file also exports `TiledGlassSurface`, a frosted glass card with the same tile, for panels that sit on top of the backdrop.",
+  "keyProps": "`tileSrc` (optional repeating image), `opacity` (pattern strength, default 0.14), `tileSize` (tile size, default 280px), `background` (base colour under the pattern)"
+ },
+ "film-grain-overlay": {
+  "about": "An animated film grain overlay for React that adds a faint noise texture over the whole page, so dark flat surfaces look less digital. It draws random grain on a small canvas about 20 times a second and stretches it with an overlay blend mode, which keeps it cheap. It does not draw under prefers-reduced-motion.",
+  "keyProps": "`opacity` (strength of the grain, default 0.05), `resolution` (canvas size in px before stretching, default 220), `className` (position and blend classes)"
+ },
+ "morph-dialog": {
+  "about": "An accessible React modal that grows out of the button that opened it: a clip-path animation carries the surface from the trigger's box to the dialog and back, starting in the trigger's own colour. It is a full modal: focus trap, Escape to close, backdrop click, scroll lock, background made inert, and focus returned to the trigger. Reduced motion swaps the morph for a short fade.",
+  "keyProps": "`trigger` (the element that opens it), `title` / `description` (labelled heading and text), `open` / `onOpenChange` (optional controlled state), `duration` (morph length in ms, default 500)"
+ }
+}
