@@ -174,3 +174,7 @@ export { BrickWallLoader, BRICK_WALL_LOADER_PALETTES } from "./loaders/BrickWall
 export type { BrickWallLoaderProps, BrickWallLoaderColors, BrickWallLoaderPalette, BrickWallLoaderPaletteName } from "./loaders/BrickWallLoader";
 export { SnakeLineLoader, SNAKE_LINE_LOADER_PALETTES } from "./loaders/SnakeLineLoader";
 export type { SnakeLineLoaderProps, SnakeLineLoaderColors, SnakeLineLoaderPalette, SnakeLineLoaderPaletteName } from "./loaders/SnakeLineLoader";
+
+// Link transitions
+export { ThorLink, ThorLinkProvider, useThorStrike } from "./interaction/ThorLink";
+export type { ThorLinkProps, ThorLinkProviderProps, ThorStrikeApi, ThorStrikeOptions, ThorStrikeResult, ThorStrikeState } from "./interaction/ThorLink";
