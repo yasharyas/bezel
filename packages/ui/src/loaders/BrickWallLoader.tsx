@@ -55,7 +55,6 @@ import {
 
 /* ---------------- shared: types and labels ---------------- */
 
-/** Where a step is. Only the host changes it. */
 export type LoaderStepStatus = "pending" | "active" | "done" | "error" | "skipped";
 
 export type LoaderStep = {
@@ -63,7 +62,7 @@ export type LoaderStep = {
   id: string;
   /** Present tense: "Import 1,240 contacts". */
   label: string;
-  /** Where the step is: pending, active, done, error or skipped. */
+  /** Where the step is. Only the host changes it. */
   status: LoaderStepStatus;
   /** 0 to 1, from real host events only. Leave it out (or null) when the size of the work is unknown. */
   progress?: number | null;
@@ -86,58 +85,62 @@ export type LoaderStep = {
 };
 
 export type LoaderStat = {
-  /** Tile heading, such as "Contacts". */
+  /** Tile heading on the results screen: "Contacts". */
   label: string;
-  /** A real number (counts up when motion is allowed) or a string shown as it is. */
+  /** A real figure. Numbers count up when motion is allowed; strings show as given. */
   value: string | number;
-  /** Small line under the value, such as "imported". */
+  /** Small line under the value: "imported". Default none. */
   sub?: string;
 };
 
 export type LoaderLabels = {
-  /** What one step is called in this game, used in the footer: "Row 2 of 5". */
+  /** The game's word for one step, used in the footer. Encounter: "Stage". */
   unit: string;
-  /** The finale banner and footer: "Wall cleared". */
+  /** The finale banner and the footer once every step is settled. Encounter: "Stage clear". */
   clear: string;
   /** Accessible name of the narration log. Default "Narration". */
   narration: string;
   /** Accessible name of the error menu. Default "What next". */
   menu: string;
-  /** Default "Retry". */
+  /** Retry button. Default "Retry". */
   retry: string;
-  /** Default "Skip". */
+  /** Skip button. Default "Skip". */
   skip: string;
-  /** Default "Cancel". */
+  /** Cancel button. Default "Cancel". */
   cancel: string;
-  /** Default "Show details". */
+  /** Details toggle while closed. Default "Show details". */
   showDetails: string;
-  /** Default "Hide details". */
+  /** Details toggle while open. Default "Hide details". */
   hideDetails: string;
-  /** Default "Pause motion". */
+  /** Heading and accessible name of the details card. Default "Details". */
+  details: string;
+  /** Accessible name of the error message when it is long enough to scroll. Default "Error message". */
+  errorMessage: string;
+  /** The motion toggle. Default "Pause motion". */
   pauseMotion: string;
-  /** Default "Continue". */
+  /** The results button. Default "Continue". */
   continue: string;
-  /** The nameplate's error mark. Default "Failed". */
+  /** The nameplate mark on a failed step. Default "Failed". */
   failed: string;
-  /** Footer text while the error menu waits. Default "Waiting for you". */
+  /** Footer note while the error menu waits. Default "Waiting for you". */
   waiting: string;
-  /** Nameplate text for a step of unknown size. Default "Working, size unknown". */
+  /** Nameplate count for a step of unknown size. Default "Working, size unknown". */
   sizeUnknown: string;
-  /** Default "Attempt 2". */
+  /** Nameplate tag from the second attempt. Default "Attempt 2". */
   attempt: (n: number) => string;
-  /** Log placeholder before anything is narrated. Default "5 steps queued. Up first: Create the workspace." */
+  /** Log placeholder before the first milestone. Default "5 steps queued. Up first: Create the workspace." */
   queued: (n: number, first: string) => string;
-  /** Log placeholder when the loader mounts mid-run; never announced. Default "1 of 5 done. Now: Import 1,240 contacts." */
+  /** Log placeholder when mounted mid-run, never announced. Default "1 of 5 done. Now: Import 1,240 contacts." */
   progress: (done: number, total: number, now: string) => string;
-  /** Footer note after a hidden tab; never announced. Default "While you were away: 2 steps finished." */
+  /** Footer note after a hidden tab or scroll away, never announced. Default "While you were away: 2 steps finished." */
   away: (n: number) => string;
-  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped)." */
+  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped).", "The step finished." for one */
   complete: (total: number, skipped: number) => string;
-  /** Narrated on Cancel. Default "Stopped. 2 finished steps are kept." */
+  /** The line after Cancel. Default "Stopped. 2 finished steps are kept." */
   stopped: (kept: number) => string;
 };
 
-const LOADER_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
+const LOADER_DEFAULT_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
   narration: "Narration",
   menu: "What next",
   retry: "Retry",
@@ -145,16 +148,18 @@ const LOADER_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
   cancel: "Cancel",
   showDetails: "Show details",
   hideDetails: "Hide details",
+  details: "Details",
+  errorMessage: "Error message",
   pauseMotion: "Pause motion",
   continue: "Continue",
   failed: "Failed",
   waiting: "Waiting for you",
   sizeUnknown: "Working, size unknown",
   attempt: (n) => `Attempt ${n}`,
-  queued: (n, first) => `${n} step${n === 1 ? "" : "s"} queued. Up first: ${first}.`,
-  progress: (done, total, now) => `${done} of ${total} done. Now: ${now}.`,
+  queued: (n, first) => `${n} step${n === 1 ? "" : "s"} queued.${first ? ` Up first: ${first}.` : ""}`,
+  progress: (done, total, now) => `${done} of ${total} done.${now ? ` Now: ${now}.` : ""}`,
   away: (n) => `While you were away: ${n} step${n === 1 ? "" : "s"} finished.`,
-  complete: (total, skipped) => `All ${total} step${total === 1 ? "" : "s"} finished${skipped ? ` (${skipped} skipped)` : ""}.`,
+  complete: (total, skipped) => `${total === 1 ? "The step" : `All ${total} steps`} finished${skipped ? ` (${skipped} skipped)` : ""}.`,
   stopped: (kept) => `Stopped. ${kept} finished step${kept === 1 ? " is" : "s are"} kept.`,
 };
 
@@ -1518,6 +1523,8 @@ const FRONT_H = 16;
 const QUEUE_H = 12;
 const PITCH = 16;
 const AIR = 84;
+/** The ball's flight room on phones, so the whole loader fits a phone screen unscaled. */
+const AIR_NARROW = 28;
 const HERO_PX = CHARACTER_H * U;
 const PADDLE_H = 3 * U;
 const BOTTOM = 14;
@@ -1526,7 +1533,7 @@ const BALL = 4 * U;
 /** Where the character stands and the ball rests on the paddle. */
 const HERO_X = 4 * U;
 const BALL_X = 22 * U;
-const fieldHeight = (n: number) => FRAME + TOP + Math.max(0, n - 1) * PITCH + FRONT_H + AIR + HERO_PX + PADDLE_H + BOTTOM;
+const fieldHeight = (n: number, air = AIR) => FRAME + TOP + Math.max(0, n - 1) * PITCH + FRONT_H + air + HERO_PX + PADDLE_H + BOTTOM;
 const snap = (v: number) => Math.round(v / U) * U;
 
 /* The paddle: a capsule with end caps and a glint, after Arkanoid's Vaus. */
@@ -1873,7 +1880,7 @@ function createBrickWallArena(core: LoaderCore, refs: BrickWallRefs): LoaderAren
     const narrow = !!root && root.clientWidth < 560;
     const bgap = narrow ? 2 : 4;
     const n = core.host.length;
-    const H = fieldHeight(n);
+    const H = fieldHeight(n, narrow ? AIR_NARROW : AIR);
     const yf = FRAME + TOP + Math.max(0, n - 1) * PITCH;
     const padX = snap((W - PADDLE_W) / 2);
     const tx = FRAME + SIDE;
@@ -2415,28 +2422,46 @@ ${CHARACTER_CSS}
 
 /* narrow: the nameplate sits above the playfield, the menu becomes a 2 x 2 grid */
 @container (max-width:559px){
-  .bz-bwl-in{padding:12px}
-  .bz-bwl-arena{grid-template-columns:minmax(0,1fr);row-gap:10px}
-  .bz-bwl-side{grid-column:1;grid-row:1;height:68px}
-  .bz-bwl-field{grid-row:2}
-  .bz-bwl-plate{height:68px;margin-top:0}
-  .bz-bwl-plate-top{flex-wrap:nowrap}
-  .bz-bwl-plate-row{flex-wrap:nowrap}
+  .bz-bwl-in{padding:10px 10px 12px}
+  .bz-bwl-arena{grid-template-columns:minmax(0,1fr);row-gap:8px;margin-top:8px}
+  .bz-bwl-side{grid-column:1;grid-row:1;height:56px}
+  .bz-bwl-field{grid-row:2;height:calc(${fieldHeight(1, AIR_NARROW)}px + (var(--bwl-n,5) - 1) * ${PITCH}px)}
+  .bz-bwl-plate{height:56px;margin-top:0;padding:5px 10px 6px 16px}
+  .bz-bwl-plate-top{flex-wrap:nowrap;min-height:20px}
+  .bz-bwl-plate-label{flex:1 1 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;line-height:20px}
+  .bz-bwl-plate-row{flex-wrap:nowrap;margin-top:5px}
   .bz-bwl-bar{flex:1 1 60px}
-  .bz-bwl-plate-label{flex:1 1 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
   .bz-bwl-ptr{display:none}
   .bz-bwl-banner{top:0;bottom:0;display:flex;flex-direction:column;justify-content:center}
   .bz-bwl-banner-in{flex:1;display:flex;flex-direction:column;justify-content:center;padding:6px 12px;font-size:14px;line-height:1.2}
   .bz-bwl-banner-rule{margin-top:6px}
-  .bz-bwl-box-in{padding:12px}
-  .bz-bwl-menu{display:grid;grid-template-columns:1fr 1fr}
-  .bz-bwl-alert{height:72px}
+  .bz-bwl-box{margin-top:10px}
+  .bz-bwl-box-in{padding:10px 12px}
+  /* one fixed height for the log, the error menu and the results, so nothing shifts between them */
+  .bz-bwl-panels{height:196px}
+  .bz-bwl-panel{overflow:hidden}
+  .bz-bwl-line{font-size:13px;line-height:22px}
+  .bz-bwl-line:last-child{font-size:15px}
+  .bz-bwl-line > .bz-bwl-g{margin-top:4px}
+  .bz-bwl-ph{font-size:14px;line-height:22px}
+  /* the details open in the message's place, so the menu never moves */
+  .bz-bwl-err{grid-template-areas:"msg" "menu";row-gap:8px}
+  .bz-bwl-alert,.bz-bwl-details{grid-area:msg;height:66px}
+  .bz-bwl-menu{grid-area:menu;display:grid;grid-template-columns:1fr 1fr}
+  .bz-bwl-alert{font-size:14px;line-height:22px}
+  .bz-bwl-alert > .bz-bwl-g{margin-top:4px}
   .bz-bwl-alert > span{-webkit-line-clamp:3}
-  .bz-bwl-details{height:80px}
-  .bz-bwl-final{height:72px}
-  .bz-bwl-final > span{-webkit-line-clamp:3}
-  .bz-bwl-foot{flex-wrap:wrap}
-  .bz-bwl-meta{flex-basis:100%}
+  .bz-bwl-err[data-details="true"] .bz-bwl-alert{visibility:hidden}
+  .bz-bwl-details{line-height:22px}
+  .bz-bwl-final{height:44px;margin-bottom:8px;font-size:15px;line-height:22px}
+  .bz-bwl-final > .bz-bwl-g{margin-top:4px}
+  .bz-bwl-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px}
+  .bz-bwl-stat{padding-top:6px}
+  .bz-bwl-stat dt{overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:12px;letter-spacing:0.04em}
+  .bz-bwl-num{font-size:16px;line-height:22px}
+  .bz-bwl-sub{display:block;min-height:18px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:12px}
+  .bz-bwl-foot{flex-wrap:wrap;gap:6px 8px;margin-top:8px}
+  .bz-bwl-meta{flex-basis:100%;min-height:19px;-webkit-line-clamp:1}
   .bz-bwl-toys{margin-left:0}
 }
 
@@ -2505,7 +2530,7 @@ export function BrickWallLoader({
   const uid = useId().replace(/:/g, "");
   const titleId = `${uid}-title`;
   const detailsId = `${uid}-details`;
-  const L = useMemo<LoaderLabels>(() => ({ ...LOADER_LABELS, unit: "Row", clear: "Wall cleared", ...labels }), [labels]);
+  const L = useMemo<LoaderLabels>(() => ({ ...LOADER_DEFAULT_LABELS, unit: "Row", clear: "Wall cleared", ...labels }), [labels]);
 
   const prefersReduced = useReducedMotionPreference();
   const reduced = reducedMotion ?? prefersReduced;
@@ -2522,6 +2547,7 @@ export function BrickWallLoader({
   /* Whether the alert is cut to its reserved lines (its full text then leads
      the details) and whether the details need scrolling (then they take focus). */
   const [overflow, setOverflow] = useState({ alert: false, details: false });
+  const plateHold = useRef<{ i: number; fillP: number; count: string; indet: boolean } | null>(null);
   const [focusTick, setFocusTick] = useState(0);
   const pendingFocus = useRef<LoaderFocus | null>(null);
 
@@ -2758,6 +2784,14 @@ export function BrickWallLoader({
     else if (view.barDetail) count = view.barDetail;
     else if (view.barP != null) count = `${Math.floor(view.barP * 100)}%`;
   }
+  /* The host can mark the front step done a beat before its row breaks. Until the row
+     breaks the plate holds what it last showed, so it never says Done over standing bricks. */
+  const held = plateHold.current;
+  if (fs && fs.status === "done" && phase === "run" && held && held.i === front) {
+    fillP = held.fillP;
+    count = held.count;
+  } else plateHold.current = fs && fs.status !== "done" ? { i: front, fillP, count, indet } : null;
+  const holdIndet = !!fs && fs.status === "done" && phase === "run" && !!held && held.i === front && held.indet;
   const showTag = !!fs && (fs.attempt ?? 1) > 1 && (fs.status === "active" || fs.status === "error");
 
   let metaLead: string;
@@ -2884,7 +2918,7 @@ export function BrickWallLoader({
                   ) : null}
                 </div>
                 <div className="bz-bwl-plate-row">
-                  <span className="bz-bwl-bar" data-indet={indet ? "true" : "false"}>
+                  <span className="bz-bwl-bar" data-indet={indet || holdIndet ? "true" : "false"}>
                     <span className="bz-bwl-fill" style={{ width: `${Math.round(fillP * 1000) / 10}%` }} />
                     <span className="bz-bwl-hatch" />
                   </span>
@@ -2919,7 +2953,7 @@ export function BrickWallLoader({
                   ) : null}
                 </div>
 
-                <div className="bz-bwl-panel bz-bwl-err" data-panel="error">
+                <div className="bz-bwl-panel bz-bwl-err" data-panel="error" data-details={detailsOpen ? "true" : "false"}>
                   <div className="bz-bwl-alert" role="alert">
                     {view.alert ? (
                       <>
@@ -2955,6 +2989,8 @@ export function BrickWallLoader({
                     id={detailsId}
                     className="bz-bwl-details"
                     data-open={detailsOpen ? "true" : "false"}
+                    role={detailsOpen && overflow.details ? "region" : undefined}
+                    aria-label={detailsOpen && overflow.details ? L.details : undefined}
                     tabIndex={detailsOpen && overflow.details ? 0 : undefined}
                   >
                     {(overflow.alert && view.alert ? [view.alert, ...view.details] : view.details).map((d, k) => (

@@ -1,5 +1,5 @@
 {
-  "fingerprint": "c96b87c29f0b6dc2",
+  "fingerprint": "5efa8a54ad9bd985",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -680,7 +680,7 @@
       {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Play a run","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#252525","ratio":15.33,"n":7},
       {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Rainbow","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3,"at":[1440]},
       {"kind":"icon","element":"svg.bz-bwl-sprite","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#2ec4b6","bg":"#0f0c24","ratio":8.82},
-      {"kind":"icon","element":"svg.bz-bwl-paddle","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#e9e6ff","bg":"#0f0c24","ratio":15.68,"at":[1440]},
+      {"kind":"icon","element":"svg.bz-bwl-paddle","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#e9e6ff","bg":"#0f0c24","ratio":15.68},
       {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#ffffff","bg":"#0f0c24","ratio":19.12},
       {"kind":"icon","element":"svg.bz-bwl-g","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"at":[1440]},
       {"kind":"focus","element":"div.bz-bwl-log","min":3,"text":"Narration (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
