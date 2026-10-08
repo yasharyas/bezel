@@ -191,6 +191,22 @@ moved with the arrow keys, Home and End. Focus moves only when it is already
 inside the component: to Retry when an error appears, to the log when a retry
 starts, and to Continue when the results open. The arena is `aria-hidden`.
 
+### ThorLink
+
+Added 8 October 2026.
+
+| Component | default | hover | focus | active | disabled | loading |
+|---|---|---|---|---|---|---|
+| `interaction/ThorLink` | + | + | + | + | n/a | + |
+
+The link is a real `<a>`: hover, focus and the focus ring are the host's
+own styles, and Enter strikes like a click. Disabled is n/a because a link
+that cannot navigate should not be a link. Loading is the strike itself: the
+root carries `aria-busy` until the commit, and a polite live region says
+"Opened" and the page title after it. The overlay canvases are
+`aria-hidden` and never take pointer events, and a second click or Escape
+fast-forwards the strike.
+
 ### Avatar
 
 | Component | default | hover | focus | active | disabled |

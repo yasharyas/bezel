@@ -146,6 +146,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Magnet | `magnet` | Wrapper that pulls its child toward a nearby pointer, then springs back. |
 | GlareHover | `glare-hover` | Soft-light glare that follows the pointer across any surface it wraps. |
 | JewelryCursor | `jewelry-cursor` | Gold dot cursor with a lagging ring that swells over links and buttons. |
+| ThorLink | `thor-link` | Link opener: a pixel-art arm summons a hammer, lightning charges it, it slams the link and the page burns through. `onNavigate` hands the href to your router at the commit beat; `ThorLinkProvider` sets sound, scale and an optional `reveal`. |
 | ScratchFoilReveal | `scratch-foil-reveal` | Gold foil you scratch away with the pointer, clearing itself past a threshold. |
 
 ### Loaders

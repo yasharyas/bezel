@@ -12,8 +12,9 @@ them replacing FAQAccordion, brought the library to 105 (see
 same day removed MessageForm, folded ConicBorderButton and StarBorder into
 BorderBeamButton, and added SketchHighlight and SketchArrow, which made 89.
 PixelAvatar, added on 22 September, took it to 90, and ConfettiFirecracker on
-23 September made it 91. Five game loaders added on 7 October make the
-current count of **96** (see [Additions, October 2026](#additions-october-2026)).
+23 September made it 91. Five game loaders added on 7 October made it 96, and
+ThorLink on 8 October makes the current count of **97** (see
+[Additions, October 2026](#additions-october-2026)).
 
 - [Summary](#summary)
 - [Owner decisions](#owner-decisions)
@@ -273,8 +274,8 @@ commit before the replacement, then remove `accordion-list`.
 
 ### Totals and the first screen
 
-The library now holds 96 components: 7 Showcase, 30 Solid and 59 Ordinary
-(the five October game loaders are counted as Ordinary until reviewed).
+The library now holds 97 components: 7 Showcase, 30 Solid and 60 Ordinary
+(the five October game loaders and ThorLink are counted as Ordinary until reviewed).
 
 "Start with these" no longer stands still: the strip cycles one card at a time
 through the pool in `apps/gallery/src/lib/featured.ts`, and the opening six
@@ -300,6 +301,16 @@ totals. They share a character system of four bright adventurers. All five
 are rated **Ordinary until reviewed alongside the rest**, as ScrollFlipDeck
 was. Their previews play a successful run on a loop, with a gallery-only
 "Simulate a failure" button under the component. The rendered contrast record after they went in: 96 components, 717 gated pairs, 0 failing, 101 decorative, 3 disabled, 16 exempt and 65 not measurable. The gate measures each one only in its still, reduced-motion state and its stage tone, so the error menu, the results screen and the other theme need their own headless pass.
+
+ThorLink was added on 8 October: a link opener in which a pixel-art arm
+summons a hammer, lightning charges it, it slams the link and the page burns
+through from the impact point. It is rated **Ordinary until reviewed**. Its
+preview is a 900px frame with three small articles that link to each other;
+clicking a link plays the strike and swaps the article at the commit beat. The
+rendered contrast record after it went in: 97 components, 726 gated pairs, 0
+failing, 101 decorative, 3 disabled, 16 exempt and 65 not measurable. The gate
+sees only the still page; the strike itself is canvas and was checked by eye
+at the charge, impact and reveal beats.
 
 ## Removals, 20 September 2026
 
@@ -725,6 +736,7 @@ needs, and a rewritten description.
 | `block-run-loader` | New (7 October) | n/a | Laid out at 600px: a platformer course with one question block per step and a flag at the end | Ordinary | Rated Ordinary until reviewed alongside the rest. Progress is honest (geometry moves only on host events), and the error menu and results are keyboard reachable. |
 | `flap-gate-loader` | New (7 October) | n/a | Laid out at 600px: a jetpack flight through one gate per step, with the score counting finished steps | Ordinary | Rated Ordinary until reviewed alongside the rest. Progress is honest (geometry moves only on host events), and the error menu and results are keyboard reachable. |
 | `brick-wall-loader` | New (7 October) | n/a | Laid out at 600px on void: a Breakout wall with one row of bricks per step | Ordinary | Rated Ordinary until reviewed alongside the rest. Progress is honest (geometry moves only on host events), and the error menu and results are keyboard reachable. |
+| `thor-link` | New (8 October) | n/a | A 900px frame: three small articles that link to each other, each click plays the strike and swaps the article | Ordinary | Rated Ordinary until reviewed alongside the rest. The page is never dimmed or tinted, flashes are capped at three, reduced motion is a 300ms crossfade, and sound waits for a gesture. |
 | `snake-line-loader` | New (7 October) | n/a | Laid out at 600px: a Snake board where the snake grows one segment per finished step | Ordinary | Rated Ordinary until reviewed alongside the rest. Progress is honest (geometry moves only on host events), and the error menu and results are keyboard reachable. |
 
 ---
