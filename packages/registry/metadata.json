@@ -1154,5 +1154,80 @@
       "text",
       "reduced-motion"
     ]
+  },
+  "encounter-loader": {
+    "name": "EncounterLoader",
+    "category": "loaders",
+    "description": "Turn-based pixel game loader: an adventurer breaks one crate per real step.",
+    "tags": [
+      "loader",
+      "multi-step",
+      "progress",
+      "pixel-art",
+      "game",
+      "rpg",
+      "accessible",
+      "reduced-motion"
+    ]
+  },
+  "block-run-loader": {
+    "name": "BlockRunLoader",
+    "category": "loaders",
+    "description": "Platformer step loader: an adventurer bonks one question block per real step.",
+    "tags": [
+      "loader",
+      "multi-step",
+      "progress",
+      "pixel-art",
+      "game",
+      "platformer",
+      "accessible",
+      "reduced-motion"
+    ]
+  },
+  "flap-gate-loader": {
+    "name": "FlapGateLoader",
+    "category": "loaders",
+    "description": "Flappy-style step loader: a jetpack pilot clears one gate per finished step.",
+    "tags": [
+      "loader",
+      "multi-step",
+      "progress",
+      "pixel-art",
+      "game",
+      "flappy",
+      "accessible",
+      "reduced-motion"
+    ]
+  },
+  "brick-wall-loader": {
+    "name": "BrickWallLoader",
+    "category": "loaders",
+    "description": "Breakout-style step loader: each step is a row of bricks broken by real progress.",
+    "tags": [
+      "loader",
+      "multi-step",
+      "progress",
+      "pixel-art",
+      "game",
+      "breakout",
+      "accessible",
+      "reduced-motion"
+    ]
+  },
+  "snake-line-loader": {
+    "name": "SnakeLineLoader",
+    "category": "loaders",
+    "description": "Snake-style step loader: the snake grows one segment for every finished step.",
+    "tags": [
+      "loader",
+      "multi-step",
+      "progress",
+      "pixel-art",
+      "game",
+      "snake",
+      "accessible",
+      "reduced-motion"
+    ]
   }
 }

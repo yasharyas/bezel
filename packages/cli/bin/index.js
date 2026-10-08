@@ -138,6 +138,11 @@ const COMPONENT_MAP = {
   "sketch-arrow": "callouts/SketchArrow.tsx",
   "pixel-avatar": "display/PixelAvatar.tsx",
   "confetti-firecracker": "feedback/ConfettiFirecracker.tsx",
+  "encounter-loader": "loaders/EncounterLoader.tsx",
+  "block-run-loader": "loaders/BlockRunLoader.tsx",
+  "flap-gate-loader": "loaders/FlapGateLoader.tsx",
+  "brick-wall-loader": "loaders/BrickWallLoader.tsx",
+  "snake-line-loader": "loaders/SnakeLineLoader.tsx",
   "autoplay-carousel": "media/AutoplayCarousel.tsx",
 };
 
@@ -242,6 +247,11 @@ function showHelp() {
     sketch-arrow            Drawn arrow that stays attached to two elements
     pixel-avatar            Seeded 8x8 pixel creatures and cute species that hop
     confetti-firecracker    Firework whose fragments fall into place as your text
+    encounter-loader        Turn-based pixel game step loader with an error menu
+    block-run-loader        Platformer step loader, one question block per step
+    flap-gate-loader        Jetpack flight step loader, one gate per step
+    brick-wall-loader       Breakout step loader, one row of bricks per step
+    snake-line-loader       Snake step loader that grows one segment per step
 
   Not in the CLI (copy by hand from the gallery):
     multi-step-loader       Imports MagicRings and ShinyText

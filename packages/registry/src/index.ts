@@ -16534,6 +16534,14738 @@ export const ConfettiFirecracker = forwardRef<FirecrackerHandle, ConfettiFirecra
     description: "Firework whose fragments fall into place spelling your text, then let go.",
     tags: ["confetti", "canvas", "particles", "easter-egg", "celebration", "text", "reduced-motion"],
   },
+  {
+    name: "EncounterLoader",
+    slug: "encounter-loader",
+    path: "loaders/EncounterLoader.tsx",
+    category: "loaders",
+    code: `"use client";
+
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type RefObject,
+} from "react";
+
+/*
+ * EncounterLoader: a multi-step loader drawn as a turn-based pixel game.
+ *
+ * Each step is a crate in a queue to the right of a pixel adventurer, and the
+ * last one is a bigger banded crate you can see from the start. The
+ * adventurer swings at the crate at the front, and it cracks one cell further
+ * each time your process reports progress. When the step is done the crate
+ * shatters and leaves a rubble mark on the floor behind the adventurer, so the
+ * floor reads as the trail of finished steps, and the next crate slides up.
+ *
+ * Nothing moves on a timer. The cracks, the bar on the nameplate and the
+ * queue change only when the steps you pass in change: at most one hit every
+ * 400ms, with the increments in between merged, and the cracks never run
+ * ahead of the bar. A step whose size is unknown gets a hatched bar and a
+ * wind-up pose instead of invented progress.
+ *
+ * The loader is controlled, the same way Stepper is. \`steps\` is its only
+ * state and the host owns every transition: it starts, advances, fails,
+ * retries and skips steps. The error menu calls \`onRetry\`, \`onSkip\` and
+ * \`onCancel\`, the results screen calls \`onContinue\`, and \`onComplete\` fires
+ * once per run after the finale.
+ *
+ * The section is named by its heading. A visually hidden list carries every
+ * step and its state, with \`aria-current\` on the current one and \`aria-busy\`
+ * only while work runs, so neither live region sits in a busy subtree. The
+ * nameplate is the one progressbar. The dialogue box is a \`role="log"\` that
+ * narrates milestones in sentences rather than ticks; errors go to a
+ * \`role="alert"\` and a menu with a roving focus. Focus moves only when it is
+ * already inside the loader.
+ *
+ * Reduced motion (followed live, or forced with \`reducedMotion\`) removes
+ * every loop and tween: the art snaps to its honest state and the adventurer
+ * holds a still pose. The Pause motion button does the same on request. Off
+ * screen or in a hidden tab nothing animates and finished steps settle
+ * without their beats; on return the footer says what finished meanwhile.
+ */
+
+/* ---------------- shared: types and labels ---------------- */
+
+export type LoaderStepStatus = "pending" | "active" | "done" | "error" | "skipped";
+
+export type LoaderStep = {
+  /** Stable key. Beats and announcements key on it. A changed id list or length rebuilds the run. */
+  id: string;
+  /** Present tense: "Import 1,240 contacts". */
+  label: string;
+  /** Where the step is. Only the host changes it. */
+  status: LoaderStepStatus;
+  /** 0 to 1, from real host events only. Leave it out (or null) when the size of the work is unknown. */
+  progress?: number | null;
+  /** A real count, shown on the nameplate and never announced: "620 of 1,240 contacts". */
+  detail?: string;
+  /** Total units of work. Brick Wall draws one brick per unit when this is 16 or fewer. The other four ignore it. */
+  count?: number;
+  /** Past-tense narration: "Imported 1,240 contacts". Falls back to "<label>: done". */
+  doneText?: string;
+  /** Plain sentence, shown and sent to role="alert" when status is "error". */
+  error?: string;
+  /** Longer text behind Show details. */
+  errorDetail?: string;
+  /** 1-based. 2 or more shows "Attempt 2", and a step that then finishes counts as a recovered hiccup. */
+  attempt?: number;
+  /** Host clock for the running or failed attempt, in milliseconds. */
+  elapsedMs?: number;
+  /** Host clock for a finished step, in milliseconds. The results Time tile is the sum. */
+  durationMs?: number;
+};
+
+export type LoaderStat = {
+  /** Tile heading on the results screen: "Contacts". */
+  label: string;
+  /** A real figure. Numbers count up when motion is allowed; strings show as given. */
+  value: string | number;
+  /** Small line under the value: "imported". Default none. */
+  sub?: string;
+};
+
+export type LoaderLabels = {
+  /** The game's word for one step, used in the footer. Encounter: "Stage". */
+  unit: string;
+  /** The finale banner and the footer once every step is settled. Encounter: "Stage clear". */
+  clear: string;
+  /** Accessible name of the narration log. Default "Narration". */
+  narration: string;
+  /** Accessible name of the error menu. Default "What next". */
+  menu: string;
+  /** Retry button. Default "Retry". */
+  retry: string;
+  /** Skip button. Default "Skip". */
+  skip: string;
+  /** Cancel button. Default "Cancel". */
+  cancel: string;
+  /** Details toggle while closed. Default "Show details". */
+  showDetails: string;
+  /** Details toggle while open. Default "Hide details". */
+  hideDetails: string;
+  /** Heading and accessible name of the details card. Default "Details". */
+  details: string;
+  /** Accessible name of the error message when it is long enough to scroll. Default "Error message". */
+  errorMessage: string;
+  /** The motion toggle. Default "Pause motion". */
+  pauseMotion: string;
+  /** The results button. Default "Continue". */
+  continue: string;
+  /** The nameplate mark on a failed step. Default "Failed". */
+  failed: string;
+  /** Footer note while the error menu waits. Default "Waiting for you". */
+  waiting: string;
+  /** Nameplate count for a step of unknown size. Default "Working, size unknown". */
+  sizeUnknown: string;
+  /** Nameplate tag from the second attempt. Default "Attempt 2". */
+  attempt: (n: number) => string;
+  /** Log placeholder before the first milestone. Default "5 steps queued. Up first: Create the workspace." */
+  queued: (n: number, first: string) => string;
+  /** Log placeholder when mounted mid-run, never announced. Default "1 of 5 done. Now: Import 1,240 contacts." */
+  progress: (done: number, total: number, now: string) => string;
+  /** Footer note after a hidden tab or scroll away, never announced. Default "While you were away: 2 steps finished." */
+  away: (n: number) => string;
+  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped)." */
+  complete: (total: number, skipped: number) => string;
+  /** The line after Cancel. Default "Stopped. 2 finished steps are kept." */
+  stopped: (kept: number) => string;
+};
+
+const LOADER_DEFAULT_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
+  narration: "Narration",
+  menu: "What next",
+  retry: "Retry",
+  skip: "Skip",
+  cancel: "Cancel",
+  showDetails: "Show details",
+  hideDetails: "Hide details",
+  details: "Details",
+  errorMessage: "Error message",
+  pauseMotion: "Pause motion",
+  continue: "Continue",
+  failed: "Failed",
+  waiting: "Waiting for you",
+  sizeUnknown: "Working, size unknown",
+  attempt: (n) => \`Attempt \${n}\`,
+  queued: (n, first) => \`\${n} step\${n === 1 ? "" : "s"} queued. Up first: \${first}.\`,
+  progress: (done, total, now) => \`\${done} of \${total} done. Now: \${now}.\`,
+  away: (n) => \`While you were away: \${n} step\${n === 1 ? "" : "s"} finished.\`,
+  complete: (total, skipped) => \`All \${total} step\${total === 1 ? "" : "s"} finished\${skipped ? \` (\${skipped} skipped)\` : ""}.\`,
+  stopped: (kept) => \`Stopped. \${kept} finished step\${kept === 1 ? " is" : "s are"} kept.\`,
+};
+
+/* ---------------- end shared: types and labels ---------------- */
+
+/* ---------------- palettes ---------------- */
+
+export type EncounterLoaderColors = {
+  /** The arena background. */
+  sky: string;
+  /** The grass floor. */
+  ground: string;
+  /** The top edge of the floor and the grass tufts. */
+  groundEdge: string;
+  /** Crate planks. */
+  crate: string;
+  /** Crate panels and the shaded side. */
+  crateShade: string;
+  /** Crate outline and the cracks. */
+  crateLine: string;
+  /** Metal corners and the bands on the last crate. */
+  crateBand: string;
+  /** The last, bigger crate. */
+  boss: string;
+  /** Its shaded side and plank seams. */
+  bossShade: string;
+  /** Its outline and cracks. */
+  bossLine: string;
+  /** Rubble left on the floor by a finished step. */
+  rubble: string;
+  /** Sparks on a hit and the flecks on a recovered step's rubble. */
+  spark: string;
+  /** The adventurer's silhouette edge, the outermost ring of pixels. Pick one that clears 3:1 on the sky: dark on a light sky, a light rim on a dark one. */
+  spriteOutline: string;
+  /** The adventurer's inner lines: the jaw, the arm against the body, the belt. Usually a near black. */
+  spriteLine: string;
+  /** Primary buttons, the nameplate bar and the banner rule. */
+  accent: string;
+  /** Text on accent: white on light themes, near black on dark ones. */
+  onAccent: string;
+};
+
+/** One colour set per theme. The loader picks between them with light-dark(), following the host's color-scheme. */
+export type EncounterLoaderPalette = { light: EncounterLoaderColors; dark: EncounterLoaderColors };
+
+/**
+ * Two presets. Every text and control pair is AA on both themes. In the arena,
+ * the light themes draw shapes with dark lines: the crate outlines, the floor
+ * edge and the adventurer's silhouette clear 3:1 on the sky (5:1 or more). The
+ * dark themes draw them with fills instead: the crate and last-crate fills and
+ * the floor edge clear 3:1 on the night sky (5:1 or more), and the adventurer
+ * gets a pale rim that clears 3:1 (about 6:1), so dark hair still has an edge.
+ * The crate outlines there are seams inside the fill, not edges on the sky.
+ * Spread one to customise: \`{ ...ENCOUNTER_LOADER_PALETTES.meadow, dark: { ... } }\`.
+ */
+export const ENCOUNTER_LOADER_PALETTES = {
+  meadow: {
+    light: { sky: "#c9ecff", ground: "#5bb543", groundEdge: "#2c6e1f", crate: "#d88a3c", crateShade: "#a25d22", crateLine: "#3b2412", crateBand: "#8a8fa3", boss: "#f2b632", bossShade: "#b07d0e", bossLine: "#4a3206", rubble: "#a25d22", spark: "#ffd23f", spriteOutline: "#17142e", spriteLine: "#17142e", accent: "#c2410c", onAccent: "#ffffff" },
+    dark: { sky: "#1a2350", ground: "#3fa34d", groundEdge: "#9be37a", crate: "#d88a3c", crateShade: "#a25d22", crateLine: "#3b2412", crateBand: "#b8bdd0", boss: "#f2b632", bossShade: "#b07d0e", bossLine: "#4a3206", rubble: "#c47a3a", spark: "#ffe066", spriteOutline: "#8fa0e6", spriteLine: "#0b0918", accent: "#ff922b", onAccent: "#0a0a0a" },
+  },
+  dungeon: {
+    light: { sky: "#e8e3f3", ground: "#5c5470", groundEdge: "#2d2640", crate: "#c08a52", crateShade: "#8a5a2e", crateLine: "#2d1c0e", crateBand: "#7c7690", boss: "#a78bfa", bossShade: "#6d4fd0", bossLine: "#2e1a6b", rubble: "#8a5a2e", spark: "#f59e0b", spriteOutline: "#17142e", spriteLine: "#17142e", accent: "#7c3aed", onAccent: "#ffffff" },
+    dark: { sky: "#1c1830", ground: "#8e86a8", groundEdge: "#c9c2e0", crate: "#c08a52", crateShade: "#8a5a2e", crateLine: "#2d1c0e", crateBand: "#a9a3c2", boss: "#c4b5fd", bossShade: "#8b72e8", bossLine: "#2e1a6b", rubble: "#b07a45", spark: "#fbbf24", spriteOutline: "#9d8fd4", spriteLine: "#0b0918", accent: "#c4b5fd", onAccent: "#0a0a0a" },
+  },
+} as const satisfies Record<string, EncounterLoaderPalette>;
+
+export type EncounterLoaderPaletteName = keyof typeof ENCOUNTER_LOADER_PALETTES;
+
+export type EncounterLoaderProps = {
+  /** The run, and the only state. The host replaces the array whenever a step changes. */
+  steps: LoaderStep[];
+  /** The heading, and the progressbar's accessible name. */
+  title: string;
+  /** Heading level of the title. Default 2. */
+  headingLevel?: 2 | 3 | 4 | 5 | 6;
+  /** A preset name or your own light and dark colours. Default "meadow". */
+  palette?: EncounterLoaderPaletteName | EncounterLoaderPalette;
+  /** A preset adventurer or your own colours. Default "ember". */
+  character?: LoaderCharacterName | LoaderCharacter;
+  /** Force a theme. Default: inherit the host's color-scheme. */
+  colorScheme?: "light" | "dark";
+  /**
+   * Replace the words listed in LoaderLabels: the buttons, the footer words and
+   * the queued, progress, away, complete and stopped sentences. Default English.
+   * The sentences built around your step labels (done, skipped, retry and error
+   * lines, the error details), the results tiles and the step states read to
+   * screen readers are English only and are not covered by this prop.
+   */
+  labels?: Partial<LoaderLabels>;
+  /** Extra results tiles, real figures only. Default none. */
+  stats?: LoaderStat[];
+  /** Added to the completion line: "Your workspace is ready." Default none. */
+  completeText?: string;
+  /** Called with the failed step's id. Without it there is no Retry button. */
+  onRetry?: (id: string) => void;
+  /** Called with the failed step's id. Without it there is no Skip button. */
+  onSkip?: (id: string) => void;
+  /** Called once the loader shows its stopped state. Without it there is no Cancel button. */
+  onCancel?: () => void;
+  /** Adds a Continue button to the results screen. Default none. */
+  onContinue?: () => void;
+  /** Called once per run, after the finale's last beat. */
+  onComplete?: () => void;
+  /** Mirrors every line the log and the alert speak, for your own logging or tests. */
+  onAnnounce?: (text: string, politeness: "polite" | "assertive") => void;
+  /** Force motion off (true) or on (false). Default: follow prefers-reduced-motion live. */
+  reducedMotion?: boolean;
+  /** Class on the root section. */
+  className?: string;
+  /** Style on the root section. */
+  style?: CSSProperties;
+};
+
+/* ---------------- shared: timing constants and helpers ---------------- */
+
+/* The motion ladder, in milliseconds. BEAT is the one ambient beat. */
+const FAST = 150;
+const BASE = 300;
+const SLOW = 500;
+const BEAT = 2400;
+const HIT_GAP = 400; // at most one progress hit per 400ms; increments in between merge
+const IMPACT = 100; // a blow lands this long after the swing starts
+const COLLECT = 100; // completions this close share a beat
+const DWELL = 300; // a step holds the front at least this long
+const BURST_MIN = 3; // this many queued completions become one beat
+const COALESCE = 400; // completions this close share one sentence and one announcement
+
+const loaderNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+
+function fmtDur(ms: number | undefined): string {
+  if (ms == null || !Number.isFinite(ms)) return "";
+  if (ms < 950) return \`\${(Math.max(1, Math.round(ms / 100)) / 10).toFixed(1)}s\`;
+  if (ms < 9950) return \`\${(Math.round(ms / 100) / 10).toFixed(1)}s\`;
+  const s = Math.round(ms / 1000);
+  if (s < 60) return \`\${s}s\`;
+  return \`\${Math.floor(s / 60)}m \${String(s % 60).padStart(2, "0")}s\`;
+}
+
+const listJoin = (a: string[]) => (a.length < 2 ? a.join("") : \`\${a.slice(0, -1).join(", ")} and \${a[a.length - 1]}\`);
+
+/** Lowercases a leading capital unless the word is an initialism ("CSV"). */
+const lowerFirst = (s: string) => (s && s.length > 1 && s[1] === s[1].toLowerCase() ? s[0].toLowerCase() + s.slice(1) : s || "");
+
+const isSettled = (s: LoaderStep | undefined) => !!s && (s.status === "done" || s.status === "skipped");
+
+/** The library's ease-out, cubic-bezier(0.23, 1, 0.32, 1), sampled in JS for stepped keyframes. */
+function loaderEase(t: number): number {
+  const curve = (a: number, b: number, s: number) => 3 * a * s * (1 - s) * (1 - s) + 3 * b * s * s * (1 - s) + s * s * s;
+  let lo = 0;
+  let hi = 1;
+  let s = t;
+  for (let i = 0; i < 24; i++) {
+    s = (lo + hi) / 2;
+    if (curve(0.23, 0.32, s) < t) lo = s;
+    else hi = s;
+  }
+  return curve(1, 1, s);
+}
+
+/** Held positions in whole CSS pixels: each keyframe holds until the next, so pixel art is never resampled mid-move. */
+function loaderStepped(points: Array<[number, number, number, number?]>): Keyframe[] {
+  return points.map(([offset, x, y, o]) => ({
+    offset,
+    easing: "step-end",
+    transform: \`translate(\${Math.round(x)}px, \${Math.round(y)}px)\`,
+    ...(o == null ? {} : { opacity: o }),
+  }));
+}
+
+/** A slide sampled from the ease-out curve about every 33ms, as stepped whole-pixel keyframes. */
+function loaderGlide(fx: number, fy: number, tx: number, ty: number, ms: number): Keyframe[] {
+  const n = Math.max(2, Math.round(ms / 33));
+  const out: Keyframe[] = [];
+  for (let j = 0; j <= n; j++) {
+    const e = loaderEase(j / n);
+    out.push({
+      offset: j / n,
+      easing: "step-end",
+      transform: \`translate(\${Math.round(fx + (tx - fx) * e)}px, \${Math.round(fy + (ty - fy) * e)}px)\`,
+    });
+  }
+  return out;
+}
+
+/** Horizontal runs of one colour key merged into one path each, in art pixels. */
+function loaderPixelPaths(map: readonly string[]): Array<[string, string]> {
+  const paths = new Map<string, string>();
+  map.forEach((row, y) => {
+    let x = 0;
+    while (x < row.length) {
+      const c = row[x];
+      if (c === ".") {
+        x++;
+        continue;
+      }
+      let x2 = x;
+      while (x2 < row.length && row[x2] === c) x2++;
+      paths.set(c, \`\${paths.get(c) ?? ""}M\${x} \${y}h\${x2 - x}v1h\${x - x2}z\`);
+      x = x2;
+    }
+  });
+  return Array.from(paths);
+}
+
+/** Markup for an arena sprite: one path per key, each with a class that CSS maps to a palette colour. */
+function loaderPixelSvg(map: readonly string[], roles: Record<string, string>, crop?: [number, number, number, number]): string {
+  const box = crop ?? [0, 0, map[0].length, map.length];
+  let out = \`<svg viewBox="\${box.join(" ")}" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true" focusable="false">\`;
+  for (const [k, d] of loaderPixelPaths(map)) out += \`<path class="bz-enc-k-\${roles[k] ?? k}" d="\${d}"/>\`;
+  return \`\${out}</svg>\`;
+}
+
+const loaderKebab = (key: string) => key.replace(/[A-Z]/g, (m) => \`-\${m.toLowerCase()}\`);
+
+/** A palette as custom properties on the root, each one light-dark(<light>, <dark>). */
+function loaderPaletteVars(light: Record<string, string>, dark: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of Object.keys(light)) out[\`--bz-enc-\${loaderKebab(key)}\`] = \`light-dark(\${light[key]}, \${dark[key] ?? light[key]})\`;
+  return out;
+}
+
+/* 7 x 7 glyphs (the cursor is 4 x 7), drawn in currentColor. */
+const LOADER_GLYPHS = {
+  done: [".......", "......#", ".....##", "#...##.", "##.##..", ".###...", "..#...."],
+  skipped: [".......", ".......", ".......", "#######", "#######", ".......", "......."],
+  retry: ["..###.#", ".#...##", "#...###", "#......", "#.....#", ".#...#.", "..###.."],
+  finish: ["...#...", "...#...", "#######", ".#####.", "..###..", ".##.##.", "##...##"],
+  stop: [".......", ".#####.", ".#####.", ".#####.", ".#####.", ".#####.", "......."],
+  cross: ["##...##", "###.###", ".#####.", "..###..", ".#####.", "###.###", "##...##"],
+  pause: [".......", ".##.##.", ".##.##.", ".##.##.", ".##.##.", ".##.##.", "......."],
+  cursor: ["#...", "##..", "###.", "####", "###.", "##..", "#..."],
+  clock: ["..###..", ".#...#.", "#..#..#", "#..##.#", "#.....#", ".#...#.", "..###.."],
+} as const;
+
+type LoaderGlyphName = keyof typeof LOADER_GLYPHS;
+
+const LOADER_GLYPH_D = Object.fromEntries(
+  Object.entries(LOADER_GLYPHS).map(([name, map]) => [name, loaderPixelPaths(map).map(([, d]) => d).join("")]),
+) as Record<LoaderGlyphName, string>;
+
+function LoaderGlyph({ name }: { name: LoaderGlyphName }) {
+  const map = LOADER_GLYPHS[name];
+  return (
+    <svg className="bz-enc-g" viewBox={\`0 0 \${map[0].length} \${map.length}\`} shapeRendering="crispEdges" aria-hidden="true" focusable="false">
+      <path d={LOADER_GLYPH_D[name]} />
+    </svg>
+  );
+}
+
+/* ---------------- end shared: timing constants and helpers ---------------- */
+
+/* ---------------- shared: character ---------------- */
+
+export type LoaderCharacterName = "ember" | "tide" | "moss" | "plum";
+
+export type LoaderCharacter = {
+  /** Which head to draw: "puffs", "ponytail", "short" or "wrap" (a head scarf coloured by hair and hairShade). */
+  hairStyle: "puffs" | "ponytail" | "short" | "wrap";
+  /** Skin colour. */
+  skin: string;
+  /** Skin shade: the far cheek, the jaw and the ear. */
+  skinShade: string;
+  /** Hair, or the wrap fabric. */
+  hair: string;
+  /** Hair shade, darker than hair: under the fringe, on the far side and at the nape. */
+  hairShade: string;
+  /** Tunic body. */
+  outfit: string;
+  /** Tunic shade, on the right of the body. */
+  outfitShade: string;
+  /** Tunic highlight: the left column and the near sleeve. */
+  outfitLight: string;
+  /** Scarf, belt buckle, hair tie and wrap band. */
+  accent: string;
+  /** Trousers, the near leg. */
+  pants: string;
+  /** Trousers shade, the far leg. */
+  pantsShade: string;
+  /** Boots and the belt leather. */
+  boots: string;
+  /** Boot shade. */
+  bootsShade: string;
+  /** Eye white. Default #ffffff. */
+  eyeWhite?: string;
+  /** Pupils and mouth. Default #1b1630. */
+  eye?: string;
+};
+
+/** Four adventurers: four skin tones, four hair styles, four outfit hues. The outfits carry the silhouette on dark skies. */
+export const LOADER_CHARACTERS: Record<LoaderCharacterName, LoaderCharacter> = {
+  ember: { hairStyle: "puffs", skin: "#8d5524", skinShade: "#6b3d18", hair: "#4a3128", hairShade: "#2a1b15", outfit: "#ff5a36", outfitShade: "#c43d20", outfitLight: "#ff9a7a", accent: "#ffd23f", pants: "#3f64b5", pantsShade: "#2b4a8a", boots: "#5b3a1e", bootsShade: "#3d2614" },
+  tide: { hairStyle: "ponytail", skin: "#f3c7a5", skinShade: "#d9a07c", hair: "#e0702c", hairShade: "#a84e1a", outfit: "#3d8bfd", outfitShade: "#2563c9", outfitLight: "#8cbcff", accent: "#ff6fa5", pants: "#e6d3a3", pantsShade: "#c2a970", boots: "#7a4a28", bootsShade: "#55331b" },
+  moss: { hairStyle: "short", skin: "#c68e5f", skinShade: "#a06c42", hair: "#4f4760", hairShade: "#2e2838", outfit: "#3fbf5a", outfitShade: "#2a8a3f", outfitLight: "#8fe39f", accent: "#ff9f1c", pants: "#8b5e34", pantsShade: "#6b4526", boots: "#2f2a3a", bootsShade: "#1f1b27" },
+  plum: { hairStyle: "wrap", skin: "#a8693f", skinShade: "#82502c", hair: "#e0457b", hairShade: "#b02f5e", outfit: "#a06cf0", outfitShade: "#7a4bc4", outfitLight: "#c9a8ff", accent: "#2ec4b6", pants: "#4a5a8c", pantsShade: "#36426a", boots: "#8a5a2b", bootsShade: "#62401e" },
+};
+
+/*
+ * The adventurer is 16 x 24 art pixels, faces right and stands on row 23,
+ * with a 1px outline all round and the light from the top left. Keys:
+ *   . clear   o outline (the game palette)   h hair   H hair shade
+ *   s skin    S skin shade   w eye white   e pupil   m mouth
+ *   c outfit  C outfit shade   l outfit light   a accent (scarf, buckle)
+ *   p trousers   P trousers shade   b boots and belt   B boot shade
+ * Accessories add j and J (jetpack), f and F (flame), k and K (wood).
+ * A head (16 x 11) takes a face patch and sits at a per-frame offset; the
+ * body for the pose is anchored to the bottom row and drawn over it.
+ * Once a frame is composed, every outline pixel that does not touch the
+ * outside becomes i, an inner line, so a light rim on a dark sky wraps the
+ * silhouette while the jaw, arm and belt lines stay dark.
+ */
+const LOADER_HERO_W = 16;
+const LOADER_HERO_H = 24;
+
+const LOADER_HEADS: Record<LoaderCharacter["hairStyle"], readonly string[]> = {
+  short: ["....oo.oo.oo....", "...ohhohhohho...", "..ohhhhhhhhhhoo.", "..ohhhhhhhhhHHo.", "..ohhhhhhhHhHHo.", "..ohhhhhHHsHsso.", "..ohhSsssssssso.", "..ohHssssssssso.", "..oHHsssssSssSo.", "...oHsssssssSo..", "....ooooooooo..."],
+  ponytail: [".....oooooo.....", "...oohhhhhhhoo..", ".ooahhhhhhhhhho.", "ohHohhhhhhhhhHo.", "ohHohhhhhhhhHHo.", "ohHohhhhhHshsso.", "oHHohSsssssssso.", ".oHoHssssssssso.", ".oHoHsssssSssSo.", "..ooHsssssssSo..", "....ooooooooo..."],
+  puffs: [".ooo...ooooo....", "ohhho.ohhhhho...", "ohhHhohhhhhHo...", ".oHHhhhhhHHhhho.", "..ohhhhhhhhhhHo.", "..ohhhhssssssso.", "..ohhSsssssssso.", "..ohHssssssssso.", "..oHHsssssSssSo.", "...oHsssssssSo..", "....ooooooooo..."],
+  wrap: [".......oooo.oo..", ".....oohhhhoHho.", "...oohhhhhHHHo..", "..ohhhhhhhHhhho.", "..ohhhhhhhhhhHo.", "..oaaaaaaaaaaao.", "..ohhSsssssssso.", "..ohHssssssssso.", "..oHHsssssSssSo.", "...oHsssssssSo..", "....ooooooooo..."],
+};
+
+/* Face patches over cols 7 to 13 and rows 6 to 9 of a head; "_" keeps the head pixel. */
+type LoaderEyes = "open" | "blink" | "squint" | "happy";
+const LOADER_FACE_X = 7;
+const LOADER_FACE_Y = 6;
+const LOADER_FACES: Record<LoaderEyes, readonly string[]> = {
+  open: ["_we_we_", "_we_we_", "_______", "____m__"],
+  blink: ["_______", "_ee_ee_", "_______", "____m__"],
+  squint: ["_e___e_", "__e_e__", "_e___e_", "___mm__"],
+  happy: ["_e___e_", "e_e_e_e", "_______", "___mm__"],
+};
+
+type LoaderPose = "idle" | "run1" | "run2" | "run3" | "run4" | "jump" | "bonk" | "swing1" | "swing2" | "hurt" | "sit" | "celebrate1" | "celebrate2" | "fly1" | "fly2";
+
+/* Bodies are anchored to the bottom row; taller maps reach up past the chin for a raised arm. */
+const LOADER_BODIES: Record<LoaderPose, readonly string[]> = {
+  idle: ["...oaaaaaaaao...", "...oClcccColco..", "...oClcccColco..", "...oClcccColco..", "...oSbbabbosso..", "...oolcccCCoo...", "....oppppPPo....", "....opPoppPo....", "....opPoppPo....", "....opPoppPo....", "....obBobbBo....", "....obBobbbBo...", "....ooooooooo..."],
+  run1: [".ooo............", "oaaaaaaaaaaaao..", ".oaooClcccColco.", "..o.oClcccColcco", "....oClcccCoosso", "....oSbbabboooo.", "....oolcccCCo...", ".....oppppPPo...", "....oPPo.oppo...", "...oPPo..oppo...", "..oPPo....oppo..", ".oBBo.....obbBo.", ".oBo......obbbBo", "..o.......oooooo"],
+  run2: ["..oaaaaaaaaaao..", ".oaaoClcccColco.", "..oooClcccColco.", "....oClcccColco.", "....oSbbabbosso.", "....oolcccCCoo..", ".....oppppPo....", ".....oPPoppo....", "..oBBBPoppPo....", "...oooooppPo....", ".......obbBo....", ".......obbbBo...", ".......oooooo..."],
+  run3: [".ooo............", "oaaaaaaaaaaaao..", ".oaooClcccColco.", "..o.oClcccColcco", "....oClcccCoosso", "....oSbbabboooo.", "....oolcccCCo...", ".....oppppPPo...", "....oppo.oPPo...", "...oppo..oPPo...", "..oppo....oPPo..", ".obbo.....oBBBo.", ".obo......oBBBBo", "..o.......oooooo"],
+  run4: ["..oaaaaaaaaaao..", ".oaaoClcccColco.", "..oooClcccColco.", "....oClcccColco.", "....oSbbabbosso.", "....oolcccCCoo..", ".....oppppPo....", ".....oppoPPo....", "..obbbpoPPPo....", "...oooooPPPo....", ".......oBBBo....", ".......oBBBBo...", ".......oooooo..."],
+  jump: ["............oo..", "...oaaaaaaaosso.", "...oClcccColcCo.", "...oClcccCCo....", "..oSClcccCCo....", "...oobbabbbo....", "....olcccCCo....", "....oppppPPPo...", "....oPPoopppPo..", "...oPPo..obbBo..", "...oBBo..obbbBo.", "...oBBo..oooooo.", "....oo..........", "................"],
+  bonk: [".............oo.", "............osso", "............oSso", ".............lco", ".............lco", ".............lco", ".............lco", ".............lco", "...oaaaaaaaaolco", "...oClcccCCCClco", "...oClcccCCCCco.", "...oClcccCCCCo..", "...oSbbabbbbo...", "....olcccCCo....", "....oppppPPo....", "....opPoppPo....", "....opPoopPo....", "....obBo.obBo...", "....oBBo.obbo...", ".....oo...oo....", "................"],
+  swing1: ["..oaaaaaaaao.oo.", "..oClcccColcosso", "..oClcccColcolco", "..oClcccColccco.", "..oSbbabbooooo..", "...olcccCCo.....", "...oppppPPPo....", "...opPPoopPPo...", "..opPo...opPo...", "..opPo...opPo...", "..obBo...obbBo..", "..obbBo..obbbBo.", "..ooooo..oooooo."],
+  swing2: ["....oaaaaaaaao..", "....oClcccCoooo.", "....oClcccClcsso", "....oClcccCoooo.", "....oSbbabbo....", ".....olcccCo....", ".....opppPPPo...", "....oPPo.oppPo..", "...oPPo...oppPo.", "..oPPo....oppPo.", ".oBBo.....obbBo.", "oBBBo.....obbbBo", "ooooo.....oooooo"],
+  hurt: [".............oo.", "............osso", "..oaaaaaaaaolco.", "..oClcccCClco...", ".ooClcccCCo.....", "oSSoClccCCo.....", "oSoobbabbo......", ".o.olcccCo......", "...oppppPPo.....", "...opPoppPPo....", "...opPo.oppPo...", "...opPo..obbBo..", "...obBo..obbbBo.", "...obbBo..ooooo.", "...ooooo........"],
+  sit: ["..oaaaaaaaao....", ".oCClcccColco...", "oSoClcccColcooo.", "oSobbabbossoobBo", "oSoppppppppppbBo", "ooPPPPPPPPPPPbBo", ".ooooooooooooooo"],
+  celebrate1: [".............oo.", "............osso", "............oSso", ".............lco", ".............lco", ".............lco", ".............lco", ".............lco", "...oaaaaaaaaolco", "...oClcccCCCClco", "...oClcccCCCCco.", "...oClcccCCCCo..", "...oSbbabbbbo...", "....olcccCCo....", "....oppppPPo....", "....opPoppPo....", "....opPoppPo....", "....opPoppPo....", "....obBobbBo....", "....obBobbbBo...", "....ooooooooo..."],
+  celebrate2: [".............oo.", "............osso", "............oSso", ".............lco", ".............lco", "...oaaaaaaaaolco", "...oClcccCCCClco", "...oClcccCCCCco.", "...oClcccCCCCo..", "...oSbbabbbbo...", "....olcccCCo....", "....oppppPPo....", "...opPPoopPPo...", "...opPo..opPo...", "...obBo..obBo...", "...obbBo.obbbBo.", "...ooooo.oooooo."],
+  fly1: ["....oaaaaaaaao..", "....oClcccColco.", "....oClcccColcso", "....oClcccCCoooo", "....oSbbabbbo...", "....oolcccCCooo.", ".....opppppppPo.", ".....oPPPPopppo.", "......oooo.obbo.", "...........obbBo", "...........ooooo", "................", "................"],
+  fly2: ["....oaaaaaaaao..", "....oClcccColco.", "....oClcccColcso", "....oClcccCCoooo", "....oSbbabbbo...", "....oolcccCCoo..", ".....opppppPPo..", ".....oPPPoppPo..", "......ooo.obbo..", "..........obbBo.", "..........ooooo.", "................", "................"],
+};
+
+export type LoaderFrameName = "idle1" | "idle2" | "run1" | "run2" | "run3" | "run4" | "jump" | "bonk" | "swing1" | "swing2" | "hurt" | "sit" | "celebrate1" | "celebrate2" | "fly1" | "fly2";
+
+const LOADER_FRAMES: Record<LoaderFrameName, { body: LoaderPose; eyes: LoaderEyes; dx: number; dy: number }> = {
+  idle1: { body: "idle", eyes: "open", dx: 0, dy: 0 },
+  idle2: { body: "idle", eyes: "open", dx: 0, dy: 1 },
+  run1: { body: "run1", eyes: "open", dx: 1, dy: 1 },
+  run2: { body: "run2", eyes: "open", dx: 1, dy: 0 },
+  run3: { body: "run3", eyes: "open", dx: 1, dy: 1 },
+  run4: { body: "run4", eyes: "open", dx: 1, dy: 0 },
+  jump: { body: "jump", eyes: "open", dx: 0, dy: 0 },
+  bonk: { body: "bonk", eyes: "squint", dx: -1, dy: 0 },
+  swing1: { body: "swing1", eyes: "open", dx: -1, dy: 0 },
+  swing2: { body: "swing2", eyes: "open", dx: 1, dy: 0 },
+  hurt: { body: "hurt", eyes: "squint", dx: -1, dy: 1 },
+  sit: { body: "sit", eyes: "blink", dx: -1, dy: 6 },
+  celebrate1: { body: "celebrate1", eyes: "happy", dx: -1, dy: 0 },
+  celebrate2: { body: "celebrate2", eyes: "happy", dx: -1, dy: 1 },
+  fly1: { body: "fly1", eyes: "open", dx: 1, dy: 0 },
+  fly2: { body: "fly2", eyes: "open", dx: 1, dy: 0 },
+};
+
+const LOADER_FRAME_NAMES = Object.keys(LOADER_FRAMES) as LoaderFrameName[];
+
+/* Colour key to the class role (bz-enc-c-<role>), which the stylesheet maps to a custom property. */
+const LOADER_HERO_ROLES: Record<string, string> = {
+  o: "outline", i: "line", h: "hair", H: "hair-shade", s: "skin", S: "skin-shade", w: "eye-white", e: "eye", m: "mouth",
+  c: "outfit", C: "outfit-shade", l: "outfit-light", a: "accent", p: "pants", P: "pants-shade", b: "boots", B: "boots-shade",
+  j: "jetpack", J: "jetpack-shade", f: "flame", F: "flame-core", k: "wood", K: "wood-shade",
+};
+
+/** A small map placed at (x, y) in the adventurer's art pixels. */
+type LoaderLayer = { x: number; y: number; rows: readonly string[] };
+
+/** A game's prop for the adventurer: layers drawn behind the head, or in front after the outline pass. */
+type LoaderAccessory = { id: string; layers: (frame: LoaderFrameName) => { back?: LoaderLayer[]; front?: LoaderLayer[] } | null };
+
+function composeLoaderHero(hairStyle: LoaderCharacter["hairStyle"], frame: LoaderFrameName, extra: { back?: LoaderLayer[]; front?: LoaderLayer[] } | null): string[] {
+  const f = LOADER_FRAMES[frame];
+  const back = extra?.back ?? [];
+  const front = extra?.front ?? [];
+  let width = LOADER_HERO_W;
+  for (const l of front) width = Math.max(width, l.x + l.rows[0].length);
+  const grid: string[][] = Array.from({ length: LOADER_HERO_H }, () => Array<string>(width).fill("."));
+  const put = (rows: readonly string[], ox: number, oy: number, maxX: number) => {
+    rows.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const gx = ox + x;
+        const gy = oy + y;
+        if (row[x] !== "." && gx >= 0 && gx < maxX && gy >= 0 && gy < LOADER_HERO_H) grid[gy][gx] = row[x];
+      }
+    });
+  };
+  const head = LOADER_HEADS[hairStyle].map((r) => r.split(""));
+  LOADER_FACES[f.eyes].forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) if (row[x] !== "_") head[LOADER_FACE_Y + y][LOADER_FACE_X + x] = row[x];
+  });
+  for (const l of back) put(l.rows, l.x, l.y, LOADER_HERO_W);
+  put(head.map((r) => r.join("")), f.dx, f.dy, LOADER_HERO_W);
+  const body = LOADER_BODIES[f.body];
+  put(body, 0, LOADER_HERO_H - body.length, LOADER_HERO_W);
+  // A pixel clipped at the box edge would lose its outline, so the edge columns become outline.
+  for (let y = 0; y < LOADER_HERO_H; y++) {
+    for (const x of [0, LOADER_HERO_W - 1]) if (grid[y][x] !== "." && grid[y][x] !== "f" && grid[y][x] !== "F") grid[y][x] = "o";
+  }
+  for (const l of front) put(l.rows, l.x, l.y, width);
+  return loaderInnerLines(grid.map((r) => r.join("")));
+}
+
+/**
+ * Splits the outline: a pixel with any clear neighbour (of eight) stays the
+ * silhouette edge; the rest become inner lines (i). Past the top, left or right
+ * of the map counts as clear; past the bottom is the floor or the portrait's
+ * frame, so the soles and the scarf's lower edge keep their dark line.
+ */
+function loaderInnerLines(map: readonly string[]): string[] {
+  const h = map.length;
+  const clear = (x: number, y: number) => y < 0 || (y < h && (x < 0 || x >= map[y].length || map[y][x] === "."));
+  return map.map((row, y) =>
+    row.replace(/o/g, (_, x: number) => {
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && clear(x + dx, y + dy)) return "o";
+      return "i";
+    }),
+  );
+}
+
+/* Every frame's paths depend only on the hair style, the accessory and the frame list, never on colour, so they are built once. */
+const loaderHeroCache = new Map<string, string>();
+function loaderHeroMarkup(hairStyle: LoaderCharacter["hairStyle"], accessory: LoaderAccessory | null, frames: readonly LoaderFrameName[]): string {
+  const key = \`\${hairStyle}:\${accessory?.id ?? ""}:\${frames.join(",")}\`;
+  const hit = loaderHeroCache.get(key);
+  if (hit) return hit;
+  let out = "";
+  for (const name of frames) {
+    let paths = "";
+    for (const [k, d] of loaderPixelPaths(composeLoaderHero(hairStyle, name, accessory ? accessory.layers(name) : null))) {
+      paths += \`<path class="bz-enc-c-\${LOADER_HERO_ROLES[k] ?? k}" d="\${d}"/>\`;
+    }
+    out += \`<g class="bz-enc-f" data-f="\${name}">\${paths}</g>\`;
+  }
+  loaderHeroCache.set(key, out);
+  return out;
+}
+
+/** The game's frames in one svg; the wrapper's data-frame (or data-loop) decides which one shows. */
+function LoaderHeroSprite({ hairStyle, accessory, frames = LOADER_FRAME_NAMES }: { hairStyle: LoaderCharacter["hairStyle"]; accessory: LoaderAccessory | null; frames?: readonly LoaderFrameName[] }) {
+  return (
+    <svg
+      className="bz-enc-sprite"
+      viewBox={\`0 0 \${LOADER_HERO_W} \${LOADER_HERO_H}\`}
+      preserveAspectRatio="none"
+      shapeRendering="crispEdges"
+      overflow="visible"
+      aria-hidden="true"
+      focusable="false"
+      dangerouslySetInnerHTML={{ __html: loaderHeroMarkup(hairStyle, accessory, frames) }}
+    />
+  );
+}
+
+function loaderCharacter(c: LoaderCharacterName | LoaderCharacter | undefined): LoaderCharacter {
+  if (!c) return LOADER_CHARACTERS.ember;
+  return typeof c === "string" ? LOADER_CHARACTERS[c] ?? LOADER_CHARACTERS.ember : c;
+}
+
+/** The adventurer's colours as --chr-* properties. They do not change with the theme. */
+function loaderCharacterVars(ch: LoaderCharacter): Record<string, string> {
+  return {
+    "--chr-hair": ch.hair, "--chr-hair-shade": ch.hairShade, "--chr-skin": ch.skin, "--chr-skin-shade": ch.skinShade,
+    "--chr-eye-white": ch.eyeWhite ?? "#ffffff", "--chr-eye": ch.eye ?? "#1b1630",
+    "--chr-outfit": ch.outfit, "--chr-outfit-shade": ch.outfitShade, "--chr-outfit-light": ch.outfitLight, "--chr-accent": ch.accent,
+    "--chr-pants": ch.pants, "--chr-pants-shade": ch.pantsShade, "--chr-boots": ch.boots, "--chr-boots-shade": ch.bootsShade,
+  };
+}
+
+/* The speaker portrait in the dialogue box: the head and scarf at a larger scale, one group per expression. */
+type LoaderFace = "open" | "blink" | "squint" | "happy";
+const LOADER_SCARF_ROW = "...oaaaaaaaao...";
+const loaderPortraitCache = new Map<string, string>();
+function loaderPortraitMarkup(hairStyle: LoaderCharacter["hairStyle"]): string {
+  const hit = loaderPortraitCache.get(hairStyle);
+  if (hit) return hit;
+  let out = "";
+  for (const eyes of ["open", "blink", "squint", "happy"] as LoaderFace[]) {
+    const head = LOADER_HEADS[hairStyle].map((r) => r.split(""));
+    LOADER_FACES[eyes].forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) if (row[x] !== "_") head[LOADER_FACE_Y + y][LOADER_FACE_X + x] = row[x];
+    });
+    let paths = "";
+    for (const [k, d] of loaderPixelPaths(loaderInnerLines([...head.map((r) => r.join("")), LOADER_SCARF_ROW]))) paths += \`<path class="bz-enc-c-\${LOADER_HERO_ROLES[k] ?? k}" d="\${d}"/>\`;
+    out += \`<g data-f="\${eyes}">\${paths}</g>\`;
+  }
+  loaderPortraitCache.set(hairStyle, out);
+  return out;
+}
+
+/** Open eyes that blink now and then while work runs, a squint on an error, dazed when stopped, happy at the end. */
+function LoaderPortrait({ hairStyle, face }: { hairStyle: LoaderCharacter["hairStyle"]; face: LoaderFace }) {
+  return (
+    <div className="bz-enc-face" data-face={face} aria-hidden="true">
+      <svg viewBox="0 0 16 12" preserveAspectRatio="none" shapeRendering="crispEdges" focusable="false" dangerouslySetInnerHTML={{ __html: loaderPortraitMarkup(hairStyle) }} />
+    </div>
+  );
+}
+
+type LoaderLoop = "" | "idle" | "working" | "celebrate" | "run" | "fly";
+
+/** Shows one frame, or starts a CSS loop. An attribute change, never a React render. */
+function loaderSetPose(hero: HTMLElement | null, frame: LoaderFrameName | "", loop: LoaderLoop) {
+  if (!hero) return;
+  if (hero.dataset.frame !== frame) hero.dataset.frame = frame;
+  if ((hero.dataset.loop ?? "") !== loop) hero.dataset.loop = loop;
+}
+
+/* ---------------- end shared: character ---------------- */
+
+/* ---------------- shared: engine ---------------- */
+
+type LoaderPhase = "idle" | "run" | "error" | "complete" | "stopped";
+type LoaderLineKind = "done" | "skipped" | "retry" | "finish" | "stop";
+type LoaderLine = { key: number; kind: LoaderLineKind; text: string };
+/** \`more\` is read after the sub and shown on hover, never drawn: a tile has little room. */
+type LoaderTile = { label: string; value: number | string; kind: "steps" | "time" | "stat" | "hiccup"; total: number; sub: string; more?: string };
+type LoaderFocusTarget = "retry" | "log" | "continue";
+type LoaderVis = "live" | "gone";
+type LoaderEntry = { i: number; kind: "done" | "skipped"; at: number; said?: boolean };
+type LoaderMotion = { reduced: boolean; paused: boolean; onscreen: boolean; visible: boolean };
+
+/** What the chassis renders. The engine owns it and pushes every change through setState. */
+type LoaderView = {
+  phase: LoaderPhase;
+  /** The step at the front of the arena. It may lag the host by one beat, never lead it. */
+  front: number;
+  frontKey: number;
+  /** The progress the art shows: it changes only when a hit lands. */
+  barP: number | null;
+  barDetail: string | null;
+  lines: LoaderLine[];
+  alert: string;
+  errorIndex: number;
+  details: string;
+  detailMore: string;
+  tiles: LoaderTile[];
+  results: boolean;
+  resultsKey: number;
+  banner: boolean;
+  done: boolean;
+  meta: string | null;
+  focus: { target: LoaderFocusTarget; n: number } | null;
+  /** The run was already under way when the loader mounted, so the log starts from a summary. */
+  midRun: boolean;
+};
+
+/** Read-only access to the engine for a game's arena driver. */
+type LoaderArenaCtx = {
+  steps: () => LoaderStep[];
+  vis: () => LoaderVis[];
+  front: () => number;
+  phase: () => LoaderPhase;
+  /** The front step's progress as the art should show it (0 when pending or of unknown size, 1 when done). */
+  frontP: () => number;
+  motionAllowed: () => boolean;
+  motionOn: () => boolean;
+  running: () => boolean;
+  later: (fn: () => void, ms: number) => number;
+  clear: (id: number) => number;
+  anim: (el: Element, frames: Keyframe[], opts: KeyframeAnimationOptions) => Animation | null;
+};
+
+/** What each game implements. The engine decides when; the arena decides how it looks. */
+type LoaderArena = {
+  rebuild: () => void;
+  layout: (animate: boolean) => void;
+  /** Starts a hit on the front step and returns when it lands, in ms. */
+  hit: (i: number) => number;
+  /** Draws the honest progress of step i; \`showy\` adds the impact effects. */
+  progress: (i: number, showy: boolean) => void;
+  /** Starts the finishing blow and returns when it lands, in ms. */
+  finish: (i: number) => number;
+  /** Resolves finished or skipped steps and returns how long to hold before the next one moves up. */
+  resolve: (entries: LoaderEntry[], showy: boolean) => number;
+  advance: (changed: boolean) => void;
+  error: (i: number, showy: boolean) => void;
+  recover: (i: number, showy: boolean) => void;
+  stop: (showy: boolean) => void;
+  finale: (showy: boolean) => void;
+  pose: () => void;
+  motion: () => void;
+  destroy: () => void;
+};
+
+type LoaderGame = { unit: string; clear: string; arena: (root: HTMLElement, ctx: LoaderArenaCtx) => LoaderArena };
+
+/** The props the engine reads. Every game's props satisfy it. */
+type LoaderHostProps = {
+  steps: LoaderStep[];
+  title: string;
+  labels?: Partial<LoaderLabels>;
+  stats?: LoaderStat[];
+  completeText?: string;
+  onRetry?: (id: string) => void;
+  onSkip?: (id: string) => void;
+  onCancel?: () => void;
+  onContinue?: () => void;
+  onComplete?: () => void;
+  onAnnounce?: (text: string, politeness: "polite" | "assertive") => void;
+  reducedMotion?: boolean;
+};
+
+function loaderFirstLive(steps: LoaderStep[]) {
+  let f = 0;
+  while (f < steps.length && isSettled(steps[f])) f++;
+  return f;
+}
+
+function loaderInitialView(steps: LoaderStep[]): LoaderView {
+  const front = loaderFirstLive(steps);
+  const s = steps[front];
+  const started = steps.some((x) => x.status !== "pending");
+  return {
+    phase: steps.length && steps.every(isSettled) ? "complete" : started ? "run" : "idle",
+    front,
+    frontKey: 0,
+    barP: s ? (s.status === "done" ? 1 : s.progress ?? null) : null,
+    barDetail: s?.detail ?? null,
+    lines: [],
+    alert: "",
+    errorIndex: -1,
+    details: "",
+    detailMore: "",
+    tiles: [],
+    results: false,
+    resultsKey: 0,
+    banner: false,
+    done: false,
+    meta: null,
+    focus: null,
+    midRun: started,
+  };
+}
+
+function loaderNeedsRebuild(prev: LoaderStep[], next: LoaderStep[], phase: LoaderPhase) {
+  if (prev.length !== next.length) return true;
+  for (let i = 0; i < next.length; i++) if (prev[i].id !== next[i].id) return true;
+  // A settled step never comes back. If the host reopens one, it has started a different run.
+  for (let i = 0; i < next.length; i++) if (isSettled(prev[i]) && !isSettled(next[i])) return true;
+  const allPending = next.every((s) => s.status === "pending");
+  return allPending && (phase !== "idle" || prev.some((s) => s.status !== "pending"));
+}
+
+type LoaderEngine = ReturnType<typeof createLoaderEngine>;
+
+function createLoaderEngine(env: {
+  root: RefObject<HTMLElement>;
+  game: LoaderGame;
+  labels: () => LoaderLabels;
+  props: () => LoaderHostProps;
+  emit: (view: LoaderView) => void;
+}) {
+  let host: LoaderStep[] = [];
+  let vis: LoaderVis[] = [];
+  let front = 0;
+  let frontSince = -1e9;
+  let beatUntil = 0;
+  let beatBusy = false;
+  let inflight: { entries: LoaderEntry[]; landed: boolean; timer: number } | null = null;
+  let backlog: LoaderEntry[] = [];
+  let phase: LoaderPhase = "idle";
+  let barP: number | null = null;
+  let barDetail: string | null = null;
+  let lastSeenP: number | null | undefined;
+  let lastHit = -1e9;
+  let hitT = 0;
+  let pumpT = 0;
+  let metaT = 0;
+  let finaleStarted = false;
+  let finalPrefix = "";
+  let motion: LoaderMotion = { reduced: false, paused: false, onscreen: true, visible: true };
+  let awayFrom: number | null = null;
+  let lineKey = 0;
+  let focusN = 0;
+  let alive = true;
+  const timers = new Set<number>();
+  const anims = new Set<Animation>();
+  let view: LoaderView = loaderInitialView([]);
+
+  const set = (patch: Partial<LoaderView>) => {
+    if (!alive) return;
+    view = { ...view, ...patch };
+    env.emit(view);
+  };
+  const later = (fn: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      timers.delete(id);
+      if (alive) fn();
+    }, Math.max(0, ms));
+    timers.add(id);
+    return id;
+  };
+  const clear = (id: number) => {
+    if (id) {
+      window.clearTimeout(id);
+      timers.delete(id);
+    }
+    return 0;
+  };
+  const motionAllowed = () => !motion.reduced && !motion.paused;
+  const running = () => motion.onscreen && motion.visible;
+  const motionOn = () => motionAllowed() && running();
+  const anim = (el: Element, frames: Keyframe[], opts: KeyframeAnimationOptions) => {
+    if (!alive || typeof el.animate !== "function") return null;
+    const a = el.animate(frames, opts);
+    anims.add(a);
+    const drop = () => anims.delete(a);
+    a.finished.then(drop, drop);
+    return a;
+  };
+  const frontP = () => {
+    const s = host[front];
+    if (!s) return 0;
+    if (s.status === "done") return 1;
+    if (s.status === "pending" || s.status === "skipped" || (s.status === "active" && s.progress == null)) return 0;
+    return barP ?? 0;
+  };
+
+  const ctx: LoaderArenaCtx = {
+    steps: () => host,
+    vis: () => vis,
+    front: () => front,
+    phase: () => phase,
+    frontP,
+    motionAllowed,
+    motionOn,
+    running,
+    later,
+    clear,
+    anim,
+  };
+  const root = env.root.current;
+  const arena = root ? env.game.arena(root, ctx) : null;
+
+  const L = () => env.labels();
+  const P = () => env.props();
+  const announce = (text: string, politeness: "polite" | "assertive") => P().onAnnounce?.(text, politeness);
+  const focusInside = () => {
+    const r = env.root.current;
+    const a = typeof document !== "undefined" ? document.activeElement : null;
+    return !!r && !!a && a !== r && r.contains(a);
+  };
+  const requestFocus = (target: LoaderFocusTarget) => set({ focus: { target, n: ++focusN } });
+
+  function appendLine(kind: LoaderLineKind, text: string) {
+    const lines = view.lines.concat({ key: ++lineKey, kind, text });
+    set({ lines: lines.length > 40 ? lines.slice(-40) : lines });
+    announce(text, "polite");
+  }
+
+  /* -------- narration: written to be heard, not ticked -------- */
+
+  function doneSentence(s: LoaderStep) {
+    const base = s.doneText || \`\${s.label}: done\`;
+    const dur = s.durationMs != null ? \` in \${fmtDur(s.durationMs)}\` : "";
+    const tries = (s.attempt ?? 1) > 1 ? \`, on attempt \${s.attempt}\` : "";
+    return \`\${base}\${dur}\${tries}.\`;
+  }
+  const skipSentence = (s: LoaderStep) => \`Skipped: \${s.label}\${s.detail ? \` (\${lowerFirst(s.detail)})\` : ""}.\`;
+
+  /** The next step still to come after these, never one that already finished. */
+  function nextAfter(list: LoaderEntry[]) {
+    let i = Math.max(...list.map((e) => e.i)) + 1;
+    while (i < host.length && isSettled(host[i])) i++;
+    return i < host.length ? i : -1;
+  }
+
+  /* Two quick finishes share a sentence, a skip that lands with a finish joins
+     it, three or more are summed up, and the line ends with what comes next. */
+  function sentence(input: LoaderEntry[]) {
+    const list = input.slice().sort((a, b) => a.i - b.i);
+    let text: string;
+    if (list.length >= BURST_MIN) {
+      const done = list.filter((e) => e.kind === "done").map((e) => host[e.i]);
+      const skipped = list.filter((e) => e.kind === "skipped").map((e) => host[e.i].label);
+      text = done.length === 1 ? doneSentence(done[0]) : done.length ? \`Finished \${done.length} steps at once: \${listJoin(done.map((s) => s.label))}.\` : "";
+      if (skipped.length) text += \`\${text ? " " : ""}Skipped: \${listJoin(skipped)}.\`;
+    } else {
+      const parts = list.map((e) => (e.kind === "done" ? doneSentence(host[e.i]) : skipSentence(host[e.i])));
+      text =
+        parts.length === 2 && list[0].kind === "done" && list[1].kind === "done"
+          ? \`\${parts[0].replace(/\\.$/, "")}, then \${lowerFirst(parts[1])}\`
+          : parts.join(" ");
+    }
+    const n = nextAfter(list);
+    if (n >= 0) text += \`\${n === host.length - 1 ? " Last up: " : " On to "}\${lowerFirst(host[n].label)}.\`;
+    return text;
+  }
+
+  /* Narrates every completion not told yet as one line. When it is the last
+     news before the finale it is held and merged into the completion line, so
+     the end of a run is one announcement, not two. */
+  function speak(list: LoaderEntry[]) {
+    const fresh = list.filter((e) => !e.said);
+    if (!fresh.length) return;
+    fresh.forEach((e) => {
+      e.said = true;
+    });
+    const text = sentence(fresh);
+    if (host.every(isSettled) && backlog.every((b) => b.said)) {
+      finalPrefix = finalPrefix ? \`\${finalPrefix} \${text}\` : text;
+      return;
+    }
+    appendLine(fresh.some((e) => e.kind === "done") ? "done" : "skipped", text);
+  }
+
+  /* -------- the bar and the hits -------- */
+
+  function syncBar() {
+    const s = host[front];
+    barP = s ? (s.status === "done" ? 1 : s.progress ?? null) : null;
+    barDetail = s ? s.detail ?? null : null;
+    lastSeenP = s ? s.progress : null;
+  }
+
+  function requestHit() {
+    if (hitT) return;
+    const t = loaderNow();
+    hitT = later(doHit, Math.max(lastHit + HIT_GAP - t, frontSince + BASE - t, 0));
+  }
+
+  function doHit() {
+    hitT = 0;
+    const s = host[front];
+    if (phase !== "run" || !s || s.status !== "active" || s.progress == null) return;
+    lastHit = loaderNow();
+    if (!motionOn() || !arena) {
+      syncBar();
+      arena?.progress(front, false);
+      set({ barP, barDetail });
+      return;
+    }
+    const id = s.id;
+    const delay = arena.hit(front);
+    later(() => {
+      if (host[front]?.id !== id) return;
+      syncBar();
+      arena.progress(front, motionOn());
+      set({ barP, barDetail });
+    }, delay);
+  }
+
+  /* -------- the beats -------- */
+
+  function pump() {
+    pumpT = clear(pumpT);
+    if (phase === "error" || phase === "stopped" || beatBusy) return;
+    if (!backlog.length) {
+      maybeFinale();
+      return;
+    }
+    if (!running()) {
+      flushBacklog();
+      return;
+    }
+    const t = loaderNow();
+    if (t < beatUntil) {
+      pumpT = later(pump, beatUntil - t);
+      return;
+    }
+    const oldest = backlog[0].at;
+    const newest = backlog[backlog.length - 1].at;
+    if (t - newest < COLLECT && t - oldest < BASE) {
+      pumpT = later(pump, COLLECT - (t - newest));
+      return;
+    }
+    if (backlog.length >= BURST_MIN || t - oldest > 900) {
+      runBeat(backlog.splice(0));
+      return;
+    }
+    const dwellLeft = frontSince + DWELL - t;
+    if (dwellLeft > 0) {
+      pumpT = later(pump, dwellLeft);
+      return;
+    }
+    // A skip that arrived with this completion resolves in the same beat.
+    let take = 1;
+    while (take < backlog.length && backlog[take].kind === "skipped" && backlog[take].at - backlog[0].at <= COALESCE) take++;
+    runBeat(backlog.splice(0, take));
+  }
+
+  function runBeat(entries: LoaderEntry[]) {
+    const head = entries[0];
+    const showy = motionOn();
+    const delay = showy && head.kind === "done" && arena ? arena.finish(head.i) : 0;
+    beatUntil = loaderNow() + delay;
+    beatBusy = true;
+    const land = () => {
+      entries.forEach((e) => {
+        vis[e.i] = "gone";
+      });
+      const hold = arena ? arena.resolve(entries, showy) : 0;
+      speak(entries.concat(backlog.filter((b) => b.at - head.at <= COALESCE)));
+      const settle = () => {
+        beatBusy = false;
+        inflight = null;
+        advanceFront();
+        pump();
+      };
+      if (hold > 0) inflight = { entries, landed: true, timer: later(settle, hold) };
+      else settle();
+    };
+    if (delay) inflight = { entries, landed: false, timer: later(land, delay) };
+    else land();
+  }
+
+  /** Resolves everything queued at once, without beats: hidden tab, off screen, an error or a cancel. */
+  function flushBacklog() {
+    pumpT = clear(pumpT);
+    let held = false;
+    if (inflight) {
+      clear(inflight.timer);
+      if (inflight.landed) held = true;
+      else backlog = inflight.entries.concat(backlog);
+      inflight = null;
+      beatBusy = false;
+    }
+    if (!backlog.length) {
+      if (held) {
+        advanceFront();
+        maybeFinale();
+      }
+      return;
+    }
+    const entries = backlog.splice(0);
+    entries.forEach((e) => {
+      vis[e.i] = "gone";
+    });
+    arena?.resolve(entries, false);
+    speak(entries);
+    advanceFront();
+    maybeFinale();
+  }
+
+  function advanceFront() {
+    const f = loaderFirstLiveVis();
+    const changed = f !== front;
+    front = f;
+    frontSince = loaderNow();
+    syncBar();
+    set({ front, barP, barDetail, frontKey: changed ? view.frontKey + 1 : view.frontKey });
+    arena?.advance(changed);
+    arena?.pose();
+    const s = host[front];
+    if (s && s.status === "active" && s.progress != null && s.progress > 0 && motionOn()) requestHit();
+  }
+
+  function loaderFirstLiveVis() {
+    let f = 0;
+    while (f < host.length && vis[f] === "gone") f++;
+    return f;
+  }
+
+  /* -------- the error path -------- */
+
+  function errorText(s: LoaderStep) {
+    const msg = s.error || "Something went wrong.";
+    if (msg.toLowerCase().includes(s.label.toLowerCase())) return msg;
+    return \`\${s.label} failed: \${lowerFirst(msg)}\${/[.!?]$/.test(msg) ? "" : "."}\`;
+  }
+
+  function detailsText(i: number) {
+    const s = host[i];
+    const bits = [\`Step \${i + 1} of \${host.length}\`, \`attempt \${s.attempt ?? 1}\`];
+    if (s.detail) bits.push(\`reached \${s.detail}\`);
+    else if (s.progress != null) bits.push(\`reached \${Math.floor(s.progress * 100)}%\`);
+    if (s.elapsedMs != null) bits.push(\`ran \${fmtDur(s.elapsedMs)}\`);
+    return bits.join(" · ");
+  }
+
+  function showError(i: number) {
+    const hadFocus = focusInside();
+    flushBacklog();
+    phase = "error";
+    clearFlash();
+    hitT = clear(hitT);
+    const s = host[i];
+    const text = errorText(s);
+    if (s.progress != null) barP = s.progress;
+    if (s.detail) barDetail = s.detail;
+    set({ phase, alert: text, errorIndex: i, details: detailsText(i), detailMore: s.errorDetail ?? "", barP, barDetail });
+    announce(text, "assertive");
+    arena?.error(i, motionOn());
+    arena?.pose();
+    if (hadFocus) requestFocus("retry");
+  }
+
+  /** Returns whether focus was in the error menu, so the caller can move it on. */
+  function clearError() {
+    const r = env.root.current;
+    const a = document.activeElement;
+    const panels = Array.from(r?.querySelectorAll('[data-panel="error"]') ?? []);
+    const had = !!a && panels.some((p) => p.contains(a));
+    const i = view.errorIndex;
+    phase = "run";
+    set({ phase, alert: "", details: "", detailMore: "" });
+    arena?.recover(i, motionOn());
+    return had;
+  }
+
+  function retryStarted(i: number) {
+    const had = clearError();
+    const s = host[i];
+    syncBar();
+    set({ barP, barDetail });
+    arena?.progress(front, false);
+    arena?.pose();
+    appendLine("retry", \`Trying again: \${s.label}, attempt \${s.attempt ?? 2}\${s.detail && s.progress ? \`, from \${s.detail}\` : ""}.\`);
+    if (had) requestFocus("log");
+  }
+
+  /* -------- the finale -------- */
+
+  function maybeFinale() {
+    if (finaleStarted || phase === "error" || phase === "stopped" || !host.length) return;
+    if (backlog.length || !host.every(isSettled) || vis.some((v) => v !== "gone")) return;
+    finale(false);
+  }
+
+  function buildTiles(): LoaderTile[] {
+    const n = host.length;
+    const done = host.filter((s) => s.status === "done");
+    const skipped = host.filter((s) => s.status === "skipped").length;
+    const total = done.reduce((a, s) => a + (s.durationMs ?? 0), 0);
+    let longest: LoaderStep | null = null;
+    for (const s of done) if (s.durationMs != null && (!longest || s.durationMs > (longest.durationMs ?? 0))) longest = s;
+    const tiles: LoaderTile[] = [
+      { label: "Steps", value: done.length + skipped, kind: "steps", total: n, sub: skipped ? \`\${skipped} skipped\` : "none skipped" },
+    ];
+    // The longest step's name stays off the tile, so a narrow tile never cuts the figure in half.
+    if (total > 0) tiles.push({ label: "Time", value: total, kind: "time", total: 0, sub: longest ? \`Longest step \${fmtDur(longest.durationMs)}\` : "", more: longest ? \`: \${longest.label}\` : undefined });
+    for (const st of P().stats ?? []) tiles.push({ label: st.label, value: st.value, kind: "stat", total: 0, sub: st.sub ?? "" });
+    const retried = done.filter((s) => (s.attempt ?? 1) > 1);
+    if (retried.length) {
+      const hiccups = retried.reduce((a, s) => a + (s.attempt ?? 1) - 1, 0);
+      tiles.push({ label: hiccups === 1 ? "Hiccup" : "Hiccups", value: hiccups, kind: "hiccup", total: 0, sub: \`at \${listJoin(retried.map((s) => s.label))}\` });
+    }
+    return tiles;
+  }
+
+  function finale(silent: boolean) {
+    finaleStarted = true;
+    const hadFocus = focusInside();
+    phase = "complete";
+    clearFlash();
+    const n = host.length;
+    const skipped = host.filter((s) => s.status === "skipped").length;
+    const showy = motionOn();
+    const extra = P().completeText;
+    if (!silent) appendLine("finish", \`\${finalPrefix ? \`\${finalPrefix} \` : ""}\${L().complete(n, skipped)}\${extra ? \` \${extra}\` : ""}\`);
+    finalPrefix = "";
+    set({ phase, tiles: buildTiles(), banner: !silent, results: false, done: false });
+    arena?.finale(showy);
+    arena?.pose();
+    if (!silent) later(() => set({ banner: false }), FAST + BEAT);
+    const open = () => {
+      set({ results: true, resultsKey: view.resultsKey + 1 });
+      later(() => {
+        set({ done: true });
+        if (hadFocus || focusInside()) requestFocus("continue");
+        P().onComplete?.();
+      }, showy ? SLOW + 200 : 0);
+    };
+    // The log line lands first and the results cover it a moment later, so the line is announced.
+    if (silent) open();
+    else later(open, showy ? FAST + BASE : FAST);
+  }
+
+  /* -------- stop, flash, motion -------- */
+
+  function flashMeta(text: string, ms: number) {
+    if (phase !== "run" && phase !== "complete") return;
+    metaT = clear(metaT);
+    set({ meta: text });
+    metaT = later(() => set({ meta: null }), ms);
+  }
+  function clearFlash() {
+    metaT = clear(metaT);
+    if (view.meta) set({ meta: null });
+  }
+
+  function cancel() {
+    if (phase === "complete" || phase === "stopped") return;
+    const hadFocus = focusInside();
+    const kept = host.filter((s) => s.status === "done").length;
+    flushBacklog();
+    pumpT = clear(pumpT);
+    hitT = clear(hitT);
+    clearFlash();
+    phase = "stopped";
+    set({ phase, alert: "", details: "", detailMore: "" });
+    arena?.stop(motionOn());
+    arena?.pose();
+    appendLine("stop", \`\${finalPrefix ? \`\${finalPrefix} \` : ""}\${L().stopped(kept)}\`);
+    finalPrefix = "";
+    P().onCancel?.();
+    if (hadFocus) requestFocus("log");
+  }
+
+  function setMotion(next: LoaderMotion) {
+    const wasRunning = running();
+    motion = next;
+    const isRunning = running();
+    if (wasRunning && !isRunning && awayFrom == null) awayFrom = host.filter(isSettled).length;
+    if (!motionOn()) {
+      anims.forEach((a) => {
+        try {
+          a.finish();
+        } catch {
+          a.cancel();
+        }
+      });
+      if (hitT) {
+        hitT = clear(hitT);
+        syncBar();
+        arena?.progress(front, false);
+        set({ barP, barDetail });
+      }
+    }
+    if (!isRunning && (backlog.length || inflight)) flushBacklog();
+    arena?.motion();
+    arena?.pose();
+    if (!wasRunning && isRunning && awayFrom != null) {
+      const d = host.filter(isSettled).length - awayFrom;
+      awayFrom = null;
+      if (d > 0) flashMeta(L().away(d), BEAT * 2);
+    }
+    pump();
+  }
+
+  /* -------- the host's steps -------- */
+
+  function rebuild(steps: LoaderStep[]) {
+    timers.forEach((id) => window.clearTimeout(id));
+    timers.clear();
+    anims.forEach((a) => a.cancel());
+    anims.clear();
+    hitT = pumpT = metaT = 0;
+    host = steps.map((s) => ({ ...s }));
+    backlog = [];
+    inflight = null;
+    beatBusy = false;
+    beatUntil = 0;
+    finaleStarted = false;
+    finalPrefix = "";
+    lastHit = -1e9;
+    vis = host.map((s) => (isSettled(s) ? "gone" : "live"));
+    const started = host.some((s) => s.status !== "pending");
+    phase = started ? (host.length && host.every(isSettled) ? "complete" : "run") : "idle";
+    front = loaderFirstLiveVis();
+    frontSince = -1e9;
+    syncBar();
+    view = { ...loaderInitialView(host), frontKey: view.frontKey + 1, resultsKey: view.resultsKey, phase };
+    set({ front, barP, barDetail });
+    arena?.rebuild();
+    arena?.pose();
+    const errAt = host.findIndex((s) => s.status === "error");
+    if (phase === "complete") finale(true);
+    else if (errAt >= 0) showError(errAt);
+  }
+
+  function update(steps: LoaderStep[]) {
+    const next = steps.map((s) => ({ ...s }));
+    const prev = host;
+    if (loaderNeedsRebuild(prev, next, phase)) {
+      rebuild(next);
+      return;
+    }
+    host = next;
+    if (phase === "stopped") return;
+    if (phase === "idle" && host.some((s) => s.status !== "pending")) {
+      phase = "run";
+      set({ phase });
+    }
+    const t = loaderNow();
+    let errAt = -1;
+    let retryAt = -1;
+    let leftError = false;
+    host.forEach((s, i) => {
+      const was = prev[i]?.status ?? "pending";
+      if (was === s.status) return;
+      if (was === "error") leftError = true;
+      if (s.status === "done" || s.status === "skipped") backlog.push({ i, kind: s.status, at: t });
+      else if (s.status === "error") errAt = i;
+      else if (s.status === "active" && was === "error") retryAt = i;
+    });
+    if (retryAt >= 0) retryStarted(retryAt);
+    else if (leftError && phase === "error") {
+      if (clearError()) requestFocus("log");
+    }
+    if (errAt >= 0) {
+      showError(errAt);
+      return;
+    }
+    const s = host[front];
+    if (phase === "run" && s && s.status === "active" && s.progress != null && s.progress !== lastSeenP) {
+      // A step that only just started reports 0: nothing to hit yet.
+      if (motionOn() && !(s.progress === 0 && lastSeenP == null)) {
+        lastSeenP = s.progress;
+        requestHit();
+      } else {
+        syncBar();
+        arena?.progress(front, false);
+        set({ barP, barDetail });
+      }
+    } else if (phase === "run" && s && s.status === "active" && s.progress == null && view.front === front) {
+      arena?.pose();
+    }
+    pump();
+  }
+
+  function layout() {
+    arena?.layout(false);
+  }
+
+  function destroy() {
+    alive = false;
+    timers.forEach((id) => window.clearTimeout(id));
+    timers.clear();
+    anims.forEach((a) => a.cancel());
+    anims.clear();
+    arena?.destroy();
+  }
+
+  return { rebuild, update, setMotion, cancel, layout, destroy };
+}
+
+/* -------- hooks -------- */
+
+const LOADER_RM_QUERY = "(prefers-reduced-motion: reduce)";
+const loaderSubscribeRM = (onChange: () => void) => {
+  const q = window.matchMedia(LOADER_RM_QUERY);
+  q.addEventListener("change", onChange);
+  return () => q.removeEventListener("change", onChange);
+};
+const loaderReadRM = () => window.matchMedia(LOADER_RM_QUERY).matches;
+const loaderServerRM = () => false;
+
+/** prefers-reduced-motion, followed live; a boolean prop wins. */
+function useReducedMotionPreference(forced: boolean | undefined) {
+  const media = useSyncExternalStore(loaderSubscribeRM, loaderReadRM, loaderServerRM);
+  return forced ?? media;
+}
+
+/** Whether the element is on screen. Starts true so a first paint is never treated as off screen. */
+function useOnscreen(ref: RefObject<Element>) {
+  const [on, setOn] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver((list) => setOn(list[list.length - 1].isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref]);
+  return on;
+}
+
+/** Whether the browser tab is visible. */
+function usePageVisible() {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const sync = () => setVisible(document.visibilityState !== "hidden");
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, []);
+  return visible;
+}
+
+function loaderStateWord(s: LoaderStep, L: LoaderLabels) {
+  switch (s.status) {
+    case "active":
+      return (s.attempt ?? 1) > 1 ? \`Running, attempt \${s.attempt}\` : "Running";
+    case "done":
+      return s.durationMs != null ? \`Done in \${fmtDur(s.durationMs)}\` : "Done";
+    case "skipped":
+      return "Skipped";
+    case "error":
+      return L.failed;
+    default:
+      return "Waiting";
+  }
+}
+
+function loaderTileText(t: LoaderTile, k: number) {
+  if (typeof t.value === "string") return t.value;
+  const v = t.value * k;
+  if (t.kind === "steps") return \`\${Math.round(v)} of \${t.total}\`;
+  if (t.kind === "time") return fmtDur(v);
+  if (t.kind === "hiccup") return \`\${Math.round(v)} recovered\`;
+  return Math.round(v).toLocaleString("en-US");
+}
+
+/** Everything the chassis needs: the engine, its view, the motion state and the handlers. */
+function useLoader(props: LoaderHostProps, game: LoaderGame) {
+  const rootRef = useRef<HTMLElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const engineRef = useRef<LoaderEngine | null>(null);
+  const uid = useId().replace(/:/g, "");
+  const labels = useMemo<LoaderLabels>(
+    () => ({ ...LOADER_DEFAULT_LABELS, unit: game.unit, clear: game.clear, ...props.labels }),
+    [props.labels, game],
+  );
+  const propsRef = useRef(props);
+  propsRef.current = props;
+  const labelsRef = useRef(labels);
+  labelsRef.current = labels;
+
+  const reduced = useReducedMotionPreference(props.reducedMotion);
+  const onscreen = useOnscreen(rootRef);
+  const visible = usePageVisible();
+  const [paused, setPaused] = useState(false);
+  const motion: LoaderMotion = { reduced, paused, onscreen, visible };
+  const motionRef = useRef(motion);
+  motionRef.current = motion;
+
+  const [view, setView] = useState<LoaderView>(() => loaderInitialView(props.steps));
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [cursor, setCursor] = useState(0);
+  const [countT, setCountT] = useState(1);
+
+  // The engine and the arena live for the component's lifetime; StrictMode's second mount builds them again.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const engine = createLoaderEngine({
+      root: rootRef,
+      game,
+      labels: () => labelsRef.current,
+      props: () => propsRef.current,
+      emit: setView,
+    });
+    engineRef.current = engine;
+    engine.setMotion(motionRef.current);
+    engine.rebuild(propsRef.current.steps);
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => engine.layout()) : null;
+    ro?.observe(root);
+    return () => {
+      ro?.disconnect();
+      engine.destroy();
+      engineRef.current = null;
+    };
+  }, [game]);
+
+  useLayoutEffect(() => {
+    engineRef.current?.update(props.steps);
+  }, [props.steps]);
+
+  useEffect(() => {
+    engineRef.current?.setMotion({ reduced, paused, onscreen, visible });
+  }, [reduced, paused, onscreen, visible]);
+
+  // A new error starts with the menu cursor on Retry and the details closed.
+  useEffect(() => {
+    setDetailsOpen(false);
+    setCursor(0);
+  }, [view.alert]);
+
+  useLayoutEffect(() => {
+    const f = view.focus;
+    if (!f) return;
+    if (f.target === "retry") menuRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    else if (f.target === "log") logRef.current?.focus();
+    else if (f.target === "continue") continueRef.current?.focus();
+  }, [view.focus]);
+
+  // The log shows its newest lines, starting on a whole line rather than mid-sentence.
+  useLayoutEffect(() => {
+    const log = logRef.current;
+    if (!log) return;
+    log.style.paddingBottom = "";
+    const target = log.scrollHeight - log.clientHeight;
+    if (target <= 0) {
+      log.scrollTop = 0;
+      return;
+    }
+    const lines = Array.from(log.children) as HTMLElement[];
+    const base = lines[0].offsetTop;
+    let top = lines[lines.length - 1].offsetTop - base;
+    for (let k = lines.length - 1; k >= 0; k--) {
+      const y = lines[k].offsetTop - base;
+      if (y < target) break;
+      top = y;
+    }
+    if (top > target) log.style.paddingBottom = \`\${top - target}px\`;
+    log.scrollTop = top;
+  }, [view.lines]);
+
+  // Results count up over SLOW when motion is allowed.
+  useEffect(() => {
+    if (!view.results) return;
+    const m = motionRef.current;
+    if (m.reduced || m.paused || !m.onscreen || !m.visible) {
+      setCountT(1);
+      return;
+    }
+    let raf = 0;
+    const t0 = loaderNow();
+    setCountT(0);
+    const tick = () => {
+      const x = Math.min(1, (loaderNow() - t0) / SLOW);
+      setCountT(1 - (1 - x) * (1 - x) * (1 - x));
+      if (x < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      setCountT(1);
+    };
+  }, [view.resultsKey, view.results]);
+
+  const steps = props.steps;
+  const n = steps.length;
+  const settled = steps.filter(isSettled).length;
+  let current = steps.findIndex((s) => s.status === "active" || s.status === "error");
+  if (current < 0) current = steps.findIndex((s) => s.status === "pending");
+  const cur = current >= 0 ? steps[current] : undefined;
+
+  let valueText: string;
+  if (view.phase === "stopped") valueText = \`Stopped at step \${current + 1} of \${n}\`;
+  else if (n && settled === n) valueText = \`All \${n} steps finished\`;
+  else if (view.phase === "idle" || !cur) valueText = labels.queued(n, steps[0]?.label ?? "");
+  else valueText = \`Step \${current + 1} of \${n}: \${cur.label}\${cur.status === "error" ? ", failed" : ""}\`;
+
+  const ps = steps[view.front];
+  let plateP = 0;
+  if (ps) {
+    if (ps.status === "done") plateP = 1;
+    else if (ps.status === "pending" || ps.status === "skipped" || (ps.status === "active" && ps.progress == null)) plateP = 0;
+    else plateP = Math.max(0, Math.min(1, view.barP ?? 0));
+  }
+  let count = "";
+  if (ps) {
+    if (ps.status === "active" && ps.progress == null) {
+      const secs = Math.floor((ps.elapsedMs ?? 0) / 1000);
+      count = \`\${labels.sizeUnknown}\${secs >= 10 ? \` · \${secs}s\` : ""}\`;
+    } else if (ps.status === "done") count = ps.detail ?? "";
+    else if (ps.status === "active" || (ps.status === "error" && ps.progress != null)) count = view.barDetail ?? \`\${Math.floor(plateP * 100)}%\`;
+  }
+  const plate = {
+    label: ps?.label ?? "",
+    state: !ps || ps.status === "skipped" ? "pending" : ps.status,
+    attempt: ps && (ps.attempt ?? 1) > 1 && (ps.status === "active" || ps.status === "error") ? ps.attempt ?? 0 : 0,
+    failed: ps?.status === "error",
+    indet: ps?.status === "active" && ps.progress == null,
+    gone: view.phase === "complete" || !ps,
+    p: plateP,
+    count,
+  };
+
+  const placeholder = view.midRun ? labels.progress(settled, n, cur?.label ?? "") : labels.queued(n, steps[0]?.label ?? "");
+
+  let metaHead = "";
+  let metaTail = "";
+  const at = Math.min(view.front + 1, Math.max(1, n));
+  if (view.phase === "complete") {
+    metaHead = labels.clear;
+    metaTail = \`\${n} of \${n}\`;
+  } else if (view.phase === "stopped") {
+    metaHead = \`\${labels.unit} \${Math.max(1, current + 1)} of \${n}\`;
+    metaTail = labels.stopped(steps.filter((s) => s.status === "done").length);
+  } else if (view.phase === "error") {
+    metaHead = \`\${labels.unit} \${at} of \${n}\`;
+    metaTail = labels.waiting;
+  } else {
+    const next = steps.slice(view.front + 1).filter((s) => !isSettled(s)).map((s) => s.label);
+    metaHead = \`\${labels.unit} \${at} of \${n}\`;
+    metaTail = next.length === 0 ? "Last step" : next.length === 1 ? \`Next: \${next[0]}\` : \`Next: \${next[0]}, then \${next[1]}\`;
+  }
+
+  const errStep = view.errorIndex >= 0 ? steps[view.errorIndex] : undefined;
+  const commands: Array<{ key: string; label: string; sr?: string; primary?: boolean; expanded?: boolean; run: () => void }> = [];
+  if (props.onRetry) commands.push({ key: "retry", label: labels.retry, sr: errStep ? \` \${errStep.label}\` : undefined, primary: true, run: () => errStep && propsRef.current.onRetry?.(errStep.id) });
+  if (props.onSkip) commands.push({ key: "skip", label: labels.skip, sr: errStep ? \` \${errStep.label}\` : undefined, run: () => errStep && propsRef.current.onSkip?.(errStep.id) });
+  if (props.onCancel) commands.push({ key: "cancel", label: labels.cancel, run: () => engineRef.current?.cancel() });
+  commands.push({ key: "details", label: detailsOpen ? labels.hideDetails : labels.showDetails, expanded: detailsOpen, run: () => setDetailsOpen((o) => !o) });
+
+  const onMenuKey = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    const btns = Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []);
+    const i = btns.indexOf(document.activeElement as HTMLButtonElement);
+    if (i < 0) return;
+    let j = i;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") j = (i + 1) % btns.length;
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") j = (i - 1 + btns.length) % btns.length;
+    else if (e.key === "Home") j = 0;
+    else if (e.key === "End") j = btns.length - 1;
+    else return;
+    e.preventDefault();
+    setCursor(j);
+    btns[j].focus();
+  };
+
+  return {
+    props,
+    view,
+    labels,
+    steps,
+    n,
+    settled,
+    current,
+    valueText,
+    plate,
+    placeholder,
+    metaHead,
+    metaTail,
+    commands,
+    cursor: Math.min(cursor, commands.length - 1),
+    setCursor,
+    onMenuKey,
+    detailsOpen,
+    countT,
+    reduced,
+    paused,
+    togglePause: () => setPaused((p) => !p),
+    motionAllowed: !reduced && !paused,
+    running: onscreen && visible,
+    rootRef,
+    logRef,
+    menuRef,
+    continueRef,
+    titleId: \`bz-enc-title-\${uid}\`,
+    detailsId: \`bz-enc-details-\${uid}\`,
+    hatchId: \`bz-enc-hatch-\${uid}\`,
+  };
+}
+
+type LoaderApi = ReturnType<typeof useLoader>;
+
+/* ---------------- end shared: engine ---------------- */
+
+/* ---------------- shared: chassis ---------------- */
+
+/** The structure for screen readers: every step and its state. */
+function LoaderStepList({ api }: { api: LoaderApi }) {
+  return (
+    <ol className="bz-enc-sr" aria-busy={api.view.phase === "run" ? "true" : "false"}>
+      {api.steps.map((s, i) => (
+        <li key={\`\${s.id}-\${i}\`} aria-current={i === api.current ? "step" : undefined}>
+          {\`\${s.label}: \${loaderStateWord(s, api.labels)}\`}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** The nameplate: the one progressbar. The arena positions it. */
+function LoaderPlate({ api }: { api: LoaderApi }) {
+  const { plate, labels } = api;
+  return (
+    <div
+      className="bz-enc-plate"
+      role="progressbar"
+      aria-labelledby={api.titleId}
+      aria-valuemin={0}
+      aria-valuemax={Math.max(1, api.n)}
+      aria-valuenow={api.settled}
+      aria-valuetext={api.valueText}
+      data-state={plate.state}
+      data-gone={plate.gone ? "true" : "false"}
+    >
+      <div className="bz-enc-plate-in" key={api.view.frontKey}>
+        <div className="bz-enc-plate-top">
+          <span className="bz-enc-plate-label">{plate.label}</span>
+          <span className="bz-enc-badges">
+            {plate.attempt ? <span className="bz-enc-tag">{labels.attempt(plate.attempt)}</span> : null}
+            {plate.failed ? (
+              <span className="bz-enc-failed">
+                <LoaderGlyph name="cross" />
+                {labels.failed}
+              </span>
+            ) : null}
+          </span>
+        </div>
+        <div className="bz-enc-plate-row">
+          <span className="bz-enc-bar" data-indet={plate.indet ? "true" : "false"}>
+            <span className="bz-enc-fill" style={{ width: \`\${Math.round(plate.p * 1000) / 10}%\` }} />
+            <svg className="bz-enc-hatch" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
+              <defs>
+                <pattern id={api.hatchId} width="8" height="8" patternUnits="userSpaceOnUse">
+                  <path d="M0 6h2v2H0zM2 4h2v2H2zM4 2h2v2H4zM6 0h2v2H6z" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill={\`url(#\${api.hatchId})\`} />
+            </svg>
+          </span>
+          <span className="bz-enc-count" title={plate.count || undefined}>
+            {plate.count}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Whether a scroll box holds more than it shows (so it joins the tab order only
+ * when it has to), and whether there is more below the fold right now (so the
+ * box can fade its last line as a cue, even where scrollbars stay hidden).
+ */
+function useLoaderOverflow(ref: RefObject<HTMLElement>, key: unknown) {
+  const [state, setState] = useState({ over: false, more: false });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => {
+      const over = el.scrollHeight > el.clientHeight + 1;
+      const more = over && el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+      setState((s) => (s.over === over && s.more === more ? s : { over, more }));
+    };
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(check) : null;
+    ro?.observe(el);
+    for (const child of Array.from(el.children)) ro?.observe(child);
+    return () => {
+      el.removeEventListener("scroll", check);
+      ro?.disconnect();
+    };
+  }, [ref, key]);
+  return state;
+}
+
+/**
+ * The error details, as a card over the paused arena: the dialogue box below
+ * has room for the message and the menu, not for a paragraph more. It comes
+ * after the box in the source, right after the menu that opens it, and the
+ * arena it covers is only drawing. Long details scroll inside the card.
+ */
+function LoaderDetails({ api }: { api: LoaderApi }) {
+  const { view, labels } = api;
+  const open = view.phase === "error" && api.detailsOpen && !!view.details;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scroll = useLoaderOverflow(scrollRef, \`\${open}|\${view.details}|\${view.detailMore}\`);
+  return (
+    <div id={api.detailsId} className="bz-enc-frame bz-enc-sheet" data-panel="error" hidden={!open}>
+      <div
+        ref={scrollRef}
+        className="bz-enc-frame-in bz-enc-sheet-in"
+        role="region"
+        aria-label={labels.details}
+        tabIndex={open && scroll.over ? 0 : undefined}
+        data-more={scroll.more ? "true" : undefined}
+      >
+        <p className="bz-enc-sheet-head" aria-hidden="true">
+          {labels.details}
+        </p>
+        <p className="bz-enc-details">{view.details}</p>
+        {view.detailMore ? <p className="bz-enc-more-detail">{view.detailMore}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+const LOADER_LINE_GLYPH: Record<LoaderLineKind, LoaderGlyphName> = { done: "done", skipped: "skipped", retry: "retry", finish: "finish", stop: "stop" };
+
+/** The dialogue box: narration, the error menu and the results share one cell, so it never changes height. */
+function LoaderBox({ api, hairStyle }: { api: LoaderApi; hairStyle: LoaderCharacter["hairStyle"] }) {
+  const { view, labels } = api;
+  const errorOn = view.phase === "error";
+  const resultsOn = view.results;
+  const lastLine = view.lines.length ? view.lines[view.lines.length - 1].text : "";
+  const face: LoaderFace = errorOn ? "squint" : view.phase === "stopped" ? "blink" : view.phase === "complete" ? "happy" : "open";
+  const errTextRef = useRef<HTMLDivElement>(null);
+  const errScroll = useLoaderOverflow(errTextRef, view.alert);
+  return (
+    <div className="bz-enc-frame bz-enc-box">
+      <div className="bz-enc-frame-in bz-enc-box-in">
+        <LoaderPortrait hairStyle={hairStyle} face={face} />
+        <div className="bz-enc-panels">
+          <div className="bz-enc-panel bz-enc-talk">
+            <div ref={api.logRef} className="bz-enc-log" role="log" aria-label={labels.narration} tabIndex={errorOn || resultsOn ? -1 : 0}>
+              {view.lines.map((line, k) => (
+                <p key={line.key} className="bz-enc-line" data-kind={line.kind} data-last={k === view.lines.length - 1 ? "true" : undefined}>
+                  <LoaderGlyph name={LOADER_LINE_GLYPH[line.kind]} />
+                  <span>{line.text}</span>
+                </p>
+              ))}
+            </div>
+            {view.lines.length ? null : (
+              <p className="bz-enc-ph" aria-hidden="true">
+                {api.placeholder}
+              </p>
+            )}
+          </div>
+          <div className="bz-enc-panel bz-enc-err" data-panel="error" data-on={errorOn ? "true" : "false"}>
+            {/* Only the message lives here; the details open as a card over the arena. A message
+                too long for the box scrolls, and only then joins the tab order with a name. */}
+            <div
+              ref={errTextRef}
+              className="bz-enc-err-text"
+              role={errScroll.over ? "region" : undefined}
+              aria-label={errScroll.over ? labels.errorMessage : undefined}
+              tabIndex={errScroll.over && errorOn ? 0 : undefined}
+              data-more={errScroll.more ? "true" : undefined}
+            >
+              <div className="bz-enc-alert" role="alert">
+                {view.alert ? (
+                  <>
+                    <LoaderGlyph name="cross" />
+                    <span>{view.alert}</span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+            <div ref={api.menuRef} className="bz-enc-menu" role="group" aria-label={labels.menu} onKeyDown={api.onMenuKey}>
+              {api.commands.map((c, k) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  className={\`bz-enc-btn\${c.primary ? " bz-enc-primary" : ""}\`}
+                  tabIndex={k === api.cursor ? 0 : -1}
+                  data-cursor={k === api.cursor ? "true" : undefined}
+                  aria-expanded={c.key === "details" ? c.expanded : undefined}
+                  aria-controls={c.key === "details" ? api.detailsId : undefined}
+                  onFocus={() => api.setCursor(k)}
+                  onClick={c.run}
+                >
+                  <span className="bz-enc-cur" aria-hidden="true">
+                    <LoaderGlyph name="cursor" />
+                  </span>
+                  {c.label}
+                  {c.sr ? <span className="bz-enc-sr">{c.sr}</span> : null}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="bz-enc-panel bz-enc-res" data-on={resultsOn ? "true" : "false"}>
+            <p className="bz-enc-res-line" aria-hidden="true">
+              {resultsOn ? lastLine : ""}
+            </p>
+            <dl className="bz-enc-tiles">
+              {view.tiles.map((t) => (
+                <div className="bz-enc-tile" key={t.label}>
+                  <dt>{t.label}</dt>
+                  <dd>
+                    <span className="bz-enc-num" aria-hidden="true">
+                      {loaderTileText(t, api.countT)}
+                    </span>
+                    <span className="bz-enc-sr">{loaderTileText(t, 1)}</span>
+                    {t.sub ? (
+                      <span className="bz-enc-sub" title={\`\${t.sub}\${t.more ?? ""}\`}>
+                        {t.sub}
+                        {t.more ? <span className="bz-enc-sr">{t.more}</span> : null}
+                      </span>
+                    ) : null}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+        <div className="bz-enc-foot">
+          <p className="bz-enc-meta" aria-hidden="true">
+            {view.meta ? (
+              <>
+                <LoaderGlyph name="clock" />
+                {view.meta}
+              </>
+            ) : (
+              <>
+                <b>{api.metaHead}</b>
+                {\` · \${api.metaTail}\`}
+              </>
+            )}
+          </p>
+          <div className="bz-enc-tools">
+            <button
+              type="button"
+              className="bz-enc-btn bz-enc-toy"
+              aria-pressed={api.paused}
+              data-hide={api.reduced ? "true" : undefined}
+              onClick={api.togglePause}
+            >
+              <LoaderGlyph name="pause" />
+              {labels.pauseMotion}
+            </button>
+            {api.props.onContinue ? (
+              <button
+                ref={api.continueRef}
+                type="button"
+                className="bz-enc-btn bz-enc-primary bz-enc-continue"
+                data-on={view.done ? "true" : "false"}
+                onClick={() => api.props.onContinue?.()}
+              >
+                {labels.continue}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LOADER_STEP_OUTER =
+  "polygon(4px 0,calc(100% - 4px) 0,calc(100% - 4px) 2px,calc(100% - 2px) 2px,calc(100% - 2px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 2px) calc(100% - 4px),calc(100% - 2px) calc(100% - 2px),calc(100% - 4px) calc(100% - 2px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 2px),2px calc(100% - 2px),2px calc(100% - 4px),0 calc(100% - 4px),0 4px,2px 4px,2px 2px,4px 2px)";
+const LOADER_STEP_INNER =
+  "polygon(2px 0,calc(100% - 2px) 0,calc(100% - 2px) 2px,100% 2px,100% calc(100% - 2px),calc(100% - 2px) calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,2px calc(100% - 2px),0 calc(100% - 2px),0 2px,2px 2px)";
+
+const LOADER_CHARACTER_KEYS = ["hair", "hair-shade", "skin", "skin-shade", "eye-white", "eye", "outfit", "outfit-shade", "outfit-light", "accent", "pants", "pants-shade", "boots", "boots-shade"];
+
+/* The chassis: the frame, the nameplate's insides, the dialogue box, the footer and the adventurer's frames. */
+const LOADER_CSS = \`
+.bz-enc{container-type:inline-size;display:block;width:100%;min-width:0;
+--bz-enc-ink:light-dark(var(--bz-ink,#0a0a0a),var(--bz-void-ink,#ffffff));
+--bz-enc-muted:light-dark(var(--bz-ink-muted,#4a4a4c),rgba(255,255,255,0.8));
+--bz-enc-panel:light-dark(var(--bz-paper,#ffffff),var(--bz-void-raised,#1a1a1a));
+--bz-enc-track:light-dark(var(--bz-line-opaque,#f0f0f0),#313131);
+--bz-enc-danger:light-dark(var(--bz-danger,#b91c1c),#fca5a5);
+--bz-enc-danger-mark:light-dark(#dc2626,#f87171);
+--bz-enc-success:light-dark(var(--bz-emerald,#047857),var(--bz-emerald-on-void,#34d399));
+--bz-enc-focus:light-dark(var(--bz-focus-ring,#912c22),var(--bz-focus-ring-void,#ffffff));
+--bz-enc-hairline:light-dark(rgba(10,10,10,0.13),rgba(255,255,255,0.16));
+--bz-enc-idle:light-dark(#8a8a8e,#8c8c8c);
+--bz-enc-fast:var(--bz-duration-fast,150ms);
+--bz-enc-base:var(--bz-duration-base,300ms);
+--bz-enc-ease:var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1));
+--bz-enc-beat:var(--bz-duration-beat,2.4s);
+--bz-enc-sans:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);
+--bz-enc-mono:var(--bz-font-mono,ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace)}
+.bz-enc *,.bz-enc *::before,.bz-enc *::after{box-sizing:border-box}
+.bz-enc-in{--bz-enc-u:3px;position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;padding:16px;border:1px solid var(--bz-enc-hairline);border-radius:16px;background:var(--bz-enc-panel);color:var(--bz-enc-ink);font-family:var(--bz-enc-sans);font-size:15px;line-height:1.5;text-align:left}
+.bz-enc-sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.bz-enc-title{grid-area:1/1;margin:0 0 10px;font-size:15px;font-weight:600;line-height:21px;color:var(--bz-enc-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bz-enc-stage{grid-area:2/1}
+.bz-enc-box{grid-area:3/1}
+.bz-enc-title:focus{outline:none}
+.bz-enc-title:focus-visible{outline:2px solid var(--bz-enc-focus);outline-offset:2px}
+.bz-enc-frame{position:relative;padding:2px;background:var(--bz-enc-ink);clip-path:\${LOADER_STEP_OUTER}}
+.bz-enc-frame-in{position:relative;background:var(--bz-enc-panel);clip-path:\${LOADER_STEP_INNER}}
+.bz-enc-g{display:block;flex:none}
+.bz-enc-g path{fill:currentColor}
+
+.bz-enc-plate{position:relative;padding:6px 10px 8px 16px;background:var(--bz-enc-panel);border:2px solid var(--bz-enc-ink);color:var(--bz-enc-ink)}
+.bz-enc-plate::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--bz-enc-accent)}
+.bz-enc-plate[data-state="pending"]::before{background:var(--bz-enc-idle)}
+.bz-enc-plate[data-state="error"]::before{background:var(--bz-enc-danger-mark)}
+.bz-enc-plate[data-gone="true"]{position:absolute!important;width:1px!important;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);border:0}
+.bz-enc-plate-in{animation:bz-enc-fade var(--bz-enc-fast) linear}
+.bz-enc-plate-top{display:flex;align-items:center;gap:2px 8px;min-height:22px}
+.bz-enc-plate-label{flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;line-height:20px;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-enc-badges{display:inline-flex;flex:none;align-items:center;gap:6px}
+.bz-enc-badges:empty{display:none}
+.bz-enc-tag{flex:none;padding:3px 6px 2px;background:var(--bz-enc-accent);color:var(--bz-enc-on-accent);font:700 11px/1.2 var(--bz-enc-mono);letter-spacing:0.02em;white-space:nowrap}
+.bz-enc-failed{flex:none;display:inline-flex;align-items:center;gap:5px;color:var(--bz-enc-danger);font-size:13px;font-weight:700;line-height:1}
+.bz-enc-failed .bz-enc-g{width:12px;height:12px;color:var(--bz-enc-danger-mark)}
+.bz-enc-plate-row{display:flex;align-items:center;gap:4px 10px;margin-top:6px}
+.bz-enc-bar{position:relative;flex:1 1 56px;min-width:56px;height:12px;overflow:hidden;border:2px solid var(--bz-enc-ink);background:var(--bz-enc-track)}
+.bz-enc-fill{position:absolute;left:0;top:0;bottom:0;background:var(--bz-enc-accent);transition:width var(--bz-enc-base) var(--bz-enc-ease)}
+.bz-enc-hatch{position:absolute;top:0;left:-8px;width:calc(100% + 8px);height:100%;display:none;color:var(--bz-enc-accent)}
+.bz-enc-hatch path{fill:currentColor}
+.bz-enc-bar[data-indet="true"] .bz-enc-fill{display:none}
+.bz-enc-bar[data-indet="true"] .bz-enc-hatch{display:block;animation:bz-enc-march var(--bz-enc-beat) steps(4) infinite}
+.bz-enc-count{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font:500 12px/16px var(--bz-enc-mono);color:var(--bz-enc-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+@keyframes bz-enc-march{from{transform:translateX(0)}to{transform:translateX(8px)}}
+@keyframes bz-enc-fade{from{opacity:0}to{opacity:1}}
+
+.bz-enc-box{margin-top:12px}
+.bz-enc-box-in{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:16px;padding:14px 18px 12px}
+.bz-enc-face{align-self:start;width:72px;height:58px;padding:6px 2px 0;border:2px solid var(--bz-enc-ink);background:var(--bz-enc-portrait,var(--bz-enc-track));overflow:hidden}
+.bz-enc-face svg{display:block;width:64px;height:48px}
+.bz-enc-face g{display:none}
+.bz-enc-face[data-face="open"] g[data-f="open"],.bz-enc-face[data-face="blink"] g[data-f="blink"],.bz-enc-face[data-face="squint"] g[data-f="squint"],.bz-enc-face[data-face="happy"] g[data-f="happy"]{display:inline}
+.bz-enc[data-motion="on"] .bz-enc-face[data-face="open"] g[data-f="blink"]{display:inline;animation:bz-enc-blink calc(var(--bz-enc-beat) * 2) step-end infinite}
+@keyframes bz-enc-blink{0%{visibility:hidden}96%{visibility:visible}100%{visibility:visible}}
+.bz-enc-panels{display:grid;height:140px}
+.bz-enc-panel{grid-area:1/1;min-width:0;min-height:0;background:var(--bz-enc-panel)}
+.bz-enc-talk{position:relative}
+.bz-enc-err,.bz-enc-res{z-index:1;visibility:hidden}
+.bz-enc-err[data-on="true"],.bz-enc-res[data-on="true"]{visibility:visible}
+.bz-enc-log{position:relative;height:120px;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;font-size:15px;line-height:24px}
+.bz-enc-log::-webkit-scrollbar{display:none}
+.bz-enc-log:focus{outline:none}
+.bz-enc-log:focus-visible{outline:2px solid var(--bz-enc-focus);outline-offset:2px}
+.bz-enc-line{display:flex;gap:8px;margin:0;color:var(--bz-enc-muted);font-size:14px}
+.bz-enc-line[data-last="true"]{color:var(--bz-enc-ink);font-size:16px;font-weight:500}
+.bz-enc-line>.bz-enc-g{width:14px;height:14px;margin-top:5px;visibility:hidden}
+.bz-enc-line[data-last="true"]>.bz-enc-g{visibility:visible}
+.bz-enc-line[data-kind="done"]>.bz-enc-g{color:var(--bz-enc-success)}
+.bz-enc-line[data-kind="skipped"]>.bz-enc-g,.bz-enc-line[data-kind="stop"]>.bz-enc-g{color:var(--bz-enc-muted)}
+.bz-enc-line[data-kind="retry"]>.bz-enc-g,.bz-enc-line[data-kind="finish"]>.bz-enc-g{color:var(--bz-enc-accent)}
+.bz-enc-ph{position:absolute;left:0;top:0;margin:0;font-size:15px;line-height:24px;color:var(--bz-enc-muted)}
+
+.bz-enc-err{display:grid;grid-template-rows:minmax(0,1fr) auto;row-gap:10px}
+.bz-enc-err-text,.bz-enc-sheet-in{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--bz-enc-muted) transparent}
+.bz-enc-err-text:focus,.bz-enc-sheet-in:focus{outline:none}
+.bz-enc-err-text:focus-visible,.bz-enc-sheet-in:focus-visible{outline:2px solid var(--bz-enc-focus);outline-offset:-2px}
+.bz-enc-err-text[data-more="true"]::after,.bz-enc-sheet-in[data-more="true"]::after{content:"";position:sticky;bottom:0;display:block;height:20px;margin-top:-20px;background:linear-gradient(to bottom,transparent,var(--bz-enc-panel));pointer-events:none}
+.bz-enc-alert{visibility:visible;display:flex;gap:10px;color:var(--bz-enc-ink);font-size:15px;font-weight:500;line-height:24px}
+.bz-enc-alert>.bz-enc-g{width:14px;height:14px;margin-top:5px;color:var(--bz-enc-danger-mark)}
+
+.bz-enc-sheet{position:absolute;grid-area:2/1/3/2;z-index:5;top:10px;left:10px;right:10px;display:flex;max-height:calc(100% - 20px)}
+.bz-enc-sheet[hidden]{display:none}
+.bz-enc-sheet-in{flex:1 1 auto;padding:10px 14px 12px}
+.bz-enc-sheet-head{margin:0 0 4px;font:700 11px/14px var(--bz-enc-mono);letter-spacing:0.08em;text-transform:uppercase;color:var(--bz-enc-muted)}
+.bz-enc-details{margin:0;font:500 12px/18px var(--bz-enc-mono);color:var(--bz-enc-ink);overflow-wrap:anywhere}
+.bz-enc-more-detail{margin:6px 0 0;font-size:13px;line-height:18px;color:var(--bz-enc-muted)}
+.bz-enc-menu{display:flex;flex-wrap:wrap;gap:8px}
+.bz-enc-menu .bz-enc-btn{justify-content:flex-start;gap:6px;padding:0 16px 0 8px}
+.bz-enc-cur{display:inline-flex;width:8px;visibility:hidden}
+.bz-enc-cur .bz-enc-g{width:8px;height:14px}
+.bz-enc-err[data-on="true"] .bz-enc-btn[data-cursor="true"] .bz-enc-cur{visibility:visible}
+
+.bz-enc-res{display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.bz-enc-res-line{flex:none;margin:0;font-size:15px;font-weight:500;line-height:22px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-enc-tiles{display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px 12px;min-height:0;margin:0;overflow-y:auto}
+.bz-enc-tile{flex:1 1 auto;min-width:0;padding-top:6px;border-top:2px solid var(--bz-enc-ink)}
+.bz-enc-tile dt{font:700 11px/14px var(--bz-enc-mono);letter-spacing:0.08em;text-transform:uppercase;color:var(--bz-enc-muted)}
+.bz-enc-tile dd{margin:2px 0 0}
+.bz-enc-num{display:block;font:700 18px/24px var(--bz-enc-mono);color:var(--bz-enc-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bz-enc-sub{width:0;min-width:100%;font-size:12px;line-height:16px;color:var(--bz-enc-muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+.bz-enc-foot{grid-column:1/-1;display:flex;align-items:center;gap:8px 16px;margin-top:12px}
+.bz-enc-meta{flex:1 1 auto;min-width:0;height:40px;margin:0;overflow:hidden;font-size:13px;line-height:20px;color:var(--bz-enc-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-enc-meta b{font-weight:600;color:var(--bz-enc-ink)}
+.bz-enc-meta .bz-enc-g{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;color:var(--bz-enc-accent)}
+.bz-enc-tools{display:flex;flex:none;gap:8px}
+
+.bz-enc-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:48px;min-height:48px;margin:0;padding:0 16px;border:2px solid var(--bz-enc-ink);border-radius:0;background:var(--bz-enc-panel);color:var(--bz-enc-ink);box-shadow:inset 0 -3px 0 var(--bz-enc-track);font:600 14px/1.2 var(--bz-enc-sans);text-align:left;cursor:pointer;transition:background-color var(--bz-enc-fast) var(--bz-enc-ease),transform var(--bz-enc-fast) var(--bz-enc-ease)}
+.bz-enc-btn .bz-enc-g{width:12px;height:12px}
+.bz-enc-btn:focus{outline:none}
+.bz-enc-btn:focus-visible{outline:2px solid var(--bz-enc-focus);outline-offset:2px;background:var(--bz-enc-track)}
+@media (hover:hover){.bz-enc-btn:hover{background:var(--bz-enc-track)}}
+.bz-enc[data-motion="on"] .bz-enc-btn:active{transform:scale(0.97)}
+.bz-enc-btn:disabled{opacity:0.5;cursor:not-allowed}
+.bz-enc-primary{border-color:var(--bz-enc-accent);background:var(--bz-enc-accent);color:var(--bz-enc-on-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25)}
+.bz-enc-primary:focus-visible{background:var(--bz-enc-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25),inset 0 0 0 2px var(--bz-enc-panel)}
+@media (hover:hover){.bz-enc-primary:hover{background:var(--bz-enc-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25),inset 0 0 0 2px var(--bz-enc-panel)}}
+.bz-enc-toy{padding:0 14px;font-size:13.5px}
+.bz-enc-toy[aria-pressed="true"]{border-color:var(--bz-enc-ink);background:var(--bz-enc-ink);color:var(--bz-enc-panel);box-shadow:none}
+.bz-enc-toy[data-hide="true"]{visibility:hidden}
+.bz-enc-continue{min-width:112px;visibility:hidden}
+.bz-enc-continue[data-on="true"]{visibility:visible}
+
+@container (max-width:559px){
+.bz-enc-in{--bz-enc-u:2px;padding:12px}
+.bz-enc-box-in{padding:12px 12px 10px}
+.bz-enc-box-in{grid-template-columns:minmax(0,1fr)}
+.bz-enc-face{display:none}
+.bz-enc-panels{height:188px}
+.bz-enc-log{height:168px}
+.bz-enc-plate-row{flex-wrap:wrap}
+.bz-enc-bar{flex-basis:100%}
+.bz-enc-badges{position:absolute;top:-12px;right:8px}
+.bz-enc-tag,.bz-enc-failed{padding:3px 6px 2px;border:2px solid var(--bz-enc-ink)}
+.bz-enc-failed{background:var(--bz-enc-panel);line-height:1.2}
+.bz-enc-menu{display:grid;grid-template-columns:1fr 1fr}
+.bz-enc-tile{flex-basis:40%}
+.bz-enc-sub{display:block;white-space:nowrap;text-overflow:ellipsis}
+.bz-enc-foot{flex-wrap:wrap}
+.bz-enc-meta{flex:1 1 100%}
+.bz-enc-tools{flex:1 1 100%}
+}
+
+.bz-enc-hero .bz-enc-f{display:none}
+\${LOADER_FRAME_NAMES.map((f) => \`.bz-enc-hero[data-frame="\${f}"] .bz-enc-f[data-f="\${f}"]\`).join(",")}{display:inline}
+.bz-enc-hero[data-loop="idle"] .bz-enc-f[data-f="idle1"],.bz-enc-hero[data-loop="working"] .bz-enc-f[data-f="idle1"],.bz-enc-hero[data-loop="celebrate"] .bz-enc-f[data-f="celebrate1"],.bz-enc-hero[data-loop="fly"] .bz-enc-f[data-f="fly1"]{display:inline;animation:bz-enc-a var(--bz-enc-loop) step-end infinite}
+.bz-enc-hero[data-loop="idle"] .bz-enc-f[data-f="idle2"],.bz-enc-hero[data-loop="working"] .bz-enc-f[data-f="swing1"],.bz-enc-hero[data-loop="celebrate"] .bz-enc-f[data-f="celebrate2"],.bz-enc-hero[data-loop="fly"] .bz-enc-f[data-f="fly2"]{display:inline;animation:bz-enc-b var(--bz-enc-loop) step-end infinite}
+.bz-enc-hero{--bz-enc-loop:var(--bz-enc-beat)}
+.bz-enc-hero[data-loop="celebrate"]{--bz-enc-loop:calc(var(--bz-enc-beat) / 4)}
+.bz-enc-hero[data-loop="fly"]{--bz-enc-loop:calc(var(--bz-enc-beat) / 8)}
+.bz-enc-hero[data-loop="run"] .bz-enc-f[data-f^="run"]{display:inline;animation:bz-enc-r 400ms step-end infinite}
+.bz-enc-hero[data-loop="run"] .bz-enc-f[data-f="run2"]{animation-delay:-300ms}
+.bz-enc-hero[data-loop="run"] .bz-enc-f[data-f="run3"]{animation-delay:-200ms}
+.bz-enc-hero[data-loop="run"] .bz-enc-f[data-f="run4"]{animation-delay:-100ms}
+@keyframes bz-enc-a{0%{visibility:visible}50%{visibility:hidden}100%{visibility:hidden}}
+@keyframes bz-enc-b{0%{visibility:hidden}50%{visibility:visible}100%{visibility:visible}}
+@keyframes bz-enc-r{0%{visibility:visible}25%{visibility:hidden}100%{visibility:hidden}}
+.bz-enc-c-outline{fill:var(--bz-enc-sprite-outline)}
+.bz-enc-c-line{fill:var(--bz-enc-sprite-line)}
+.bz-enc-c-mouth{fill:var(--chr-eye)}
+\${LOADER_CHARACTER_KEYS.map((k) => \`.bz-enc-c-\${k}{fill:var(--chr-\${k})}\`).join("\\n")}
+
+.bz-enc[data-motion="off"] .bz-enc-f,.bz-enc[data-motion="off"] .bz-enc-hatch{animation:none!important}
+.bz-enc[data-motion="off"] .bz-enc-fill{transition:none}
+.bz-enc[data-motion="off"] .bz-enc-btn{transition:background-color var(--bz-enc-fast) linear}
+.bz-enc[data-running="false"] *,.bz-enc[data-running="false"] *::before{animation-play-state:paused!important}
+\`;
+
+/* ---------------- end shared: chassis ---------------- */
+
+/* ---------------- Encounter arena ---------------- */
+
+/* Crates are 14 x 14 art pixels; the last crate is 18 x 18. Keys: o outline,
+   c planks, C panels and shade, b metal corners and bands, g and G the last
+   crate's planks and seams. */
+const ENC_CRATE = [
+  "oooooooooooooo",
+  "obbccccccccbbo",
+  "obcccccccccCbo",
+  "occoooooooocCo",
+  "occoCCCCccocCo",
+  "occoCCCccCocCo",
+  "occoCCccCCocCo",
+  "occoCccCCCocCo",
+  "occoccCCCCocCo",
+  "occocCCCCCocCo",
+  "occoooooooocCo",
+  "obcccccccccCbo",
+  "obbCCCCCCCCbbo",
+  "oooooooooooooo",
+];
+const ENC_BOSS = [
+  "oooooooooooooooooo",
+  "obbgggGggggGgggbbo",
+  "obbgggGggggGgggbbo",
+  "ogggggGggggGggggGo",
+  "ogggggGggggGggggGo",
+  "obobbbbbbbbbbbbobo",
+  "ogggggGggggGggggGo",
+  "ogggggGggggGggggGo",
+  "ogggggGggggGggggGo",
+  "ogggggGggggGggggGo",
+  "ogggggGggggGggggGo",
+  "ogggggGggggGggggGo",
+  "obobbbbbbbbbbbbobo",
+  "ogggggGggggGggggGo",
+  "ogggggGggggGggggGo",
+  "obbgggGggggGgggbbo",
+  "obbGGGGGGGGGGGGbbo",
+  "oooooooooooooooooo",
+];
+const ENC_CRATE_ROLES: Record<string, string> = { o: "crate-line", c: "crate", C: "crate-shade", b: "crate-band", x: "crate-line", w: "glint" };
+const ENC_BOSS_ROLES: Record<string, string> = { o: "boss-line", g: "boss", G: "boss-shade", b: "crate-band", x: "boss-line", w: "glint" };
+
+/* Two jagged splits that grow together, one cell each per twelfth of progress, so the art never runs ahead of the bar. */
+const ENC_CRACKS: Array<Array<[number, number]>> = [
+  [[6, 1], [6, 2], [5, 4], [6, 5], [5, 6], [5, 7], [4, 8], [4, 9], [3, 11], [4, 12], [2, 8], [1, 9]],
+  [[10, 1], [10, 2], [11, 4], [12, 5], [11, 6], [9, 6], [8, 7], [9, 8], [8, 9], [9, 11], [10, 12], [12, 3]],
+];
+const ENC_BOSS_CRACKS: Array<Array<[number, number]>> = [
+  [[8, 1], [8, 2], [9, 3], [8, 4], [8, 6], [9, 7], [8, 8], [9, 9], [8, 10], [9, 11], [8, 13], [9, 14]],
+  [[3, 3], [4, 4], [3, 6], [2, 7], [3, 8], [4, 9], [14, 10], [13, 11], [14, 13], [15, 14], [14, 6], [13, 7]],
+];
+
+/* One mark per resolved step on the floor behind the adventurer: rubble when
+   done (gold flecks after a retry, a bigger heap for the last crate) and an
+   empty bracket when skipped. */
+const ENC_RUBBLE = ["...oo...", "..ocCo..", ".orrrro.", "orrrrrro"];
+const ENC_RUBBLE_GOLD = ["...oo...", "..ocyo..", ".oryrro.", "orrryrro"];
+const ENC_RUBBLE_BOSS = ["....oo....", "...ogGo...", "..ogGGyo..", ".orrgrrro.", "orrrrrrrro"];
+const ENC_SLOT = ["ss....ss", "s......s", "s......s", "ss....ss"];
+const ENC_TRAIL_ROLES: Record<string, string> = { o: "crate-line", c: "crate", C: "crate-shade", r: "rubble", y: "spark", g: "boss", G: "boss-shade", s: "slot" };
+const ENC_SPARK = ["..o..", ".oyo.", "oyyyo", ".oyo.", "..o.."];
+const ENC_SPARK_ROLES: Record<string, string> = { o: "outline", y: "spark" };
+const ENC_TUFT = ["e...e", "e.e.e", "eeeee"];
+const ENC_TUFT_ROLES: Record<string, string> = { e: "ground-edge" };
+
+/* The wooden sword is Encounter's own prop: raised on the wind-up, forward on the strike. */
+const ENC_SWORD_UP = ["..oo..", ".okKo.", ".okKo.", ".okKo.", ".okKo.", ".okKo.", ".okKo.", "oooooo", "oKKKKo", "oooooo"];
+const ENC_SWORD_FORWARD = ["ooo........", "oKoooooooo.", "oKokkkkkkko", "oKoKKKKKKo.", "oKooooooo..", "ooo........"];
+/* The frames Encounter shows: the rest of the shared set (running, jumping, flying) never appear here, so they are not drawn. */
+const ENC_FRAMES: readonly LoaderFrameName[] = ["idle1", "idle2", "swing1", "swing2", "hurt", "sit", "celebrate1", "celebrate2"];
+
+const ENC_SWORD: LoaderAccessory = {
+  id: "sword",
+  layers: (frame) =>
+    frame === "swing1"
+      ? { front: [{ x: 12, y: 2, rows: ENC_SWORD_UP }] }
+      : frame === "swing2"
+        ? { front: [{ x: 15, y: 11, rows: ENC_SWORD_FORWARD }] }
+        : null,
+};
+
+const encCrackCount = (p: number) => (p >= 1 ? 12 : Math.max(0, Math.floor(p * 12 + 1e-9)));
+
+function encCracked(art: readonly string[], cracks: Array<Array<[number, number]>>, k: number): string[] {
+  const rows = art.map((r) => r.split(""));
+  for (const line of cracks) for (let j = 0; j < Math.min(k, line.length); j++) rows[line[j][1]][line[j][0]] = "x";
+  return rows.map((r) => r.join(""));
+}
+
+function encCrackOverlay(art: readonly string[], cracks: Array<Array<[number, number]>>, k: number): string[] {
+  const grid = art.map((r) => r.replace(/./g, ".").split(""));
+  for (const line of cracks) for (let j = 0; j < Math.min(k, line.length); j++) grid[line[j][1]][line[j][0]] = "x";
+  return grid.map((r) => r.join(""));
+}
+
+type EncGeom = { u: number; W: number; H: number; floor: number; lead: number; slot: number; critX: number; x0: number };
+
+function createEncounterArena(root: HTMLElement, ctx: LoaderArenaCtx): LoaderArena {
+  const q = <T extends Element>(sel: string) => root.querySelector(sel) as T;
+  const arenaEl = q<HTMLDivElement>(".bz-enc-arena");
+  const cratesEl = q<HTMLDivElement>(".bz-enc-crates");
+  const trailEl = q<HTMLDivElement>(".bz-enc-trail");
+  const fxEl = q<HTMLDivElement>(".bz-enc-fx");
+  const tuftsEl = q<HTMLDivElement>(".bz-enc-tufts");
+  const heroEl = q<HTMLDivElement>(".bz-enc-hero");
+  const moverEl = q<HTMLDivElement>(".bz-enc-mover");
+  const moreEl = q<HTMLSpanElement>(".bz-enc-more");
+  const plateEl = q<HTMLDivElement>(".bz-enc-plate");
+
+  let crates: Array<HTMLDivElement | null> = [];
+  let crateX: number[] = [];
+  let trail: Array<HTMLDivElement | null> = [];
+  let g: EncGeom = { u: 3, W: 0, H: 0, floor: 24, lead: 6, slot: 18, critX: 0, x0: 0 };
+  let transientUntil = 0;
+  let poseTimers: number[] = [];
+  let celebrateUntil = 0;
+  let tuftKey = "";
+
+  const isBoss = (i: number) => i === ctx.steps().length - 1;
+  const artOf = (i: number) => (isBoss(i) ? ENC_BOSS : ENC_CRATE);
+  const rolesOf = (i: number) => (isBoss(i) ? ENC_BOSS_ROLES : ENC_CRATE_ROLES);
+  const cracksOf = (i: number) => (isBoss(i) ? ENC_BOSS_CRACKS : ENC_CRACKS);
+  const sizeOf = (i: number) => artOf(i).length * g.u;
+  const crateTop = (i: number) => g.H - g.floor - sizeOf(i);
+
+  /* -------- poses -------- */
+
+  function pose() {
+    if (transientUntil > loaderNow()) return;
+    const phase = ctx.phase();
+    const m = ctx.motionAllowed();
+    if (phase === "error" || phase === "stopped") return loaderSetPose(heroEl, "sit", "");
+    if (phase === "complete") return m && celebrateUntil > loaderNow() ? loaderSetPose(heroEl, "", "celebrate") : loaderSetPose(heroEl, "celebrate1", "");
+    if (!m) return loaderSetPose(heroEl, "idle1", "");
+    const s = ctx.steps()[ctx.front()];
+    loaderSetPose(heroEl, "", s && s.status === "active" && s.progress == null ? "working" : "idle");
+  }
+
+  /** A short sequence of held frames, then back to the resting pose. */
+  function play(seq: Array<[LoaderFrameName, number]>) {
+    poseTimers.forEach(ctx.clear);
+    poseTimers = [];
+    let at = 0;
+    seq.forEach(([frame, ms], k) => {
+      if (k === 0) loaderSetPose(heroEl, frame, "");
+      else poseTimers.push(ctx.later(() => loaderSetPose(heroEl, frame, ""), at));
+      at += ms;
+    });
+    transientUntil = loaderNow() + at;
+    poseTimers.push(
+      ctx.later(() => {
+        transientUntil = 0;
+        pose();
+      }, at),
+    );
+  }
+
+  /** The adventurer steps in by d pixels, holds, and steps back. */
+  function lunge(d: number) {
+    ctx.anim(moverEl, loaderStepped([[0, 0, 0], [0.08, d, 0], [0.5, Math.round(d / 3), 0], [0.75, 0, 0], [1, 0, 0]]), { duration: BASE });
+  }
+
+  /* -------- building -------- */
+
+  function makeCrate(i: number) {
+    const el = document.createElement("div");
+    el.className = "bz-enc-crate";
+    if (isBoss(i)) el.dataset.boss = "true";
+    el.innerHTML = \`<div class="bz-enc-crate-art">\${loaderPixelSvg(artOf(i), rolesOf(i))}<div class="bz-enc-cracks"></div></div>\`;
+    cratesEl.appendChild(el);
+    return el;
+  }
+
+  function trailMap(i: number) {
+    const s = ctx.steps()[i];
+    if (s.status === "skipped") return ENC_SLOT;
+    if (isBoss(i)) return ENC_RUBBLE_BOSS;
+    return (s.attempt ?? 1) > 1 ? ENC_RUBBLE_GOLD : ENC_RUBBLE;
+  }
+
+  function placeTrail(el: HTMLDivElement, i: number) {
+    const m = trailMap(i);
+    el.style.left = \`\${g.lead + i * g.slot}px\`;
+    el.style.width = \`\${m[0].length * g.u}px\`;
+    el.style.height = \`\${m.length * g.u}px\`;
+  }
+
+  function renderTrail(fade: boolean) {
+    const steps = ctx.steps();
+    const vis = ctx.vis();
+    steps.forEach((s, i) => {
+      const want = vis[i] === "gone";
+      let el = trail[i];
+      if (!want) {
+        if (el) {
+          el.remove();
+          trail[i] = null;
+        }
+        return;
+      }
+      const kind = s.status === "skipped" ? "skipped" : (s.attempt ?? 1) > 1 ? "gold" : "done";
+      if (el && el.dataset.kind === kind) return;
+      el?.remove();
+      el = document.createElement("div");
+      el.className = "bz-enc-rub";
+      el.dataset.kind = kind;
+      el.innerHTML = loaderPixelSvg(trailMap(i), ENC_TRAIL_ROLES);
+      trailEl.appendChild(el);
+      trail[i] = el;
+      placeTrail(el, i);
+      if (fade && ctx.running()) ctx.anim(el, [{ opacity: 0 }, { opacity: 1 }], { duration: FAST, easing: "linear" });
+    });
+  }
+
+  function drawCracks() {
+    const i = ctx.front();
+    const el = crates[i];
+    if (!el) return;
+    const k = encCrackCount(ctx.frontP());
+    if (el.dataset.cracks === String(k)) return;
+    el.dataset.cracks = String(k);
+    const layer = el.querySelector(".bz-enc-cracks");
+    if (layer) layer.innerHTML = k ? loaderPixelSvg(encCrackOverlay(artOf(i), cracksOf(i), k), rolesOf(i)) : "";
+  }
+
+  function rebuild() {
+    cratesEl.textContent = "";
+    trailEl.textContent = "";
+    fxEl.textContent = "";
+    poseTimers.forEach(ctx.clear);
+    poseTimers = [];
+    transientUntil = 0;
+    celebrateUntil = 0;
+    const steps = ctx.steps();
+    const vis = ctx.vis();
+    crates = steps.map((_, i) => (vis[i] === "live" ? makeCrate(i) : null));
+    crateX = steps.map(() => 0);
+    trail = steps.map(() => null);
+    layout(false);
+    renderTrail(false);
+    drawCracks();
+  }
+
+  /* -------- layout: one art unit at a time, 3px wide and 2px narrow -------- */
+
+  function layout(animate: boolean) {
+    const W = arenaEl.clientWidth;
+    const H = arenaEl.clientHeight;
+    if (!W || !H) return;
+    const narrow = root.clientWidth < 560;
+    if (root.dataset.narrow !== String(narrow)) root.dataset.narrow = String(narrow);
+    const u = narrow ? 2 : 3;
+    const steps = ctx.steps();
+    const vis = ctx.vis();
+    const n = steps.length;
+    const last = n - 1;
+    const floor = 8 * u;
+    const lead = 2 * u;
+    const slot = Math.max(5 * u, Math.min(10 * u, Math.floor((W * 0.26) / Math.max(1, n))));
+    const trailW = n ? (n - 1) * slot + 10 * u : 0;
+    const critX = lead + trailW + 3 * u;
+    const heroW = 16 * u;
+    const crate = 14 * u;
+    const boss = 18 * u;
+    const gap = narrow ? 6 * u : 8 * u;
+    const x0 = critX + heroW + gap;
+    const qgap = 4 * u;
+    const pad = 4 * u;
+    const resized = g.u !== u || g.W !== W;
+    g = { u, W, H, floor, lead, slot, critX, x0 };
+
+    trail.forEach((el, i) => el && placeTrail(el, i));
+    heroEl.style.transform = \`translate(\${critX}px, 0px)\`;
+    arenaEl.style.setProperty("--bz-enc-bx", \`\${Math.round(critX + heroW + (W - critX - heroW) / 2)}px\`);
+
+    const tk = \`\${W}:\${u}\`;
+    if (tk !== tuftKey) {
+      tuftKey = tk;
+      tuftsEl.textContent = "";
+      for (const f of [0.08, 0.44, 0.7, 0.93]) {
+        const t = document.createElement("div");
+        t.className = "bz-enc-tuft";
+        t.style.left = \`\${Math.round((W * f) / u) * u}px\`;
+        t.style.width = \`\${ENC_TUFT[0].length * u}px\`;
+        t.style.height = \`\${ENC_TUFT.length * u}px\`;
+        t.innerHTML = loaderPixelSvg(ENC_TUFT, ENC_TUFT_ROLES);
+        tuftsEl.appendChild(t);
+      }
+    }
+
+    const live: number[] = [];
+    for (let i = 0; i < n; i++) if (vis[i] === "live") live.push(i);
+    const bossQueued = live.length > 1 && live[live.length - 1] === last;
+    const bossX = W - pad - boss;
+    const queued = live.slice(1, bossQueued ? -1 : undefined);
+    const frontSize = live.length && live[0] === last ? boss : crate;
+    const start = x0 + frontSize + qgap;
+    const end = bossQueued ? bossX - qgap : W - pad;
+    const chipW = 9 * u + 6;
+    let shown = Math.min(queued.length, 4, Math.max(0, Math.floor((end - start + qgap) / (crate + qgap))));
+    while (shown > 0 && shown < queued.length && start + shown * (crate + qgap) + chipW > end) shown--;
+    const hidden = queued.length - shown;
+    const chipX = start + shown * (crate + qgap);
+
+    live.forEach((i, k) => {
+      const el = crates[i];
+      if (!el) return;
+      let x: number;
+      let role: string;
+      if (k === 0) {
+        x = x0;
+        role = "front";
+      } else if (i === last) {
+        x = bossX;
+        role = "boss";
+      } else if (k - 1 < shown) {
+        x = start + (k - 1) * (crate + qgap);
+        role = "queue";
+      } else {
+        x = chipX;
+        role = "hidden";
+      }
+      const size = artOf(i).length * u;
+      el.style.width = \`\${size}px\`;
+      el.style.height = \`\${size}px\`;
+      if (el.dataset.role !== role) el.dataset.role = role;
+      const from = crateX[i];
+      crateX[i] = x;
+      el.style.transform = \`translate(\${x}px, 0px)\`;
+      if (animate && !resized && from !== x && role !== "hidden" && ctx.motionOn()) ctx.anim(el, loaderGlide(from, 0, x, 0, BASE), { duration: BASE });
+    });
+
+    if (hidden > 0) {
+      moreEl.textContent = \`+\${hidden}\`;
+      moreEl.style.left = \`\${chipX}px\`;
+      moreEl.dataset.on = "true";
+    } else {
+      moreEl.textContent = "";
+      moreEl.dataset.on = "false";
+    }
+
+    // The nameplate floats above the front crate, right of the adventurer and clear of the last crate.
+    const px = critX + heroW + 3 * u;
+    const pw = narrow ? W - pad - px : Math.min(340, W - pad - px);
+    const pb = floor + Math.max(frontSize, bossQueued ? boss : 0) + 4 * u;
+    plateEl.style.left = \`\${px}px\`;
+    plateEl.style.width = \`\${Math.max(120, pw)}px\`;
+    plateEl.style.bottom = \`\${pb}px\`;
+  }
+
+  /* -------- effects -------- */
+
+  function wobble(i: number) {
+    const art = crates[i]?.firstElementChild;
+    if (art) ctx.anim(art, loaderStepped([[0, 0, 0], [0.1, g.u, 0], [0.45, -g.u, 0], [0.8, 0, 0], [1, 0, 0]]), { duration: BASE });
+  }
+
+  function sparks(i: number) {
+    const x = crateX[i];
+    const top = crateTop(i);
+    for (const [dx, dy] of [[-5, -4], [-2, -7]]) {
+      const sp = document.createElement("div");
+      sp.className = "bz-enc-spark";
+      sp.style.cssText = \`left:\${x - 2 * g.u}px;top:\${top + 2 * g.u}px;width:\${5 * g.u}px;height:\${5 * g.u}px\`;
+      sp.innerHTML = loaderPixelSvg(ENC_SPARK, ENC_SPARK_ROLES);
+      fxEl.appendChild(sp);
+      const a = ctx.anim(sp, loaderStepped([[0, 0, 0, 1], [0.34, (dx * g.u) / 2, (dy * g.u) / 2, 1], [0.67, dx * g.u, dy * g.u, 0.6], [1, dx * g.u, dy * g.u, 0]]), { duration: BASE, fill: "forwards" });
+      const rm = () => sp.remove();
+      if (a) a.finished.then(rm, rm);
+      else rm();
+    }
+  }
+
+  function glint(i: number) {
+    const art = crates[i]?.firstElementChild;
+    if (!art) return;
+    const el = document.createElement("div");
+    el.className = "bz-enc-glint";
+    el.innerHTML = loaderPixelSvg(artOf(i).map((r) => r.replace(/[^.]/g, "w")), rolesOf(i));
+    art.appendChild(el);
+    ctx.later(() => el.remove(), FAST);
+  }
+
+  /** The crate splits into six pieces that hop out in whole art pixels. Nothing rotates. */
+  function shatter(i: number) {
+    const el = crates[i];
+    if (!el) return;
+    const art = encCracked(artOf(i), cracksOf(i), 12);
+    const roles = rolesOf(i);
+    const size = art.length;
+    const u = g.u;
+    const x = crateX[i];
+    const top = crateTop(i);
+    const hw = Math.ceil(size / 2);
+    const h1 = Math.round(size / 3);
+    const h2 = Math.round((2 * size) / 3);
+    const pieces: Array<[number, number, number, number, number, number]> = [
+      [0, 0, hw, h1, -0.6, 0.5],
+      [hw, 0, size - hw, h1, 0.6, 0.45],
+      [0, h1, hw, h2 - h1, -0.85, 0.2],
+      [hw, h1, size - hw, h2 - h1, 0.85, 0.25],
+      [0, h2, hw, size - h2, -0.45, 0.05],
+      [hw, h2, size - hw, size - h2, 0.5, 0.05],
+    ];
+    const big = isBoss(i);
+    for (const [cx, cy, cw, ch, fx, fy] of pieces) {
+      const p = document.createElement("div");
+      p.className = "bz-enc-shard";
+      p.style.cssText = \`left:\${x + cx * u}px;top:\${top + cy * u}px;width:\${cw * u}px;height:\${ch * u}px\`;
+      p.innerHTML = loaderPixelSvg(art, roles, [cx, cy, cw, ch]);
+      fxEl.appendChild(p);
+      const dx = fx * size * (big ? 1.3 : 1);
+      const dy = fy * size;
+      const up = size * 0.3 * (big ? 1.3 : 1);
+      const pts: Array<[number, number, number, number]> = [];
+      for (let j = 0; j <= 6; j++) {
+        const t = j / 6;
+        pts.push([t, Math.round(dx * t) * u, Math.round(-4 * up * t * (1 - t) + dy * t * t) * u, t < 0.5 ? 1 : Math.max(0, 1 - (t - 0.5) * 2)]);
+      }
+      const a = ctx.anim(p, loaderStepped(pts), { duration: big ? SLOW : BASE, fill: "forwards" });
+      const rm = () => p.remove();
+      if (a) a.finished.then(rm, rm);
+      else rm();
+    }
+    el.remove();
+    crates[i] = null;
+  }
+
+  /** A skipped crate rises out of the way and leaves a dashed outline that is gone after 300ms. */
+  function stepAside(i: number) {
+    const el = crates[i];
+    if (!el) return;
+    const x = crateX[i];
+    const top = crateTop(i);
+    const size = sizeOf(i);
+    const ghost = document.createElement("div");
+    ghost.className = "bz-enc-ghost";
+    ghost.style.cssText = \`left:\${x}px;top:\${top}px;width:\${size}px;height:\${size}px\`;
+    fxEl.appendChild(ghost);
+    ctx.later(() => {
+      const a = ctx.anim(ghost, [{ opacity: 1 }, { opacity: 0 }], { duration: FAST, easing: "linear", fill: "forwards" });
+      const rm = () => ghost.remove();
+      if (a) a.finished.then(rm, rm);
+      else rm();
+    }, BASE - FAST);
+    crates[i] = null;
+    const a = ctx.anim(el, [0, 1, 2, 3].map((j) => ({ offset: j / 3, easing: "step-end", transform: \`translate(\${x}px, \${-2 * g.u * j}px)\`, opacity: 1 - j / 3 })), { duration: BASE, fill: "forwards" });
+    const rm = () => el.remove();
+    if (a) a.finished.then(rm, rm);
+    else rm();
+  }
+
+  function fadeOut(i: number) {
+    const el = crates[i];
+    if (!el) return;
+    crates[i] = null;
+    if (!ctx.running()) {
+      el.remove();
+      return;
+    }
+    const a = ctx.anim(el, [{ opacity: 1 }, { opacity: 0 }], { duration: FAST, easing: "linear", fill: "forwards" });
+    const rm = () => el.remove();
+    if (a) a.finished.then(rm, rm);
+    else rm();
+  }
+
+  return {
+    rebuild,
+    layout,
+    hit() {
+      play([["swing1", IMPACT], ["swing2", 200]]);
+      lunge(2 * g.u);
+      return IMPACT;
+    },
+    progress(i, showy) {
+      drawCracks();
+      if (showy) {
+        wobble(i);
+        sparks(i);
+      }
+    },
+    finish() {
+      play([["swing1", 50], ["swing2", 250]]);
+      lunge(3 * g.u);
+      return IMPACT;
+    },
+    resolve(entries, showy) {
+      let hold = 0;
+      for (const e of entries) {
+        if (!showy) fadeOut(e.i);
+        else if (e.kind === "done") shatter(e.i);
+        else {
+          stepAside(e.i);
+          hold = BASE;
+        }
+      }
+      renderTrail(true);
+      return hold;
+    },
+    advance(changed) {
+      renderTrail(true);
+      layout(ctx.motionOn());
+      drawCracks();
+      const el = crates[ctx.front()];
+      if (changed && el && !ctx.motionOn() && ctx.running()) ctx.anim(el, [{ opacity: 0 }, { opacity: 1 }], { duration: FAST, easing: "linear" });
+    },
+    error(i, showy) {
+      const el = crates[i];
+      if (el) el.dataset.error = "true";
+      if (showy) {
+        glint(i);
+        play([["hurt", FAST + 100]]);
+        ctx.anim(moverEl, loaderStepped([[0, 0, 0], [0.15, -3 * g.u, 0], [0.7, -3 * g.u, 0], [1, 0, 0]]), { duration: BASE });
+      } else {
+        poseTimers.forEach(ctx.clear);
+        transientUntil = 0;
+      }
+    },
+    recover() {
+      crates.forEach((el) => {
+        if (el) delete el.dataset.error;
+      });
+      drawCracks();
+    },
+    stop() {
+      poseTimers.forEach(ctx.clear);
+      transientUntil = 0;
+    },
+    finale(showy) {
+      renderTrail(true);
+      poseTimers.forEach(ctx.clear);
+      transientUntil = 0;
+      if (showy) {
+        celebrateUntil = loaderNow() + BEAT * 3;
+        poseTimers.push(ctx.later(pose, BEAT * 3 + 20));
+      } else celebrateUntil = 0;
+    },
+    pose,
+    motion() {
+      if (!ctx.motionAllowed()) {
+        poseTimers.forEach(ctx.clear);
+        poseTimers = [];
+        transientUntil = 0;
+        celebrateUntil = 0;
+      }
+    },
+    destroy() {
+      poseTimers.forEach(ctx.clear);
+      cratesEl.textContent = "";
+      trailEl.textContent = "";
+      fxEl.textContent = "";
+      tuftsEl.textContent = "";
+      moreEl.textContent = "";
+    },
+  };
+}
+
+const ENCOUNTER_GAME: LoaderGame = { unit: "Stage", clear: "Stage clear", arena: createEncounterArena };
+
+const CSS = \`\${LOADER_CSS}
+.bz-enc-stage{margin:0}
+.bz-enc-arena{height:216px;overflow:hidden;background:var(--bz-enc-sky)}
+.bz-enc-art{position:absolute;inset:0;--bz-enc-floor:calc(8 * var(--bz-enc-u))}
+.bz-enc-ground{position:absolute;left:0;right:0;bottom:0;height:var(--bz-enc-floor);border-top:var(--bz-enc-u) solid var(--bz-enc-ground-edge);background:var(--bz-enc-ground)}
+.bz-enc-tuft,.bz-enc-rub,.bz-enc-crate,.bz-enc-hero{position:absolute;left:0;bottom:var(--bz-enc-floor)}
+.bz-enc-tuft svg,.bz-enc-rub svg,.bz-enc-crate svg,.bz-enc-shard svg,.bz-enc-spark svg,.bz-enc-glint svg{position:absolute;inset:0;display:block;width:100%;height:100%}
+.bz-enc-crate{z-index:1}
+.bz-enc-crate[data-role="hidden"]{display:none}
+.bz-enc-crate[data-error="true"]{z-index:3;outline:2px solid var(--bz-enc-danger-mark);outline-offset:2px}
+.bz-enc-crate-art,.bz-enc-cracks,.bz-enc-glint{position:absolute;inset:0}
+.bz-enc-glint{opacity:0.85}
+.bz-enc-hero{z-index:2;width:calc(16 * var(--bz-enc-u));height:calc(24 * var(--bz-enc-u))}
+.bz-enc[data-phase="error"] .bz-enc-hero{z-index:3}
+.bz-enc-mover{width:100%;height:100%}
+.bz-enc-sprite{display:block;width:100%;height:100%;overflow:visible}
+.bz-enc-fx{position:absolute;inset:0;z-index:3;pointer-events:none}
+.bz-enc-shard,.bz-enc-spark{position:absolute}
+.bz-enc-ghost{position:absolute;border:2px dashed var(--bz-enc-slot)}
+.bz-enc-more{position:absolute;bottom:calc(var(--bz-enc-floor) + 4 * var(--bz-enc-u));z-index:1;padding:2px 5px;border:2px solid var(--bz-enc-ink);background:var(--bz-enc-panel);color:var(--bz-enc-ink);font:700 12px/1.2 var(--bz-enc-mono);visibility:hidden}
+.bz-enc-more[data-on="true"]{visibility:visible}
+/* The art is not its own stacking layer, so the veil can sit between the scenery (sky, floor,
+   rubble, the queue) and what the error is about: the failed crate and the adventurer stay
+   at full colour above it. */
+.bz-enc-veil{position:absolute;inset:0;z-index:2;background:var(--bz-enc-panel);opacity:0;visibility:hidden;transition:opacity var(--bz-enc-base) var(--bz-enc-ease),visibility 0s linear var(--bz-enc-base)}
+.bz-enc[data-phase="error"] .bz-enc-veil,.bz-enc[data-phase="stopped"] .bz-enc-veil{opacity:0.35;visibility:visible;transition:opacity var(--bz-enc-base) var(--bz-enc-ease)}
+.bz-enc[data-motion="off"] .bz-enc-veil{transition:none}
+.bz-enc-banner{position:absolute;top:calc(5 * var(--bz-enc-u));left:var(--bz-enc-bx,50%);z-index:3;padding:8px 18px 6px;border:2px solid var(--bz-enc-ink);background:var(--bz-enc-panel);color:var(--bz-enc-ink);font:700 15px/1 var(--bz-enc-mono);letter-spacing:0.14em;text-transform:uppercase;white-space:nowrap;transform:translateX(-50%);visibility:hidden}
+.bz-enc-banner::after{content:"";display:block;height:4px;margin-top:6px;background:var(--bz-enc-accent)}
+.bz-enc-banner[data-on="true"]{visibility:visible;animation:bz-enc-fade var(--bz-enc-fast) linear}
+.bz-enc-arena .bz-enc-plate{position:absolute;z-index:4;left:0;bottom:90px;width:300px}
+.bz-enc-k-crate{fill:var(--bz-enc-crate)}
+.bz-enc-k-crate-shade{fill:var(--bz-enc-crate-shade)}
+.bz-enc-k-crate-line{fill:var(--bz-enc-crate-line)}
+.bz-enc-k-crate-band{fill:var(--bz-enc-crate-band)}
+.bz-enc-k-boss{fill:var(--bz-enc-boss)}
+.bz-enc-k-boss-shade{fill:var(--bz-enc-boss-shade)}
+.bz-enc-k-boss-line{fill:var(--bz-enc-boss-line)}
+.bz-enc-k-rubble{fill:var(--bz-enc-rubble)}
+.bz-enc-k-spark{fill:var(--bz-enc-spark)}
+.bz-enc-k-outline{fill:var(--bz-enc-sprite-outline)}
+.bz-enc-k-ground-edge{fill:var(--bz-enc-ground-edge)}
+.bz-enc-k-slot{fill:var(--bz-enc-slot)}
+.bz-enc-k-glint{fill:#ffffff}
+.bz-enc-crate[data-error="true"] .bz-enc-k-crate-line,.bz-enc-crate[data-error="true"] .bz-enc-k-boss-line{fill:var(--bz-enc-danger-mark)}
+.bz-enc-c-wood{fill:#e0a96d}
+.bz-enc-c-wood-shade{fill:#a8693a}
+@container (max-width:559px){.bz-enc-arena{height:168px}}
+\`;
+
+/* ---------------- the component ---------------- */
+
+function encounterPalette(p: EncounterLoaderProps["palette"]): EncounterLoaderPalette {
+  if (!p) return ENCOUNTER_LOADER_PALETTES.meadow;
+  return typeof p === "string" ? ENCOUNTER_LOADER_PALETTES[p] ?? ENCOUNTER_LOADER_PALETTES.meadow : p;
+}
+
+export function EncounterLoader(props: EncounterLoaderProps) {
+  const { title, headingLevel = 2, palette, character, colorScheme, className, style } = props;
+  const api = useLoader(props, ENCOUNTER_GAME);
+  const hero = loaderCharacter(character);
+  const pal = encounterPalette(palette);
+  const rootStyle = useMemo(
+    () =>
+      ({
+        ...loaderPaletteVars(pal.light, pal.dark),
+        "--bz-enc-slot": \`light-dark(\${pal.light.crateLine}, \${pal.dark.crateBand})\`,
+        "--bz-enc-portrait": \`light-dark(\${pal.light.sky}, \${pal.dark.sky})\`,
+        ...loaderCharacterVars(hero),
+        ...(colorScheme ? { colorScheme } : {}),
+        ...style,
+      }) as CSSProperties,
+    [pal, hero, colorScheme, style],
+  );
+  const Heading = \`h\${headingLevel}\` as "h2";
+  const { view, labels } = api;
+
+  return (
+    <section
+      ref={api.rootRef}
+      className={\`bz-enc\${className ? \` \${className}\` : ""}\`}
+      aria-labelledby={api.titleId}
+      data-phase={view.phase}
+      data-motion={api.motionAllowed ? "on" : "off"}
+      data-running={api.running ? "true" : "false"}
+      style={rootStyle}
+    >
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="bz-enc-in">
+        <Heading id={api.titleId} className="bz-enc-title" tabIndex={-1}>
+          {title}
+        </Heading>
+        <LoaderStepList api={api} />
+        <div className="bz-enc-frame bz-enc-stage">
+          <div className="bz-enc-frame-in bz-enc-arena">
+            <div className="bz-enc-art" aria-hidden="true">
+              <div className="bz-enc-ground" />
+              <div className="bz-enc-tufts" />
+              <div className="bz-enc-trail" />
+              <div className="bz-enc-crates" />
+              <div className="bz-enc-hero" data-frame="idle1">
+                <div className="bz-enc-mover">
+                  <LoaderHeroSprite hairStyle={hero.hairStyle} accessory={ENC_SWORD} frames={ENC_FRAMES} />
+                </div>
+              </div>
+              <div className="bz-enc-fx" />
+              <span className="bz-enc-more" />
+            </div>
+            <div className="bz-enc-veil" aria-hidden="true" />
+            <div className="bz-enc-banner" aria-hidden="true" data-on={view.banner ? "true" : "false"}>
+              {labels.clear}
+            </div>
+            <LoaderPlate api={api} />
+          </div>
+        </div>
+        <LoaderBox api={api} hairStyle={hero.hairStyle} />
+        <LoaderDetails api={api} />
+      </div>
+    </section>
+  );
+}`,
+    description: "Turn-based pixel game loader: an adventurer breaks one crate per real step.",
+    tags: ["loader", "multi-step", "progress", "pixel-art", "game", "rpg", "accessible", "reduced-motion"],
+  },
+  {
+    name: "BlockRunLoader",
+    slug: "block-run-loader",
+    path: "loaders/BlockRunLoader.tsx",
+    category: "loaders",
+    code: `"use client";
+
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type RefObject,
+} from "react";
+
+/*
+ * BlockRunLoader: a multi-step loader played as a side-scrolling platformer.
+ *
+ * Every step is a question block floating one hop above an adventurer's head.
+ * When your process reports progress, the adventurer jumps and bonks the block
+ * from below: the block bumps, a coin pops out and the nameplate bar fills to
+ * the value you sent. When you mark the step done, a last bonk turns the block
+ * solid and the course scrolls left, so the next block arrives overhead. A
+ * skipped step becomes a dashed ghost block. After the last block the
+ * adventurer runs to the flagpole, the flag comes down and the dialogue box
+ * turns into a results screen built from your real numbers.
+ *
+ * Nothing moves on a timer. The bar fills at a bonk, at most one bonk every
+ * 400ms with the increments in between merged, and the course scrolls only
+ * when a step is done or skipped, so its position is always the number of
+ * resolved steps. Coins and hops are feedback for something that happened;
+ * they never add up to anything. A step whose size is unknown gets a hatched
+ * bar and a blinking block instead of invented progress.
+ *
+ * The loader is controlled, the same way Stepper is. \`steps\` is its only
+ * state and the host owns every transition: it starts, advances, fails,
+ * retries and skips steps. The error menu calls \`onRetry\`, \`onSkip\` and
+ * \`onCancel\`, the results screen calls \`onContinue\`, and \`onComplete\` fires
+ * once per run after the finale.
+ *
+ * The section is named by its heading. A visually hidden list carries every
+ * step and its state, with \`aria-current\` on the current one and \`aria-busy\`
+ * only while work runs, so neither live region sits in a busy subtree. The
+ * nameplate is the one progressbar. The dialogue box is a \`role="log"\` that
+ * narrates milestones in sentences rather than ticks; errors go to a
+ * \`role="alert"\` and a menu with a roving focus. Focus moves only when it is
+ * already inside the loader.
+ *
+ * Reduced motion (followed live, or forced with \`reducedMotion\`) removes
+ * every loop and tween: blocks swap state, the course snaps to its honest
+ * place and the adventurer holds a still pose. The Pause motion button does
+ * the same on request. Off screen or in a hidden tab nothing animates and
+ * finished steps settle without their beats; on return the footer says what
+ * finished meanwhile.
+ */
+
+/* ---------------- shared: types and labels ---------------- */
+
+export type LoaderStepStatus = "pending" | "active" | "done" | "error" | "skipped";
+
+export type LoaderStep = {
+  /** Stable key. Beats and announcements key on it. A changed id list or length rebuilds the run. */
+  id: string;
+  /** Present tense: "Import 1,240 contacts". */
+  label: string;
+  /** Where the step is. Only the host changes it. */
+  status: LoaderStepStatus;
+  /** 0 to 1, from real host events only. Leave it out (or null) when the size of the work is unknown. */
+  progress?: number | null;
+  /** A real count, shown on the nameplate and never announced: "620 of 1,240 contacts". */
+  detail?: string;
+  /** Total units of work. Brick Wall draws one brick per unit when this is 16 or fewer. The other four ignore it. */
+  count?: number;
+  /** Past-tense narration: "Imported 1,240 contacts". Falls back to "<label>: done". */
+  doneText?: string;
+  /** Plain sentence, shown and sent to role="alert" when status is "error". */
+  error?: string;
+  /** Longer text behind Show details. */
+  errorDetail?: string;
+  /** 1-based. 2 or more shows "Attempt 2", and a step that then finishes counts as a recovered hiccup. */
+  attempt?: number;
+  /** Host clock for the running or failed attempt, in milliseconds. */
+  elapsedMs?: number;
+  /** Host clock for a finished step, in milliseconds. The results Time tile is the sum. */
+  durationMs?: number;
+};
+
+export type LoaderStat = {
+  /** Tile heading on the results screen: "Contacts". */
+  label: string;
+  /** A real figure. Numbers count up when motion is allowed; strings show as given. */
+  value: string | number;
+  /** Small line under the value: "imported". Default none. */
+  sub?: string;
+};
+
+export type LoaderLabels = {
+  /** The game's word for one step, used in the footer. Encounter: "Stage". */
+  unit: string;
+  /** The finale banner and the footer once every step is settled. Encounter: "Stage clear". */
+  clear: string;
+  /** Accessible name of the narration log. Default "Narration". */
+  narration: string;
+  /** Accessible name of the error menu. Default "What next". */
+  menu: string;
+  /** Retry button. Default "Retry". */
+  retry: string;
+  /** Skip button. Default "Skip". */
+  skip: string;
+  /** Cancel button. Default "Cancel". */
+  cancel: string;
+  /** Details toggle while closed. Default "Show details". */
+  showDetails: string;
+  /** Details toggle while open. Default "Hide details". */
+  hideDetails: string;
+  /** The motion toggle. Default "Pause motion". */
+  pauseMotion: string;
+  /** The results button. Default "Continue". */
+  continue: string;
+  /** The nameplate mark on a failed step. Default "Failed". */
+  failed: string;
+  /** Footer note while the error menu waits. Default "Waiting for you". */
+  waiting: string;
+  /** Nameplate count for a step of unknown size. Default "Working, size unknown". */
+  sizeUnknown: string;
+  /** Nameplate tag from the second attempt. Default "Attempt 2". */
+  attempt: (n: number) => string;
+  /** Log placeholder before the first milestone. Default "5 steps queued. Up first: Create the workspace." */
+  queued: (n: number, first: string) => string;
+  /** Log placeholder when mounted mid-run, never announced. Default "1 of 5 done. Now: Import 1,240 contacts." */
+  progress: (done: number, total: number, now: string) => string;
+  /** Footer note after a hidden tab or scroll away, never announced. Default "While you were away: 2 steps finished." */
+  away: (n: number) => string;
+  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped)." */
+  complete: (total: number, skipped: number) => string;
+  /** The line after Cancel. Default "Stopped. 2 finished steps are kept." */
+  stopped: (kept: number) => string;
+};
+
+const LOADER_DEFAULT_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
+  narration: "Narration",
+  menu: "What next",
+  retry: "Retry",
+  skip: "Skip",
+  cancel: "Cancel",
+  showDetails: "Show details",
+  hideDetails: "Hide details",
+  pauseMotion: "Pause motion",
+  continue: "Continue",
+  failed: "Failed",
+  waiting: "Waiting for you",
+  sizeUnknown: "Working, size unknown",
+  attempt: (n) => \`Attempt \${n}\`,
+  queued: (n, first) => \`\${n} step\${n === 1 ? "" : "s"} queued. Up first: \${first}.\`,
+  progress: (done, total, now) => \`\${done} of \${total} done. Now: \${now}.\`,
+  away: (n) => \`While you were away: \${n} step\${n === 1 ? "" : "s"} finished.\`,
+  complete: (total, skipped) => \`All \${total} step\${total === 1 ? "" : "s"} finished\${skipped ? \` (\${skipped} skipped)\` : ""}.\`,
+  stopped: (kept) => \`Stopped. \${kept} finished step\${kept === 1 ? " is" : "s are"} kept.\`,
+};
+
+/* ---------------- end shared: types and labels ---------------- */
+
+/* ---------------- palettes ---------------- */
+
+export type BlockRunLoaderColors = {
+  /** The sky behind the course. */
+  sky: string;
+  /** Clouds. Set it to the sky colour for a course with no clouds. */
+  cloud: string;
+  /** Hills, bushes and the pipe highlight. */
+  hill: string;
+  /** Hill outlines and spots. */
+  hillShade: string;
+  /** Ground bricks. */
+  ground: string;
+  /** Mortar between the ground bricks. */
+  groundMortar: string;
+  /** The top edge of the ground, which carries it against the sky. */
+  groundEdge: string;
+  /** Question block fill. */
+  block: string;
+  /** Question block bevel shade. */
+  blockShade: string;
+  /** Block outline, rivets and the shadow under the "?". On a light sky it carries the block's edge; on a dark sky the bright block fill does. */
+  blockLine: string;
+  /** The "?" mark and the block's light bevel. */
+  blockMark: string;
+  /** A used block, once its step is done. */
+  used: string;
+  /** Used block shade. */
+  usedShade: string;
+  /** Coins, sparkles and the rivets of a block that needed a retry. */
+  coin: string;
+  /** Coin shade. */
+  coinShade: string;
+  /** Coin outline. */
+  coinLine: string;
+  /** The flagpole and the start pipe. */
+  pole: string;
+  /** The flag. */
+  flag: string;
+  /** Castle wall. */
+  castle: string;
+  /** Castle outline and bricks. */
+  castleShade: string;
+  /** Castle door and windows. */
+  castleDoor: string;
+  /** The adventurer's outline and the start pipe's. Pick one that clears 3:1 on the sky: near black on a light sky, a lifted slate on a dark one. */
+  spriteOutline: string;
+  /** Primary buttons, the nameplate bar, the banner rule and the attempt tag. Keep it clear of red, which marks a failed step. */
+  accent: string;
+  /** Text on accent: white on light themes, near black on dark ones. */
+  onAccent: string;
+};
+
+/** One colour set per theme. The loader picks between them with light-dark(), following the host's color-scheme. */
+export type BlockRunLoaderPalette = { light: BlockRunLoaderColors; dark: BlockRunLoaderColors };
+
+export type BlockRunLoaderPaletteName = "overworld" | "underground";
+
+/**
+ * Two presets. Every text and control pair is AA on both themes. The
+ * adventurer's outline and the ground edge clear 3:1 on their sky, and so do
+ * the block outlines on the light skies; on the dark skies the bright block
+ * fill carries the shape. Red belongs to the flag and the failed step alone.
+ * Spread one to customise: \`{ ...BLOCK_RUN_LOADER_PALETTES.overworld, dark: { ... } }\`.
+ */
+export const BLOCK_RUN_LOADER_PALETTES: Record<BlockRunLoaderPaletteName, BlockRunLoaderPalette> = {
+  overworld: {
+    light: {
+      sky: "#8fd3ff", cloud: "#ffffff", hill: "#4cc35a", hillShade: "#2e8b3d",
+      ground: "#b5470d", groundMortar: "#f2a65a", groundEdge: "#4a1c05",
+      block: "#f7b32b", blockShade: "#c27c0e", blockLine: "#5a3200", blockMark: "#fff3c4",
+      used: "#a0522d", usedShade: "#6e3618",
+      coin: "#ffd23f", coinShade: "#e09b00", coinLine: "#6b4500",
+      pole: "#2f9e44", flag: "#e03131", castle: "#c8642a", castleShade: "#8a3d14", castleDoor: "#17142e",
+      spriteOutline: "#17142e", accent: "#1864ab", onAccent: "#ffffff",
+    },
+    dark: {
+      sky: "#16245a", cloud: "#2c3c7a", hill: "#2f9e44", hillShade: "#1f6e30",
+      ground: "#c84c0c", groundMortar: "#7a2e08", groundEdge: "#f2a65a",
+      block: "#f7b32b", blockShade: "#c27c0e", blockLine: "#5a3200", blockMark: "#fff3c4",
+      used: "#b5653a", usedShade: "#7a3a1a",
+      coin: "#ffd23f", coinShade: "#e09b00", coinLine: "#6b4500",
+      pole: "#51cf66", flag: "#ff6b6b", castle: "#d9773a", castleShade: "#9a4a1c", castleDoor: "#0b0918",
+      spriteOutline: "#6f80c0", accent: "#74c0fc", onAccent: "#0a0a0a",
+    },
+  },
+  underground: {
+    light: {
+      sky: "#bfe6ee", cloud: "#f4fcfd", hill: "#3fb6c9", hillShade: "#1f7f91",
+      ground: "#1f6f8b", groundMortar: "#9fd8e4", groundEdge: "#0b3a4a",
+      block: "#f7b32b", blockShade: "#c27c0e", blockLine: "#5a3200", blockMark: "#fff3c4",
+      used: "#3d6f80", usedShade: "#24505e",
+      coin: "#ffd23f", coinShade: "#e09b00", coinLine: "#6b4500",
+      pole: "#0e7490", flag: "#f59f00", castle: "#2b7a8c", castleShade: "#1a5462", castleDoor: "#17142e",
+      spriteOutline: "#17142e", accent: "#0e7490", onAccent: "#ffffff",
+    },
+    dark: {
+      sky: "#0b1a2b", cloud: "#0b1a2b", hill: "#123a4a", hillShade: "#0d2c38",
+      ground: "#3bb3c9", groundMortar: "#0e4c5c", groundEdge: "#9be7f2",
+      block: "#f7b32b", blockShade: "#c27c0e", blockLine: "#5a3200", blockMark: "#fff3c4",
+      used: "#4f8fa3", usedShade: "#2f6a7c",
+      coin: "#ffd23f", coinShade: "#e09b00", coinLine: "#6b4500",
+      pole: "#67e8f9", flag: "#fbbf24", castle: "#3bb3c9", castleShade: "#237d8f", castleDoor: "#0b0918",
+      spriteOutline: "#5f7896", accent: "#67e8f9", onAccent: "#0a0a0a",
+    },
+  },
+};
+
+export type BlockRunLoaderProps = {
+  /** The run, and the only state. The host replaces the array whenever a step changes. */
+  steps: LoaderStep[];
+  /** The heading, and the progressbar's accessible name. */
+  title: string;
+  /** Heading level of the title. Default 2. */
+  headingLevel?: 2 | 3 | 4 | 5 | 6;
+  /** A preset name or your own light and dark colours. Default "overworld". */
+  palette?: BlockRunLoaderPaletteName | BlockRunLoaderPalette;
+  /** A preset adventurer or your own colours. Default "ember". */
+  character?: LoaderCharacterName | LoaderCharacter;
+  /** Force a theme. Default: inherit the host's color-scheme. */
+  colorScheme?: "light" | "dark";
+  /** Override any visible or announced string. Default English copy. */
+  labels?: Partial<LoaderLabels>;
+  /** Extra results tiles, real figures only. Default none. */
+  stats?: LoaderStat[];
+  /** Added to the completion line: "Your workspace is ready." Default none. */
+  completeText?: string;
+  /** Called with the failed step's id. Without it there is no Retry button. */
+  onRetry?: (id: string) => void;
+  /** Called with the failed step's id. Without it there is no Skip button. */
+  onSkip?: (id: string) => void;
+  /** Called once the loader shows its stopped state. Without it there is no Cancel button. */
+  onCancel?: () => void;
+  /** Adds a Continue button to the results screen. Default none. */
+  onContinue?: () => void;
+  /** Called once per run, after the finale's last beat. */
+  onComplete?: () => void;
+  /** Mirrors every line the log and the alert speak, for your own logging or tests. */
+  onAnnounce?: (text: string, politeness: "polite" | "assertive") => void;
+  /** Force motion off (true) or on (false). Default: follow prefers-reduced-motion live. */
+  reducedMotion?: boolean;
+  /** Class on the root section. */
+  className?: string;
+  /** Style on the root section. */
+  style?: CSSProperties;
+};
+
+/* ---------------- shared: timing constants and helpers ---------------- */
+
+/* The motion ladder, in milliseconds. BEAT is the one ambient beat. */
+const FAST = 150;
+const BASE = 300;
+const SLOW = 500;
+const BEAT = 2400;
+const HIT_GAP = 400; // at most one progress hit per 400ms; increments in between merge
+const IMPACT = 100; // a blow lands this long after the swing starts
+const COLLECT = 100; // completions this close share a beat
+const DWELL = 300; // a step holds the front at least this long
+const BURST_MIN = 3; // this many queued completions become one beat
+const COALESCE = 400; // completions this close share one sentence and one announcement
+
+const loaderNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+
+function fmtDur(ms: number | undefined): string {
+  if (ms == null || !Number.isFinite(ms)) return "";
+  if (ms < 950) return \`\${(Math.max(1, Math.round(ms / 100)) / 10).toFixed(1)}s\`;
+  if (ms < 9950) return \`\${(Math.round(ms / 100) / 10).toFixed(1)}s\`;
+  const s = Math.round(ms / 1000);
+  if (s < 60) return \`\${s}s\`;
+  return \`\${Math.floor(s / 60)}m \${String(s % 60).padStart(2, "0")}s\`;
+}
+
+const listJoin = (a: string[]) => (a.length < 2 ? a.join("") : \`\${a.slice(0, -1).join(", ")} and \${a[a.length - 1]}\`);
+
+/** Lowercases a leading capital unless the word is an initialism ("CSV"). */
+const lowerFirst = (s: string) => (s && s.length > 1 && s[1] === s[1].toLowerCase() ? s[0].toLowerCase() + s.slice(1) : s || "");
+
+const isSettled = (s: LoaderStep | undefined) => !!s && (s.status === "done" || s.status === "skipped");
+
+/** The library's ease-out, cubic-bezier(0.23, 1, 0.32, 1), sampled in JS for stepped keyframes. */
+function loaderEase(t: number): number {
+  const curve = (a: number, b: number, s: number) => 3 * a * s * (1 - s) * (1 - s) + 3 * b * s * s * (1 - s) + s * s * s;
+  let lo = 0;
+  let hi = 1;
+  let s = t;
+  for (let i = 0; i < 24; i++) {
+    s = (lo + hi) / 2;
+    if (curve(0.23, 0.32, s) < t) lo = s;
+    else hi = s;
+  }
+  return curve(1, 1, s);
+}
+
+/** Held positions in whole CSS pixels: each keyframe holds until the next, so pixel art is never resampled mid-move. */
+function loaderStepped(points: Array<[number, number, number, number?]>): Keyframe[] {
+  return points.map(([offset, x, y, o]) => ({
+    offset,
+    easing: "step-end",
+    transform: \`translate(\${Math.round(x)}px, \${Math.round(y)}px)\`,
+    ...(o == null ? {} : { opacity: o }),
+  }));
+}
+
+/** A slide sampled from the ease-out curve about every 33ms, as stepped whole-pixel keyframes. */
+function loaderGlide(fx: number, fy: number, tx: number, ty: number, ms: number): Keyframe[] {
+  const n = Math.max(2, Math.round(ms / 33));
+  const out: Keyframe[] = [];
+  for (let j = 0; j <= n; j++) {
+    const e = loaderEase(j / n);
+    out.push({
+      offset: j / n,
+      easing: "step-end",
+      transform: \`translate(\${Math.round(fx + (tx - fx) * e)}px, \${Math.round(fy + (ty - fy) * e)}px)\`,
+    });
+  }
+  return out;
+}
+
+/** Horizontal runs of one colour key merged into one path each, in art pixels. */
+function loaderPixelPaths(map: readonly string[]): Array<[string, string]> {
+  const paths = new Map<string, string>();
+  map.forEach((row, y) => {
+    let x = 0;
+    while (x < row.length) {
+      const c = row[x];
+      if (c === ".") {
+        x++;
+        continue;
+      }
+      let x2 = x;
+      while (x2 < row.length && row[x2] === c) x2++;
+      paths.set(c, \`\${paths.get(c) ?? ""}M\${x} \${y}h\${x2 - x}v1h\${x - x2}z\`);
+      x = x2;
+    }
+  });
+  return Array.from(paths);
+}
+
+/** Markup for an arena sprite: one path per key, each with a class that CSS maps to a palette colour. */
+function loaderPixelSvg(map: readonly string[], roles: Record<string, string>, crop?: [number, number, number, number]): string {
+  const box = crop ?? [0, 0, map[0].length, map.length];
+  let out = \`<svg viewBox="\${box.join(" ")}" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true" focusable="false">\`;
+  for (const [k, d] of loaderPixelPaths(map)) out += \`<path class="bz-brl-k-\${roles[k] ?? k}" d="\${d}"/>\`;
+  return \`\${out}</svg>\`;
+}
+
+const loaderKebab = (key: string) => key.replace(/[A-Z]/g, (m) => \`-\${m.toLowerCase()}\`);
+
+/** A palette as custom properties on the root, each one light-dark(<light>, <dark>). */
+function loaderPaletteVars(light: Record<string, string>, dark: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of Object.keys(light)) out[\`--bz-brl-\${loaderKebab(key)}\`] = \`light-dark(\${light[key]}, \${dark[key] ?? light[key]})\`;
+  return out;
+}
+
+/* 7 x 7 glyphs (the cursor is 4 x 7), drawn in currentColor. */
+const LOADER_GLYPHS = {
+  done: [".......", "......#", ".....##", "#...##.", "##.##..", ".###...", "..#...."],
+  skipped: [".......", ".......", ".......", "#######", "#######", ".......", "......."],
+  retry: ["..###.#", ".#...##", "#...###", "#......", "#.....#", ".#...#.", "..###.."],
+  finish: ["...#...", "...#...", "#######", ".#####.", "..###..", ".##.##.", "##...##"],
+  stop: [".......", ".#####.", ".#####.", ".#####.", ".#####.", ".#####.", "......."],
+  cross: ["##...##", "###.###", ".#####.", "..###..", ".#####.", "###.###", "##...##"],
+  pause: [".......", ".##.##.", ".##.##.", ".##.##.", ".##.##.", ".##.##.", "......."],
+  cursor: ["#...", "##..", "###.", "####", "###.", "##..", "#..."],
+  clock: ["..###..", ".#...#.", "#..#..#", "#..##.#", "#.....#", ".#...#.", "..###.."],
+} as const;
+
+type LoaderGlyphName = keyof typeof LOADER_GLYPHS;
+
+const LOADER_GLYPH_D = Object.fromEntries(
+  Object.entries(LOADER_GLYPHS).map(([name, map]) => [name, loaderPixelPaths(map).map(([, d]) => d).join("")]),
+) as Record<LoaderGlyphName, string>;
+
+function LoaderGlyph({ name }: { name: LoaderGlyphName }) {
+  const map = LOADER_GLYPHS[name];
+  return (
+    <svg className="bz-brl-g" viewBox={\`0 0 \${map[0].length} \${map.length}\`} shapeRendering="crispEdges" aria-hidden="true" focusable="false">
+      <path d={LOADER_GLYPH_D[name]} />
+    </svg>
+  );
+}
+
+/* ---------------- end shared: timing constants and helpers ---------------- */
+
+/* ---------------- shared: character ---------------- */
+
+export type LoaderCharacterName = "ember" | "tide" | "moss" | "plum";
+
+export type LoaderCharacter = {
+  /** Which head to draw: "puffs", "ponytail", "short" or "wrap" (a head scarf coloured by hair and hairShade). */
+  hairStyle: "puffs" | "ponytail" | "short" | "wrap";
+  /** Skin colour. */
+  skin: string;
+  /** Skin shade: the far cheek, the jaw and the ear. */
+  skinShade: string;
+  /** Hair, or the wrap fabric. */
+  hair: string;
+  /** Hair shade, darker than hair: under the fringe, on the far side and at the nape. */
+  hairShade: string;
+  /** Tunic body. */
+  outfit: string;
+  /** Tunic shade, on the right of the body. */
+  outfitShade: string;
+  /** Tunic highlight: the left column and the near sleeve. */
+  outfitLight: string;
+  /** Scarf, belt buckle, hair tie and wrap band. */
+  accent: string;
+  /** Trousers, the near leg. */
+  pants: string;
+  /** Trousers shade, the far leg. */
+  pantsShade: string;
+  /** Boots and the belt leather. */
+  boots: string;
+  /** Boot shade. */
+  bootsShade: string;
+  /** Eye white. Default #ffffff. */
+  eyeWhite?: string;
+  /** Pupils and mouth. Default #1b1630. */
+  eye?: string;
+};
+
+/** Four adventurers: four skin tones, four hair styles, four outfit hues. The outfits carry the silhouette on dark skies. */
+export const LOADER_CHARACTERS: Record<LoaderCharacterName, LoaderCharacter> = {
+  ember: { hairStyle: "puffs", skin: "#8d5524", skinShade: "#6b3d18", hair: "#4a3128", hairShade: "#2a1b15", outfit: "#ff5a36", outfitShade: "#c43d20", outfitLight: "#ff9a7a", accent: "#ffd23f", pants: "#3f64b5", pantsShade: "#2b4a8a", boots: "#5b3a1e", bootsShade: "#3d2614" },
+  tide: { hairStyle: "ponytail", skin: "#f3c7a5", skinShade: "#d9a07c", hair: "#e0702c", hairShade: "#a84e1a", outfit: "#3d8bfd", outfitShade: "#2563c9", outfitLight: "#8cbcff", accent: "#ff6fa5", pants: "#e6d3a3", pantsShade: "#c2a970", boots: "#7a4a28", bootsShade: "#55331b" },
+  moss: { hairStyle: "short", skin: "#c68e5f", skinShade: "#a06c42", hair: "#4f4760", hairShade: "#2e2838", outfit: "#3fbf5a", outfitShade: "#2a8a3f", outfitLight: "#8fe39f", accent: "#ff9f1c", pants: "#8b5e34", pantsShade: "#6b4526", boots: "#2f2a3a", bootsShade: "#1f1b27" },
+  plum: { hairStyle: "wrap", skin: "#a8693f", skinShade: "#82502c", hair: "#e0457b", hairShade: "#b02f5e", outfit: "#a06cf0", outfitShade: "#7a4bc4", outfitLight: "#c9a8ff", accent: "#2ec4b6", pants: "#4a5a8c", pantsShade: "#36426a", boots: "#8a5a2b", bootsShade: "#62401e" },
+};
+
+/*
+ * The adventurer is 16 x 24 art pixels, faces right and stands on row 23,
+ * with a 1px outline all round and the light from the top left. Keys:
+ *   . clear   o outline (the game palette)   h hair   H hair shade
+ *   s skin    S skin shade   w eye white   e pupil   m mouth
+ *   c outfit  C outfit shade   l outfit light   a accent (scarf, buckle)
+ *   p trousers   P trousers shade   b boots and belt   B boot shade
+ * Accessories add j and J (jetpack), f and F (flame), k and K (wood).
+ * A head (16 x 11) takes a face patch and sits at a per-frame offset; the
+ * body for the pose is anchored to the bottom row and drawn over it.
+ */
+const LOADER_HERO_W = 16;
+const LOADER_HERO_H = 24;
+
+const LOADER_HEADS: Record<LoaderCharacter["hairStyle"], readonly string[]> = {
+  short: ["....oo.oo.oo....", "...ohhohhohho...", "..ohhhhhhhhhhoo.", "..ohhhhhhhhhHHo.", "..ohhhhhhhHhHHo.", "..ohhhhhHHsHsso.", "..ohhSsssssssso.", "..ohHssssssssso.", "..oHHsssssSssSo.", "...oHsssssssSo..", "....ooooooooo..."],
+  ponytail: [".....oooooo.....", "...oohhhhhhhoo..", ".ooahhhhhhhhhho.", "ohHohhhhhhhhhHo.", "ohHohhhhhhhhHHo.", "ohHohhhhhHshsso.", "oHHohSsssssssso.", ".oHoHssssssssso.", ".oHoHsssssSssSo.", "..ooHsssssssSo..", "....ooooooooo..."],
+  puffs: [".ooo...ooooo....", "ohhho.ohhhhho...", "ohhHhohhhhhHo...", ".oHHhhhhhHHhhho.", "..ohhhhhhhhhhHo.", "..ohhhhssssssso.", "..ohhSsssssssso.", "..ohHssssssssso.", "..oHHsssssSssSo.", "...oHsssssssSo..", "....ooooooooo..."],
+  wrap: [".......oooo.oo..", ".....oohhhhoHho.", "...oohhhhhHHHo..", "..ohhhhhhhHhhho.", "..ohhhhhhhhhhHo.", "..oaaaaaaaaaaao.", "..ohhSsssssssso.", "..ohHssssssssso.", "..oHHsssssSssSo.", "...oHsssssssSo..", "....ooooooooo..."],
+};
+
+/* Face patches over cols 7 to 13 and rows 6 to 9 of a head; "_" keeps the head pixel. */
+type LoaderEyes = "open" | "blink" | "squint" | "happy";
+const LOADER_FACE_X = 7;
+const LOADER_FACE_Y = 6;
+const LOADER_FACES: Record<LoaderEyes, readonly string[]> = {
+  open: ["_we_we_", "_we_we_", "_______", "____m__"],
+  blink: ["_______", "_ee_ee_", "_______", "____m__"],
+  squint: ["_e___e_", "__e_e__", "_e___e_", "___mm__"],
+  happy: ["_e___e_", "e_e_e_e", "_______", "___mm__"],
+};
+
+type LoaderPose = "idle" | "run1" | "run2" | "run3" | "run4" | "jump" | "bonk" | "swing1" | "swing2" | "hurt" | "sit" | "celebrate1" | "celebrate2" | "fly1" | "fly2";
+
+/* Bodies are anchored to the bottom row; taller maps reach up past the chin for a raised arm. */
+const LOADER_BODIES: Record<LoaderPose, readonly string[]> = {
+  idle: ["...oaaaaaaaao...", "...oClcccColco..", "...oClcccColco..", "...oClcccColco..", "...oSbbabbosso..", "...oolcccCCoo...", "....oppppPPo....", "....opPoppPo....", "....opPoppPo....", "....opPoppPo....", "....obBobbBo....", "....obBobbbBo...", "....ooooooooo..."],
+  run1: [".ooo............", "oaaaaaaaaaaaao..", ".oaooClcccColco.", "..o.oClcccColcco", "....oClcccCoosso", "....oSbbabboooo.", "....oolcccCCo...", ".....oppppPPo...", "....oPPo.oppo...", "...oPPo..oppo...", "..oPPo....oppo..", ".oBBo.....obbBo.", ".oBo......obbbBo", "..o.......oooooo"],
+  run2: ["..oaaaaaaaaaao..", ".oaaoClcccColco.", "..oooClcccColco.", "....oClcccColco.", "....oSbbabbosso.", "....oolcccCCoo..", ".....oppppPo....", ".....oPPoppo....", "..oBBBPoppPo....", "...oooooppPo....", ".......obbBo....", ".......obbbBo...", ".......oooooo..."],
+  run3: [".ooo............", "oaaaaaaaaaaaao..", ".oaooClcccColco.", "..o.oClcccColcco", "....oClcccCoosso", "....oSbbabboooo.", "....oolcccCCo...", ".....oppppPPo...", "....oppo.oPPo...", "...oppo..oPPo...", "..oppo....oPPo..", ".obbo.....oBBBo.", ".obo......oBBBBo", "..o.......oooooo"],
+  run4: ["..oaaaaaaaaaao..", ".oaaoClcccColco.", "..oooClcccColco.", "....oClcccColco.", "....oSbbabbosso.", "....oolcccCCoo..", ".....oppppPo....", ".....oppoPPo....", "..obbbpoPPPo....", "...oooooPPPo....", ".......oBBBo....", ".......oBBBBo...", ".......oooooo..."],
+  jump: ["............oo..", "...oaaaaaaaosso.", "...oClcccColcCo.", "...oClcccCCo....", "..oSClcccCCo....", "...oobbabbbo....", "....olcccCCo....", "....oppppPPPo...", "....oPPoopppPo..", "...oPPo..obbBo..", "...oBBo..obbbBo.", "...oBBo..oooooo.", "....oo..........", "................"],
+  bonk: [".............oo.", "............osso", "............oSso", ".............lco", ".............lco", ".............lco", ".............lco", ".............lco", "...oaaaaaaaaolco", "...oClcccCCCClco", "...oClcccCCCCco.", "...oClcccCCCCo..", "...oSbbabbbbo...", "....olcccCCo....", "....oppppPPo....", "....opPoppPo....", "....opPoopPo....", "....obBo.obBo...", "....oBBo.obbo...", ".....oo...oo....", "................"],
+  swing1: ["..oaaaaaaaao.oo.", "..oClcccColcosso", "..oClcccColcolco", "..oClcccColccco.", "..oSbbabbooooo..", "...olcccCCo.....", "...oppppPPPo....", "...opPPoopPPo...", "..opPo...opPo...", "..opPo...opPo...", "..obBo...obbBo..", "..obbBo..obbbBo.", "..ooooo..oooooo."],
+  swing2: ["....oaaaaaaaao..", "....oClcccCoooo.", "....oClcccClcsso", "....oClcccCoooo.", "....oSbbabbo....", ".....olcccCo....", ".....opppPPPo...", "....oPPo.oppPo..", "...oPPo...oppPo.", "..oPPo....oppPo.", ".oBBo.....obbBo.", "oBBBo.....obbbBo", "ooooo.....oooooo"],
+  hurt: [".............oo.", "............osso", "..oaaaaaaaaolco.", "..oClcccCClco...", ".ooClcccCCo.....", "oSSoClccCCo.....", "oSoobbabbo......", ".o.olcccCo......", "...oppppPPo.....", "...opPoppPPo....", "...opPo.oppPo...", "...opPo..obbBo..", "...obBo..obbbBo.", "...obbBo..ooooo.", "...ooooo........"],
+  sit: ["..oaaaaaaaao....", ".oCClcccColco...", "oSoClcccColcooo.", "oSobbabbossoobBo", "oSoppppppppppbBo", "ooPPPPPPPPPPPbBo", ".ooooooooooooooo"],
+  celebrate1: [".............oo.", "............osso", "............oSso", ".............lco", ".............lco", ".............lco", ".............lco", ".............lco", "...oaaaaaaaaolco", "...oClcccCCCClco", "...oClcccCCCCco.", "...oClcccCCCCo..", "...oSbbabbbbo...", "....olcccCCo....", "....oppppPPo....", "....opPoppPo....", "....opPoppPo....", "....opPoppPo....", "....obBobbBo....", "....obBobbbBo...", "....ooooooooo..."],
+  celebrate2: [".............oo.", "............osso", "............oSso", ".............lco", ".............lco", "...oaaaaaaaaolco", "...oClcccCCCClco", "...oClcccCCCCco.", "...oClcccCCCCo..", "...oSbbabbbbo...", "....olcccCCo....", "....oppppPPo....", "...opPPoopPPo...", "...opPo..opPo...", "...obBo..obBo...", "...obbBo.obbbBo.", "...ooooo.oooooo."],
+  fly1: ["....oaaaaaaaao..", "....oClcccColco.", "....oClcccColcso", "....oClcccCCoooo", "....oSbbabbbo...", "....oolcccCCooo.", ".....opppppppPo.", ".....oPPPPopppo.", "......oooo.obbo.", "...........obbBo", "...........ooooo", "................", "................"],
+  fly2: ["....oaaaaaaaao..", "....oClcccColco.", "....oClcccColcso", "....oClcccCCoooo", "....oSbbabbbo...", "....oolcccCCoo..", ".....opppppPPo..", ".....oPPPoppPo..", "......ooo.obbo..", "..........obbBo.", "..........ooooo.", "................", "................"],
+};
+
+export type LoaderFrameName = "idle1" | "idle2" | "run1" | "run2" | "run3" | "run4" | "jump" | "bonk" | "swing1" | "swing2" | "hurt" | "sit" | "celebrate1" | "celebrate2" | "fly1" | "fly2";
+
+const LOADER_FRAMES: Record<LoaderFrameName, { body: LoaderPose; eyes: LoaderEyes; dx: number; dy: number }> = {
+  idle1: { body: "idle", eyes: "open", dx: 0, dy: 0 },
+  idle2: { body: "idle", eyes: "open", dx: 0, dy: 1 },
+  run1: { body: "run1", eyes: "open", dx: 1, dy: 1 },
+  run2: { body: "run2", eyes: "open", dx: 1, dy: 0 },
+  run3: { body: "run3", eyes: "open", dx: 1, dy: 1 },
+  run4: { body: "run4", eyes: "open", dx: 1, dy: 0 },
+  jump: { body: "jump", eyes: "open", dx: 0, dy: 0 },
+  bonk: { body: "bonk", eyes: "squint", dx: -1, dy: 0 },
+  swing1: { body: "swing1", eyes: "open", dx: -1, dy: 0 },
+  swing2: { body: "swing2", eyes: "open", dx: 1, dy: 0 },
+  hurt: { body: "hurt", eyes: "squint", dx: -1, dy: 1 },
+  sit: { body: "sit", eyes: "blink", dx: -1, dy: 6 },
+  celebrate1: { body: "celebrate1", eyes: "happy", dx: -1, dy: 0 },
+  celebrate2: { body: "celebrate2", eyes: "happy", dx: -1, dy: 1 },
+  fly1: { body: "fly1", eyes: "open", dx: 1, dy: 0 },
+  fly2: { body: "fly2", eyes: "open", dx: 1, dy: 0 },
+};
+
+const LOADER_FRAME_NAMES = Object.keys(LOADER_FRAMES) as LoaderFrameName[];
+
+/* Colour key to the class role (bz-brl-c-<role>), which the stylesheet maps to a custom property. */
+const LOADER_HERO_ROLES: Record<string, string> = {
+  o: "outline", h: "hair", H: "hair-shade", s: "skin", S: "skin-shade", w: "eye-white", e: "eye", m: "mouth",
+  c: "outfit", C: "outfit-shade", l: "outfit-light", a: "accent", p: "pants", P: "pants-shade", b: "boots", B: "boots-shade",
+  j: "jetpack", J: "jetpack-shade", f: "flame", F: "flame-core", k: "wood", K: "wood-shade",
+};
+
+/** A small map placed at (x, y) in the adventurer's art pixels. */
+type LoaderLayer = { x: number; y: number; rows: readonly string[] };
+
+/** A game's prop for the adventurer: layers drawn behind the head, or in front after the outline pass. */
+type LoaderAccessory = { id: string; layers: (frame: LoaderFrameName) => { back?: LoaderLayer[]; front?: LoaderLayer[] } | null };
+
+function composeLoaderHero(hairStyle: LoaderCharacter["hairStyle"], frame: LoaderFrameName, extra: { back?: LoaderLayer[]; front?: LoaderLayer[] } | null): string[] {
+  const f = LOADER_FRAMES[frame];
+  const back = extra?.back ?? [];
+  const front = extra?.front ?? [];
+  let width = LOADER_HERO_W;
+  for (const l of front) width = Math.max(width, l.x + l.rows[0].length);
+  const grid: string[][] = Array.from({ length: LOADER_HERO_H }, () => Array<string>(width).fill("."));
+  const put = (rows: readonly string[], ox: number, oy: number, maxX: number) => {
+    rows.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const gx = ox + x;
+        const gy = oy + y;
+        if (row[x] !== "." && gx >= 0 && gx < maxX && gy >= 0 && gy < LOADER_HERO_H) grid[gy][gx] = row[x];
+      }
+    });
+  };
+  const head = LOADER_HEADS[hairStyle].map((r) => r.split(""));
+  LOADER_FACES[f.eyes].forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) if (row[x] !== "_") head[LOADER_FACE_Y + y][LOADER_FACE_X + x] = row[x];
+  });
+  for (const l of back) put(l.rows, l.x, l.y, LOADER_HERO_W);
+  put(head.map((r) => r.join("")), f.dx, f.dy, LOADER_HERO_W);
+  const body = LOADER_BODIES[f.body];
+  put(body, 0, LOADER_HERO_H - body.length, LOADER_HERO_W);
+  // A pixel clipped at the box edge would lose its outline, so the edge columns become outline.
+  for (let y = 0; y < LOADER_HERO_H; y++) {
+    for (const x of [0, LOADER_HERO_W - 1]) if (grid[y][x] !== "." && grid[y][x] !== "f" && grid[y][x] !== "F") grid[y][x] = "o";
+  }
+  for (const l of front) put(l.rows, l.x, l.y, width);
+  return grid.map((r) => r.join(""));
+}
+
+/* Every frame's paths depend only on the hair style and the accessory, never on colour, so they are built once. */
+const loaderHeroCache = new Map<string, string>();
+function loaderHeroMarkup(hairStyle: LoaderCharacter["hairStyle"], accessory: LoaderAccessory | null): string {
+  const key = \`\${hairStyle}:\${accessory?.id ?? ""}\`;
+  const hit = loaderHeroCache.get(key);
+  if (hit) return hit;
+  let out = "";
+  for (const name of LOADER_FRAME_NAMES) {
+    let paths = "";
+    for (const [k, d] of loaderPixelPaths(composeLoaderHero(hairStyle, name, accessory ? accessory.layers(name) : null))) {
+      paths += \`<path class="bz-brl-c-\${LOADER_HERO_ROLES[k] ?? k}" d="\${d}"/>\`;
+    }
+    out += \`<g class="bz-brl-f" data-f="\${name}">\${paths}</g>\`;
+  }
+  loaderHeroCache.set(key, out);
+  return out;
+}
+
+/** All sixteen frames in one svg; the wrapper's data-frame (or data-loop) decides which one shows. */
+function LoaderHeroSprite({ hairStyle, accessory }: { hairStyle: LoaderCharacter["hairStyle"]; accessory: LoaderAccessory | null }) {
+  return (
+    <svg
+      className="bz-brl-sprite"
+      viewBox={\`0 0 \${LOADER_HERO_W} \${LOADER_HERO_H}\`}
+      preserveAspectRatio="none"
+      shapeRendering="crispEdges"
+      overflow="visible"
+      aria-hidden="true"
+      focusable="false"
+      dangerouslySetInnerHTML={{ __html: loaderHeroMarkup(hairStyle, accessory) }}
+    />
+  );
+}
+
+function loaderCharacter(c: LoaderCharacterName | LoaderCharacter | undefined): LoaderCharacter {
+  if (!c) return LOADER_CHARACTERS.ember;
+  return typeof c === "string" ? LOADER_CHARACTERS[c] ?? LOADER_CHARACTERS.ember : c;
+}
+
+/** The adventurer's colours as --chr-* properties. They do not change with the theme. */
+function loaderCharacterVars(ch: LoaderCharacter): Record<string, string> {
+  return {
+    "--chr-hair": ch.hair, "--chr-hair-shade": ch.hairShade, "--chr-skin": ch.skin, "--chr-skin-shade": ch.skinShade,
+    "--chr-eye-white": ch.eyeWhite ?? "#ffffff", "--chr-eye": ch.eye ?? "#1b1630",
+    "--chr-outfit": ch.outfit, "--chr-outfit-shade": ch.outfitShade, "--chr-outfit-light": ch.outfitLight, "--chr-accent": ch.accent,
+    "--chr-pants": ch.pants, "--chr-pants-shade": ch.pantsShade, "--chr-boots": ch.boots, "--chr-boots-shade": ch.bootsShade,
+  };
+}
+
+/* The speaker portrait in the dialogue box: the head and scarf at a larger scale, one group per expression. */
+type LoaderFace = "open" | "blink" | "squint" | "happy";
+const LOADER_SCARF_ROW = "...oaaaaaaaao...";
+const loaderPortraitCache = new Map<string, string>();
+function loaderPortraitMarkup(hairStyle: LoaderCharacter["hairStyle"]): string {
+  const hit = loaderPortraitCache.get(hairStyle);
+  if (hit) return hit;
+  let out = "";
+  for (const eyes of ["open", "blink", "squint", "happy"] as LoaderFace[]) {
+    const head = LOADER_HEADS[hairStyle].map((r) => r.split(""));
+    LOADER_FACES[eyes].forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) if (row[x] !== "_") head[LOADER_FACE_Y + y][LOADER_FACE_X + x] = row[x];
+    });
+    let paths = "";
+    for (const [k, d] of loaderPixelPaths([...head.map((r) => r.join("")), LOADER_SCARF_ROW])) paths += \`<path class="bz-brl-c-\${LOADER_HERO_ROLES[k] ?? k}" d="\${d}"/>\`;
+    out += \`<g data-f="\${eyes}">\${paths}</g>\`;
+  }
+  loaderPortraitCache.set(hairStyle, out);
+  return out;
+}
+
+/** Open eyes that blink now and then while work runs, a squint on an error, dazed when stopped, happy at the end. */
+function LoaderPortrait({ hairStyle, face }: { hairStyle: LoaderCharacter["hairStyle"]; face: LoaderFace }) {
+  return (
+    <div className="bz-brl-face" data-face={face} aria-hidden="true">
+      <svg viewBox="0 0 16 12" preserveAspectRatio="none" shapeRendering="crispEdges" focusable="false" dangerouslySetInnerHTML={{ __html: loaderPortraitMarkup(hairStyle) }} />
+    </div>
+  );
+}
+
+type LoaderLoop = "" | "idle" | "working" | "celebrate" | "run" | "fly";
+
+/** Shows one frame, or starts a CSS loop. An attribute change, never a React render. */
+function loaderSetPose(hero: HTMLElement | null, frame: LoaderFrameName | "", loop: LoaderLoop) {
+  if (!hero) return;
+  if (hero.dataset.frame !== frame) hero.dataset.frame = frame;
+  if ((hero.dataset.loop ?? "") !== loop) hero.dataset.loop = loop;
+}
+
+/* ---------------- end shared: character ---------------- */
+
+/* ---------------- shared: engine ---------------- */
+
+type LoaderPhase = "idle" | "run" | "error" | "complete" | "stopped";
+type LoaderLineKind = "done" | "skipped" | "retry" | "finish" | "stop";
+type LoaderLine = { key: number; kind: LoaderLineKind; text: string };
+type LoaderTile = { label: string; value: number | string; kind: "steps" | "time" | "stat" | "hiccup"; total: number; sub: string };
+type LoaderFocusTarget = "retry" | "log" | "continue";
+type LoaderVis = "live" | "gone";
+type LoaderEntry = { i: number; kind: "done" | "skipped"; at: number; said?: boolean };
+type LoaderMotion = { reduced: boolean; paused: boolean; onscreen: boolean; visible: boolean };
+
+/** What the chassis renders. The engine owns it and pushes every change through setState. */
+type LoaderView = {
+  phase: LoaderPhase;
+  /** The step at the front of the arena. It may lag the host by one beat, never lead it. */
+  front: number;
+  frontKey: number;
+  /** The progress the art shows: it changes only when a hit lands. */
+  barP: number | null;
+  barDetail: string | null;
+  lines: LoaderLine[];
+  alert: string;
+  errorIndex: number;
+  details: string;
+  detailMore: string;
+  tiles: LoaderTile[];
+  results: boolean;
+  resultsKey: number;
+  banner: boolean;
+  done: boolean;
+  meta: string | null;
+  focus: { target: LoaderFocusTarget; n: number } | null;
+  /** The run was already under way when the loader mounted, so the log starts from a summary. */
+  midRun: boolean;
+};
+
+/** Read-only access to the engine for a game's arena driver. */
+type LoaderArenaCtx = {
+  steps: () => LoaderStep[];
+  vis: () => LoaderVis[];
+  front: () => number;
+  phase: () => LoaderPhase;
+  /** The front step's progress as the art should show it (0 when pending or of unknown size, 1 when done). */
+  frontP: () => number;
+  motionAllowed: () => boolean;
+  motionOn: () => boolean;
+  running: () => boolean;
+  later: (fn: () => void, ms: number) => number;
+  clear: (id: number) => number;
+  anim: (el: Element, frames: Keyframe[], opts: KeyframeAnimationOptions) => Animation | null;
+};
+
+/** What each game implements. The engine decides when; the arena decides how it looks. */
+type LoaderArena = {
+  rebuild: () => void;
+  layout: (animate: boolean) => void;
+  /** Starts a hit on the front step and returns when it lands, in ms. */
+  hit: (i: number) => number;
+  /** Draws the honest progress of step i; \`showy\` adds the impact effects. */
+  progress: (i: number, showy: boolean) => void;
+  /** Starts the finishing blow and returns when it lands, in ms. */
+  finish: (i: number) => number;
+  /** Resolves finished or skipped steps and returns how long to hold before the next one moves up. */
+  resolve: (entries: LoaderEntry[], showy: boolean) => number;
+  advance: (changed: boolean) => void;
+  error: (i: number, showy: boolean) => void;
+  recover: (i: number, showy: boolean) => void;
+  stop: (showy: boolean) => void;
+  finale: (showy: boolean) => void;
+  pose: () => void;
+  motion: () => void;
+  destroy: () => void;
+};
+
+type LoaderGame = { unit: string; clear: string; arena: (root: HTMLElement, ctx: LoaderArenaCtx) => LoaderArena };
+
+/** The props the engine reads. Every game's props satisfy it. */
+type LoaderHostProps = {
+  steps: LoaderStep[];
+  title: string;
+  labels?: Partial<LoaderLabels>;
+  stats?: LoaderStat[];
+  completeText?: string;
+  onRetry?: (id: string) => void;
+  onSkip?: (id: string) => void;
+  onCancel?: () => void;
+  onContinue?: () => void;
+  onComplete?: () => void;
+  onAnnounce?: (text: string, politeness: "polite" | "assertive") => void;
+  reducedMotion?: boolean;
+};
+
+function loaderFirstLive(steps: LoaderStep[]) {
+  let f = 0;
+  while (f < steps.length && isSettled(steps[f])) f++;
+  return f;
+}
+
+function loaderInitialView(steps: LoaderStep[]): LoaderView {
+  const front = loaderFirstLive(steps);
+  const s = steps[front];
+  const started = steps.some((x) => x.status !== "pending");
+  return {
+    phase: steps.length && steps.every(isSettled) ? "complete" : started ? "run" : "idle",
+    front,
+    frontKey: 0,
+    barP: s ? (s.status === "done" ? 1 : s.progress ?? null) : null,
+    barDetail: s?.detail ?? null,
+    lines: [],
+    alert: "",
+    errorIndex: -1,
+    details: "",
+    detailMore: "",
+    tiles: [],
+    results: false,
+    resultsKey: 0,
+    banner: false,
+    done: false,
+    meta: null,
+    focus: null,
+    midRun: started,
+  };
+}
+
+function loaderNeedsRebuild(prev: LoaderStep[], next: LoaderStep[], phase: LoaderPhase) {
+  if (prev.length !== next.length) return true;
+  for (let i = 0; i < next.length; i++) if (prev[i].id !== next[i].id) return true;
+  // A settled step never comes back. If the host reopens one, it has started a different run.
+  for (let i = 0; i < next.length; i++) if (isSettled(prev[i]) && !isSettled(next[i])) return true;
+  const allPending = next.every((s) => s.status === "pending");
+  return allPending && (phase !== "idle" || prev.some((s) => s.status !== "pending"));
+}
+
+type LoaderEngine = ReturnType<typeof createLoaderEngine>;
+
+function createLoaderEngine(env: {
+  root: RefObject<HTMLElement>;
+  game: LoaderGame;
+  labels: () => LoaderLabels;
+  props: () => LoaderHostProps;
+  emit: (view: LoaderView) => void;
+}) {
+  let host: LoaderStep[] = [];
+  let vis: LoaderVis[] = [];
+  let front = 0;
+  let frontSince = -1e9;
+  let beatUntil = 0;
+  let beatBusy = false;
+  let inflight: { entries: LoaderEntry[]; landed: boolean; timer: number } | null = null;
+  let backlog: LoaderEntry[] = [];
+  let phase: LoaderPhase = "idle";
+  let barP: number | null = null;
+  let barDetail: string | null = null;
+  let lastSeenP: number | null | undefined;
+  let lastHit = -1e9;
+  let hitT = 0;
+  let pumpT = 0;
+  let metaT = 0;
+  let finaleStarted = false;
+  let finalPrefix = "";
+  let motion: LoaderMotion = { reduced: false, paused: false, onscreen: true, visible: true };
+  let awayFrom: number | null = null;
+  let lineKey = 0;
+  let focusN = 0;
+  let alive = true;
+  const timers = new Set<number>();
+  const anims = new Set<Animation>();
+  let view: LoaderView = loaderInitialView([]);
+
+  const set = (patch: Partial<LoaderView>) => {
+    if (!alive) return;
+    view = { ...view, ...patch };
+    env.emit(view);
+  };
+  const later = (fn: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      timers.delete(id);
+      if (alive) fn();
+    }, Math.max(0, ms));
+    timers.add(id);
+    return id;
+  };
+  const clear = (id: number) => {
+    if (id) {
+      window.clearTimeout(id);
+      timers.delete(id);
+    }
+    return 0;
+  };
+  const motionAllowed = () => !motion.reduced && !motion.paused;
+  const running = () => motion.onscreen && motion.visible;
+  const motionOn = () => motionAllowed() && running();
+  const anim = (el: Element, frames: Keyframe[], opts: KeyframeAnimationOptions) => {
+    if (!alive || typeof el.animate !== "function") return null;
+    const a = el.animate(frames, opts);
+    anims.add(a);
+    const drop = () => anims.delete(a);
+    a.finished.then(drop, drop);
+    return a;
+  };
+  const frontP = () => {
+    const s = host[front];
+    if (!s) return 0;
+    if (s.status === "done") return 1;
+    if (s.status === "pending" || s.status === "skipped" || (s.status === "active" && s.progress == null)) return 0;
+    return barP ?? 0;
+  };
+
+  const ctx: LoaderArenaCtx = {
+    steps: () => host,
+    vis: () => vis,
+    front: () => front,
+    phase: () => phase,
+    frontP,
+    motionAllowed,
+    motionOn,
+    running,
+    later,
+    clear,
+    anim,
+  };
+  const root = env.root.current;
+  const arena = root ? env.game.arena(root, ctx) : null;
+
+  const L = () => env.labels();
+  const P = () => env.props();
+  const announce = (text: string, politeness: "polite" | "assertive") => P().onAnnounce?.(text, politeness);
+  const focusInside = () => {
+    const r = env.root.current;
+    const a = typeof document !== "undefined" ? document.activeElement : null;
+    return !!r && !!a && a !== r && r.contains(a);
+  };
+  const requestFocus = (target: LoaderFocusTarget) => set({ focus: { target, n: ++focusN } });
+
+  function appendLine(kind: LoaderLineKind, text: string) {
+    const lines = view.lines.concat({ key: ++lineKey, kind, text });
+    set({ lines: lines.length > 40 ? lines.slice(-40) : lines });
+    announce(text, "polite");
+  }
+
+  /* -------- narration: written to be heard, not ticked -------- */
+
+  function doneSentence(s: LoaderStep) {
+    const base = s.doneText || \`\${s.label}: done\`;
+    const dur = s.durationMs != null ? \` in \${fmtDur(s.durationMs)}\` : "";
+    const tries = (s.attempt ?? 1) > 1 ? \`, on attempt \${s.attempt}\` : "";
+    return \`\${base}\${dur}\${tries}.\`;
+  }
+  const skipSentence = (s: LoaderStep) => \`Skipped: \${s.label}\${s.detail ? \` (\${lowerFirst(s.detail)})\` : ""}.\`;
+
+  /** The next step still to come after these, never one that already finished. */
+  function nextAfter(list: LoaderEntry[]) {
+    let i = Math.max(...list.map((e) => e.i)) + 1;
+    while (i < host.length && isSettled(host[i])) i++;
+    return i < host.length ? i : -1;
+  }
+
+  /* Two quick finishes share a sentence, a skip that lands with a finish joins
+     it, three or more are summed up, and the line ends with what comes next. */
+  function sentence(input: LoaderEntry[]) {
+    const list = input.slice().sort((a, b) => a.i - b.i);
+    let text: string;
+    if (list.length >= BURST_MIN) {
+      const done = list.filter((e) => e.kind === "done").map((e) => host[e.i]);
+      const skipped = list.filter((e) => e.kind === "skipped").map((e) => host[e.i].label);
+      text = done.length === 1 ? doneSentence(done[0]) : done.length ? \`Finished \${done.length} steps at once: \${listJoin(done.map((s) => s.label))}.\` : "";
+      if (skipped.length) text += \`\${text ? " " : ""}Skipped: \${listJoin(skipped)}.\`;
+    } else {
+      const parts = list.map((e) => (e.kind === "done" ? doneSentence(host[e.i]) : skipSentence(host[e.i])));
+      text =
+        parts.length === 2 && list[0].kind === "done" && list[1].kind === "done"
+          ? \`\${parts[0].replace(/\\.$/, "")}, then \${lowerFirst(parts[1])}\`
+          : parts.join(" ");
+    }
+    const n = nextAfter(list);
+    if (n >= 0) text += \`\${n === host.length - 1 ? " Last up: " : " On to "}\${lowerFirst(host[n].label)}.\`;
+    return text;
+  }
+
+  /* Narrates every completion not told yet as one line. When it is the last
+     news before the finale it is held and merged into the completion line, so
+     the end of a run is one announcement, not two. */
+  function speak(list: LoaderEntry[]) {
+    const fresh = list.filter((e) => !e.said);
+    if (!fresh.length) return;
+    fresh.forEach((e) => {
+      e.said = true;
+    });
+    const text = sentence(fresh);
+    if (host.every(isSettled) && backlog.every((b) => b.said)) {
+      finalPrefix = finalPrefix ? \`\${finalPrefix} \${text}\` : text;
+      return;
+    }
+    appendLine(fresh.some((e) => e.kind === "done") ? "done" : "skipped", text);
+  }
+
+  /* -------- the bar and the hits -------- */
+
+  function syncBar() {
+    const s = host[front];
+    barP = s ? (s.status === "done" ? 1 : s.progress ?? null) : null;
+    barDetail = s ? s.detail ?? null : null;
+    lastSeenP = s ? s.progress : null;
+  }
+
+  function requestHit() {
+    if (hitT) return;
+    const t = loaderNow();
+    hitT = later(doHit, Math.max(lastHit + HIT_GAP - t, frontSince + BASE - t, 0));
+  }
+
+  function doHit() {
+    hitT = 0;
+    const s = host[front];
+    if (phase !== "run" || !s || s.status !== "active" || s.progress == null) return;
+    lastHit = loaderNow();
+    if (!motionOn() || !arena) {
+      syncBar();
+      arena?.progress(front, false);
+      set({ barP, barDetail });
+      return;
+    }
+    const id = s.id;
+    const delay = arena.hit(front);
+    later(() => {
+      if (host[front]?.id !== id) return;
+      syncBar();
+      arena.progress(front, motionOn());
+      set({ barP, barDetail });
+    }, delay);
+  }
+
+  /* -------- the beats -------- */
+
+  function pump() {
+    pumpT = clear(pumpT);
+    if (phase === "error" || phase === "stopped" || beatBusy) return;
+    if (!backlog.length) {
+      maybeFinale();
+      return;
+    }
+    if (!running()) {
+      flushBacklog();
+      return;
+    }
+    const t = loaderNow();
+    if (t < beatUntil) {
+      pumpT = later(pump, beatUntil - t);
+      return;
+    }
+    const oldest = backlog[0].at;
+    const newest = backlog[backlog.length - 1].at;
+    if (t - newest < COLLECT && t - oldest < BASE) {
+      pumpT = later(pump, COLLECT - (t - newest));
+      return;
+    }
+    if (backlog.length >= BURST_MIN || t - oldest > 900) {
+      runBeat(backlog.splice(0));
+      return;
+    }
+    const dwellLeft = frontSince + DWELL - t;
+    if (dwellLeft > 0) {
+      pumpT = later(pump, dwellLeft);
+      return;
+    }
+    // A skip that arrived with this completion resolves in the same beat.
+    let take = 1;
+    while (take < backlog.length && backlog[take].kind === "skipped" && backlog[take].at - backlog[0].at <= COALESCE) take++;
+    runBeat(backlog.splice(0, take));
+  }
+
+  function runBeat(entries: LoaderEntry[]) {
+    const head = entries[0];
+    const showy = motionOn();
+    const delay = showy && head.kind === "done" && arena ? arena.finish(head.i) : 0;
+    beatUntil = loaderNow() + delay;
+    beatBusy = true;
+    const land = () => {
+      entries.forEach((e) => {
+        vis[e.i] = "gone";
+      });
+      const hold = arena ? arena.resolve(entries, showy) : 0;
+      speak(entries.concat(backlog.filter((b) => b.at - head.at <= COALESCE)));
+      const settle = () => {
+        beatBusy = false;
+        inflight = null;
+        advanceFront();
+        pump();
+      };
+      if (hold > 0) inflight = { entries, landed: true, timer: later(settle, hold) };
+      else settle();
+    };
+    if (delay) inflight = { entries, landed: false, timer: later(land, delay) };
+    else land();
+  }
+
+  /** Resolves everything queued at once, without beats: hidden tab, off screen, an error or a cancel. */
+  function flushBacklog() {
+    pumpT = clear(pumpT);
+    let held = false;
+    if (inflight) {
+      clear(inflight.timer);
+      if (inflight.landed) held = true;
+      else backlog = inflight.entries.concat(backlog);
+      inflight = null;
+      beatBusy = false;
+    }
+    if (!backlog.length) {
+      if (held) {
+        advanceFront();
+        maybeFinale();
+      }
+      return;
+    }
+    const entries = backlog.splice(0);
+    entries.forEach((e) => {
+      vis[e.i] = "gone";
+    });
+    arena?.resolve(entries, false);
+    speak(entries);
+    advanceFront();
+    maybeFinale();
+  }
+
+  function advanceFront() {
+    const f = loaderFirstLiveVis();
+    const changed = f !== front;
+    front = f;
+    frontSince = loaderNow();
+    syncBar();
+    set({ front, barP, barDetail, frontKey: changed ? view.frontKey + 1 : view.frontKey });
+    arena?.advance(changed);
+    arena?.pose();
+    const s = host[front];
+    if (s && s.status === "active" && s.progress != null && s.progress > 0 && motionOn()) requestHit();
+  }
+
+  function loaderFirstLiveVis() {
+    let f = 0;
+    while (f < host.length && vis[f] === "gone") f++;
+    return f;
+  }
+
+  /* -------- the error path -------- */
+
+  function errorText(s: LoaderStep) {
+    const msg = s.error || "Something went wrong.";
+    if (msg.toLowerCase().includes(s.label.toLowerCase())) return msg;
+    return \`\${s.label} failed: \${lowerFirst(msg)}\${/[.!?]$/.test(msg) ? "" : "."}\`;
+  }
+
+  function detailsText(i: number) {
+    const s = host[i];
+    const bits = [\`Step \${i + 1} of \${host.length}\`, \`attempt \${s.attempt ?? 1}\`];
+    if (s.detail) bits.push(\`reached \${s.detail}\`);
+    else if (s.progress != null) bits.push(\`reached \${Math.floor(s.progress * 100)}%\`);
+    if (s.elapsedMs != null) bits.push(\`ran \${fmtDur(s.elapsedMs)}\`);
+    return bits.join(" · ");
+  }
+
+  function showError(i: number) {
+    const hadFocus = focusInside();
+    flushBacklog();
+    phase = "error";
+    clearFlash();
+    hitT = clear(hitT);
+    const s = host[i];
+    const text = errorText(s);
+    if (s.progress != null) barP = s.progress;
+    if (s.detail) barDetail = s.detail;
+    set({ phase, alert: text, errorIndex: i, details: detailsText(i), detailMore: s.errorDetail ?? "", barP, barDetail });
+    announce(text, "assertive");
+    arena?.error(i, motionOn());
+    arena?.pose();
+    if (hadFocus) requestFocus("retry");
+  }
+
+  /** Returns whether focus was in the error menu, so the caller can move it on. */
+  function clearError() {
+    const r = env.root.current;
+    const a = document.activeElement;
+    const panel = r?.querySelector('[data-panel="error"]');
+    const had = !!panel && !!a && panel.contains(a);
+    const i = view.errorIndex;
+    phase = "run";
+    set({ phase, alert: "", details: "", detailMore: "" });
+    arena?.recover(i, motionOn());
+    return had;
+  }
+
+  function retryStarted(i: number) {
+    const had = clearError();
+    const s = host[i];
+    syncBar();
+    set({ barP, barDetail });
+    arena?.progress(front, false);
+    arena?.pose();
+    appendLine("retry", \`Trying again: \${s.label}, attempt \${s.attempt ?? 2}\${s.detail && s.progress ? \`, from \${s.detail}\` : ""}.\`);
+    if (had) requestFocus("log");
+  }
+
+  /* -------- the finale -------- */
+
+  function maybeFinale() {
+    if (finaleStarted || phase === "error" || phase === "stopped" || !host.length) return;
+    if (backlog.length || !host.every(isSettled) || vis.some((v) => v !== "gone")) return;
+    finale(false);
+  }
+
+  function buildTiles(): LoaderTile[] {
+    const n = host.length;
+    const done = host.filter((s) => s.status === "done");
+    const skipped = host.filter((s) => s.status === "skipped").length;
+    const total = done.reduce((a, s) => a + (s.durationMs ?? 0), 0);
+    let longest: LoaderStep | null = null;
+    for (const s of done) if (s.durationMs != null && (!longest || s.durationMs > (longest.durationMs ?? 0))) longest = s;
+    const tiles: LoaderTile[] = [
+      { label: "Steps", value: done.length + skipped, kind: "steps", total: n, sub: skipped ? \`\${skipped} skipped\` : "none skipped" },
+    ];
+    if (total > 0) tiles.push({ label: "Time", value: total, kind: "time", total: 0, sub: longest ? \`Longest: \${longest.label}, \${fmtDur(longest.durationMs)}\` : "" });
+    for (const st of P().stats ?? []) tiles.push({ label: st.label, value: st.value, kind: "stat", total: 0, sub: st.sub ?? "" });
+    const retried = done.filter((s) => (s.attempt ?? 1) > 1);
+    if (retried.length) {
+      const hiccups = retried.reduce((a, s) => a + (s.attempt ?? 1) - 1, 0);
+      tiles.push({ label: hiccups === 1 ? "Hiccup" : "Hiccups", value: hiccups, kind: "hiccup", total: 0, sub: \`at \${listJoin(retried.map((s) => s.label))}\` });
+    }
+    return tiles;
+  }
+
+  function finale(silent: boolean) {
+    finaleStarted = true;
+    const hadFocus = focusInside();
+    phase = "complete";
+    clearFlash();
+    const n = host.length;
+    const skipped = host.filter((s) => s.status === "skipped").length;
+    const showy = motionOn();
+    const extra = P().completeText;
+    if (!silent) appendLine("finish", \`\${finalPrefix ? \`\${finalPrefix} \` : ""}\${L().complete(n, skipped)}\${extra ? \` \${extra}\` : ""}\`);
+    finalPrefix = "";
+    set({ phase, tiles: buildTiles(), banner: !silent, results: false, done: false });
+    arena?.finale(showy);
+    arena?.pose();
+    if (!silent) later(() => set({ banner: false }), FAST + BEAT);
+    const open = () => {
+      set({ results: true, resultsKey: view.resultsKey + 1 });
+      later(() => {
+        set({ done: true });
+        if (hadFocus || focusInside()) requestFocus("continue");
+        P().onComplete?.();
+      }, showy ? SLOW + 200 : 0);
+    };
+    // The log line lands first and the results cover it a moment later, so the line is announced.
+    if (silent) open();
+    else later(open, showy ? FAST + BASE : FAST);
+  }
+
+  /* -------- stop, flash, motion -------- */
+
+  function flashMeta(text: string, ms: number) {
+    if (phase !== "run" && phase !== "complete") return;
+    metaT = clear(metaT);
+    set({ meta: text });
+    metaT = later(() => set({ meta: null }), ms);
+  }
+  function clearFlash() {
+    metaT = clear(metaT);
+    if (view.meta) set({ meta: null });
+  }
+
+  function cancel() {
+    if (phase === "complete" || phase === "stopped") return;
+    const hadFocus = focusInside();
+    const kept = host.filter((s) => s.status === "done").length;
+    flushBacklog();
+    pumpT = clear(pumpT);
+    hitT = clear(hitT);
+    clearFlash();
+    phase = "stopped";
+    set({ phase, alert: "", details: "", detailMore: "" });
+    arena?.stop(motionOn());
+    arena?.pose();
+    appendLine("stop", \`\${finalPrefix ? \`\${finalPrefix} \` : ""}\${L().stopped(kept)}\`);
+    finalPrefix = "";
+    P().onCancel?.();
+    if (hadFocus) requestFocus("log");
+  }
+
+  function setMotion(next: LoaderMotion) {
+    const wasRunning = running();
+    motion = next;
+    const isRunning = running();
+    if (wasRunning && !isRunning && awayFrom == null) awayFrom = host.filter(isSettled).length;
+    if (!motionOn()) {
+      anims.forEach((a) => {
+        try {
+          a.finish();
+        } catch {
+          a.cancel();
+        }
+      });
+      if (hitT) {
+        hitT = clear(hitT);
+        syncBar();
+        arena?.progress(front, false);
+        set({ barP, barDetail });
+      }
+    }
+    if (!isRunning && (backlog.length || inflight)) flushBacklog();
+    arena?.motion();
+    arena?.pose();
+    if (!wasRunning && isRunning && awayFrom != null) {
+      const d = host.filter(isSettled).length - awayFrom;
+      awayFrom = null;
+      if (d > 0) flashMeta(L().away(d), BEAT * 2);
+    }
+    pump();
+  }
+
+  /* -------- the host's steps -------- */
+
+  function rebuild(steps: LoaderStep[]) {
+    timers.forEach((id) => window.clearTimeout(id));
+    timers.clear();
+    anims.forEach((a) => a.cancel());
+    anims.clear();
+    hitT = pumpT = metaT = 0;
+    host = steps.map((s) => ({ ...s }));
+    backlog = [];
+    inflight = null;
+    beatBusy = false;
+    beatUntil = 0;
+    finaleStarted = false;
+    finalPrefix = "";
+    lastHit = -1e9;
+    vis = host.map((s) => (isSettled(s) ? "gone" : "live"));
+    const started = host.some((s) => s.status !== "pending");
+    phase = started ? (host.length && host.every(isSettled) ? "complete" : "run") : "idle";
+    front = loaderFirstLiveVis();
+    frontSince = -1e9;
+    syncBar();
+    view = { ...loaderInitialView(host), frontKey: view.frontKey + 1, resultsKey: view.resultsKey, phase };
+    set({ front, barP, barDetail });
+    arena?.rebuild();
+    arena?.pose();
+    const errAt = host.findIndex((s) => s.status === "error");
+    if (phase === "complete") finale(true);
+    else if (errAt >= 0) showError(errAt);
+  }
+
+  function update(steps: LoaderStep[]) {
+    const next = steps.map((s) => ({ ...s }));
+    const prev = host;
+    if (loaderNeedsRebuild(prev, next, phase)) {
+      rebuild(next);
+      return;
+    }
+    host = next;
+    if (phase === "stopped") return;
+    if (phase === "idle" && host.some((s) => s.status !== "pending")) {
+      phase = "run";
+      set({ phase });
+    }
+    const t = loaderNow();
+    let errAt = -1;
+    let retryAt = -1;
+    let leftError = false;
+    host.forEach((s, i) => {
+      const was = prev[i]?.status ?? "pending";
+      if (was === s.status) return;
+      if (was === "error") leftError = true;
+      if (s.status === "done" || s.status === "skipped") backlog.push({ i, kind: s.status, at: t });
+      else if (s.status === "error") errAt = i;
+      else if (s.status === "active" && was === "error") retryAt = i;
+    });
+    if (retryAt >= 0) retryStarted(retryAt);
+    else if (leftError && phase === "error") {
+      if (clearError()) requestFocus("log");
+    }
+    if (errAt >= 0) {
+      showError(errAt);
+      return;
+    }
+    const s = host[front];
+    if (phase === "run" && s && s.status === "active" && s.progress != null && s.progress !== lastSeenP) {
+      // A step that only just started reports 0: nothing to hit yet.
+      if (motionOn() && !(s.progress === 0 && lastSeenP == null)) {
+        lastSeenP = s.progress;
+        requestHit();
+      } else {
+        syncBar();
+        arena?.progress(front, false);
+        set({ barP, barDetail });
+      }
+    } else if (phase === "run" && s && s.status === "active" && s.progress == null && view.front === front) {
+      arena?.pose();
+    }
+    pump();
+  }
+
+  function layout() {
+    arena?.layout(false);
+  }
+
+  function destroy() {
+    alive = false;
+    timers.forEach((id) => window.clearTimeout(id));
+    timers.clear();
+    anims.forEach((a) => a.cancel());
+    anims.clear();
+    arena?.destroy();
+  }
+
+  return { rebuild, update, setMotion, cancel, layout, destroy };
+}
+
+/* -------- hooks -------- */
+
+const LOADER_RM_QUERY = "(prefers-reduced-motion: reduce)";
+const loaderSubscribeRM = (onChange: () => void) => {
+  const q = window.matchMedia(LOADER_RM_QUERY);
+  q.addEventListener("change", onChange);
+  return () => q.removeEventListener("change", onChange);
+};
+const loaderReadRM = () => window.matchMedia(LOADER_RM_QUERY).matches;
+const loaderServerRM = () => false;
+
+/** prefers-reduced-motion, followed live; a boolean prop wins. */
+function useReducedMotionPreference(forced: boolean | undefined) {
+  const media = useSyncExternalStore(loaderSubscribeRM, loaderReadRM, loaderServerRM);
+  return forced ?? media;
+}
+
+/** Whether the element is on screen. Starts true so a first paint is never treated as off screen. */
+function useOnscreen(ref: RefObject<Element>) {
+  const [on, setOn] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver((list) => setOn(list[list.length - 1].isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref]);
+  return on;
+}
+
+/** Whether the browser tab is visible. */
+function usePageVisible() {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const sync = () => setVisible(document.visibilityState !== "hidden");
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, []);
+  return visible;
+}
+
+function loaderStateWord(s: LoaderStep, L: LoaderLabels) {
+  switch (s.status) {
+    case "active":
+      return (s.attempt ?? 1) > 1 ? \`Running, attempt \${s.attempt}\` : "Running";
+    case "done":
+      return s.durationMs != null ? \`Done in \${fmtDur(s.durationMs)}\` : "Done";
+    case "skipped":
+      return "Skipped";
+    case "error":
+      return L.failed;
+    default:
+      return "Waiting";
+  }
+}
+
+function loaderTileText(t: LoaderTile, k: number) {
+  if (typeof t.value === "string") return t.value;
+  const v = t.value * k;
+  if (t.kind === "steps") return \`\${Math.round(v)} of \${t.total}\`;
+  if (t.kind === "time") return fmtDur(v);
+  if (t.kind === "hiccup") return \`\${Math.round(v)} recovered\`;
+  return Math.round(v).toLocaleString("en-US");
+}
+
+/** Everything the chassis needs: the engine, its view, the motion state and the handlers. */
+function useLoader(props: LoaderHostProps, game: LoaderGame) {
+  const rootRef = useRef<HTMLElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const engineRef = useRef<LoaderEngine | null>(null);
+  const uid = useId().replace(/:/g, "");
+  const labels = useMemo<LoaderLabels>(
+    () => ({ ...LOADER_DEFAULT_LABELS, unit: game.unit, clear: game.clear, ...props.labels }),
+    [props.labels, game],
+  );
+  const propsRef = useRef(props);
+  propsRef.current = props;
+  const labelsRef = useRef(labels);
+  labelsRef.current = labels;
+
+  const reduced = useReducedMotionPreference(props.reducedMotion);
+  const onscreen = useOnscreen(rootRef);
+  const visible = usePageVisible();
+  const [paused, setPaused] = useState(false);
+  const motion: LoaderMotion = { reduced, paused, onscreen, visible };
+  const motionRef = useRef(motion);
+  motionRef.current = motion;
+
+  const [view, setView] = useState<LoaderView>(() => loaderInitialView(props.steps));
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [cursor, setCursor] = useState(0);
+  const [countT, setCountT] = useState(1);
+
+  // The engine and the arena live for the component's lifetime; StrictMode's second mount builds them again.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const engine = createLoaderEngine({
+      root: rootRef,
+      game,
+      labels: () => labelsRef.current,
+      props: () => propsRef.current,
+      emit: setView,
+    });
+    engineRef.current = engine;
+    engine.setMotion(motionRef.current);
+    engine.rebuild(propsRef.current.steps);
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => engine.layout()) : null;
+    ro?.observe(root);
+    return () => {
+      ro?.disconnect();
+      engine.destroy();
+      engineRef.current = null;
+    };
+  }, [game]);
+
+  useLayoutEffect(() => {
+    engineRef.current?.update(props.steps);
+  }, [props.steps]);
+
+  useEffect(() => {
+    engineRef.current?.setMotion({ reduced, paused, onscreen, visible });
+  }, [reduced, paused, onscreen, visible]);
+
+  // A new error starts with the menu cursor on Retry and the details closed.
+  useEffect(() => {
+    setDetailsOpen(false);
+    setCursor(0);
+  }, [view.alert]);
+
+  useLayoutEffect(() => {
+    const f = view.focus;
+    if (!f) return;
+    if (f.target === "retry") menuRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    else if (f.target === "log") logRef.current?.focus();
+    else if (f.target === "continue") continueRef.current?.focus();
+  }, [view.focus]);
+
+  // The log shows its newest lines, starting on a whole line rather than mid-sentence.
+  useLayoutEffect(() => {
+    const log = logRef.current;
+    if (!log) return;
+    log.style.paddingBottom = "";
+    const target = log.scrollHeight - log.clientHeight;
+    if (target <= 0) {
+      log.scrollTop = 0;
+      return;
+    }
+    const lines = Array.from(log.children) as HTMLElement[];
+    const base = lines[0].offsetTop;
+    let top = lines[lines.length - 1].offsetTop - base;
+    for (let k = lines.length - 1; k >= 0; k--) {
+      const y = lines[k].offsetTop - base;
+      if (y < target) break;
+      top = y;
+    }
+    if (top > target) log.style.paddingBottom = \`\${top - target}px\`;
+    log.scrollTop = top;
+  }, [view.lines]);
+
+  // Results count up over SLOW when motion is allowed.
+  useEffect(() => {
+    if (!view.results) return;
+    const m = motionRef.current;
+    if (m.reduced || m.paused || !m.onscreen || !m.visible) {
+      setCountT(1);
+      return;
+    }
+    let raf = 0;
+    const t0 = loaderNow();
+    setCountT(0);
+    const tick = () => {
+      const x = Math.min(1, (loaderNow() - t0) / SLOW);
+      setCountT(1 - (1 - x) * (1 - x) * (1 - x));
+      if (x < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      setCountT(1);
+    };
+  }, [view.resultsKey, view.results]);
+
+  const steps = props.steps;
+  const n = steps.length;
+  const settled = steps.filter(isSettled).length;
+  let current = steps.findIndex((s) => s.status === "active" || s.status === "error");
+  if (current < 0) current = steps.findIndex((s) => s.status === "pending");
+  const cur = current >= 0 ? steps[current] : undefined;
+
+  let valueText: string;
+  if (view.phase === "stopped") valueText = \`Stopped at step \${current + 1} of \${n}\`;
+  else if (n && settled === n) valueText = \`All \${n} steps finished\`;
+  else if (view.phase === "idle" || !cur) valueText = labels.queued(n, steps[0]?.label ?? "");
+  else valueText = \`Step \${current + 1} of \${n}: \${cur.label}\${cur.status === "error" ? ", failed" : ""}\`;
+
+  const ps = steps[view.front];
+  let plateP = 0;
+  if (ps) {
+    if (ps.status === "done") plateP = 1;
+    else if (ps.status === "pending" || ps.status === "skipped" || (ps.status === "active" && ps.progress == null)) plateP = 0;
+    else plateP = Math.max(0, Math.min(1, view.barP ?? 0));
+  }
+  let count = "";
+  if (ps) {
+    if (ps.status === "active" && ps.progress == null) {
+      const secs = Math.floor((ps.elapsedMs ?? 0) / 1000);
+      count = \`\${labels.sizeUnknown}\${secs >= 10 ? \` · \${secs}s\` : ""}\`;
+    } else if (ps.status === "done") count = ps.detail ?? "";
+    else if (ps.status === "active" || (ps.status === "error" && ps.progress != null)) count = view.barDetail ?? \`\${Math.floor(plateP * 100)}%\`;
+  }
+  const plate = {
+    label: ps?.label ?? "",
+    state: !ps || ps.status === "skipped" ? "pending" : ps.status,
+    attempt: ps && (ps.attempt ?? 1) > 1 && (ps.status === "active" || ps.status === "error") ? ps.attempt ?? 0 : 0,
+    failed: ps?.status === "error",
+    indet: ps?.status === "active" && ps.progress == null,
+    gone: view.phase === "complete" || !ps,
+    p: plateP,
+    count,
+  };
+
+  const placeholder = view.midRun ? labels.progress(settled, n, cur?.label ?? "") : labels.queued(n, steps[0]?.label ?? "");
+
+  let metaHead = "";
+  let metaTail = "";
+  const at = Math.min(view.front + 1, Math.max(1, n));
+  if (view.phase === "complete") {
+    metaHead = labels.clear;
+    metaTail = \`\${n} of \${n}\`;
+  } else if (view.phase === "stopped") {
+    metaHead = \`\${labels.unit} \${Math.max(1, current + 1)} of \${n}\`;
+    metaTail = labels.stopped(steps.filter((s) => s.status === "done").length);
+  } else if (view.phase === "error") {
+    metaHead = \`\${labels.unit} \${at} of \${n}\`;
+    metaTail = labels.waiting;
+  } else {
+    const next = steps.slice(view.front + 1).filter((s) => !isSettled(s)).map((s) => s.label);
+    metaHead = \`\${labels.unit} \${at} of \${n}\`;
+    metaTail = next.length === 0 ? "Last step" : next.length === 1 ? \`Next: \${next[0]}\` : \`Next: \${next[0]}, then \${next[1]}\`;
+  }
+
+  const errStep = view.errorIndex >= 0 ? steps[view.errorIndex] : undefined;
+  const commands: Array<{ key: string; label: string; sr?: string; primary?: boolean; expanded?: boolean; run: () => void }> = [];
+  if (props.onRetry) commands.push({ key: "retry", label: labels.retry, sr: errStep ? \` \${errStep.label}\` : undefined, primary: true, run: () => errStep && propsRef.current.onRetry?.(errStep.id) });
+  if (props.onSkip) commands.push({ key: "skip", label: labels.skip, sr: errStep ? \` \${errStep.label}\` : undefined, run: () => errStep && propsRef.current.onSkip?.(errStep.id) });
+  if (props.onCancel) commands.push({ key: "cancel", label: labels.cancel, run: () => engineRef.current?.cancel() });
+  commands.push({ key: "details", label: detailsOpen ? labels.hideDetails : labels.showDetails, expanded: detailsOpen, run: () => setDetailsOpen((o) => !o) });
+
+  const onMenuKey = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    const btns = Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []);
+    const i = btns.indexOf(document.activeElement as HTMLButtonElement);
+    if (i < 0) return;
+    let j = i;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") j = (i + 1) % btns.length;
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") j = (i - 1 + btns.length) % btns.length;
+    else if (e.key === "Home") j = 0;
+    else if (e.key === "End") j = btns.length - 1;
+    else return;
+    e.preventDefault();
+    setCursor(j);
+    btns[j].focus();
+  };
+
+  return {
+    props,
+    view,
+    labels,
+    steps,
+    n,
+    settled,
+    current,
+    valueText,
+    plate,
+    placeholder,
+    metaHead,
+    metaTail,
+    commands,
+    cursor: Math.min(cursor, commands.length - 1),
+    setCursor,
+    onMenuKey,
+    detailsOpen,
+    countT,
+    reduced,
+    paused,
+    togglePause: () => setPaused((p) => !p),
+    motionAllowed: !reduced && !paused,
+    running: onscreen && visible,
+    rootRef,
+    logRef,
+    menuRef,
+    continueRef,
+    titleId: \`bz-brl-title-\${uid}\`,
+    detailsId: \`bz-brl-details-\${uid}\`,
+    hatchId: \`bz-brl-hatch-\${uid}\`,
+  };
+}
+
+type LoaderApi = ReturnType<typeof useLoader>;
+
+/* ---------------- end shared: engine ---------------- */
+
+/* ---------------- shared: chassis ---------------- */
+
+/** The structure for screen readers: every step and its state. */
+function LoaderStepList({ api }: { api: LoaderApi }) {
+  return (
+    <ol className="bz-brl-sr" aria-busy={api.view.phase === "run" ? "true" : "false"}>
+      {api.steps.map((s, i) => (
+        <li key={\`\${s.id}-\${i}\`} aria-current={i === api.current ? "step" : undefined}>
+          {\`\${s.label}: \${loaderStateWord(s, api.labels)}\`}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** The nameplate: the one progressbar. The arena positions it. */
+function LoaderPlate({ api }: { api: LoaderApi }) {
+  const { plate, labels } = api;
+  // "620 of 1,240 contacts": the unit word can drop on the narrowest layouts, the numbers never do.
+  const unit = /^(.*\\d)(\\s+[^\\d·]+)$/.exec(plate.count);
+  return (
+    <div
+      className="bz-brl-plate"
+      role="progressbar"
+      aria-labelledby={api.titleId}
+      aria-valuemin={0}
+      aria-valuemax={Math.max(1, api.n)}
+      aria-valuenow={api.settled}
+      aria-valuetext={api.valueText}
+      data-state={plate.state}
+      data-gone={plate.gone ? "true" : "false"}
+    >
+      <div className="bz-brl-plate-in" key={api.view.frontKey}>
+        <div className="bz-brl-plate-top">
+          <span className="bz-brl-plate-label">{plate.label}</span>
+          <span className="bz-brl-badges">
+            {plate.attempt ? <span className="bz-brl-tag">{labels.attempt(plate.attempt)}</span> : null}
+            {plate.failed ? (
+              <span className="bz-brl-failed">
+                <LoaderGlyph name="cross" />
+                {labels.failed}
+              </span>
+            ) : null}
+          </span>
+        </div>
+        <div className="bz-brl-plate-row">
+          <span className="bz-brl-bar" data-indet={plate.indet ? "true" : "false"}>
+            <span className="bz-brl-fill" style={{ width: \`\${Math.round(plate.p * 1000) / 10}%\` }} />
+            <svg className="bz-brl-hatch" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
+              <defs>
+                <pattern id={api.hatchId} width="8" height="8" patternUnits="userSpaceOnUse">
+                  <path d="M0 6h2v2H0zM2 4h2v2H2zM4 2h2v2H4zM6 0h2v2H6z" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill={\`url(#\${api.hatchId})\`} />
+            </svg>
+          </span>
+          <span className="bz-brl-count">
+            {unit ? unit[1] : plate.count}
+            {unit ? <span className="bz-brl-unit">{unit[2]}</span> : null}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LOADER_LINE_GLYPH: Record<LoaderLineKind, LoaderGlyphName> = { done: "done", skipped: "skipped", retry: "retry", finish: "finish", stop: "stop" };
+
+/** The dialogue box: narration, the error menu and the results share one cell, so it never changes height. */
+function LoaderBox({ api, hairStyle }: { api: LoaderApi; hairStyle: LoaderCharacter["hairStyle"] }) {
+  const { view, labels } = api;
+  const errorOn = view.phase === "error";
+  const resultsOn = view.results;
+  const errTextRef = useRef<HTMLDivElement>(null);
+  const [errScroll, setErrScroll] = useState(false);
+  // Long host text on a narrow screen can outgrow the error cell. Then the cell scrolls and takes focus, so a keyboard reaches all of it.
+  useLayoutEffect(() => {
+    const el = errTextRef.current;
+    if (!el || !errorOn) {
+      setErrScroll(false);
+      return;
+    }
+    const check = () => setErrScroll(el.scrollHeight > el.clientHeight + 1);
+    check();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(check) : null;
+    ro?.observe(el);
+    return () => ro?.disconnect();
+  }, [errorOn, api.detailsOpen, view.alert, view.details, view.detailMore]);
+  const lastLine = view.lines.length ? view.lines[view.lines.length - 1].text : "";
+  const face: LoaderFace = errorOn ? "squint" : view.phase === "stopped" ? "blink" : view.phase === "complete" ? "happy" : "open";
+  return (
+    <div className="bz-brl-frame bz-brl-box">
+      <div className="bz-brl-frame-in bz-brl-box-in">
+        <LoaderPortrait hairStyle={hairStyle} face={face} />
+        <div className="bz-brl-panels">
+          <div className="bz-brl-panel bz-brl-talk">
+            <div ref={api.logRef} className="bz-brl-log" role="log" aria-label={labels.narration} tabIndex={errorOn || resultsOn ? -1 : 0}>
+              {view.lines.map((line, k) => (
+                <p key={line.key} className="bz-brl-line" data-kind={line.kind} data-last={k === view.lines.length - 1 ? "true" : undefined}>
+                  <LoaderGlyph name={LOADER_LINE_GLYPH[line.kind]} />
+                  <span>{line.text}</span>
+                </p>
+              ))}
+            </div>
+            {view.lines.length ? null : (
+              <p className="bz-brl-ph" aria-hidden="true">
+                {api.placeholder}
+              </p>
+            )}
+          </div>
+          <div className="bz-brl-panel bz-brl-err" data-panel="error" data-on={errorOn ? "true" : "false"}>
+            <div
+              ref={errTextRef}
+              className="bz-brl-err-text"
+              data-scroll={errScroll ? "true" : undefined}
+              tabIndex={errScroll ? 0 : undefined}
+              role={errScroll ? "region" : undefined}
+              aria-labelledby={errScroll ? \`\${api.detailsId}-alert\` : undefined}
+            >
+              <div id={\`\${api.detailsId}-alert\`} className="bz-brl-alert" role="alert">
+                {view.alert ? (
+                  <>
+                    <LoaderGlyph name="cross" />
+                    <span>{view.alert}</span>
+                  </>
+                ) : null}
+              </div>
+              <p id={api.detailsId} className="bz-brl-details" hidden={!api.detailsOpen}>
+                <span>{view.details}</span>
+                {view.detailMore ? <span className="bz-brl-more-detail">{view.detailMore}</span> : null}
+              </p>
+            </div>
+            <div ref={api.menuRef} className="bz-brl-menu" role="group" aria-label={labels.menu} onKeyDown={api.onMenuKey}>
+              {api.commands.map((c, k) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  className={\`bz-brl-btn\${c.primary ? " bz-brl-primary" : ""}\`}
+                  tabIndex={k === api.cursor ? 0 : -1}
+                  data-cursor={k === api.cursor ? "true" : undefined}
+                  aria-expanded={c.key === "details" ? c.expanded : undefined}
+                  aria-controls={c.key === "details" ? api.detailsId : undefined}
+                  onFocus={() => api.setCursor(k)}
+                  onClick={c.run}
+                >
+                  <span className="bz-brl-cur" aria-hidden="true">
+                    <LoaderGlyph name="cursor" />
+                  </span>
+                  {c.label}
+                  {c.sr ? <span className="bz-brl-sr">{c.sr}</span> : null}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="bz-brl-panel bz-brl-res" data-on={resultsOn ? "true" : "false"}>
+            <p className="bz-brl-res-line" aria-hidden="true">
+              {resultsOn ? lastLine : ""}
+            </p>
+            <dl className="bz-brl-tiles">
+              {view.tiles.map((t) => (
+                <div className="bz-brl-tile" key={t.label} data-kind={t.kind}>
+                  <dt>{t.label}</dt>
+                  <dd>
+                    <span className="bz-brl-num" aria-hidden="true">
+                      {loaderTileText(t, api.countT)}
+                    </span>
+                    <span className="bz-brl-sr">{loaderTileText(t, 1)}</span>
+                    {t.sub ? (
+                      <span className="bz-brl-sub" title={t.sub}>
+                        {t.sub}
+                      </span>
+                    ) : null}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+        <div className="bz-brl-foot">
+          <p className="bz-brl-meta" aria-hidden="true">
+            {view.meta ? (
+              <>
+                <LoaderGlyph name="clock" />
+                {view.meta}
+              </>
+            ) : (
+              <>
+                <b>{api.metaHead}</b>
+                {\` · \${api.metaTail}\`}
+              </>
+            )}
+          </p>
+          <div className="bz-brl-tools">
+            {api.props.onContinue ? (
+              <button
+                ref={api.continueRef}
+                type="button"
+                className="bz-brl-btn bz-brl-primary bz-brl-continue"
+                data-on={view.done ? "true" : "false"}
+                onClick={() => api.props.onContinue?.()}
+              >
+                {labels.continue}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="bz-brl-btn bz-brl-toy"
+              aria-pressed={api.paused}
+              data-hide={api.reduced ? "true" : undefined}
+              onClick={api.togglePause}
+            >
+              <LoaderGlyph name="pause" />
+              {labels.pauseMotion}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LOADER_STEP_OUTER =
+  "polygon(4px 0,calc(100% - 4px) 0,calc(100% - 4px) 2px,calc(100% - 2px) 2px,calc(100% - 2px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 2px) calc(100% - 4px),calc(100% - 2px) calc(100% - 2px),calc(100% - 4px) calc(100% - 2px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 2px),2px calc(100% - 2px),2px calc(100% - 4px),0 calc(100% - 4px),0 4px,2px 4px,2px 2px,4px 2px)";
+const LOADER_STEP_INNER =
+  "polygon(2px 0,calc(100% - 2px) 0,calc(100% - 2px) 2px,100% 2px,100% calc(100% - 2px),calc(100% - 2px) calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,2px calc(100% - 2px),0 calc(100% - 2px),0 2px,2px 2px)";
+
+const LOADER_CHARACTER_KEYS = ["hair", "hair-shade", "skin", "skin-shade", "eye-white", "eye", "outfit", "outfit-shade", "outfit-light", "accent", "pants", "pants-shade", "boots", "boots-shade"];
+
+/* The chassis: the frame, the nameplate's insides, the dialogue box, the footer and the adventurer's frames. */
+const LOADER_CSS = \`
+.bz-brl{container-type:inline-size;display:block;width:100%;min-width:0;
+--bz-brl-ink:light-dark(var(--bz-ink,#0a0a0a),var(--bz-void-ink,#ffffff));
+--bz-brl-muted:light-dark(var(--bz-ink-muted,#4a4a4c),rgba(255,255,255,0.8));
+--bz-brl-panel:light-dark(var(--bz-paper,#ffffff),var(--bz-void-raised,#1a1a1a));
+--bz-brl-track:light-dark(var(--bz-line-opaque,#f0f0f0),#313131);
+--bz-brl-danger:light-dark(var(--bz-danger,#b91c1c),#fca5a5);
+--bz-brl-danger-mark:light-dark(#dc2626,#f87171);
+--bz-brl-success:light-dark(var(--bz-emerald,#047857),var(--bz-emerald-on-void,#34d399));
+--bz-brl-focus:light-dark(var(--bz-focus-ring,#912c22),var(--bz-focus-ring-void,#ffffff));
+--bz-brl-hairline:light-dark(rgba(10,10,10,0.13),rgba(255,255,255,0.16));
+--bz-brl-idle:light-dark(#8a8a8e,#8c8c8c);
+--bz-brl-fast:var(--bz-duration-fast,150ms);
+--bz-brl-base:var(--bz-duration-base,300ms);
+--bz-brl-ease:var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1));
+--bz-brl-beat:var(--bz-duration-beat,2.4s);
+--bz-brl-sans:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);
+--bz-brl-mono:var(--bz-font-mono,ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace)}
+.bz-brl *,.bz-brl *::before,.bz-brl *::after{box-sizing:border-box}
+.bz-brl-in{--bz-brl-u:3px;position:relative;padding:16px;border:1px solid var(--bz-brl-hairline);border-radius:16px;background:var(--bz-brl-panel);color:var(--bz-brl-ink);font-family:var(--bz-brl-sans);font-size:15px;line-height:1.5;text-align:left}
+.bz-brl-sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.bz-brl-title{margin:0 0 10px;font-size:15px;font-weight:600;line-height:21px;color:var(--bz-brl-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bz-brl-title:focus{outline:none}
+.bz-brl-title:focus-visible{outline:2px solid var(--bz-brl-focus);outline-offset:2px}
+.bz-brl-frame{position:relative;padding:2px;background:var(--bz-brl-ink);clip-path:\${LOADER_STEP_OUTER}}
+.bz-brl-frame-in{position:relative;background:var(--bz-brl-panel);clip-path:\${LOADER_STEP_INNER}}
+.bz-brl-g{display:block;flex:none}
+.bz-brl-g path{fill:currentColor}
+
+.bz-brl-plate{position:relative;padding:6px 10px 8px 16px;background:var(--bz-brl-panel);border:2px solid var(--bz-brl-ink);color:var(--bz-brl-ink)}
+.bz-brl-plate::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--bz-brl-accent)}
+.bz-brl-plate[data-state="pending"]::before{background:var(--bz-brl-idle)}
+.bz-brl-plate[data-state="error"]::before{background:var(--bz-brl-danger-mark)}
+.bz-brl-plate[data-gone="true"]{position:absolute!important;width:1px!important;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);border:0}
+.bz-brl-plate-in{animation:bz-brl-fade var(--bz-brl-fast) linear}
+.bz-brl-plate-top{display:flex;align-items:center;gap:2px 8px;min-height:22px}
+.bz-brl-plate-label{flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;line-height:20px;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-brl-badges{display:inline-flex;flex:none;align-items:center;gap:6px}
+.bz-brl-badges:empty{display:none}
+.bz-brl-tag{flex:none;padding:3px 6px 2px;background:var(--bz-brl-accent);color:var(--bz-brl-on-accent);font:700 11px/1.2 var(--bz-brl-mono);letter-spacing:0.02em;white-space:nowrap}
+.bz-brl-failed{flex:none;display:inline-flex;align-items:center;gap:5px;color:var(--bz-brl-danger);font-size:13px;font-weight:700;line-height:1}
+.bz-brl-failed .bz-brl-g{width:12px;height:12px;color:var(--bz-brl-danger-mark)}
+.bz-brl-plate-row{display:flex;align-items:center;gap:4px 10px;margin-top:6px}
+.bz-brl-bar{position:relative;flex:1 1 56px;min-width:56px;height:12px;overflow:hidden;border:2px solid var(--bz-brl-ink);background:var(--bz-brl-track)}
+.bz-brl-fill{position:absolute;left:0;top:0;bottom:0;background:var(--bz-brl-accent);transition:width var(--bz-brl-base) var(--bz-brl-ease)}
+.bz-brl-hatch{position:absolute;top:0;left:-8px;width:calc(100% + 8px);height:100%;display:none;color:var(--bz-brl-accent)}
+.bz-brl-hatch path{fill:currentColor}
+.bz-brl-bar[data-indet="true"] .bz-brl-fill{display:none}
+.bz-brl-bar[data-indet="true"] .bz-brl-hatch{display:block;animation:bz-brl-march var(--bz-brl-beat) steps(4) infinite}
+.bz-brl-count{flex:none;font:500 12px/16px var(--bz-brl-mono);color:var(--bz-brl-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+@keyframes bz-brl-march{from{transform:translateX(0)}to{transform:translateX(8px)}}
+@keyframes bz-brl-fade{from{opacity:0}to{opacity:1}}
+
+.bz-brl-box{margin-top:12px}
+.bz-brl-box-in{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:16px;padding:14px 18px 12px}
+.bz-brl-face{align-self:start;width:72px;height:58px;padding:6px 2px 0;border:2px solid var(--bz-brl-ink);background:var(--bz-brl-portrait,var(--bz-brl-track));overflow:hidden}
+.bz-brl-face svg{display:block;width:64px;height:48px}
+.bz-brl-face g{display:none}
+.bz-brl-face[data-face="open"] g[data-f="open"],.bz-brl-face[data-face="blink"] g[data-f="blink"],.bz-brl-face[data-face="squint"] g[data-f="squint"],.bz-brl-face[data-face="happy"] g[data-f="happy"]{display:inline}
+.bz-brl[data-motion="on"] .bz-brl-face[data-face="open"] g[data-f="blink"]{display:inline;animation:bz-brl-blink calc(var(--bz-brl-beat) * 2) step-end infinite}
+@keyframes bz-brl-blink{0%{visibility:hidden}96%{visibility:visible}100%{visibility:visible}}
+.bz-brl-panels{display:grid;height:140px}
+.bz-brl-panel{grid-area:1/1;min-width:0;min-height:0;background:var(--bz-brl-panel)}
+.bz-brl-talk{position:relative}
+.bz-brl-err,.bz-brl-res{z-index:1;visibility:hidden}
+.bz-brl-err[data-on="true"],.bz-brl-res[data-on="true"]{visibility:visible}
+.bz-brl-log{position:relative;height:120px;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;font-size:15px;line-height:24px}
+.bz-brl-log::-webkit-scrollbar{display:none}
+.bz-brl-log:focus{outline:none}
+.bz-brl-log:focus-visible{outline:2px solid var(--bz-brl-focus);outline-offset:2px}
+.bz-brl-line{display:flex;gap:8px;margin:0;color:var(--bz-brl-muted);font-size:14px}
+.bz-brl-line[data-last="true"]{color:var(--bz-brl-ink);font-size:16px;font-weight:500}
+.bz-brl-line>.bz-brl-g{width:14px;height:14px;margin-top:5px;visibility:hidden}
+.bz-brl-line[data-last="true"]>.bz-brl-g{visibility:visible}
+.bz-brl-line[data-kind="done"]>.bz-brl-g{color:var(--bz-brl-success)}
+.bz-brl-line[data-kind="skipped"]>.bz-brl-g,.bz-brl-line[data-kind="stop"]>.bz-brl-g{color:var(--bz-brl-muted)}
+.bz-brl-line[data-kind="retry"]>.bz-brl-g,.bz-brl-line[data-kind="finish"]>.bz-brl-g{color:var(--bz-brl-accent)}
+.bz-brl-ph{position:absolute;left:0;top:0;margin:0;font-size:15px;line-height:24px;color:var(--bz-brl-muted)}
+
+.bz-brl-err{display:grid;grid-template-rows:minmax(0,1fr) auto;row-gap:10px}
+.bz-brl-err-text{min-height:0;overflow-y:auto;scrollbar-width:thin}
+.bz-brl-err-text:focus{outline:none}
+.bz-brl-err-text:focus-visible{outline:2px solid var(--bz-brl-focus);outline-offset:2px}
+.bz-brl-err-text[data-scroll="true"]{background:linear-gradient(var(--bz-brl-panel),var(--bz-brl-panel)) 0 100%/100% 6px no-repeat local,linear-gradient(var(--bz-brl-muted),var(--bz-brl-muted)) 0 100%/100% 2px no-repeat scroll}
+.bz-brl-alert{visibility:visible;display:flex;gap:10px;color:var(--bz-brl-ink);font-size:15px;font-weight:500;line-height:24px}
+.bz-brl-alert>.bz-brl-g{width:14px;height:14px;margin-top:5px;color:var(--bz-brl-danger-mark)}
+.bz-brl-details{margin:4px 0 0 24px;font:500 12px/18px var(--bz-brl-mono);color:var(--bz-brl-muted)}
+.bz-brl-details[hidden]{display:none}
+.bz-brl-more-detail{display:block;font-family:var(--bz-brl-sans);font-size:13px;line-height:18px}
+.bz-brl-menu{display:flex;flex-wrap:wrap;gap:8px}
+.bz-brl-menu .bz-brl-btn{justify-content:flex-start;gap:6px;padding:0 16px 0 8px}
+.bz-brl-cur{display:inline-flex;width:8px;visibility:hidden}
+.bz-brl-cur .bz-brl-g{width:8px;height:14px}
+.bz-brl-err[data-on="true"] .bz-brl-btn[data-cursor="true"] .bz-brl-cur{visibility:visible}
+
+.bz-brl-res{display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.bz-brl-res-line{flex:none;margin:0;font-size:15px;font-weight:500;line-height:22px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-brl-tiles{display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px 12px;min-height:0;margin:0;overflow-y:auto}
+.bz-brl-tile{flex:1 1 auto;min-width:0;padding-top:6px;border-top:2px solid var(--bz-brl-ink)}
+.bz-brl-tile[data-kind="time"]{flex-grow:4}
+.bz-brl-tile dt{font:700 11px/14px var(--bz-brl-mono);letter-spacing:0.08em;text-transform:uppercase;color:var(--bz-brl-muted)}
+.bz-brl-tile dd{margin:2px 0 0}
+.bz-brl-num{display:block;font:700 18px/24px var(--bz-brl-mono);color:var(--bz-brl-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bz-brl-sub{width:0;min-width:100%;font-size:12px;line-height:16px;color:var(--bz-brl-muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+.bz-brl-foot{grid-column:1/-1;display:flex;align-items:center;gap:8px 16px;margin-top:12px}
+.bz-brl-meta{flex:1 1 auto;min-width:0;height:40px;margin:0;overflow:hidden;font-size:13px;line-height:20px;color:var(--bz-brl-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-brl-meta b{font-weight:600;color:var(--bz-brl-ink)}
+.bz-brl-meta .bz-brl-g{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;color:var(--bz-brl-accent)}
+.bz-brl-tools{display:flex;flex:none;justify-content:flex-end;gap:8px}
+
+.bz-brl-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:48px;min-height:48px;margin:0;padding:0 16px;border:2px solid var(--bz-brl-ink);border-radius:0;background:var(--bz-brl-panel);color:var(--bz-brl-ink);box-shadow:inset 0 -3px 0 var(--bz-brl-track);font:600 14px/1.2 var(--bz-brl-sans);text-align:left;cursor:pointer;transition:background-color var(--bz-brl-fast) var(--bz-brl-ease),transform var(--bz-brl-fast) var(--bz-brl-ease)}
+.bz-brl-btn .bz-brl-g{width:12px;height:12px}
+.bz-brl-btn:focus{outline:none}
+.bz-brl-btn:focus-visible{outline:2px solid var(--bz-brl-focus);outline-offset:2px;background:var(--bz-brl-track)}
+@media (hover:hover){.bz-brl-btn:hover{background:var(--bz-brl-track)}}
+.bz-brl[data-motion="on"] .bz-brl-btn:active{transform:scale(0.97)}
+.bz-brl-btn:disabled{opacity:0.5;cursor:not-allowed}
+.bz-brl-primary{border-color:var(--bz-brl-accent);background:var(--bz-brl-accent);color:var(--bz-brl-on-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25)}
+.bz-brl-primary:focus-visible{background:var(--bz-brl-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25),inset 0 0 0 2px var(--bz-brl-panel)}
+@media (hover:hover){.bz-brl-primary:hover{background:var(--bz-brl-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25),inset 0 0 0 2px var(--bz-brl-panel)}}
+.bz-brl-toy{padding:0 14px;font-size:13.5px}
+.bz-brl-toy[aria-pressed="true"]{border-color:var(--bz-brl-ink);background:var(--bz-brl-ink);color:var(--bz-brl-panel);box-shadow:none}
+.bz-brl-toy[data-hide="true"]{display:none}
+.bz-brl-continue{min-width:112px;visibility:hidden}
+.bz-brl-continue[data-on="true"]{visibility:visible}
+
+@container (max-width:559px){
+.bz-brl-in{--bz-brl-u:2px;padding:12px}
+.bz-brl-box-in{padding:12px 12px 10px}
+.bz-brl-box-in{grid-template-columns:minmax(0,1fr)}
+.bz-brl-face{display:none}
+.bz-brl-panels{height:240px}
+.bz-brl-log{height:220px}
+.bz-brl-plate-row{flex-wrap:wrap}
+.bz-brl-bar{flex-basis:100%}
+.bz-brl-badges{position:absolute;top:-12px;right:8px}
+.bz-brl-tag,.bz-brl-failed{padding:3px 6px 2px;border:2px solid var(--bz-brl-ink)}
+.bz-brl-failed{background:var(--bz-brl-panel);line-height:1.2}
+.bz-brl-menu{display:grid;grid-template-columns:1fr 1fr}
+.bz-brl-tile{flex-basis:40%}
+.bz-brl-sub{display:block;white-space:nowrap;text-overflow:ellipsis}
+.bz-brl-res-line{-webkit-line-clamp:3}
+.bz-brl-foot{flex-wrap:wrap}
+.bz-brl-meta{flex:1 1 100%}
+.bz-brl-tools{flex:1 1 100%}
+}
+@container (max-width:339px){
+.bz-brl-unit{display:none}
+.bz-brl-menu .bz-brl-btn{padding:0 8px 0 4px;gap:4px;font-size:13.5px}
+.bz-brl-toy{padding:0 10px;gap:6px}
+.bz-brl-continue{min-width:96px;padding:0 12px}
+.bz-brl-toy,.bz-brl-continue,.bz-brl-menu .bz-brl-btn{white-space:nowrap}
+}
+
+.bz-brl-hero .bz-brl-f{display:none}
+\${LOADER_FRAME_NAMES.map((f) => \`.bz-brl-hero[data-frame="\${f}"] .bz-brl-f[data-f="\${f}"]\`).join(",")}{display:inline}
+.bz-brl-hero[data-loop="idle"] .bz-brl-f[data-f="idle1"],.bz-brl-hero[data-loop="working"] .bz-brl-f[data-f="idle1"],.bz-brl-hero[data-loop="celebrate"] .bz-brl-f[data-f="celebrate1"],.bz-brl-hero[data-loop="fly"] .bz-brl-f[data-f="fly1"]{display:inline;animation:bz-brl-a var(--bz-brl-loop) step-end infinite}
+.bz-brl-hero[data-loop="idle"] .bz-brl-f[data-f="idle2"],.bz-brl-hero[data-loop="working"] .bz-brl-f[data-f="swing1"],.bz-brl-hero[data-loop="celebrate"] .bz-brl-f[data-f="celebrate2"],.bz-brl-hero[data-loop="fly"] .bz-brl-f[data-f="fly2"]{display:inline;animation:bz-brl-b var(--bz-brl-loop) step-end infinite}
+.bz-brl-hero{--bz-brl-loop:var(--bz-brl-beat)}
+.bz-brl-hero[data-loop="celebrate"]{--bz-brl-loop:calc(var(--bz-brl-beat) / 4)}
+.bz-brl-hero[data-loop="fly"]{--bz-brl-loop:calc(var(--bz-brl-beat) / 8)}
+.bz-brl-hero[data-loop="run"] .bz-brl-f[data-f^="run"]{display:inline;animation:bz-brl-r 400ms step-end infinite}
+.bz-brl-hero[data-loop="run"] .bz-brl-f[data-f="run2"]{animation-delay:-300ms}
+.bz-brl-hero[data-loop="run"] .bz-brl-f[data-f="run3"]{animation-delay:-200ms}
+.bz-brl-hero[data-loop="run"] .bz-brl-f[data-f="run4"]{animation-delay:-100ms}
+@keyframes bz-brl-a{0%{visibility:visible}50%{visibility:hidden}100%{visibility:hidden}}
+@keyframes bz-brl-b{0%{visibility:hidden}50%{visibility:visible}100%{visibility:visible}}
+@keyframes bz-brl-r{0%{visibility:visible}25%{visibility:hidden}100%{visibility:hidden}}
+.bz-brl-c-outline{fill:var(--bz-brl-sprite-outline)}
+.bz-brl-c-mouth{fill:var(--chr-eye)}
+\${LOADER_CHARACTER_KEYS.map((k) => \`.bz-brl-c-\${k}{fill:var(--chr-\${k})}\`).join("\\n")}
+
+.bz-brl[data-motion="off"] .bz-brl-f,.bz-brl[data-motion="off"] .bz-brl-hatch{animation:none!important}
+.bz-brl[data-motion="off"] .bz-brl-fill{transition:none}
+.bz-brl[data-motion="off"] .bz-brl-btn{transition:background-color var(--bz-brl-fast) linear}
+.bz-brl[data-running="false"] *,.bz-brl[data-running="false"] *::before{animation-play-state:paused!important}
+\`;
+
+/* ---------------- end shared: chassis ---------------- */
+
+/* ---------------- Block Run arena ---------------- */
+
+/* Art keys for the course, each mapped by class (bz-brl-k-<role>) to a palette colour. */
+const BRL_ROLES: Record<string, string> = {
+  k: "block-line", q: "block", Q: "block-shade", m: "block-mark", u: "used", U: "used-shade",
+  c: "coin", C: "coin-shade", n: "coin-line", h: "hill", H: "hill-shade", w: "cloud",
+  g: "ground", G: "ground-mortar", e: "ground-edge", p: "pole", f: "flag",
+  t: "castle", T: "castle-shade", d: "castle-door", o: "sprite-outline", x: "danger-mark", z: "ghost",
+};
+
+const BRL_Q = [".####.", "##..##", "....##", "...##.", "..##..", "......", "..##..", "..##.."];
+const BRL_Q_BIG = ["..####..", ".##..##.", "##....##", "......##", ".....##.", "....##..", "...##...", "........", "...##...", "...##..."];
+const BRL_BANG = ["..##..", "..##..", "..##..", "..##..", "..##..", "......", "..##..", "..##.."];
+const BRL_BANG_BIG = ["...##...", "...##...", "...##...", "...##...", "...##...", "...##...", "...##...", "........", "...##...", "...##..."];
+const BRL_COIN = ["..nn..", ".nccn.", "nccCcn", "nccCcn", "nccCcn", "nccCcn", ".nccn.", "..nn.."];
+const BRL_COIN_TURN = ["..nn..", ".ncCn.", ".ncCn.", ".ncCn.", ".ncCn.", ".ncCn.", ".ncCn.", "..nn.."];
+const BRL_SPARK = ["..c..", "..c..", "cc.cc", "..c..", "..c.."];
+const BRL_SPARK_SMALL = [".....", "..c..", ".c.c.", "..c..", "....."];
+const BRL_GROUND = ["eeeeeeee", "gggGgggg", "gggGgggg", "GGGGGGGG", "gggggggG", "gggggggG", "GGGGGGGG"];
+const BRL_CLOUD = [".....wwww.......", "...wwwwwwww.....", "..wwwwwwwwwwww..", ".wwwwwwwwwwwwww.", "wwwwwwwwwwwwwwww", "wwwwwwwwwwwwwwww", ".wwwwwwwwwwwwww."];
+const BRL_HILL = [".......HHHHHH.......", ".....HHhhhhhhHH.....", "....HhhhhhhhhhhH....", "...HhhhHhhhhHhhhH...", "..HhhhhhhhhhhhhhhH..", ".HhhhhHhhhhhhhHhhhH.", ".HhhhhhhhhhhhhhhhhH.", "HhhhhhhhhhhhhhhhhhhH"];
+const BRL_BUSH = ["...HH..HH...", "..HhhHHhhH..", ".HhhhhhhhhH.", "HhhhhhhhhhhH"];
+const BRL_PIPE = ["oooooooooo", "ohhppppppo", "ohhppppppo", "oooooooooo", ".ohpppppo.", ".ohpppppo.", ".ohpppppo.", ".ohpppppo.", ".ohpppppo.", ".ohpppppo."];
+const BRL_CASTLE = [
+  "......TT.TT.TT......",
+  "......TTTTTTTT......",
+  "......TttttttT......",
+  "......TtdttdtT......",
+  "......TtdttdtT......",
+  "......TttttttT......",
+  "TT.TT.TttttttT.TT.TT",
+  "TTTTTTTTTTTTTTTTTTTT",
+  "TttttttttttttttttttT",
+  "TttTttttttttttttTttT",
+  "TttttttTddddTttttttT",
+  "TttttttddddddttttttT",
+  "TttttttddddddttttttT",
+  "TttttttddddddttttttT",
+  "TttttttddddddttttttT",
+];
+const BRL_FLAG = [".....f", "...fff", ".fffff", "ffffff", ".fffff", "...fff", ".....f"];
+const BRL_BALL = [".p.", "ppp", ".p."];
+const BRL_POLE_BASE = ["kkk", "kuk", "kkk"];
+
+type BrlBlockKind = "q" | "err" | "used" | "usedg" | "ghost";
+
+/* A block is n x n art pixels: an outline with cut corners, a light bevel at
+   the top left and a shade at the bottom right, four rivets, and a glyph with
+   a one-pixel shadow in its own layer so the "?" can blink on the beat. A
+   skipped step is a dashed outline; a used block needed a retry when its
+   rivets are gold. */
+function brlBlockMaps(n: number, kind: BrlBlockKind): { base: string[]; mark: string[] | null } {
+  const grid = Array.from({ length: n }, () => Array<string>(n).fill("."));
+  if (kind === "ghost") {
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        const ex = x === 0 || x === n - 1;
+        const ey = y === 0 || y === n - 1;
+        const at = ex && !ey ? y : ey && !ex ? x : -1;
+        if (at > 0 && (at % 4 === 1 || at % 4 === 2)) grid[y][x] = "z";
+      }
+    }
+    return { base: grid.map((r) => r.join("")), mark: null };
+  }
+  const fill = kind === "err" ? "x" : kind === "q" ? "q" : "u";
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      const ex = x === 0 || x === n - 1;
+      const ey = y === 0 || y === n - 1;
+      grid[y][x] = ex && ey ? "." : ex || ey ? "k" : fill;
+    }
+  }
+  if (kind === "q") for (let i = 1; i < n - 2; i++) grid[1][i] = grid[i][1] = "m";
+  const shade = kind === "q" ? "Q" : kind === "err" ? "" : "U";
+  if (shade) for (let i = 2; i < n - 1; i++) grid[n - 2][i] = grid[i][n - 2] = shade;
+  const rivet = kind === "usedg" ? "c" : "k";
+  for (const [x, y] of [[3, 3], [n - 4, 3], [3, n - 4], [n - 4, n - 4]]) grid[y][x] = rivet;
+  const base = grid.map((r) => r.join(""));
+  const glyph = kind === "q" ? (n > 16 ? BRL_Q_BIG : BRL_Q) : kind === "err" ? (n > 16 ? BRL_BANG_BIG : BRL_BANG) : null;
+  if (!glyph) return { base, mark: null };
+  const mark = Array.from({ length: n }, () => Array<string>(n).fill("."));
+  const gx = Math.floor((n - glyph[0].length) / 2);
+  const gy = Math.floor((n - glyph.length) / 2);
+  glyph.forEach((row, y) => [...row].forEach((c, x) => { if (c === "#") mark[gy + y + 1][gx + x + 1] = "k"; }));
+  glyph.forEach((row, y) => [...row].forEach((c, x) => { if (c === "#") mark[gy + y][gx + x] = "m"; }));
+  return { base, mark: mark.map((r) => r.join("")) };
+}
+
+const brlBlockCache = new Map<string, string>();
+function brlBlockHtml(n: number, kind: BrlBlockKind): string {
+  const key = \`\${kind}\${n}\`;
+  let html = brlBlockCache.get(key);
+  if (!html) {
+    const { base, mark } = brlBlockMaps(n, kind);
+    html = loaderPixelSvg(base, BRL_ROLES) + (mark ? \`<div class="bz-brl-mark"\${kind === "q" ? ' data-q="true"' : ""}>\${loaderPixelSvg(mark, BRL_ROLES)}</div>\` : "");
+    brlBlockCache.set(key, html);
+  }
+  return html;
+}
+
+/* Integer scales only, one per layout: u = 3 at 560px and wider, 2 below.
+   The adventurer is 16 x 24 art pixels, blocks 16 (the last one 20), the ground 7. */
+const BRL_WIDE = { u: 3, lead: 108, ahead: 5, gapP: 16, pad: 4, flagGap: 8 };
+const BRL_NARROW = { u: 2, lead: 10, ahead: 5, gapP: 8, pad: 4, flagGap: 7 };
+const BRL_RUN = 400;
+
+type BrlGeom = {
+  u: number; W: number; n: number; big: number; G: number; bb: number; pb: number; P: number;
+  critX: number; x0: number; spacing: number; castleX: number; px: number; pw: number; standX: number; bannerW: number;
+};
+
+function createBlockRunArena(root: HTMLElement, ctx: LoaderArenaCtx): LoaderArena {
+  const q = <T extends Element>(sel: string) => root.querySelector(sel) as T;
+  const arenaEl = q<HTMLDivElement>(".bz-brl-arena");
+  const worldEl = q<HTMLDivElement>(".bz-brl-world");
+  const heroEl = q<HTMLDivElement>(".bz-brl-hero");
+  const moverEl = q<HTMLDivElement>(".bz-brl-mover");
+  const bannerEl = q<HTMLDivElement>(".bz-brl-banner");
+  const plateEl = q<HTMLDivElement>(".bz-brl-plate");
+  // The nameplate's hatch pattern carries an id unique to this instance; the ground's is built from it once.
+  const groundId = \`\${plateEl?.querySelector("pattern")?.id ?? "bz-brl"}-ground\`;
+
+  let g: BrlGeom | null = null;
+  let cam = 0;
+  let scrollAnim: Animation | null = null;
+  let scrollEnd = 0;
+  let atFlag = false;
+  let flagDown = false;
+  let holdError = false;
+  let played = false;
+  let groundKey = "";
+  let sceneryKey = "";
+  let parts: { scenery: HTMLElement; pole: HTMLElement; flag: HTMLElement; castle: HTMLElement; ground: HTMLElement; blocks: HTMLElement; fx: HTMLElement } | null = null;
+  let blockEls: HTMLDivElement[] = [];
+  let transientUntil = 0;
+  let poseTimers: number[] = [];
+  let celebrateUntil = 0;
+  let celebrateT = 0;
+
+  const steps = () => ctx.steps();
+  const gone = (i: number) => ctx.vis()[i] === "gone";
+  const sizeOf = (i: number) => (i === steps().length - 1 ? 20 : 16);
+
+  /* -------- poses -------- */
+
+  function pose() {
+    paint();
+    if (transientUntil > loaderNow()) return;
+    const phase = ctx.phase();
+    const m = ctx.motionAllowed();
+    if (phase === "error" || phase === "stopped") return loaderSetPose(heroEl, "sit", "");
+    if (phase === "complete") return m && celebrateUntil > loaderNow() ? loaderSetPose(heroEl, "", "celebrate") : loaderSetPose(heroEl, "celebrate1", "");
+    if (!m) return loaderSetPose(heroEl, "idle1", "");
+    const s = steps()[ctx.front()];
+    loaderSetPose(heroEl, "", s && s.status === "active" && s.progress == null ? "working" : "idle");
+  }
+
+  function clearTransient() {
+    poseTimers.forEach(ctx.clear);
+    poseTimers = [];
+    transientUntil = 0;
+  }
+
+  /** A short sequence of held frames, or a CSS loop for ms, then back to the resting pose. */
+  function play(seq: Array<[LoaderFrameName, number]>, loop: LoaderLoop = "") {
+    clearTransient();
+    let at = 0;
+    seq.forEach(([frame, ms], k) => {
+      if (k === 0) loaderSetPose(heroEl, loop ? "" : frame, loop);
+      else poseTimers.push(ctx.later(() => loaderSetPose(heroEl, frame, ""), at));
+      at += ms;
+    });
+    transientUntil = loaderNow() + at;
+    poseTimers.push(
+      ctx.later(() => {
+        transientUntil = 0;
+        pose();
+      }, at),
+    );
+  }
+
+  const bonk = () => play([["jump", IMPACT], ["bonk", 120], ["jump", BASE - IMPACT - 120]]);
+
+  /** Up one hop (4 art pixels) in held steps: contact at IMPACT, back on the ground by BASE. */
+  function hop() {
+    if (!g) return;
+    const h = 4 * g.u;
+    ctx.anim(moverEl, loaderStepped([[0, 0, 0], [0.12, 0, -h / 2], [0.33, 0, -h], [0.6, 0, -h], [0.76, 0, -h / 2], [0.9, 0, 0], [1, 0, 0]]), { duration: BASE });
+  }
+
+  /* -------- the blocks -------- */
+
+  /* What a block shows comes from the host's status and from vis (has its
+     beat played), never from a timer. */
+  function blockKind(i: number): BrlBlockKind {
+    const s = steps()[i];
+    if (gone(i)) return s.status === "skipped" ? "ghost" : (s.attempt ?? 1) > 1 ? "usedg" : "used";
+    const phase = ctx.phase();
+    if (i === ctx.front() && s.status === "error" && (phase === "error" || phase === "stopped") && !holdError) return "err";
+    return "q";
+  }
+
+  function paint() {
+    const list = steps();
+    const front = ctx.front();
+    const phase = ctx.phase();
+    blockEls.forEach((el, i) => {
+      const s = list[i];
+      if (!s) return;
+      const kind = blockKind(i);
+      const role = gone(i) ? "past" : i === front ? "front" : "queue";
+      const blink = kind === "q" && role === "front" && phase === "run" && s.status === "active" && s.progress == null;
+      if (el.dataset.role !== role) el.dataset.role = role;
+      if (el.dataset.kind !== kind) el.dataset.kind = kind;
+      const b = blink ? "true" : "false";
+      if (el.dataset.blink !== b) el.dataset.blink = b;
+      const key = \`\${kind}\${sizeOf(i)}\`;
+      if (el.dataset.key !== key) {
+        el.dataset.key = key;
+        (el.firstElementChild as HTMLElement).innerHTML = brlBlockHtml(sizeOf(i), kind);
+      }
+    });
+  }
+
+  /* -------- building -------- */
+
+  function rebuild() {
+    clearTransient();
+    ctx.clear(celebrateT);
+    celebrateUntil = 0;
+    worldEl.innerHTML =
+      \`<div class="bz-brl-scenery"></div>\` +
+      \`<div class="bz-brl-pole"><span class="bz-brl-pole-line"></span><div class="bz-brl-ball">\${loaderPixelSvg(BRL_BALL, BRL_ROLES)}</div><div class="bz-brl-base">\${loaderPixelSvg(BRL_POLE_BASE, BRL_ROLES)}</div><div class="bz-brl-flag">\${loaderPixelSvg(BRL_FLAG, BRL_ROLES)}</div></div>\` +
+      \`<div class="bz-brl-castle">\${loaderPixelSvg(BRL_CASTLE, BRL_ROLES)}</div>\` +
+      \`<div class="bz-brl-groundwrap"></div><div class="bz-brl-blocks"></div><div class="bz-brl-fx"></div>\`;
+    const w = <T extends HTMLElement>(sel: string) => worldEl.querySelector(sel) as T;
+    parts = { scenery: w(".bz-brl-scenery"), pole: w(".bz-brl-pole"), flag: w(".bz-brl-flag"), castle: w(".bz-brl-castle"), ground: w(".bz-brl-groundwrap"), blocks: w(".bz-brl-blocks"), fx: w(".bz-brl-fx") };
+    const blocks = parts.blocks;
+    blockEls = steps().map(() => {
+      const b = document.createElement("div");
+      b.className = "bz-brl-block";
+      b.innerHTML = '<div class="bz-brl-block-art"></div>';
+      blocks.appendChild(b);
+      return b;
+    });
+    cam = 0;
+    scrollAnim = null;
+    scrollEnd = 0;
+    atFlag = flagDown = holdError = played = false;
+    groundKey = sceneryKey = "";
+    worldEl.style.transform = "translateX(0px)";
+    place(0);
+  }
+
+  const thing = (map: readonly string[], x: number, bottom: number, u: number) =>
+    \`<div class="bz-brl-thing" style="left:\${Math.round(x)}px;bottom:\${bottom}px;width:\${map[0].length * u}px;height:\${map.length * u}px">\${loaderPixelSvg(map, BRL_ROLES)}</div>\`;
+
+  /* No cloud rests as a sliver at the left edge at any camera stop, or peeks
+     out from behind the nameplate or the banner. A cloud with no such spot
+     near where it wants to be is left out. */
+  function placeCloud(want: number, w: number, geo: BrlGeom): number | null {
+    const stops: number[] = [];
+    for (let k = 0; k < Math.max(1, geo.n); k++) stops.push(k * geo.spacing);
+    const lastStop = stops[stops.length - 1];
+    const bl = (geo.W - geo.bannerW) / 2 - geo.u;
+    const br = (geo.W + geo.bannerW) / 2 + geo.u;
+    const cuts = (sx: number, e: number) => sx < e && sx + w > e;
+    const ok = (x: number) =>
+      x >= 0 &&
+      stops.every((c) => {
+        const sx = x - c;
+        if (cuts(sx, 0) || cuts(sx, geo.px - 2) || cuts(sx, geo.px + geo.pw + 2)) return false;
+        return c !== lastStop || sx + w <= bl || sx >= br;
+      });
+    const range = Math.ceil(Math.max(geo.spacing, 16 * geo.u) / geo.u);
+    for (let d = 0; d <= range; d++) {
+      for (const x of d ? [want + d * geo.u, want - d * geo.u] : [want]) if (ok(Math.round(x))) return Math.round(x);
+    }
+    return null;
+  }
+
+  function sceneryHtml(geo: BrlGeom): string {
+    const { u, x0, spacing, n, G, pb, critX, big } = geo;
+    const span = Math.max(0, n - 1) * spacing;
+    let h = thing(BRL_HILL, x0 + spacing * 0.5, G, u);
+    if (n > 3) h += thing(BRL_BUSH, x0 + span * 0.62, G, u);
+    if (n > 5) h += thing(BRL_HILL, x0 + span * 0.9, G, u);
+    const cloud = (want: number, bottom: number) => {
+      const x = placeCloud(want, BRL_CLOUD[0].length * u, geo);
+      if (x != null) h += thing(BRL_CLOUD, x, bottom, u);
+    };
+    cloud(x0 - 16 * u, pb + 3 * u);
+    cloud(x0 + span * 0.45 + 8 * u, pb + 5 * u);
+    cloud(x0 + span + big + 20 * u, pb + 4 * u);
+    // Past the castle too, so the finished course is not left half empty.
+    const after = geo.castleX + BRL_CASTLE[0].length * u;
+    h += thing(BRL_BUSH, after + 4 * u, G, u);
+    h += thing(BRL_HILL, after + 22 * u, G, u);
+    cloud(after + 14 * u, pb - 2 * u);
+    // The start pipe is gone after the first scroll, never left as a sliver.
+    const pipeX = Math.min(critX - 2 * u, spacing || critX) - 10 * u;
+    if (pipeX >= 2 * u) h += thing(BRL_PIPE, pipeX, G, u);
+    return h;
+  }
+
+  function groundSvg(width: number, u: number) {
+    const id = groundId;
+    let paths = "";
+    for (const [k, d] of loaderPixelPaths(BRL_GROUND)) paths += \`<path class="bz-brl-k-\${BRL_ROLES[k]}" d="\${d}"/>\`;
+    return \`<svg class="bz-brl-ground" width="\${width}" height="\${7 * u}" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><defs><pattern id="\${id}" width="\${8 * u}" height="\${7 * u}" patternUnits="userSpaceOnUse" viewBox="0 0 8 7">\${paths}</pattern></defs><rect width="100%" height="100%" fill="url(#\${id})"/></svg>\`;
+  }
+
+  /* -------- layout -------- */
+
+  /* The blocks float exactly one hop above the adventurer's head. Step i sits
+     at x0 + i * spacing and the camera is front * spacing, so the course is
+     only ever as far along as the resolved steps. The nameplate floats right
+     of the front block's column and above every block top, so it never covers
+     the adventurer, the block being bonked or a coin. */
+  function place(ms: number) {
+    if (!parts) return;
+    const W = arenaEl.clientWidth;
+    const narrow = root.clientWidth < 560;
+    if (root.dataset.narrow !== String(narrow)) root.dataset.narrow = String(narrow);
+    const n = steps().length;
+    if (!W || !n) return;
+    const c = narrow ? BRL_NARROW : BRL_WIDE;
+    const u = c.u;
+    const last = n - 1;
+    const blk = 16 * u;
+    const big = 20 * u;
+    const G = 7 * u;
+    const bb = G + (LOADER_HERO_H + 4) * u;
+    const pb = bb + big + 2 * u;
+    const P = pb - G - 2 * u;
+    const critX = c.lead;
+    const x0 = critX + c.ahead * u;
+    let flagGap = c.flagGap * u;
+    const castleW = BRL_CASTLE[0].length * u;
+    const standOff = 5 * u;
+    const castleOff = standOff + LOADER_HERO_W * u + 3 * u;
+    const tail = flagGap + castleOff + castleW;
+    const spacing = n > 1 ? Math.max(blk + 2 * u, Math.min(blk + 9 * u, Math.floor((W - c.pad - x0 - big - tail) / last))) : 0;
+    // On a course longer than the arena the flag never rests half cut at the right edge.
+    const straddles = () => {
+      for (let k = 0; k < n; k++) {
+        const l = x0 + last * spacing + big + flagGap - 5 * u - k * spacing;
+        if (l < W && l + 9 * u > W) return true;
+      }
+      return false;
+    };
+    for (let e = 0; e < 40 && straddles(); e++) flagGap += u;
+    const poleX = x0 + last * spacing + big + flagGap;
+    const castleX = poleX + castleOff;
+    const worldW = castleX + castleW + W;
+    const px = x0 + big + c.gapP;
+    const pw = Math.min(340, W - px - c.pad);
+    const standX = x0 + big + flagGap + standOff;
+    const bannerW = bannerEl?.offsetWidth || 200;
+    g = { u, W, n, big, G, bb, pb, P, critX, x0, spacing, castleX, px, pw, standX, bannerW };
+
+    worldEl.style.width = \`\${worldW}px\`;
+    worldEl.style.setProperty("--u", \`\${u}px\`);
+    const gk = \`\${worldW}|\${u}\`;
+    if (gk !== groundKey) {
+      groundKey = gk;
+      parts.ground.innerHTML = groundSvg(worldW, u);
+    }
+    const sk = [u, n, spacing, x0, W, bannerW, px, pw].join("|");
+    if (sk !== sceneryKey) {
+      sceneryKey = sk;
+      parts.scenery.innerHTML = sceneryHtml(g);
+    }
+    parts.pole.style.cssText = \`left:\${poleX}px;bottom:\${G}px;width:\${3 * u}px;height:\${P}px\`;
+    parts.flag.style.transform = flagDown ? \`translateY(\${P - 13 * u}px)\` : "";
+    parts.castle.style.cssText = \`left:\${castleX}px;bottom:\${G}px;width:\${castleW}px;height:\${BRL_CASTLE.length * u}px\`;
+    blockEls.forEach((el, i) => {
+      const size = sizeOf(i) * u;
+      const keep = el.style.visibility;
+      el.style.cssText = \`left:\${x0 + i * spacing}px;bottom:\${bb}px;width:\${size}px;height:\${size}px\`;
+      if (keep) el.style.visibility = keep;
+    });
+    paint();
+    heroEl.style.transform = \`translateX(\${atFlag ? standX : critX}px)\`;
+    plateEl.style.left = \`\${px}px\`;
+    plateEl.style.width = \`\${Math.max(120, pw)}px\`;
+    plateEl.style.bottom = \`\${pb}px\`;
+    setCamera(Math.min(ctx.front(), last) * spacing, ms);
+  }
+
+  /* The camera moves the whole world in held whole-pixel steps sampled from
+     the ease-out curve. A new scroll starts from wherever the last one is, so
+     steps settling back to back never queue up travel. */
+  function worldX(): number {
+    const m = /matrix\\(([^)]+)\\)/.exec(getComputedStyle(worldEl).transform || "");
+    return m ? parseFloat(m[1].split(",")[4]) || 0 : -cam;
+  }
+
+  function setCamera(target: number, ms: number) {
+    if (target === cam && !ms) {
+      if (!scrollAnim) {
+        worldEl.style.transform = \`translateX(\${-cam}px)\`;
+        trimEdge();
+      }
+      return;
+    }
+    const from = scrollAnim ? worldX() : -cam;
+    if (scrollAnim) {
+      scrollAnim.cancel();
+      scrollAnim = null;
+    }
+    cam = target;
+    const to = -cam;
+    worldEl.style.transform = \`translateX(\${to}px)\`;
+    if (!ms || Math.abs(to - from) < 1) {
+      trimEdge();
+      return;
+    }
+    const a = ctx.anim(worldEl, loaderGlide(from, 0, to, 0, ms), { duration: ms });
+    scrollAnim = a;
+    if (!a) {
+      trimEdge();
+      return;
+    }
+    const done = () => {
+      if (scrollAnim === a) {
+        scrollAnim = null;
+        trimEdge();
+      }
+    };
+    a.finished.then(done, done);
+  }
+
+  /* History that would rest as a sliver at the left edge is hidden once the camera stops. */
+  function trimEdge() {
+    const geo = g;
+    if (!geo) return;
+    blockEls.forEach((el, i) => {
+      const size = sizeOf(i) * geo.u;
+      const right = geo.x0 + i * geo.spacing + size - cam;
+      const v = gone(i) && right > 0 && right < size * 0.5 ? "hidden" : "";
+      if (el.style.visibility !== v) el.style.visibility = v;
+    });
+  }
+
+  /* -------- effects -------- */
+
+  function blockBox(i: number) {
+    const el = blockEls[i];
+    if (!el || !g) return null;
+    const size = sizeOf(i) * g.u;
+    return { el, x: parseFloat(el.style.left) || 0, size, top: g.bb + size };
+  }
+
+  /** The block jumps one art pixel and settles back. */
+  function bump(i: number) {
+    const b = blockBox(i);
+    const art = b?.el.firstElementChild;
+    if (b && art && g) ctx.anim(art, loaderStepped([[0, 0, -g.u], [1, 0, 0]]), { duration: FAST });
+  }
+
+  /** A coin pops out of the top, spinning (face on, half turned), rises and fades. Feedback only, never counted. */
+  function coin(i: number, big: boolean) {
+    const b = blockBox(i);
+    if (!b || !g || !parts) return;
+    const u = g.u;
+    const w = 6 * u;
+    const h = 8 * u;
+    const rise = (big ? 7 : 5) * u;
+    const dur = big ? 420 : BASE;
+    const el = document.createElement("div");
+    el.className = "bz-brl-coin";
+    el.style.cssText = \`left:\${Math.round(b.x + (b.size - w) / 2)}px;bottom:\${b.top + u}px;width:\${w}px;height:\${h}px\`;
+    el.innerHTML = \`<div class="bz-brl-fr1">\${loaderPixelSvg(BRL_COIN, BRL_ROLES)}</div><div class="bz-brl-fr2">\${loaderPixelSvg(BRL_COIN_TURN, BRL_ROLES)}</div>\`;
+    parts.fx.appendChild(el);
+    const pts: Array<[number, number, number, number?]> = [];
+    for (let j = 0; j <= 6; j++) {
+      const t = j / 6;
+      pts.push([t, 0, -Math.round((rise * (1 - (1 - t) * (1 - t))) / u) * u, t <= 0.5 ? 1 : 1 - (t - 0.5) * 2]);
+    }
+    const a = ctx.anim(el, loaderStepped(pts), { duration: dur, fill: "forwards" });
+    const spin = [0, 1, 2, 3, 4, 5, 6].map((j) => j / 6);
+    ctx.anim(el.children[0], spin.map((o, j) => ({ offset: o, easing: "step-end", opacity: j % 2 ? 0 : 1 })), { duration: dur });
+    ctx.anim(el.children[1], spin.map((o, j) => ({ offset: o, easing: "step-end", opacity: j % 2 ? 1 : 0 })), { duration: dur });
+    const rm = () => el.remove();
+    if (a) a.finished.then(rm, rm);
+    else rm();
+  }
+
+  /** Two small stars at the top corners of a block that was just used up. */
+  function sparkle(i: number) {
+    const b = blockBox(i);
+    if (!b || !g || !parts) return;
+    const fx = parts.fx;
+    const s = 5 * g.u;
+    const spots: Array<[number, number]> = [[b.x - Math.round(s * 0.4), b.top - Math.round(s * 0.2)], [b.x + b.size - Math.round(s * 0.6), b.top + Math.round(s * 0.3)]];
+    spots.forEach(([x, y], k) => {
+      const el = document.createElement("div");
+      el.className = "bz-brl-spark";
+      el.style.cssText = \`left:\${x}px;bottom:\${y}px;width:\${s}px;height:\${s}px\`;
+      el.innerHTML = \`<div class="bz-brl-fr1">\${loaderPixelSvg(BRL_SPARK, BRL_ROLES)}</div><div class="bz-brl-fr2">\${loaderPixelSvg(BRL_SPARK_SMALL, BRL_ROLES)}</div>\`;
+      fx.appendChild(el);
+      const d = BASE + 60;
+      const a = ctx.anim(el, [{ offset: 0, easing: "step-end", opacity: 0 }, { offset: 0.1 + k * 0.15, easing: "step-end", opacity: 1 }, { offset: 1, opacity: 1 }], { duration: d, fill: "forwards" });
+      ctx.anim(el.children[0], [{ offset: 0, easing: "step-end", opacity: 1 }, { offset: 0.6, easing: "step-end", opacity: 0 }, { offset: 1, opacity: 0 }], { duration: d, fill: "forwards" });
+      ctx.anim(el.children[1], [{ offset: 0, easing: "step-end", opacity: 0 }, { offset: 0.6, easing: "step-end", opacity: 1 }, { offset: 1, opacity: 1 }], { duration: d, fill: "forwards" });
+      const rm = () => el.remove();
+      if (a) a.finished.then(rm, rm);
+      else rm();
+    });
+  }
+
+  /** The error flash: the "!" block lights up in its mark colour for one frame. */
+  function glint(i: number) {
+    const art = blockEls[i]?.firstElementChild;
+    if (!art) return;
+    const el = document.createElement("div");
+    el.className = "bz-brl-glint";
+    el.innerHTML = loaderPixelSvg(brlBlockMaps(sizeOf(i), "err").base.map((r) => r.replace(/[^.]/g, "m")), BRL_ROLES);
+    art.appendChild(el);
+    ctx.later(() => el.remove(), FAST);
+  }
+
+  /** Without travel, a changed block only cross-fades, at most 150ms. */
+  function fadeIn(el?: Element | null) {
+    if (el && ctx.running()) ctx.anim(el, [{ opacity: 0.25 }, { opacity: 1 }], { duration: FAST, easing: "linear" });
+  }
+
+  /** A hop waits for a scroll in flight, so the block is overhead when it lands. */
+  function afterScroll(fn: () => void) {
+    const wait = Math.max(0, Math.round(scrollEnd - loaderNow()));
+    if (wait) ctx.later(fn, wait);
+    else fn();
+    return wait;
+  }
+
+  return {
+    rebuild,
+    layout: () => place(0),
+    hit() {
+      return (
+        afterScroll(() => {
+          bonk();
+          hop();
+        }) + IMPACT
+      );
+    },
+    progress(i, showy) {
+      paint();
+      if (showy) {
+        bump(i);
+        coin(i, false);
+      }
+    },
+    finish() {
+      return (
+        afterScroll(() => {
+          bonk();
+          hop();
+        }) + IMPACT
+      );
+    },
+    resolve(entries, showy) {
+      played = true;
+      paint();
+      const done = entries.find((e) => e.kind === "done");
+      if (showy && done) {
+        bump(done.i);
+        coin(done.i, true);
+        sparkle(done.i);
+        return BASE - IMPACT;
+      }
+      entries.forEach((e) => fadeIn(blockEls[e.i]));
+      return 0;
+    },
+    advance(changed) {
+      paint();
+      if (!g) return;
+      const last = steps().length - 1;
+      const target = Math.min(ctx.front(), last) * g.spacing;
+      const blocks = g.spacing ? Math.round((target - cam) / g.spacing) : 0;
+      const ms = blocks > 0 && ctx.motionOn() ? Math.min(SLOW, BASE + (blocks - 1) * 100) : 0;
+      setCamera(target, ms);
+      if (ms) {
+        scrollEnd = loaderNow() + ms;
+        play([["run1", ms]], "run");
+      } else if (changed && blocks > 0) fadeIn(parts?.blocks);
+    },
+    error(i, showy) {
+      if (!showy) {
+        holdError = false;
+        clearTransient();
+        paint();
+        return;
+      }
+      // The bonk lands on the block, which turns into "!", and the adventurer is
+      // knocked down. A scroll still in flight finishes first, so the block is
+      // overhead and still a "?" when the bonk lands.
+      holdError = true;
+      paint();
+      const strike = () => {
+        if (ctx.phase() !== "error" || !ctx.motionOn()) {
+          holdError = false;
+          pose();
+          return;
+        }
+        play([["jump", IMPACT], ["bonk", 80], ["hurt", BASE]]);
+        hop();
+        ctx.later(() => {
+          holdError = false;
+          paint();
+          if (ctx.phase() === "error" && ctx.motionOn()) glint(i);
+        }, IMPACT);
+      };
+      const wait = Math.max(0, Math.round(scrollEnd - loaderNow()));
+      if (wait) {
+        // The run carries on until the strike takes over, with no resting frame between them.
+        play([["run1", wait + FAST]], "run");
+        // Kept with the pose timers, so Retry, Cancel or Pause motion during the wait drops it.
+        poseTimers.push(ctx.later(strike, wait));
+      } else strike();
+    },
+    recover() {
+      holdError = false;
+      clearTransient();
+      paint();
+    },
+    stop() {
+      holdError = false;
+      clearTransient();
+      paint();
+    },
+    finale(showy) {
+      const run = showy && played && !atFlag && !!g;
+      const from = g ? g.critX : 0;
+      atFlag = flagDown = true;
+      clearTransient();
+      ctx.clear(celebrateT);
+      place(0);
+      celebrateUntil = showy ? loaderNow() + (run ? BRL_RUN : 0) + BEAT * 3 : 0;
+      if (showy) celebrateT = ctx.later(pose, (run ? BRL_RUN : 0) + BEAT * 3 + 20);
+      if (!run || !g) return;
+      // The run to the flagpole in whole art pixels, then the flag slides down the pole.
+      const geo = g;
+      const k = Math.max(2, Math.round((geo.standX - from) / geo.u));
+      ctx.anim(heroEl, Array.from({ length: k + 1 }, (_, j) => ({ offset: j / k, easing: "step-end", transform: \`translateX(\${Math.round(from + ((geo.standX - from) * j) / k)}px)\` })), { duration: BRL_RUN });
+      play([["run1", BRL_RUN]], "run");
+      const drop = geo.P - 13 * geo.u;
+      const f = Math.max(2, Math.round(drop / geo.u));
+      if (parts) ctx.anim(parts.flag, Array.from({ length: f + 1 }, (_, j) => ({ offset: j / f, easing: "step-end", transform: \`translateY(\${Math.round((drop * j) / f)}px)\` })), { duration: BRL_RUN, delay: Math.round(BRL_RUN * 0.6), fill: "backwards" });
+    },
+    pose,
+    motion() {
+      if (!ctx.motionAllowed()) {
+        clearTransient();
+        ctx.clear(celebrateT);
+        celebrateUntil = 0;
+        scrollEnd = 0;
+        if (holdError) {
+          holdError = false;
+          paint();
+        }
+      }
+    },
+    destroy() {
+      clearTransient();
+      ctx.clear(celebrateT);
+      worldEl.textContent = "";
+      parts = null;
+      blockEls = [];
+    },
+  };
+}
+
+const BLOCK_RUN_GAME: LoaderGame = { unit: "Block", clear: "Course clear", arena: createBlockRunArena };
+
+const CSS = \`\${LOADER_CSS}
+.bz-brl-stage{margin:0}
+.bz-brl-arena{height:240px;overflow:hidden;background:var(--bz-brl-sky)}
+.bz-brl-art{position:absolute;inset:0;z-index:0;isolation:isolate;overflow:hidden}
+.bz-brl-world{position:absolute;top:0;bottom:0;left:0}
+.bz-brl-world svg{display:block;overflow:visible}
+.bz-brl-thing,.bz-brl-block,.bz-brl-coin,.bz-brl-spark,.bz-brl-castle,.bz-brl-pole,.bz-brl-ground{position:absolute}
+.bz-brl-ground{bottom:0;left:0}
+.bz-brl-thing>svg,.bz-brl-block-art>svg,.bz-brl-mark,.bz-brl-mark>svg,.bz-brl-fr1,.bz-brl-fr2,.bz-brl-fr1>svg,.bz-brl-fr2>svg,.bz-brl-castle>svg,.bz-brl-flag>svg,.bz-brl-ball>svg,.bz-brl-base>svg,.bz-brl-glint,.bz-brl-glint>svg{position:absolute;inset:0;width:100%;height:100%}
+.bz-brl-block-art{position:absolute;inset:0}
+.bz-brl-fr2{opacity:0}
+.bz-brl-block[data-blink="true"] .bz-brl-mark[data-q="true"]{animation:bz-brl-a var(--bz-brl-beat) step-end infinite}
+.bz-brl-pole-line{position:absolute;top:calc(var(--u) * 3);bottom:calc(var(--u) * 3);left:var(--u);width:var(--u);background:var(--bz-brl-pole)}
+.bz-brl-ball,.bz-brl-base{position:absolute;left:0;width:calc(var(--u) * 3);height:calc(var(--u) * 3)}
+.bz-brl-ball{top:0}
+.bz-brl-base{bottom:0}
+.bz-brl-flag{position:absolute;top:calc(var(--u) * 3);left:calc(var(--u) * -5);width:calc(var(--u) * 6);height:calc(var(--u) * 7)}
+.bz-brl-hero{position:absolute;bottom:calc(7 * var(--bz-brl-u));left:0;z-index:2;width:calc(16 * var(--bz-brl-u));height:calc(24 * var(--bz-brl-u))}
+.bz-brl-mover{width:100%;height:100%}
+.bz-brl-sprite{display:block;width:100%;height:100%;overflow:visible}
+.bz-brl-veil{position:absolute;inset:0;z-index:2;background:var(--bz-brl-panel);opacity:0;visibility:hidden}
+.bz-brl[data-phase="stopped"] .bz-brl-veil{opacity:0.35;visibility:visible}
+.bz-brl-banner{position:absolute;top:calc(5 * var(--bz-brl-u));left:50%;z-index:3;padding:8px 18px 6px;border:2px solid var(--bz-brl-ink);background:var(--bz-brl-panel);color:var(--bz-brl-ink);font:700 15px/1 var(--bz-brl-mono);letter-spacing:0.14em;text-transform:uppercase;white-space:nowrap;transform:translateX(-50%);visibility:hidden}
+.bz-brl-banner::after{content:"";display:block;height:4px;margin-top:6px;background:var(--bz-brl-accent)}
+.bz-brl-banner[data-on="true"]{visibility:visible}
+.bz-brl[data-motion="on"] .bz-brl-banner[data-on="true"]{animation:bz-brl-drop var(--bz-brl-base) steps(3,end) both}
+@keyframes bz-brl-drop{from{transform:translate(-50%,-9px)}to{transform:translate(-50%,0)}}
+.bz-brl-arena .bz-brl-plate{position:absolute;bottom:171px;left:0;z-index:4;width:300px}
+.bz-brl-arena .bz-brl-plate-label{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;overflow-wrap:normal}
+.bz-brl-arena .bz-brl-count{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+\${Object.values(BRL_ROLES).map((r) => \`.bz-brl-k-\${r}{fill:var(--bz-brl-\${r})}\`).join("\\n")}
+.bz-brl[data-motion="off"] .bz-brl-mark,.bz-brl[data-motion="off"] .bz-brl-banner{animation:none!important}
+@container (max-width:559px){
+/* 16px taller than the course needs, so the nameplate's badges ride its top edge without touching the frame. */
+.bz-brl-arena{height:200px}
+.bz-brl-arena .bz-brl-badges{top:-16px}
+.bz-brl-arena .bz-brl-plate-row{flex-wrap:nowrap}
+.bz-brl-arena .bz-brl-bar{flex:1 1 40px;min-width:40px}
+.bz-brl-arena .bz-brl-count{font-size:11px}
+.bz-brl-banner{padding:6px 12px 5px;font-size:13px}
+}
+\`;
+
+/* ---------------- the component ---------------- */
+
+function blockRunPalette(p: BlockRunLoaderProps["palette"]): BlockRunLoaderPalette {
+  if (!p) return BLOCK_RUN_LOADER_PALETTES.overworld;
+  return typeof p === "string" ? BLOCK_RUN_LOADER_PALETTES[p] ?? BLOCK_RUN_LOADER_PALETTES.overworld : p;
+}
+
+export function BlockRunLoader(props: BlockRunLoaderProps) {
+  const { title, headingLevel = 2, palette, character, colorScheme, className, style } = props;
+  const api = useLoader(props, BLOCK_RUN_GAME);
+  const hero = loaderCharacter(character);
+  const pal = blockRunPalette(palette);
+  const rootStyle = useMemo(
+    () =>
+      ({
+        ...loaderPaletteVars(pal.light, pal.dark),
+        // A skipped block's dashes: the block outline on light skies, the block fill on dark ones.
+        "--bz-brl-ghost": \`light-dark(\${pal.light.blockLine}, \${pal.dark.block})\`,
+        "--bz-brl-portrait": \`light-dark(\${pal.light.sky}, \${pal.dark.sky})\`,
+        ...loaderCharacterVars(hero),
+        ...(colorScheme ? { colorScheme } : {}),
+        ...style,
+      }) as CSSProperties,
+    [pal, hero, colorScheme, style],
+  );
+  const Heading = \`h\${headingLevel}\` as "h2";
+  const { view, labels } = api;
+
+  return (
+    <section
+      ref={api.rootRef}
+      className={\`bz-brl\${className ? \` \${className}\` : ""}\`}
+      aria-labelledby={api.titleId}
+      data-phase={view.phase}
+      data-motion={api.motionAllowed ? "on" : "off"}
+      data-running={api.running ? "true" : "false"}
+      style={rootStyle}
+    >
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="bz-brl-in">
+        <Heading id={api.titleId} className="bz-brl-title" tabIndex={-1}>
+          {title}
+        </Heading>
+        <LoaderStepList api={api} />
+        <div className="bz-brl-frame bz-brl-stage">
+          <div className="bz-brl-frame-in bz-brl-arena">
+            <div className="bz-brl-art" aria-hidden="true">
+              <div className="bz-brl-world" />
+              <div className="bz-brl-hero" data-frame="idle1">
+                <div className="bz-brl-mover">
+                  <LoaderHeroSprite hairStyle={hero.hairStyle} accessory={null} />
+                </div>
+              </div>
+            </div>
+            <div className="bz-brl-veil" aria-hidden="true" />
+            <div className="bz-brl-banner" aria-hidden="true" data-on={view.banner ? "true" : "false"}>
+              {labels.clear}
+            </div>
+            <LoaderPlate api={api} />
+          </div>
+        </div>
+        <LoaderBox api={api} hairStyle={hero.hairStyle} />
+      </div>
+    </section>
+  );
+}`,
+    description: "Platformer step loader: an adventurer bonks one question block per real step.",
+    tags: ["loader", "multi-step", "progress", "pixel-art", "game", "platformer", "accessible", "reduced-motion"],
+  },
+  {
+    name: "FlapGateLoader",
+    slug: "flap-gate-loader",
+    path: "loaders/FlapGateLoader.tsx",
+    category: "loaders",
+    code: `"use client";
+
+import {
+  memo,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type KeyboardEvent,
+  type RefObject,
+} from "react";
+
+/*
+ * FlapGateLoader: a multi-step loader drawn as a Flappy-style flight, where a
+ * jetpack pilot clears one pipe gate per step.
+ *
+ * Every step is a pipe pair with a gap, and distance is progress. The pipes
+ * sit on one world strip that moves only when the host reports something
+ * real: each progress event is one flap (a short flame burst and a 6px rise)
+ * and the gate closes in by exactly that much; a finished step flies the
+ * pilot out through the gap and lines it up with the next one. The big score
+ * at the top is the number of steps done. A skipped gate retracts and leaves
+ * dashed ghosts, and the last gate carries a flag.
+ *
+ * Honesty: geometry moves only on host events. The world strip and the bar
+ * land exactly on steps[front].progress, at most once every 400ms, and nothing
+ * interpolates between events on a timer. A step of unknown size (progress
+ * left out) keeps the world still, hatches the front pipe and says "Working,
+ * size unknown". The picture may lag the host by one short beat and is never
+ * ahead of it.
+ *
+ * The host owns the run. \`steps\` is the only state: the loader never
+ * advances, completes, fails, retries or skips a step. When a step fails, the
+ * dialogue box turns into a menu that calls onRetry, onSkip or onCancel, and
+ * the host decides what happens next by sending new steps.
+ *
+ * Accessibility: the nameplate is the one progressbar, named by the heading.
+ * The dialogue box is a role="log" that narrates milestones in sentences
+ * (never every percent), a role="alert" carries the error, and a visually
+ * hidden list mirrors every step with aria-current on the running one. The
+ * menu is one tab stop with arrow keys, Home and End. Focus moves only when it
+ * is already inside the loader: to Retry when an error appears, to the
+ * narration when a retry starts, and to Continue when the results open.
+ *
+ * Motion: reduced motion (the media query, or the reducedMotion prop) and the
+ * Pause motion button drop every loop, flap and glide. Positions snap to
+ * their honest place and the pilot lands hurt on the ground at once after an
+ * error.
+ * Off screen or in a hidden tab, loops hold still and queued beats resolve
+ * without playing; on return the meta line says what finished meanwhile.
+ */
+
+/* ---------------- shared: types and labels ---------------- */
+
+/** Where a step is. Only the host changes it; the loader shows it. */
+export type LoaderStepStatus = "pending" | "active" | "done" | "error" | "skipped";
+
+export type LoaderStep = {
+  /** Stable key. Beats and announcements key on it; a changed id list or length rebuilds the run. */
+  id: string;
+  /** Present tense, shown on the nameplate and in narration: "Import 1,240 contacts". */
+  label: string;
+  /** Where the step is. Only the host moves it. */
+  status: LoaderStepStatus;
+  /** 0 to 1, from real host events only. Leave it out (or null) when the size of the work is unknown. */
+  progress?: number | null;
+  /** A real count shown on the nameplate and never announced: "620 of 1,240 contacts". */
+  detail?: string;
+  /** Total units of work. Brick Wall draws one brick per unit when this is 16 or fewer; the other games ignore it. */
+  count?: number;
+  /** Past-tense narration: "Imported 1,240 contacts". Defaults to "<label>: done". */
+  doneText?: string;
+  /** A plain sentence, shown and sent to role="alert" when the status is "error". */
+  error?: string;
+  /** Longer text behind Show details. */
+  errorDetail?: string;
+  /** 1-based. 2 or more shows "Attempt 2", and a step that then finishes counts as a recovered hiccup. */
+  attempt?: number;
+  /** Host clock for the running or failed attempt, in ms. */
+  elapsedMs?: number;
+  /** Host clock for a finished step, in ms. The results Time tile is the sum. */
+  durationMs?: number;
+};
+
+/** One extra tile on the results screen. Real numbers only. */
+export type LoaderStat = {
+  /** Tile heading: "Contacts". */
+  label: string;
+  /** The value shown large. A number counts up when motion is on; a string shows as written. */
+  value: string | number;
+  /** A short line under the value: "imported". */
+  sub?: string;
+};
+
+/**
+ * The interface strings: buttons, nameplate words, the meta line and the
+ * run-level sentences. Pass any subset through \`labels\`. Per-step narration,
+ * the error sentence and the results tile names are English, built around
+ * each step's own label, doneText and error.
+ */
+export type LoaderLabels = {
+  /** What one step is called on the meta line. Default set per game ("Gate" here). */
+  unit: string;
+  /** The banner and meta line once every step is settled. Default set per game ("All gates cleared" here). */
+  clear: string;
+  /** Accessible name of the narration log. Default "Narration". */
+  narration: string;
+  /** Accessible name of the error menu. Default "What next". */
+  menu: string;
+  /** Retry button. Default "Retry". */
+  retry: string;
+  /** Skip button. Default "Skip". */
+  skip: string;
+  /** Cancel button. Default "Cancel". */
+  cancel: string;
+  /** Details toggle while closed. Default "Show details". */
+  showDetails: string;
+  /** Details toggle while open. Default "Hide details". */
+  hideDetails: string;
+  /** The motion toggle. Default "Pause motion". */
+  pauseMotion: string;
+  /** The results button. Default "Continue". */
+  continue: string;
+  /** The mark on a failed nameplate. Default "Failed". */
+  failed: string;
+  /** Meta line while the menu waits for a choice. Default "Waiting for you". */
+  waiting: string;
+  /** Nameplate text for a step without progress. Default "Working, size unknown". */
+  sizeUnknown: string;
+  /** Nameplate tag on a retried step. Default "Attempt 2". */
+  attempt: (n: number) => string;
+  /** Placeholder before anything has happened. Default "5 steps queued. Up first: Create the workspace." */
+  queued: (n: number, first: string) => string;
+  /** Placeholder when mounted mid-run, never announced. Default "1 of 5 done. Now: Import 1,240 contacts." */
+  progress: (done: number, total: number, now: string) => string;
+  /** Meta note after a hidden tab, never announced. Default "While you were away: 2 steps finished." */
+  away: (n: number) => string;
+  /** Completion line. Default "All 5 steps finished." or "All 5 steps finished (1 skipped)." */
+  complete: (total: number, skipped: number) => string;
+  /** Line after Cancel. Default "Stopped. 2 finished steps are kept." */
+  stopped: (kept: number) => string;
+};
+
+const LOADER_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
+  narration: "Narration",
+  menu: "What next",
+  retry: "Retry",
+  skip: "Skip",
+  cancel: "Cancel",
+  showDetails: "Show details",
+  hideDetails: "Hide details",
+  pauseMotion: "Pause motion",
+  continue: "Continue",
+  failed: "Failed",
+  waiting: "Waiting for you",
+  sizeUnknown: "Working, size unknown",
+  attempt: (n) => \`Attempt \${n}\`,
+  queued: (n, first) => \`\${n} step\${n === 1 ? "" : "s"} queued.\${first ? \` Up first: \${first}.\` : ""}\`,
+  progress: (done, total, now) => \`\${done} of \${total} done.\${now ? \` Now: \${now}.\` : ""}\`,
+  away: (n) => \`While you were away: \${n} step\${n === 1 ? "" : "s"} finished.\`,
+  complete: (total, skipped) => \`All \${total} steps finished\${skipped ? \` (\${skipped} skipped)\` : ""}.\`,
+  stopped: (kept) => \`Stopped. \${kept} finished step\${kept === 1 ? " is" : "s are"} kept.\`,
+};
+
+/* ---------------- end shared: types and labels ---------------- */
+
+/* ---------------- flap gate: palettes ---------------- */
+
+/** Scene colours for one theme. Every value is a hex string. */
+export type FlapGateLoaderColors = {
+  /** Sky behind everything. */
+  sky: string;
+  /** The static clouds low on the horizon. */
+  cloud: string;
+  /** Pipe body. */
+  pipe: string;
+  /** Pipe shade, on the right of each pipe. */
+  pipeShade: string;
+  /** Pipe highlight, on the left of each pipe. In the dark set it also draws the ghost of a skipped gate. */
+  pipeLight: string;
+  /** Pipe outline and the size-unknown hatch. In the light set it also draws the ghost of a skipped gate. */
+  pipeLine: string;
+  /** Ground fill. */
+  ground: string;
+  /** Diagonal stripes in the ground. */
+  groundStripe: string;
+  /** Grass band on top of the ground. */
+  grass: string;
+  /** Ground edges. */
+  groundLine: string;
+  /** Jetpack tank. */
+  jetpack: string;
+  /** Jetpack shade and the smoke puff after a failure. */
+  jetpackShade: string;
+  /** Jetpack flame. */
+  flame: string;
+  /** Flame core and the sparks of a bonk. */
+  flameCore: string;
+  /** Score digits and the checkered lips of the last gate. */
+  score: string;
+  /** Score outline and spark outline. */
+  scoreLine: string;
+  /** The character's outline. Dark enough to carry the silhouette on a light sky. */
+  spriteOutline: string;
+  /** A one art pixel rim round the character, so the silhouette still reads on a dark sky. Leave it out for none; the presets set it on their dark skies only. */
+  spriteHalo?: string;
+  /** Primary buttons, the nameplate bar, the Attempt tag and the flag. */
+  accent: string;
+  /** Text on accent: white on light themes, ink on dark ones. */
+  onAccent: string;
+};
+
+/** A colour set for each theme; \`light-dark()\` picks one from the host's color-scheme. */
+export type FlapGateLoaderPalette = { light: FlapGateLoaderColors; dark: FlapGateLoaderColors };
+
+export type FlapGateLoaderPaletteName = "daybreak" | "sunset";
+
+/** The presets. Spread one to customise it: \`{ ...FLAP_GATE_LOADER_PALETTES.sunset, dark: {...} }\`. */
+export const FLAP_GATE_LOADER_PALETTES: Record<FlapGateLoaderPaletteName, FlapGateLoaderPalette> = {
+  daybreak: {
+    light: {
+      sky: "#7fd0f0", cloud: "#ffffff", pipe: "#3cb043", pipeShade: "#23812b", pipeLight: "#a6e8a0", pipeLine: "#13461a",
+      ground: "#ded895", groundStripe: "#c9b26b", grass: "#7ac943", groundLine: "#13461a",
+      jetpack: "#9aa5b1", jetpackShade: "#5f6b78", flame: "#ff7a1a", flameCore: "#ffd23f",
+      score: "#ffffff", scoreLine: "#17142e", spriteOutline: "#17142e", accent: "#15803d", onAccent: "#ffffff",
+    },
+    dark: {
+      sky: "#132a4f", cloud: "#24406f", pipe: "#4cc153", pipeShade: "#2e8a36", pipeLight: "#a6e8a0", pipeLine: "#0b2a10",
+      ground: "#c9a85a", groundStripe: "#a3843f", grass: "#3fa34d", groundLine: "#e9d9a0",
+      jetpack: "#b8c2cc", jetpackShade: "#6f7b88", flame: "#ff8c3a", flameCore: "#ffe066",
+      score: "#ffffff", scoreLine: "#0b0918", spriteOutline: "#0b0918", spriteHalo: "#7fa6d6", accent: "#86efac", onAccent: "#0a0a0a",
+    },
+  },
+  sunset: {
+    light: {
+      sky: "#ffd2a8", cloud: "#fff1e0", pipe: "#1fa39a", pipeShade: "#137a73", pipeLight: "#8ee6dd", pipeLine: "#0b4f4a",
+      ground: "#f0b46a", groundStripe: "#d9924a", grass: "#e8590c", groundLine: "#5a2a08",
+      jetpack: "#9aa5b1", jetpackShade: "#5f6b78", flame: "#ff5d8f", flameCore: "#ffd23f",
+      score: "#ffffff", scoreLine: "#17142e", spriteOutline: "#17142e", accent: "#be185d", onAccent: "#ffffff",
+    },
+    dark: {
+      sky: "#3a1d4f", cloud: "#57306f", pipe: "#2ec4b6", pipeShade: "#1a8a80", pipeLight: "#8ee6dd", pipeLine: "#082e2b",
+      ground: "#b5653a", groundStripe: "#8f4a26", grass: "#f08c4a", groundLine: "#f4c08a",
+      jetpack: "#b8c2cc", jetpackShade: "#6f7b88", flame: "#ff8fb1", flameCore: "#ffe066",
+      score: "#ffffff", scoreLine: "#0b0918", spriteOutline: "#0b0918", spriteHalo: "#c48fd6", accent: "#f9a8d4", onAccent: "#0a0a0a",
+    },
+  },
+};
+
+/* The halo is optional, so it is set apart from the keys every palette has. */
+const FGL_COLOR_KEYS = Object.keys(FLAP_GATE_LOADER_PALETTES.daybreak.light) as Exclude<keyof FlapGateLoaderColors, "spriteHalo">[];
+
+/* ---------------- flap gate: props ---------------- */
+
+export type FlapGateLoaderProps = {
+  /** The run, and the only state. The loader never changes it; send a new array on every host event. */
+  steps: LoaderStep[];
+  /** The heading, which also names the progressbar: "Setting up your workspace". */
+  title: string;
+  /** Heading level for the title. Default 2. */
+  headingLevel?: 2 | 3 | 4 | 5 | 6;
+  /** A preset name or your own colours for light and dark. Default "daybreak". */
+  palette?: FlapGateLoaderPaletteName | FlapGateLoaderPalette;
+  /** The pilot: "ember", "tide", "moss", "plum" or your own colours. Default "ember". */
+  character?: LoaderCharacterName | LoaderCharacter;
+  /** Force a theme. Default: inherit the host's color-scheme. */
+  colorScheme?: "light" | "dark";
+  /** Override any visible or announced string. */
+  labels?: Partial<LoaderLabels>;
+  /** Extra results tiles, real numbers only. */
+  stats?: LoaderStat[];
+  /** Appended to the completion line: "Your workspace is ready." */
+  completeText?: string;
+  /** Called with the failed step's id. Without it there is no Retry button. */
+  onRetry?: (id: string) => void;
+  /** Called with the failed step's id. Without it there is no Skip button. */
+  onSkip?: (id: string) => void;
+  /** Called after the loader has stopped. Without it there is no Cancel button. */
+  onCancel?: () => void;
+  /** With it, the results screen shows Continue, which calls it. */
+  onContinue?: () => void;
+  /** Called once per run, after the finale's last beat. */
+  onComplete?: () => void;
+  /** Mirrors everything the log and the alert say, for your own logging or tests. */
+  onAnnounce?: (text: string, politeness: "polite" | "assertive") => void;
+  /** Force reduced motion on or off. Default: follow prefers-reduced-motion, live. */
+  reducedMotion?: boolean;
+  /** Extra classes on the root section. */
+  className?: string;
+  /** Inline styles on the root section, applied after the palette and character variables. */
+  style?: CSSProperties;
+};
+
+/* ---------------- shared: timing constants and helpers ---------------- */
+
+const FAST = 150;
+const BASE = 300;
+const SLOW = 500;
+const BEAT = 2400;
+/** At most one progress hit per 400ms; increments in between merge into the next hit. */
+const HIT_GAP = 400;
+/** A finishing blow lands this long after its beat starts. */
+const IMPACT = 100;
+/** Completions this close together share a beat. */
+const COLLECT = 100;
+/** A step holds the front for at least this long. */
+const DWELL = 300;
+/** This many queued completions become one burst beat. */
+const BURST_MIN = 3;
+/** Completions this close share one sentence and one announcement. */
+const COALESCE = 400;
+
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 4);
+const easeIn = (t: number) => t * t;
+const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+const now = () => performance.now();
+const settled = (s: LoaderStep | undefined) => !!s && (s.status === "done" || s.status === "skipped");
+const lowerFirst = (s: string) => (s && s.length > 1 && s[1] === s[1].toLowerCase() ? s[0].toLowerCase() + s.slice(1) : s || "");
+const listJoin = (a: string[]) => (a.length < 2 ? a.join("") : \`\${a.slice(0, -1).join(", ")} and \${a[a.length - 1]}\`);
+const fmtNum = (n: number) => Math.round(n).toLocaleString("en-US");
+
+/** 0.9s, 12s, 1m 05s. */
+function fmtDur(ms: number | undefined | null): string {
+  if (ms == null || !isFinite(ms)) return "";
+  if (ms < 950) return \`\${(Math.max(1, Math.round(ms / 100)) / 10).toFixed(1)}s\`;
+  if (ms < 9950) return \`\${(Math.round(ms / 100) / 10).toFixed(1)}s\`;
+  const s = Math.round(ms / 1000);
+  if (s < 60) return \`\${s}s\`;
+  return \`\${Math.floor(s / 60)}m \${String(s % 60).padStart(2, "0")}s\`;
+}
+
+/** A text map to one path per colour key, horizontal runs merged, in map pixels. */
+function pixelPaths(map: string[]): [string, string][] {
+  const paths = new Map<string, string>();
+  map.forEach((row, y) => {
+    let x = 0;
+    while (x < row.length) {
+      const c = row[x];
+      if (c === ".") {
+        x++;
+        continue;
+      }
+      let x2 = x;
+      while (x2 < row.length && row[x2] === c) x2++;
+      paths.set(c, \`\${paths.get(c) ?? ""}M\${x} \${y}h\${x2 - x}v1h\${x - x2}z\`);
+      x = x2;
+    }
+  });
+  return [...paths];
+}
+
+/** Whole-pixel travel: keyframes sampled from an ease curve, each held with step-end. */
+function glideFrames(from: number[], to: number[], dur: number, ease: (t: number) => number, fmt: (v: number[]) => string, hold = 0) {
+  const total = dur + hold;
+  const n = Math.max(2, Math.round(dur / 16));
+  const frames: Keyframe[] = [{ offset: 0, easing: "step-end", transform: fmt(from) }];
+  for (let k = 1; k <= n; k++) {
+    const e = ease(k / n);
+    frames.push({ offset: (hold + (k / n) * dur) / total, easing: "step-end", transform: fmt(from.map((f, j) => Math.round(f + (to[j] - f) * e))) });
+  }
+  return { frames, duration: total };
+}
+
+/** Held translate points: [offset, x, y, opacity?]. */
+function steppedFrames(points: [number, number, number, number?][]): Keyframe[] {
+  return points.map(([offset, x, y, o]) => ({
+    offset,
+    easing: "step-end",
+    transform: \`translate(\${Math.round(x)}px, \${Math.round(y)}px)\`,
+    ...(o == null ? {} : { opacity: o }),
+  }));
+}
+
+/** The translate a node shows right now, mid-animation included. */
+function readXY(node: HTMLElement): number[] {
+  const t = getComputedStyle(node).transform;
+  const m = t && t !== "none" ? t.match(/matrix(3d)?\\(([^)]+)\\)/) : null;
+  if (!m) return [0, 0];
+  const v = m[2].split(",").map(parseFloat);
+  return m[1] ? [v[12], v[13]] : [v[4], v[5]];
+}
+
+const GLYPHS: Record<string, string[]> = {
+  done: [".......", "......#", ".....##", "#...##.", "##.##..", ".###...", "..#...."],
+  skipped: [".......", ".......", ".......", "#######", "#######", ".......", "......."],
+  retry: ["..###.#", ".#...##", "#...###", "#......", "#.....#", ".#...#.", "..###.."],
+  finish: ["...#...", "...#...", "#######", ".#####.", "..###..", ".##.##.", "##...##"],
+  stop: [".......", ".#####.", ".#####.", ".#####.", ".#####.", ".#####.", "......."],
+  cross: ["##...##", "###.###", ".#####.", "..###..", ".#####.", "###.###", "##...##"],
+  pause: [".......", ".##.##.", ".##.##.", ".##.##.", ".##.##.", ".##.##.", "......."],
+  cursor: ["#...", "##..", "###.", "####", "###.", "##..", "#..."],
+  clock: ["..###..", ".#...#.", "#..#..#", "#..##.#", "#.....#", ".#...#.", "..###.."],
+};
+const GLYPH_PATHS: Record<string, string> = Object.fromEntries(Object.entries(GLYPHS).map(([k, m]) => [k, pixelPaths(m)[0]?.[1] ?? ""]));
+
+/** A pixel glyph in currentColor. Decorative: the words beside it carry the meaning. */
+function Glyph({ name }: { name: string }) {
+  const map = GLYPHS[name] ?? GLYPHS.done;
+  return (
+    <svg className="bz-fgl-g" data-g={name} viewBox={\`0 0 \${map[0].length} \${map.length}\`} shapeRendering="crispEdges" aria-hidden="true" focusable="false">
+      <path className="bz-fgl-gp" d={GLYPH_PATHS[name] ?? GLYPH_PATHS.done} />
+    </svg>
+  );
+}
+
+/* ---------------- end shared: timing constants and helpers ---------------- */
+
+/* ---------------- shared: character ---------------- */
+
+export type LoaderCharacterName = "ember" | "tide" | "moss" | "plum";
+
+/** A pilot's colours. Every value is a hex string; the outline comes from the game palette. */
+export type LoaderCharacter = {
+  /** Which head to draw: "puffs", "ponytail", "short" or "wrap" (a head scarf in hair and hairShade). */
+  hairStyle: "puffs" | "ponytail" | "short" | "wrap";
+  /** Skin. */
+  skin: string;
+  /** Skin shade: the far cheek, the jaw and the ear. */
+  skinShade: string;
+  /** Hair, or the wrap fabric. */
+  hair: string;
+  /** Hair shade. Darker than hair: under the fringe, on the far side and at the nape. */
+  hairShade: string;
+  /** Tunic. */
+  outfit: string;
+  /** Tunic shade, on the right of the body. */
+  outfitShade: string;
+  /** Tunic highlight: the left column and the near sleeve. */
+  outfitLight: string;
+  /** Scarf, belt buckle, hair tie and wrap band. */
+  accent: string;
+  /** Trousers, the near leg. */
+  pants: string;
+  /** Trousers shade, the far leg. */
+  pantsShade: string;
+  /** Boots and belt leather. */
+  boots: string;
+  /** Boot shade. */
+  bootsShade: string;
+  /** Eye white. Default "#ffffff". */
+  eyeWhite?: string;
+  /** Pupils and mouth. Default "#1b1630". */
+  eye?: string;
+};
+
+/** Four bright, inclusive pilots: four skin tones, four hair styles, four outfit hues. */
+export const LOADER_CHARACTERS: Record<LoaderCharacterName, LoaderCharacter> = {
+  ember: { hairStyle: "puffs", skin: "#8d5524", skinShade: "#6b3d18", hair: "#4a3128", hairShade: "#2a1b15", outfit: "#ff5a36", outfitShade: "#c43d20", outfitLight: "#ff9a7a", accent: "#ffd23f", pants: "#3f64b5", pantsShade: "#2b4a8a", boots: "#5b3a1e", bootsShade: "#3d2614" },
+  tide: { hairStyle: "ponytail", skin: "#f3c7a5", skinShade: "#d9a07c", hair: "#e0702c", hairShade: "#a84e1a", outfit: "#3d8bfd", outfitShade: "#2563c9", outfitLight: "#8cbcff", accent: "#ff6fa5", pants: "#e6d3a3", pantsShade: "#c2a970", boots: "#7a4a28", bootsShade: "#55331b" },
+  moss: { hairStyle: "short", skin: "#c68e5f", skinShade: "#a06c42", hair: "#4f4760", hairShade: "#2e2838", outfit: "#3fbf5a", outfitShade: "#2a8a3f", outfitLight: "#8fe39f", accent: "#ff9f1c", pants: "#8b5e34", pantsShade: "#6b4526", boots: "#2f2a3a", bootsShade: "#1f1b27" },
+  plum: { hairStyle: "wrap", skin: "#a8693f", skinShade: "#82502c", hair: "#e0457b", hairShade: "#b02f5e", outfit: "#a06cf0", outfitShade: "#7a4bc4", outfitLight: "#c9a8ff", accent: "#2ec4b6", pants: "#4a5a8c", pantsShade: "#36426a", boots: "#8a5a2b", bootsShade: "#62401e" },
+};
+
+/*
+ * The art: 16 x 24 art pixels, facing right, feet on row 23, a 1px outline all
+ * round, light from the top left. Keys: o outline, h hair, H hair shade, s skin,
+ * S skin shade, w eye white, e pupil, m mouth, c outfit, C outfit shade,
+ * l outfit light, a accent, p trousers, P trousers shade, b boots, B boot shade.
+ * A frame is a 16 x 11 head (with a face patch) placed at a per-frame offset,
+ * under a body anchored to the bottom row. The pilot's set has six frames:
+ * fly1 and fly2 (knees tucked, the two beats of the flight loop), hurt
+ * (knocked back, squinting, held while a step has failed), sit (resting on the
+ * ground after a stop), and celebrate1 and celebrate2 (a fist pump at the
+ * finish). The other game loaders share this character with poses of their own.
+ */
+type LoaderHairStyle = LoaderCharacter["hairStyle"];
+type LoaderEyes = "open" | "blink" | "squint" | "happy";
+type LoaderPose = "hurt" | "sit" | "celebrate1" | "celebrate2" | "fly1" | "fly2";
+type LoaderFrameName = "hurt" | "sit" | "celebrate1" | "celebrate2" | "fly1" | "fly2";
+type LoaderAccessory = { x: number; y: number; rows: string[] };
+type LoaderAccessories = { under?: LoaderAccessory[]; over?: LoaderAccessory[] };
+type LoaderSpriteLayer = { name: string; x: number; y: number; rows: string[] };
+
+const LOADER_W = 16;
+const LOADER_H = 24;
+
+const LOADER_HEADS: Record<LoaderHairStyle, string[]> = {
+  short: [
+    "....oo.oo.oo....",
+    "...ohhohhohho...",
+    "..ohhhhhhhhhhoo.",
+    "..ohhhhhhhhhHHo.",
+    "..ohhhhhhhHhHHo.",
+    "..ohhhhhHHsHsso.",
+    "..ohhSsssssssso.",
+    "..ohHssssssssso.",
+    "..oHHsssssSssSo.",
+    "...oHsssssssSo..",
+    "....ooooooooo...",
+  ],
+  ponytail: [
+    ".....oooooo.....",
+    "...oohhhhhhhoo..",
+    ".ooahhhhhhhhhho.",
+    "ohHohhhhhhhhhHo.",
+    "ohHohhhhhhhhHHo.",
+    "ohHohhhhhHshsso.",
+    "oHHohSsssssssso.",
+    ".oHoHssssssssso.",
+    ".oHoHsssssSssSo.",
+    "..ooHsssssssSo..",
+    "....ooooooooo...",
+  ],
+  puffs: [
+    ".ooo...ooooo....",
+    "ohhho.ohhhhho...",
+    "ohhHhohhhhhHo...",
+    ".oHHhhhhhHHhhho.",
+    "..ohhhhhhhhhhHo.",
+    "..ohhhhssssssso.",
+    "..ohhSsssssssso.",
+    "..ohHssssssssso.",
+    "..oHHsssssSssSo.",
+    "...oHsssssssSo..",
+    "....ooooooooo...",
+  ],
+  wrap: [
+    ".......oooo.oo..",
+    ".....oohhhhoHho.",
+    "...oohhhhhHHHo..",
+    "..ohhhhhhhHhhho.",
+    "..ohhhhhhhhhhHo.",
+    "..oaaaaaaaaaaao.",
+    "..ohhSsssssssso.",
+    "..ohHssssssssso.",
+    "..oHHsssssSssSo.",
+    "...oHsssssssSo..",
+    "....ooooooooo...",
+  ],
+};
+
+/* Face patches over cols 7 to 13, rows 6 to 9 of a head. "_" keeps the head pixel. */
+const LOADER_FACES: Record<LoaderEyes, string[]> = {
+  open: ["_we_we_", "_we_we_", "_______", "____m__"],
+  blink: ["_______", "_ee_ee_", "_______", "____m__"],
+  squint: ["_e___e_", "__e_e__", "_e___e_", "___mm__"],
+  happy: ["_e___e_", "e_e_e_e", "_______", "___mm__"],
+};
+
+const LOADER_BODIES: Record<LoaderPose, string[]> = {
+  hurt: [
+    ".............oo.",
+    "............osso",
+    "..oaaaaaaaaolco.",
+    "..oClcccCClco...",
+    ".ooClcccCCo.....",
+    "oSSoClccCCo.....",
+    "oSoobbabbo......",
+    ".o.olcccCo......",
+    "...oppppPPo.....",
+    "...opPoppPPo....",
+    "...opPo.oppPo...",
+    "...opPo..obbBo..",
+    "...obBo..obbbBo.",
+    "...obbBo..ooooo.",
+    "...ooooo........",
+  ],
+  sit: [
+    "..oaaaaaaaao....",
+    ".oCClcccColco...",
+    "oSoClcccColcooo.",
+    "oSobbabbossoobBo",
+    "oSoppppppppppbBo",
+    "ooPPPPPPPPPPPbBo",
+    ".ooooooooooooooo",
+  ],
+  celebrate1: [
+    ".............oo.",
+    "............osso",
+    "............oSso",
+    ".............lco",
+    ".............lco",
+    ".............lco",
+    ".............lco",
+    ".............lco",
+    "...oaaaaaaaaolco",
+    "...oClcccCCCClco",
+    "...oClcccCCCCco.",
+    "...oClcccCCCCo..",
+    "...oSbbabbbbo...",
+    "....olcccCCo....",
+    "....oppppPPo....",
+    "....opPoppPo....",
+    "....opPoppPo....",
+    "....opPoppPo....",
+    "....obBobbBo....",
+    "....obBobbbBo...",
+    "....ooooooooo...",
+  ],
+  celebrate2: [
+    ".............oo.",
+    "............osso",
+    "............oSso",
+    ".............lco",
+    ".............lco",
+    "...oaaaaaaaaolco",
+    "...oClcccCCCClco",
+    "...oClcccCCCCco.",
+    "...oClcccCCCCo..",
+    "...oSbbabbbbo...",
+    "....olcccCCo....",
+    "....oppppPPo....",
+    "...opPPoopPPo...",
+    "...opPo..opPo...",
+    "...obBo..obBo...",
+    "...obbBo.obbbBo.",
+    "...ooooo.oooooo.",
+  ],
+  fly1: [
+    "....oaaaaaaaao..",
+    "....oClcccColco.",
+    "....oClcccColcso",
+    "....oClcccCCoooo",
+    "....oSbbabbbo...",
+    "....oolcccCCooo.",
+    ".....opppppppPo.",
+    ".....oPPPPopppo.",
+    "......oooo.obbo.",
+    "...........obbBo",
+    "...........ooooo",
+    "................",
+    "................",
+  ],
+  fly2: [
+    "....oaaaaaaaao..",
+    "....oClcccColco.",
+    "....oClcccColcso",
+    "....oClcccCCoooo",
+    "....oSbbabbbo...",
+    "....oolcccCCoo..",
+    ".....opppppPPo..",
+    ".....oPPPoppPo..",
+    "......ooo.obbo..",
+    "..........obbBo.",
+    "..........ooooo.",
+    "................",
+    "................",
+  ],
+};
+
+const LOADER_FRAMES: Record<LoaderFrameName, { body: LoaderPose; eyes: LoaderEyes; dx: number; dy: number }> = {
+  hurt: { body: "hurt", eyes: "squint", dx: -1, dy: 1 },
+  sit: { body: "sit", eyes: "blink", dx: -1, dy: 6 },
+  celebrate1: { body: "celebrate1", eyes: "happy", dx: -1, dy: 0 },
+  celebrate2: { body: "celebrate2", eyes: "happy", dx: -1, dy: 1 },
+  fly1: { body: "fly1", eyes: "open", dx: 1, dy: 0 },
+  fly2: { body: "fly2", eyes: "open", dx: 1, dy: 0 },
+};
+
+/** Colour key to the role used in class names: bz-fgl-c-hair, bz-fgl-c-outfit-light. */
+const LOADER_ROLES: Record<string, string> = {
+  o: "outline", h: "hair", H: "hair-shade", s: "skin", S: "skin-shade", w: "eye-white", e: "eye", m: "mouth",
+  c: "outfit", C: "outfit-shade", l: "outfit-light", a: "accent", p: "pants", P: "pants-shade", b: "boots", B: "boots-shade",
+  j: "jetpack", J: "jetpack-shade", f: "flame", F: "flame-core", k: "wood", K: "wood-shade",
+};
+const LOADER_BODY_KEYS = "hHsSwemcClapPbB";
+
+/** One frame as a text map: accessories under, head, body, accessories over. */
+function composeLoaderFrame(style: LoaderHairStyle, name: LoaderFrameName, acc: LoaderAccessories = {}): string[] {
+  const f = LOADER_FRAMES[name];
+  const grid: string[][] = Array.from({ length: LOADER_H }, () => Array(LOADER_W).fill("."));
+  const put = (a: LoaderAccessory) => {
+    a.rows.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const gx = a.x + x;
+        const gy = a.y + y;
+        if (row[x] !== "." && gx >= 0 && gx < LOADER_W && gy >= 0 && gy < LOADER_H) grid[gy][gx] = row[x];
+      }
+    });
+  };
+  const head = LOADER_HEADS[style].map((r) => r.split(""));
+  LOADER_FACES[f.eyes].forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) if (row[x] !== "_") head[6 + y][7 + x] = row[x];
+  });
+  acc.under?.forEach(put);
+  put({ x: f.dx, y: f.dy, rows: head.map((r) => r.join("")) });
+  const body = LOADER_BODIES[f.body];
+  put({ x: 0, y: LOADER_H - body.length, rows: body });
+  acc.over?.forEach(put);
+  // A body pixel clipped at the box edge keeps a clean edge: it becomes outline.
+  for (let y = 0; y < LOADER_H; y++) {
+    for (const x of [0, LOADER_W - 1]) if (LOADER_BODY_KEYS.includes(grid[y][x])) grid[y][x] = "o";
+  }
+  return grid.map((r) => r.join(""));
+}
+
+/** The character's colours as custom properties, the same in light and dark. */
+function loaderCharacterVars(ch: LoaderCharacter): Record<string, string> {
+  return {
+    "--chr-hair": ch.hair, "--chr-hair-shade": ch.hairShade, "--chr-skin": ch.skin, "--chr-skin-shade": ch.skinShade,
+    "--chr-eye-white": ch.eyeWhite ?? "#ffffff", "--chr-eye": ch.eye ?? "#1b1630",
+    "--chr-outfit": ch.outfit, "--chr-outfit-shade": ch.outfitShade, "--chr-outfit-light": ch.outfitLight, "--chr-accent": ch.accent,
+    "--chr-pants": ch.pants, "--chr-pants-shade": ch.pantsShade, "--chr-boots": ch.boots, "--chr-boots-shade": ch.bootsShade,
+  };
+}
+
+const loaderFrameCache = new Map<string, [string, string][]>();
+
+/** Paths for one frame, cached by hair style, frame and accessory set. */
+function loaderFramePaths(style: LoaderHairStyle, name: LoaderFrameName, accKey: string, acc?: (f: LoaderFrameName) => LoaderAccessories) {
+  const key = \`\${style}|\${name}|\${accKey}\`;
+  let paths = loaderFrameCache.get(key);
+  if (!paths) {
+    paths = pixelPaths(composeLoaderFrame(style, name, acc?.(name)));
+    loaderFrameCache.set(key, paths);
+  }
+  return paths;
+}
+
+/**
+ * Every frame the game uses, in one svg. CSS shows one through the parent's
+ * data-frame (or two, alternating, through data-loop), so a pose change is an
+ * attribute change and never a React render.
+ */
+const CharacterSprite = memo(function CharacterSprite({
+  hairStyle,
+  frames,
+  accessories,
+  accessoriesKey = "",
+  layers = [],
+}: {
+  hairStyle: LoaderHairStyle;
+  frames: LoaderFrameName[];
+  accessories?: (f: LoaderFrameName) => LoaderAccessories;
+  accessoriesKey?: string;
+  layers?: LoaderSpriteLayer[];
+}) {
+  const groups = useMemo(
+    () => frames.map((f) => [f, loaderFramePaths(hairStyle, f, accessoriesKey, accessories)] as const),
+    [hairStyle, frames, accessories, accessoriesKey],
+  );
+  return (
+    <svg viewBox={\`0 0 \${LOADER_W} \${LOADER_H}\`} shapeRendering="crispEdges" aria-hidden="true" focusable="false">
+      {groups.map(([f, paths]) => (
+        <g key={f} data-f={f}>
+          {paths.map(([k, d]) => (
+            <path key={k} className={\`bz-fgl-c-\${LOADER_ROLES[k] ?? k}\`} d={d} />
+          ))}
+        </g>
+      ))}
+      {layers.map((layer) => (
+        <g key={layer.name} data-l={layer.name}>
+          {pixelPaths(layer.rows.map((r) => \`\${".".repeat(layer.x)}\${r}\`)).map(([k, d]) => (
+            <path key={k} className={\`bz-fgl-c-\${LOADER_ROLES[k] ?? k}\`} d={d} transform={\`translate(0 \${layer.y})\`} />
+          ))}
+        </g>
+      ))}
+    </svg>
+  );
+});
+
+/* ---------------- end shared: character ---------------- */
+
+/* ---------------- shared: engine ---------------- */
+
+type LoaderPhase = "idle" | "run" | "error" | "complete" | "stopped";
+type LoaderLineKind = "done" | "skipped" | "retry" | "finish" | "stop";
+type LoaderLine = { key: number; kind: LoaderLineKind; text: string };
+type LoaderTile = { label: string; text: string; sub: string; to: number | null; fmt: (v: number) => string };
+type LoaderEntry = { i: number; kind: "done" | "skipped"; at: number; said?: boolean };
+type LoaderMotion = { reduced: boolean; paused: boolean; onscreen: boolean; visible: boolean };
+
+/** What React renders from. The engine changes it only through emit(). */
+type LoaderView = {
+  run: number;
+  phase: LoaderPhase;
+  front: number;
+  barP: number | null;
+  barDetail: string | null;
+  lines: LoaderLine[];
+  intro: string;
+  alert: string;
+  errorAt: number;
+  details: string;
+  detailsOpen: boolean;
+  menu: number;
+  tiles: LoaderTile[];
+  counts: string[];
+  finishText: string;
+  resultsOpen: boolean;
+  banner: boolean;
+  continueOn: boolean;
+  note: string | null;
+  focus: { to: "retry" | "log" | "continue"; n: number } | null;
+};
+
+type LoaderHost = {
+  completeText?: string;
+  stats?: LoaderStat[];
+  onComplete?: () => void;
+  onCancel?: () => void;
+  onAnnounce?: (text: string, politeness: "polite" | "assertive") => void;
+};
+
+type LoaderIO = {
+  labels: () => LoaderLabels;
+  host: () => LoaderHost;
+  emit: (patch: Partial<LoaderView>) => void;
+  /** Focus is somewhere inside the loader. */
+  focusInside: () => boolean;
+  /** Focus is inside the error panel. */
+  focusInError: () => boolean;
+  root: () => HTMLElement | null;
+  resized: () => void;
+};
+
+/** What the engine shares with a game's arena. */
+type LoaderCore = {
+  host: LoaderStep[];
+  /** Per step: true once its beat has landed on screen. */
+  vis: boolean[];
+  /** The step at the front of the arena (may lag the host by one beat, never ahead). */
+  front: number;
+  phase: LoaderPhase;
+  /** Front progress as the picture shows it: changes only on a hit. */
+  barP: number | null;
+  /** Not reduced and not paused. */
+  motionAllowed: () => boolean;
+  /** On screen and in a visible tab. */
+  running: () => boolean;
+  motionOn: () => boolean;
+  later: (fn: () => void, ms: number) => number;
+  clear: (id: number) => number;
+  anim: (node: Element, frames: Keyframe[], opts: KeyframeAnimationOptions) => Animation;
+};
+
+/** A game's arena: imperative, aria-hidden, driven by the engine. */
+type LoaderArena = {
+  build: () => void;
+  layout: () => void;
+  sync: () => void;
+  hit: (showy: boolean) => void;
+  /** A beat starts; returns the ms until it lands. */
+  beat: (entries: LoaderEntry[], showy: boolean) => number;
+  /** A beat lands; returns the ms to hold before the front moves on. */
+  land: (entries: LoaderEntry[], showy: boolean) => number;
+  flush: (entries: LoaderEntry[]) => void;
+  advance: (animate: boolean, dur: number) => void;
+  error: (i: number, showy: boolean) => void;
+  recover: (showy: boolean) => void;
+  stop: (showy: boolean) => void;
+  finale: (showy: boolean, silent: boolean) => void;
+  pose: () => void;
+  motion: () => void;
+  destroy: () => void;
+};
+
+type LoaderEngine = {
+  rebuild: (steps: LoaderStep[]) => void;
+  update: (steps: LoaderStep[]) => void;
+  motion: (m: LoaderMotion) => void;
+  cancel: () => void;
+  destroy: () => void;
+};
+
+function introText(steps: LoaderStep[], L: LoaderLabels): string {
+  if (!steps.length) return "";
+  if (steps.every((s) => s.status === "pending")) return L.queued(steps.length, steps[0].label);
+  const cur = steps.find((s) => s.status === "active" || s.status === "error");
+  return L.progress(steps.filter(settled).length, steps.length, cur ? cur.label : "");
+}
+
+function initialLoaderView(steps: LoaderStep[], L: LoaderLabels): LoaderView {
+  let front = 0;
+  while (front < steps.length && settled(steps[front])) front++;
+  const s = steps[front];
+  const started = steps.some((x) => x.status !== "pending");
+  return {
+    run: 0,
+    phase: !started ? "idle" : steps.every(settled) ? "complete" : "run",
+    front,
+    barP: s ? (s.status === "done" ? 1 : s.progress ?? null) : null,
+    barDetail: s?.detail ?? null,
+    lines: [],
+    intro: introText(steps, L),
+    alert: "",
+    errorAt: -1,
+    details: "",
+    detailsOpen: false,
+    menu: 0,
+    tiles: [],
+    counts: [],
+    finishText: "",
+    resultsOpen: false,
+    banner: false,
+    continueOn: false,
+    note: null,
+    focus: null,
+  };
+}
+
+/**
+ * The step engine: diffs each new steps array against the last, queues
+ * completions as beats, narrates them, and drives the arena. It owns timers
+ * and animations and releases all of them in destroy(), so React StrictMode
+ * can create it twice.
+ */
+function createLoaderEngine(io: LoaderIO, makeArena: (core: LoaderCore) => LoaderArena): LoaderEngine {
+  const timers = new Set<number>();
+  const anims = new Set<Animation>();
+  let mo: LoaderMotion = { reduced: false, paused: false, onscreen: true, visible: true };
+  const core: LoaderCore = {
+    host: [],
+    vis: [],
+    front: 0,
+    phase: "idle",
+    barP: null,
+    motionAllowed: () => !mo.reduced && !mo.paused,
+    running: () => mo.onscreen && mo.visible,
+    motionOn: () => core.motionAllowed() && core.running(),
+    later: (fn, ms) => {
+      const id = window.setTimeout(() => {
+        timers.delete(id);
+        fn();
+      }, Math.max(0, ms));
+      timers.add(id);
+      return id;
+    },
+    clear: (id) => {
+      if (id) {
+        window.clearTimeout(id);
+        timers.delete(id);
+      }
+      return 0;
+    },
+    anim: (node, frames, opts) => {
+      const a = node.animate(frames, opts);
+      anims.add(a);
+      const done = () => anims.delete(a);
+      a.finished.then(done, done);
+      return a;
+    },
+  };
+  const arena = makeArena(core);
+  let alive = true;
+  let run = 0;
+  let frontSince = -1e9;
+  let beatUntil = 0;
+  let beatBusy = false;
+  let inflight: { entries: LoaderEntry[]; landed: boolean; timer: number } | null = null;
+  let backlog: LoaderEntry[] = [];
+  let barDetail: string | null = null;
+  let lastSeenP: number | null | undefined = null;
+  let lastHit = -1e9;
+  let hitT = 0;
+  let pumpT = 0;
+  let noteT = 0;
+  let countRaf = 0;
+  let finaleStarted = false;
+  let finalPrefix = "";
+  let lines: LoaderLine[] = [];
+  let lineKey = 0;
+  let focusN = 0;
+  let awayFrom: number | null = null;
+
+  const emit = (patch: Partial<LoaderView>) => {
+    if (alive) io.emit(patch);
+  };
+  const announce = (text: string, politeness: "polite" | "assertive") => io.host().onAnnounce?.(text, politeness);
+  const focus = (to: "retry" | "log" | "continue") => emit({ focus: { to, n: ++focusN } });
+  const settledCount = () => core.host.filter(settled).length;
+
+  function render() {
+    emit({ phase: core.phase, front: core.front, barP: core.barP, barDetail });
+    arena.sync();
+  }
+
+  function appendLine(kind: LoaderLineKind, text: string) {
+    lines = lines.concat({ key: ++lineKey, kind, text }).slice(-40);
+    emit({ lines });
+    announce(text, "polite");
+  }
+
+  function syncBar() {
+    const s = core.host[core.front];
+    core.barP = s ? (s.status === "done" ? 1 : s.progress ?? null) : null;
+    barDetail = s ? s.detail ?? null : null;
+    lastSeenP = s ? s.progress : null;
+  }
+
+  function clearNote() {
+    noteT = core.clear(noteT);
+    emit({ note: null });
+  }
+
+  function rebuild(steps: LoaderStep[]) {
+    timers.forEach((id) => window.clearTimeout(id));
+    timers.clear();
+    anims.forEach((a) => a.cancel());
+    anims.clear();
+    cancelAnimationFrame(countRaf);
+    hitT = pumpT = noteT = countRaf = 0;
+    core.host = steps.map((s) => ({ ...s }));
+    core.vis = core.host.map(settled);
+    backlog = [];
+    inflight = null;
+    beatBusy = false;
+    finaleStarted = false;
+    finalPrefix = "";
+    lastHit = -1e9;
+    lines = [];
+    core.phase = core.host.some((s) => s.status !== "pending") ? (core.host.every(settled) ? "complete" : "run") : "idle";
+    core.front = 0;
+    while (core.front < core.host.length && core.vis[core.front]) core.front++;
+    frontSince = -1e9;
+    syncBar();
+    emit({
+      run: ++run,
+      lines,
+      intro: introText(core.host, io.labels()),
+      alert: "",
+      errorAt: -1,
+      details: "",
+      detailsOpen: false,
+      menu: 0,
+      tiles: [],
+      counts: [],
+      finishText: "",
+      resultsOpen: false,
+      banner: false,
+      continueOn: false,
+      note: null,
+    });
+    arena.build();
+    render();
+    arena.pose();
+    if (core.phase === "complete") finale(true);
+    else {
+      const e = core.host.findIndex((s) => s.status === "error");
+      if (e >= 0) showError(e, true);
+    }
+  }
+
+  function needsRebuild(prev: LoaderStep[], next: LoaderStep[]) {
+    if (prev.length !== next.length) return true;
+    for (let i = 0; i < next.length; i++) if (prev[i].id !== next[i].id) return true;
+    return next.every((s) => s.status === "pending") && (core.phase !== "idle" || prev.some((s) => s.status !== "pending"));
+  }
+
+  function update(steps: LoaderStep[]) {
+    const next = steps.map((s) => ({ ...s }));
+    const prev = core.host;
+    if (needsRebuild(prev, next)) {
+      rebuild(next);
+      return;
+    }
+    core.host = next;
+    if (core.phase === "stopped") {
+      arena.sync();
+      return;
+    }
+    if (core.phase === "idle" && next.some((s) => s.status !== "pending")) {
+      core.phase = "run";
+      // The queued placeholder would be stale now: say what is running instead.
+      emit({ intro: introText(next, io.labels()) });
+    }
+    const t = now();
+    let errAt = -1;
+    let retryAt = -1;
+    let leftError = false;
+    next.forEach((s, i) => {
+      const was = prev[i] ? prev[i].status : "pending";
+      if (was === s.status) return;
+      if (was === "error") leftError = true;
+      if (s.status === "done" || s.status === "skipped") backlog.push({ i, kind: s.status, at: t });
+      else if (s.status === "error") errAt = i;
+      else if (s.status === "active" && was === "error") retryAt = i;
+    });
+    if (retryAt >= 0) retryStarted(retryAt);
+    else if (leftError && core.phase === "error" && clearError()) focus("log");
+    if (errAt >= 0) {
+      showError(errAt, false);
+      return;
+    }
+    const s = core.host[core.front];
+    if (core.phase === "run" && s && s.status === "active" && s.progress != null && s.progress !== lastSeenP) {
+      if (core.motionOn()) {
+        lastSeenP = s.progress;
+        requestHit();
+      } else syncBar();
+    }
+    render();
+    pump();
+  }
+
+  /* ---- hits: one per real progress event, merged when they come faster than HIT_GAP */
+  function requestHit() {
+    if (hitT) return;
+    hitT = core.later(doHit, Math.max(lastHit + HIT_GAP - now(), frontSince + BASE - now(), 0));
+  }
+
+  function doHit() {
+    hitT = 0;
+    const s = core.host[core.front];
+    if (core.phase !== "run" || !s || s.status !== "active" || s.progress == null) return;
+    lastHit = now();
+    syncBar();
+    arena.hit(core.motionOn());
+    render();
+  }
+
+  /* ---- beats: completions play one at a time, bursts and coalesced finishes share one */
+  function pump() {
+    pumpT = core.clear(pumpT);
+    if (core.phase === "error" || core.phase === "stopped" || beatBusy) return;
+    if (!backlog.length) {
+      maybeFinale();
+      return;
+    }
+    if (!core.running()) {
+      flushBacklog();
+      return;
+    }
+    const t = now();
+    if (t < beatUntil) {
+      pumpT = core.later(pump, beatUntil - t);
+      return;
+    }
+    const oldest = backlog[0].at;
+    const newest = backlog[backlog.length - 1].at;
+    if (t - newest < COLLECT && t - oldest < BASE) {
+      pumpT = core.later(pump, COLLECT - (t - newest));
+      return;
+    }
+    if (backlog.length >= BURST_MIN || t - oldest > 900) {
+      runBeat(backlog.splice(0));
+      return;
+    }
+    const dwellLeft = frontSince + DWELL - t;
+    if (dwellLeft > 0) {
+      pumpT = core.later(pump, dwellLeft);
+      return;
+    }
+    // A skip that arrived with this completion resolves in the same beat.
+    let take = 1;
+    while (take < backlog.length && backlog[take].kind === "skipped" && backlog[take].at - backlog[0].at <= COALESCE) take++;
+    runBeat(backlog.splice(0, take));
+  }
+
+  function runBeat(entries: LoaderEntry[]) {
+    const head = entries[0];
+    const showy = core.motionOn();
+    beatBusy = true;
+    const delay = arena.beat(entries, showy);
+    beatUntil = now() + delay;
+    const land = () => {
+      entries.forEach((e) => {
+        core.vis[e.i] = true;
+      });
+      const hold = arena.land(entries, showy);
+      speak(entries.concat(backlog.filter((b) => b.at - head.at <= COALESCE)));
+      const travel = entries.length >= BURST_MIN ? SLOW : BASE;
+      const settle = () => {
+        beatBusy = false;
+        inflight = null;
+        advanceFront(showy, travel);
+        pump();
+      };
+      if (hold > 0) inflight = { entries, landed: true, timer: core.later(settle, hold) };
+      else settle();
+    };
+    if (delay > 0) inflight = { entries, landed: false, timer: core.later(land, delay) };
+    else land();
+  }
+
+  function flushBacklog() {
+    pumpT = core.clear(pumpT);
+    let held = false;
+    if (inflight) {
+      core.clear(inflight.timer);
+      if (inflight.landed) held = true;
+      else backlog = inflight.entries.concat(backlog);
+      inflight = null;
+      beatBusy = false;
+    }
+    if (!backlog.length) {
+      if (held) {
+        advanceFront(false, 0);
+        maybeFinale();
+      }
+      return;
+    }
+    const entries = backlog.splice(0);
+    entries.forEach((e) => {
+      core.vis[e.i] = true;
+    });
+    arena.flush(entries);
+    speak(entries);
+    advanceFront(false, 0);
+    maybeFinale();
+  }
+
+  function advanceFront(animate: boolean, dur: number) {
+    let f = 0;
+    while (f < core.host.length && core.vis[f]) f++;
+    core.front = f;
+    frontSince = now();
+    syncBar();
+    arena.advance(animate, dur);
+    render();
+    arena.pose();
+    const s = core.host[f];
+    if (s && s.status === "active" && s.progress != null && core.motionOn()) requestHit();
+  }
+
+  /* ---- narration */
+  function doneSentence(s: LoaderStep) {
+    const base = s.doneText || \`\${s.label}: done\`;
+    const dur = s.durationMs != null ? \` in \${fmtDur(s.durationMs)}\` : "";
+    const tries = (s.attempt ?? 1) > 1 ? \`, on attempt \${s.attempt}\` : "";
+    return \`\${base}\${dur}\${tries}.\`;
+  }
+  const skipSentence = (s: LoaderStep) => \`Skipped: \${s.label}\${s.detail ? \` (\${lowerFirst(s.detail)})\` : ""}.\`;
+
+  function nextAfter(list: LoaderEntry[]) {
+    let i = Math.max(...list.map((e) => e.i)) + 1;
+    while (i < core.host.length && settled(core.host[i])) i++;
+    return i < core.host.length ? i : -1;
+  }
+
+  /* One sentence per group of milestones: two quick finishes share a sentence,
+     a burst is summed up, and the line ends with what comes next. */
+  function sentence(list: LoaderEntry[]) {
+    list = list.slice().sort((a, b) => a.i - b.i);
+    let text: string;
+    if (list.length >= BURST_MIN) {
+      const done = list.filter((e) => e.kind === "done").map((e) => core.host[e.i]);
+      const skipped = list.filter((e) => e.kind === "skipped").map((e) => core.host[e.i].label);
+      text = done.length === 1 ? doneSentence(done[0]) : done.length ? \`Finished \${done.length} steps at once: \${listJoin(done.map((s) => s.label))}.\` : "";
+      if (skipped.length) text += \`\${text ? " " : ""}Skipped: \${listJoin(skipped)}.\`;
+    } else {
+      const parts = list.map((e) => (e.kind === "done" ? doneSentence(core.host[e.i]) : skipSentence(core.host[e.i])));
+      text = parts.length === 2 && list[0].kind === "done" && list[1].kind === "done" ? \`\${parts[0].replace(/\\.$/, "")}, then \${lowerFirst(parts[1])}\` : parts.join(" ");
+    }
+    const n = nextAfter(list);
+    if (n >= 0) text += \`\${n === core.host.length - 1 ? " Last up: " : " On to "}\${lowerFirst(core.host[n].label)}.\`;
+    return text;
+  }
+
+  /* Narrates every completion not told yet as one line. The last news before
+     the finale is held and merged into the completion line. */
+  function speak(list: LoaderEntry[]) {
+    const fresh = list.filter((e) => !e.said);
+    if (!fresh.length) return;
+    fresh.forEach((e) => {
+      e.said = true;
+    });
+    const text = sentence(fresh);
+    if (core.host.every(settled) && backlog.every((b) => b.said)) {
+      finalPrefix = \`\${finalPrefix ? \`\${finalPrefix} \` : ""}\${text}\`;
+      return;
+    }
+    appendLine(fresh.some((e) => e.kind === "done") ? "done" : "skipped", text);
+  }
+
+  /* ---- errors */
+  function errorText(s: LoaderStep) {
+    const msg = s.error || "Something went wrong.";
+    if (msg.toLowerCase().includes(s.label.toLowerCase())) return msg;
+    return \`\${s.label} failed: \${lowerFirst(msg)}\${/[.!?]$/.test(msg) ? "" : "."}\`;
+  }
+
+  function detailsText(i: number) {
+    const s = core.host[i];
+    const bits = [\`Step \${i + 1} of \${core.host.length}\`, \`attempt \${s.attempt ?? 1}\`];
+    if (s.detail) bits.push(\`reached \${s.detail}\`);
+    else if (s.progress != null) bits.push(\`reached \${Math.floor(s.progress * 100)}%\`);
+    if (s.elapsedMs != null) bits.push(\`ran \${fmtDur(s.elapsedMs)}\`);
+    return \`\${bits.join(" · ")}\${s.errorDetail ? \`. \${s.errorDetail}\` : ""}\`;
+  }
+
+  function showError(i: number, silent: boolean) {
+    const hadFocus = io.focusInside();
+    flushBacklog();
+    core.phase = "error";
+    clearNote();
+    hitT = core.clear(hitT);
+    const s = core.host[i];
+    const text = errorText(s);
+    if (s.progress != null) core.barP = s.progress;
+    if (s.detail) barDetail = s.detail;
+    emit({ alert: text, errorAt: i, details: detailsText(i), detailsOpen: false, menu: 0 });
+    if (!silent) announce(text, "assertive");
+    render();
+    arena.error(i, core.motionOn() && !silent);
+    if (hadFocus) focus("retry");
+  }
+
+  /** Leaves the error state. Returns whether focus was in the menu. */
+  function clearError() {
+    const hadFocus = io.focusInError();
+    core.phase = "run";
+    emit({ alert: "", detailsOpen: false });
+    arena.recover(core.motionOn());
+    return hadFocus;
+  }
+
+  function retryStarted(i: number) {
+    const hadFocus = clearError();
+    syncBar();
+    render();
+    arena.pose();
+    const s = core.host[i];
+    appendLine("retry", \`Trying again: \${s.label}, attempt \${s.attempt ?? 2}.\`);
+    if (hadFocus) focus("log");
+  }
+
+  /* ---- the end of a run */
+  function maybeFinale() {
+    if (finaleStarted || core.phase === "error" || core.phase === "stopped" || !core.host.length) return;
+    if (backlog.length || !core.host.every(settled) || core.vis.some((v) => !v)) return;
+    finale(false);
+  }
+
+  function buildResults(): LoaderTile[] {
+    const n = core.host.length;
+    const done = core.host.filter((s) => s.status === "done");
+    const skipped = core.host.filter((s) => s.status === "skipped").length;
+    const total = done.reduce((a, s) => a + (s.durationMs ?? 0), 0);
+    const longest = done.reduce<LoaderStep | null>((a, s) => (!a || (s.durationMs ?? 0) > (a.durationMs ?? 0) ? s : a), null);
+    const retried = done.filter((s) => (s.attempt ?? 1) > 1);
+    const tile = (label: string, to: number | null, fmt: (v: number) => string, sub: string, text?: string): LoaderTile => ({
+      label,
+      to,
+      fmt,
+      sub,
+      text: text ?? fmt(to ?? 0),
+    });
+    const tiles = [tile("Steps", done.length + skipped, (v) => \`\${Math.round(v)} of \${n}\`, skipped ? \`\${skipped} skipped\` : "none skipped")];
+    if (total > 0) tiles.push(tile("Time", total, fmtDur, longest?.durationMs ? \`Longest: \${longest.label}, \${fmtDur(longest.durationMs)}\` : ""));
+    (io.host().stats ?? []).forEach((st) => {
+      if (typeof st.value === "number") tiles.push(tile(st.label, st.value, fmtNum, st.sub ?? ""));
+      else tiles.push(tile(st.label, null, String, st.sub ?? "", st.value));
+    });
+    if (retried.length) {
+      const hiccups = retried.reduce((a, s) => a + (s.attempt ?? 1) - 1, 0);
+      tiles.push(tile(hiccups === 1 ? "Hiccup" : "Hiccups", hiccups, (v) => \`\${Math.round(v)} recovered\`, \`at \${listJoin(retried.map((s) => s.label))}\`));
+    }
+    return tiles;
+  }
+
+  function countUp(animate: boolean, tiles: LoaderTile[]) {
+    const final = () => emit({ counts: tiles.map((t) => t.text) });
+    cancelAnimationFrame(countRaf);
+    if (!animate) {
+      final();
+      return;
+    }
+    const t0 = now();
+    const ease = (x: number) => 1 - Math.pow(1 - x, 3);
+    const tick = () => {
+      if (!alive) return;
+      if (!core.motionOn()) {
+        final();
+        return;
+      }
+      const x = Math.min(1, (now() - t0) / SLOW);
+      emit({ counts: tiles.map((t) => (t.to == null ? t.text : t.fmt(t.to * ease(x)))) });
+      if (x < 1) countRaf = requestAnimationFrame(tick);
+      else final();
+    };
+    countRaf = requestAnimationFrame(tick);
+  }
+
+  function finale(silent: boolean) {
+    finaleStarted = true;
+    const hadFocus = io.focusInside();
+    core.phase = "complete";
+    clearNote();
+    const L = io.labels();
+    const host = io.host();
+    const n = core.host.length;
+    const skipped = core.host.filter((s) => s.status === "skipped").length;
+    const showy = core.motionOn() && !silent;
+    const closing = \`\${L.complete(n, skipped)}\${host.completeText ? \` \${host.completeText}\` : ""}\`;
+    render();
+    if (!silent) appendLine("finish", \`\${finalPrefix ? \`\${finalPrefix} \` : ""}\${closing}\`);
+    finalPrefix = "";
+    const tiles = buildResults();
+    emit({ tiles, counts: tiles.map((t) => (showy && t.to != null ? t.fmt(0) : t.text)), finishText: closing });
+    arena.finale(showy, silent);
+    if (!silent) {
+      emit({ banner: true });
+      core.later(() => emit({ banner: false }), FAST + BEAT);
+    }
+    const open = () => {
+      emit({ resultsOpen: true });
+      countUp(showy, tiles);
+      core.later(
+        () => {
+          emit({ continueOn: true });
+          if (hadFocus || io.focusInside()) focus("continue");
+          if (!silent) host.onComplete?.();
+        },
+        showy ? SLOW + 200 : 0,
+      );
+    };
+    // The completion line is in the log before the results replace it, so it is announced.
+    if (silent) open();
+    else core.later(open, showy ? FAST + BASE : 400);
+  }
+
+  /* ---- cancel */
+  function cancel() {
+    if (core.phase === "complete" || core.phase === "stopped") return;
+    const hadFocus = io.focusInside();
+    const kept = core.host.filter((s) => s.status === "done").length;
+    flushBacklog();
+    pumpT = core.clear(pumpT);
+    hitT = core.clear(hitT);
+    clearNote();
+    core.phase = "stopped";
+    emit({ alert: "", detailsOpen: false });
+    render();
+    arena.stop(core.motionOn());
+    arena.pose();
+    appendLine("stop", \`\${finalPrefix ? \`\${finalPrefix} \` : ""}\${io.labels().stopped(kept)}\`);
+    finalPrefix = "";
+    io.host().onCancel?.();
+    if (hadFocus) focus("log");
+  }
+
+  /* ---- motion, off screen and hidden tabs */
+  function motion(next: LoaderMotion) {
+    const wasRunning = core.running();
+    mo = next;
+    if (wasRunning && !core.running()) awayFrom = settledCount();
+    if (!core.motionOn()) {
+      anims.forEach((a) => {
+        try {
+          a.finish();
+        } catch {
+          a.cancel();
+        }
+      });
+      if (!core.running() && backlog.length) flushBacklog();
+    }
+    if (hitT && !core.motionOn()) {
+      hitT = core.clear(hitT);
+      syncBar();
+      render();
+    }
+    arena.motion();
+    arena.pose();
+    if (!wasRunning && core.running() && awayFrom != null) {
+      const d = settledCount() - awayFrom;
+      awayFrom = null;
+      if (d > 0 && (core.phase === "run" || core.phase === "complete")) {
+        noteT = core.clear(noteT);
+        emit({ note: io.labels().away(d) });
+        noteT = core.later(() => emit({ note: null }), BEAT * 2);
+      }
+    }
+  }
+
+  const ro = typeof ResizeObserver === "function" ? new ResizeObserver(() => {
+    arena.layout();
+    io.resized();
+  }) : null;
+  const rootEl = io.root();
+  if (ro && rootEl) ro.observe(rootEl);
+
+  return {
+    rebuild,
+    update,
+    motion,
+    cancel,
+    destroy() {
+      alive = false;
+      ro?.disconnect();
+      timers.forEach((id) => window.clearTimeout(id));
+      timers.clear();
+      anims.forEach((a) => a.cancel());
+      anims.clear();
+      cancelAnimationFrame(countRaf);
+      arena.destroy();
+    },
+  };
+}
+
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(RM_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+
+/** prefers-reduced-motion, live. */
+function useReducedMotionPreference() {
+  return useSyncExternalStore(subscribeReducedMotion, () => window.matchMedia(RM_QUERY).matches, () => false);
+}
+
+const subscribeVisibility = (onChange: () => void) => {
+  document.addEventListener("visibilitychange", onChange);
+  return () => document.removeEventListener("visibilitychange", onChange);
+};
+
+/** The browser tab is visible. */
+function usePageVisible() {
+  return useSyncExternalStore(subscribeVisibility, () => document.visibilityState !== "hidden", () => true);
+}
+
+/** The element is at least partly on screen. */
+function useOnscreen(ref: RefObject<Element>) {
+  const [onscreen, setOnscreen] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver !== "function") return;
+    const io = new IntersectionObserver((list) => setOnscreen(list[list.length - 1].isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref]);
+  return onscreen;
+}
+
+/** Scrolls the log so it starts on a whole line and shows the newest one. */
+function scrollLogToLines(log: HTMLElement | null) {
+  if (!log) return;
+  log.style.paddingBottom = "";
+  const target = log.scrollHeight - log.clientHeight;
+  if (target <= 0) {
+    log.scrollTop = 0;
+    return;
+  }
+  const items = Array.from(log.children) as HTMLElement[];
+  const base = items[0].offsetTop;
+  let top = items[items.length - 1].offsetTop - base;
+  for (let k = items.length - 1; k >= 0; k--) {
+    const y = items[k].offsetTop - base;
+    if (y < target) break;
+    top = y;
+  }
+  if (top > target) log.style.paddingBottom = \`\${top - target}px\`;
+  log.scrollTop = top;
+}
+
+/* ---------------- end shared: engine ---------------- */
+
+/* ---------------- flap gate: arena ---------------- */
+
+/** One art pixel in CSS px, at every width. */
+const FGL_U = 2;
+const FGL_SKY = 100;
+const FGL_SKY_NARROW = 84;
+const FGL_GROUND = 8;
+const FGL_PIPE = 16;
+const FGL_GAP = 36;
+const FGL_SPACE = 80;
+const FGL_LIP = 6;
+const FGL_LIP_FIN = 7;
+/* Gaps shift by index, never at random. Neighbours differ by 4 art px at most,
+   less than the 6 the pilot clears on each side, so lining up never clips a lip. */
+const FGL_GAP_VAR = [0, -3, 1, 4, 1, -3, -4, 0, 3, -1];
+const FGL_HERO_W = LOADER_W * FGL_U;
+const FGL_HERO_H = LOADER_H * FGL_U;
+const FGL_SCORE_U = 3;
+/* The score chip's padding on the left and top; the digit map's own outline and shadow pad the other two sides. */
+const FGL_SCORE_PAD = 3;
+
+const FGL_FRAMES: LoaderFrameName[] = ["fly1", "fly2", "hurt", "sit", "celebrate1", "celebrate2"];
+/* The jetpack sits on the back, behind the body, with a strap across the chest. */
+const FGL_JETPACK = ["..oo..", ".ojJo.", "ojjjJo", "ojjjJo", "oooooo", "ojjjJo", "ojjjJo", "oJJJJo", ".oJJo."];
+const fglAccessories = (f: LoaderFrameName): LoaderAccessories => {
+  const y = f === "sit" ? 15 : 10;
+  return { under: [{ x: 0, y, rows: FGL_JETPACK }], over: [{ x: 5, y: y + 2, rows: ["J", "J", "J"] }] };
+};
+/* Flames glow, so they have no outline. CSS alternates them on the beat. */
+const FGL_LAYERS: LoaderSpriteLayer[] = [
+  { name: "fl1", x: 1, y: 19, rows: [".fFf", "..f."] },
+  { name: "fl2", x: 1, y: 19, rows: ["fFFf", ".fFf", "..f."] },
+];
+
+const FGL_CLOUD_L = [
+  "......####..........",
+  "....########.####...",
+  "...###############..",
+  ".#################..",
+  "###################.",
+  "####################",
+  ".##################.",
+];
+const FGL_CLOUD_S = ["....###.....", "..########..", ".##########.", "############", ".##########."];
+const FGL_CLOUDS: [string[], number, number][] = [
+  [FGL_CLOUD_L, 0.04, 0.6],
+  [FGL_CLOUD_S, 0.5, 0.66],
+  [FGL_CLOUD_S, 0.78, 0.2],
+];
+const FGL_FLAG = ["o....", "offf.", "offff", "offf.", "o....", "o...."];
+const FGL_SPARK = ["..o..", ".oFo.", "oFFFo", ".oFo.", "..o.."];
+const FGL_SMOKE = [
+  ["......", "..JJ..", ".JJJJ.", "..JJ..", "......"],
+  [".J..J.", "J....J", "..JJ..", "J....J", ".J..J."],
+];
+const FGL_DIGITS = [
+  [".###.", "##.##", "##.##", "##.##", "##.##", "##.##", ".###."],
+  ["..##.", ".###.", "..##.", "..##.", "..##.", "..##.", "..##."],
+  [".###.", "##.##", "...##", "..##.", ".##..", "##...", "#####"],
+  ["####.", "...##", "...##", ".###.", "...##", "...##", "####."],
+  ["...##", "..###", ".####", "##.##", "#####", "...##", "...##"],
+  ["#####", "##...", "####.", "...##", "...##", "##.##", ".###."],
+  [".###.", "##...", "####.", "##.##", "##.##", "##.##", ".###."],
+  ["#####", "...##", "..##.", "..##.", ".##..", ".##..", ".##.."],
+  [".###.", "##.##", "##.##", ".###.", "##.##", "##.##", ".###."],
+  [".###.", "##.##", "##.##", ".####", "...##", "...##", ".###."],
+];
+
+/* Map keys to palette roles, one set per kind of art. */
+const FGL_PIPE_ROLES: Record<string, keyof FlapGateLoaderColors> = { o: "pipeLine", x: "pipeLine", p: "pipe", l: "pipeLight", s: "pipeShade", w: "score", f: "accent" };
+const FGL_SCORE_ROLES: Record<string, keyof FlapGateLoaderColors> = { w: "score", o: "scoreLine" };
+const FGL_CLOUD_ROLES: Record<string, keyof FlapGateLoaderColors> = { "#": "cloud" };
+const FGL_FX_ROLES: Record<string, keyof FlapGateLoaderColors> = { o: "scoreLine", F: "flameCore", J: "jetpackShade" };
+const FGL_GROUND_ROLES: Record<string, keyof FlapGateLoaderColors> = { o: "groundLine", g: "grass", d: "ground", s: "groundStripe" };
+
+/** Arena art as an svg string: one path per colour key, classed by palette role. */
+function fglSvg(map: string[], roles: Record<string, string>, cls = ""): string {
+  const paths = pixelPaths(map)
+    .map(([k, d]) => \`<path class="bz-fgl-a-\${roles[k] ?? "pipeLine"}" d="\${d}"/>\`)
+    .join("");
+  return \`<svg\${cls ? \` class="\${cls}"\` : ""} viewBox="0 0 \${map[0].length} \${map.length}" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true" focusable="false">\${paths}</svg>\`;
+}
+
+/* A pipe, 16 art px wide: the lip spans all 16, the body the middle 14. Outline,
+   a highlight band on the left and shade on the right. The last gate's lips are
+   checkered. Size unknown hatches the body. */
+function fglPipeMap(rows: number, lipBelow: boolean, finish: boolean, hatched: boolean): string[] {
+  const lipH = finish ? FGL_LIP_FIN : FGL_LIP;
+  const body: string[] = [];
+  for (let y = 0; y < rows - lipH; y++) {
+    let r = ".o";
+    for (let x = 2; x < 14; x++) r += hatched && (x + y) % 4 === 0 ? "x" : x === 3 || x === 4 ? "l" : x >= 11 ? "s" : "p";
+    body.push(\`\${r}o.\`);
+  }
+  const lip = ["oooooooooooooooo"];
+  for (let y = 1; y < lipH - 1; y++) {
+    let r = "o";
+    for (let x = 1; x < 15; x++) {
+      if (finish) r += (Math.floor((x - 1) / 2) + Math.floor((y - 1) / 2)) % 2 ? "w" : "o";
+      else r += x === 2 || x === 3 ? "l" : x >= 12 ? "s" : "p";
+    }
+    lip.push(\`\${r}o\`);
+  }
+  lip.push("oooooooooooooooo");
+  return lipBelow ? body.concat(lip) : lip.concat(body);
+}
+
+/* Chunky 5 x 7 digits with an outline and a drop shadow, like the game's own. */
+function fglScoreMap(n: number): string[] {
+  const ds = String(Math.max(0, Math.floor(n))).split("").map((c) => FGL_DIGITS[+c]);
+  const W = ds.length * 6 - 1 + 3;
+  const H = 10;
+  const F: number[][] = Array.from({ length: H }, () => Array(W).fill(0));
+  ds.forEach((g, k) => g.forEach((row, y) => {
+    for (let x = 0; x < 5; x++) if (row[x] === "#") F[y + 1][x + 1 + k * 6] = 1;
+  }));
+  const on = (x: number, y: number) => y >= 0 && y < H && x >= 0 && x < W && F[y][x] === 1;
+  const O = F.map((r) => r.slice());
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (F[y][x]) continue;
+      for (let dy = -1; dy <= 1 && !O[y][x]; dy++) for (let dx = -1; dx <= 1; dx++) if (on(x + dx, y + dy)) { O[y][x] = 2; break; }
+    }
+  }
+  for (let y = H - 1; y > 0; y--) for (let x = W - 1; x > 0; x--) if (!O[y][x] && O[y - 1][x - 1]) O[y][x] = 2;
+  return O.map((r) => r.map((v) => (v === 1 ? "w" : v ? "o" : ".")).join(""));
+}
+
+type FglRefs = {
+  root: RefObject<HTMLElement>;
+  art: RefObject<HTMLDivElement>;
+  clouds: RefObject<HTMLDivElement>;
+  world: RefObject<HTMLDivElement>;
+  pipes: RefObject<HTMLDivElement>;
+  ground: RefObject<HTMLDivElement>;
+  hero: RefObject<HTMLDivElement>;
+  hop: RefObject<HTMLDivElement>;
+  bob: RefObject<HTMLDivElement>;
+  sprite: RefObject<HTMLDivElement>;
+  fx: RefObject<HTMLDivElement>;
+  score: RefObject<HTMLDivElement>;
+  banner: RefObject<HTMLDivElement>;
+};
+
+type FglGeo = { W: number; narrow: boolean; sky: number; skyH: number; groundH: number; S: number; pass: number; reach: number; heroCX: number; heroX: number; lipW: number };
+
+/**
+ * The flight. Pipe i's centre sits at (i + 1) x spacing - pass on the world
+ * strip, and the strip stands at heroCX - (front x spacing + progress x reach):
+ * a gate starts one reach ahead of the pilot, is centred on it at 100%, and is
+ * behind it once done. So the pilot is never past a gate the host has not
+ * finished.
+ */
+function createFlapGateArena(core: LoaderCore, refs: FglRefs, uid: string): LoaderArena {
+  let G: FglGeo | null = null;
+  let pipes: (HTMLDivElement | null)[] = [];
+  let ghosts: (HTMLDivElement[] | null)[] = [];
+  let pipeLive: boolean[] = [];
+  let worldTo: number | null = null;
+  let worldAnim: Animation | null = null;
+  let heroTo: string | null = null;
+  let heroAnim: Animation | null = null;
+  let hopAnim: Animation | null = null;
+  let scoreShown = -1;
+  let scoreW = 0;
+  let scoreH = 0;
+  let recoil = 0;
+  let transientUntil = 0;
+  let poseTimers: number[] = [];
+  let celebrating = false;
+  let celebT = 0;
+  let groundKey = "";
+
+  const n = () => core.host.length;
+  const topRows = (i: number) => (G ? (G.sky - FGL_GAP) / 2 : 32) + (i === n() - 1 ? 0 : FGL_GAP_VAR[i % FGL_GAP_VAR.length]);
+  const pipeX = (i: number) => (G ? (i + 1) * G.S - G.pass : 0);
+  const hoverY = (i: number) => (topRows(i) + (FGL_GAP - LOADER_H) / 2) * FGL_U;
+
+  function makePipe(i: number) {
+    const g = G as FglGeo;
+    const fin = i === n() - 1;
+    const t = topRows(i);
+    const b = g.sky - FGL_GAP - t;
+    const node = document.createElement("div");
+    node.className = "bz-fgl-pipe";
+    const half = (rows: number, below: boolean) =>
+      \`<div class="bz-fgl-half">\${fglSvg(fglPipeMap(rows, below, fin, false), FGL_PIPE_ROLES, "bz-fgl-pl")}\${fglSvg(fglPipeMap(rows, below, fin, true), FGL_PIPE_ROLES, "bz-fgl-hx")}</div>\`;
+    node.innerHTML = half(t, true) + half(b, false) + (fin ? \`<div class="bz-fgl-flag">\${fglSvg(FGL_FLAG, FGL_PIPE_ROLES)}</div>\` : "");
+    node.dataset.t = String(t);
+    node.dataset.b = String(b);
+    return node;
+  }
+
+  function sizePipe(node: HTMLDivElement, i: number) {
+    const g = G as FglGeo;
+    const U = FGL_U;
+    const t = Number(node.dataset.t);
+    const b = Number(node.dataset.b);
+    node.style.cssText = \`left:\${pipeX(i) - g.lipW / 2}px;width:\${g.lipW}px;height:\${g.skyH}px\`;
+    const [top, bot, flag] = Array.from(node.children) as HTMLElement[];
+    top.style.cssText = \`top:0;width:\${g.lipW}px;height:\${t * U}px\`;
+    bot.style.cssText = \`top:\${(g.sky - b) * U}px;width:\${g.lipW}px;height:\${b * U}px\`;
+    if (flag) flag.style.cssText = \`left:\${10 * U}px;top:\${(g.sky - b - FGL_FLAG.length) * U}px;width:\${FGL_FLAG[0].length * U}px;height:\${FGL_FLAG.length * U}px\`;
+  }
+
+  function makeGhost(i: number) {
+    const parts = [0, 1].map(() => {
+      const d = document.createElement("div");
+      d.className = "bz-fgl-ghost";
+      refs.pipes.current?.appendChild(d);
+      return d;
+    });
+    ghosts[i] = parts;
+    sizeGhost(parts, i);
+  }
+
+  function sizeGhost(parts: HTMLDivElement[], i: number) {
+    if (!G) return;
+    const t = topRows(i);
+    const b = G.sky - FGL_GAP - t;
+    const x = pipeX(i) - G.lipW / 2;
+    parts[0].style.cssText = \`left:\${x}px;top:0;width:\${G.lipW}px;height:\${t * FGL_U}px\`;
+    parts[1].style.cssText = \`left:\${x}px;top:\${(G.sky - b) * FGL_U}px;width:\${G.lipW}px;height:\${b * FGL_U}px\`;
+  }
+
+  // The ground is part of the world strip, so it moves only with it.
+  function buildGround() {
+    const g = G as FglGeo;
+    const el = refs.ground.current;
+    if (!el) return;
+    const left = -(g.W + g.S);
+    const w = (n() + 3) * g.S + 2 * g.W;
+    const tile: string[] = [];
+    for (let y = 0; y < FGL_GROUND; y++) {
+      let r = "";
+      for (let x = 0; x < 8; x++) r += y === 0 ? "o" : y < 3 ? "g" : y === 3 ? "o" : (x + y) % 8 < 2 ? "s" : "d";
+      tile.push(r);
+    }
+    const paths = pixelPaths(tile)
+      .map(([k, d]) => \`<path class="bz-fgl-a-\${FGL_GROUND_ROLES[k]}" d="\${d}"/>\`)
+      .join("");
+    el.style.cssText = \`left:\${left}px;top:\${g.skyH}px;width:\${w}px;height:\${g.groundH}px\`;
+    el.innerHTML = \`<svg viewBox="0 0 \${w / FGL_U} \${FGL_GROUND}" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><defs><pattern id="\${uid}-ground" width="8" height="\${FGL_GROUND}" patternUnits="userSpaceOnUse">\${paths}</pattern></defs><rect width="100%" height="100%" fill="url(#\${uid}-ground)"/></svg>\`;
+  }
+
+  function buildClouds() {
+    const el = refs.clouds.current;
+    if (!el || !G) return;
+    const g = G;
+    el.innerHTML = FGL_CLOUDS.map(([m, fx, fy]) => {
+      const top = Math.round(fy * (g.sky - m.length)) * FGL_U;
+      return \`<div class="bz-fgl-cloud" style="left:\${Math.round(g.W * fx)}px;top:\${top}px;width:\${m[0].length * FGL_U}px;height:\${m.length * FGL_U}px">\${fglSvg(m, FGL_CLOUD_ROLES)}</div>\`;
+    }).join("");
+  }
+
+  // The front gate's progress as the world shows it: the last progress flapped for.
+  function worldP() {
+    const s = core.host[core.front];
+    if (!s || s.status === "pending" || s.status === "skipped") return 0;
+    if (s.status === "active" && s.progress == null) return 0;
+    return Math.max(0, Math.min(1, core.barP ?? 0));
+  }
+  const worldTarget = () => {
+    const g = G as FglGeo;
+    return Math.round(g.heroCX - (core.front * g.S + (core.front < n() ? worldP() : 0) * g.reach));
+  };
+
+  function glide(node: HTMLElement, from: number[], to: number[], dur: number, ease: (t: number) => number, fmt: (v: number[]) => string, hold = 0) {
+    const { frames, duration } = glideFrames(from, to, dur, ease, fmt, hold);
+    return core.anim(node, frames, { duration });
+  }
+
+  function placeWorld(animate: boolean, dur: number) {
+    const world = refs.world.current;
+    if (!G || !world) return;
+    const to = worldTarget();
+    if (to === worldTo) return;
+    const from = worldTo == null ? to : readXY(world)[0];
+    worldTo = to;
+    worldAnim?.cancel();
+    worldAnim = null;
+    const fmt = (v: number[]) => \`translateX(\${v[0]}px)\`;
+    world.style.transform = fmt([to]);
+    if (animate && core.motionOn() && Math.round(from) !== to) worldAnim = glide(world, [Math.round(from)], [to], dur || BASE, easeOut, fmt);
+  }
+
+  // Lined up with the front gap in flight, on the ground after an error or a stop,
+  // a little higher at the finale.
+  function heroTarget(): number[] {
+    const g = G as FglGeo;
+    const last = Math.max(0, n() - 1);
+    if (core.phase === "error" || core.phase === "stopped") return [g.heroX - recoil, g.skyH - FGL_HERO_H];
+    if (core.phase === "complete") return [g.heroX, Math.max(FGL_U, hoverY(last) - 4 * FGL_U)];
+    return [g.heroX, hoverY(Math.min(core.front, last))];
+  }
+
+  function placeHero(animate: boolean, dur = BASE, ease = easeOut, hold = 0) {
+    const hero = refs.hero.current;
+    if (!G || !hero) return;
+    const to = heroTarget();
+    const key = to.join(",");
+    if (key === heroTo) return;
+    const from = heroTo == null ? to : readXY(hero).map(Math.round);
+    heroTo = key;
+    heroAnim?.cancel();
+    heroAnim = null;
+    const fmt = (v: number[]) => \`translate(\${v[0]}px, \${v[1]}px)\`;
+    hero.style.transform = fmt(to);
+    if (animate && core.motionOn() && (from[0] !== to[0] || from[1] !== to[1])) heroAnim = glide(hero, from, to, dur, ease, fmt, hold);
+  }
+
+  // One flap: up 6px fast, then settle, 300ms in all.
+  function flap() {
+    const hop = refs.hop.current;
+    if (!hop) return;
+    hopAnim?.cancel();
+    const frames: Keyframe[] = [];
+    const steps = 18;
+    for (let k = 0; k <= steps; k++) {
+      const t = k / steps;
+      const y = t <= 0.3 ? -6 * easeOut(t / 0.3) : -6 * (1 - easeInOut((t - 0.3) / 0.7));
+      frames.push({ offset: t, easing: "step-end", transform: \`translateY(\${Math.round(y)}px)\` });
+    }
+    hopAnim = core.anim(hop, frames, { duration: BASE });
+  }
+
+  // The digits sit on a chip of their own outline colour, so a pipe passing behind never muddles them.
+  function sizeScore() {
+    const el = refs.score.current;
+    if (!G || !el || !scoreW) return;
+    const w = scoreW * FGL_SCORE_U + FGL_SCORE_PAD;
+    el.style.cssText = \`left:\${Math.round((G.W - w) / 2)}px;top:\${3 * FGL_U}px;width:\${w}px;height:\${scoreH * FGL_SCORE_U + FGL_SCORE_PAD}px\`;
+  }
+
+  function renderScore(pop: boolean) {
+    const el = refs.score.current;
+    if (!el) return;
+    const score = core.host.reduce((a, s, i) => a + (core.vis[i] && s.status === "done" ? 1 : 0), 0);
+    if (score === scoreShown) return;
+    const up = scoreShown >= 0 && score > scoreShown;
+    scoreShown = score;
+    const m = fglScoreMap(score);
+    scoreW = m[0].length;
+    scoreH = m.length;
+    el.innerHTML = fglSvg(m, FGL_SCORE_ROLES);
+    el.dataset.n = String(score);
+    sizeScore();
+    if (pop && up && core.motionOn()) core.anim(el, steppedFrames([[0, 0, -4], [0.5, 0, -2], [1, 0, 0]]), { duration: BASE });
+  }
+
+  // The banner sits under the score: centred if it clears the pilot, otherwise to its right.
+  function placeBanner() {
+    const el = refs.banner.current;
+    if (!G || !el) return;
+    const bw = el.offsetWidth || 0;
+    const right = G.heroCX + FGL_HERO_W / 2 + 12;
+    const left = Math.min(Math.max(Math.round((G.W - bw) / 2), right), G.W - 6 - bw);
+    el.style.setProperty("--bz-fgl-bx", \`\${Math.max(6, left)}px\`);
+    el.style.setProperty("--bz-fgl-by", \`\${3 * FGL_U + scoreH * FGL_SCORE_U + FGL_SCORE_PAD + 3 * FGL_U}px\`);
+  }
+
+  /* ---- poses */
+  function setSprite(frame: string, loop: string, flame: string) {
+    const sp = refs.sprite.current;
+    if (!sp) return;
+    if (sp.dataset.frame !== frame) sp.dataset.frame = frame;
+    if ((sp.dataset.loop ?? "") !== loop) sp.dataset.loop = loop;
+    if (sp.dataset.flame !== flame) sp.dataset.flame = flame;
+  }
+
+  function pose() {
+    if (transientUntil > now()) return;
+    let frame = "fly1";
+    let loop = "";
+    let flame = "on";
+    let bob = false;
+    if (core.phase === "error") {
+      // Held for as long as the menu waits, so the failure reads in a still frame too.
+      frame = "hurt";
+      flame = "off";
+    } else if (core.phase === "stopped") {
+      frame = "sit";
+      flame = "off";
+    } else if (core.phase === "complete") {
+      frame = "celebrate1";
+      if (celebrating && core.motionAllowed()) loop = "celebrate";
+    } else if (core.motionAllowed()) {
+      loop = "fly";
+      const s = core.host[core.front];
+      bob = !!s && s.status === "active" && s.progress == null;
+    }
+    setSprite(loop ? "" : frame, loop, flame);
+    const b = refs.bob.current;
+    if (b && b.dataset.bob !== String(bob)) b.dataset.bob = String(bob);
+  }
+
+  // Plays frames in order (the first at once), then hands back to pose().
+  function playTransient(seq: [string, number, string][]) {
+    poseTimers.forEach((id) => core.clear(id));
+    poseTimers = [];
+    let at = 0;
+    seq.forEach(([frame, ms, flame], k) => {
+      if (k === 0) setSprite(frame, "", flame);
+      else poseTimers.push(core.later(() => setSprite(frame, "", flame), at));
+      at += ms;
+    });
+    transientUntil = now() + at;
+    poseTimers.push(core.later(() => {
+      transientUntil = 0;
+      pose();
+    }, at));
+  }
+
+  function sparks() {
+    const fx = refs.fx.current;
+    const hero = refs.hero.current;
+    if (!G || !fx || !hero) return;
+    const [hx, hy] = readXY(hero);
+    const s = FGL_SPARK.length * FGL_U;
+    ([[hx + 13 * FGL_U, hy, 8, -10], [hx + 9 * FGL_U, hy - FGL_U, -6, -12]] as number[][]).forEach(([x, y, dx, dy]) => {
+      const sp = document.createElement("div");
+      sp.className = "bz-fgl-spark";
+      sp.style.cssText = \`left:\${Math.round(x)}px;top:\${Math.round(y)}px;width:\${s}px;height:\${s}px\`;
+      sp.innerHTML = fglSvg(FGL_SPARK, FGL_FX_ROLES);
+      fx.appendChild(sp);
+      const a = core.anim(sp, steppedFrames([[0, 0, 0, 1], [0.34, dx / 2, dy / 2, 1], [0.67, dx, dy, 1], [1, dx, dy, 0]]), { duration: BASE + FAST, fill: "forwards" });
+      a.finished.then(() => sp.remove(), () => sp.remove());
+    });
+  }
+
+  // The jetpack sputters: one 2-frame puff under the tank.
+  function smoke() {
+    const fx = refs.fx.current;
+    const hero = refs.hero.current;
+    if (!G || !fx || !hero) return;
+    const [hx, hy] = readXY(hero);
+    const w = FGL_SMOKE[0][0].length * FGL_U;
+    const h = FGL_SMOKE[0].length * FGL_U;
+    const puff = document.createElement("div");
+    puff.className = "bz-fgl-smoke";
+    puff.style.cssText = \`left:\${Math.round(hx - FGL_U)}px;top:\${Math.round(hy + 18 * FGL_U)}px;width:\${w}px;height:\${h}px\`;
+    puff.innerHTML = FGL_SMOKE.map((m) => fglSvg(m, FGL_FX_ROLES)).join("");
+    fx.appendChild(puff);
+    const [a, b] = Array.from(puff.children) as HTMLElement[];
+    core.anim(a, [{ opacity: 1, easing: "step-end" }, { opacity: 0, offset: 0.5, easing: "step-end" }, { opacity: 0 }], { duration: BASE, fill: "forwards" });
+    const last = core.anim(b, [{ opacity: 0, easing: "step-end" }, { opacity: 1, offset: 0.5, easing: "step-end" }, { opacity: 0 }], { duration: BASE, fill: "forwards" });
+    last.finished.then(() => puff.remove(), () => puff.remove());
+  }
+
+  // A skipped gate retracts, the top up and the bottom down, over its dashed ghost.
+  function retract(i: number) {
+    const node = pipes[i];
+    pipeLive[i] = false;
+    pipes[i] = null;
+    makeGhost(i);
+    if (!node || !G) return;
+    const g = G;
+    const slide = (half: HTMLElement, d: number) =>
+      core.anim(half, [0, 1, 2, 3, 4, 5, 6].map((k) => ({ offset: k / 6, easing: "step-end", transform: \`translateY(\${Math.round(d * easeIn(k / 6))}px)\` })), { duration: BASE, fill: "forwards" });
+    const [top, bot, flag] = Array.from(node.children) as HTMLElement[];
+    slide(top, -(top.offsetHeight + FGL_U));
+    const down = bot.offsetHeight + g.groundH + FGL_U;
+    if (flag) slide(flag, down + FGL_FLAG.length * FGL_U);
+    const a = slide(bot, down);
+    a.finished.then(() => node.remove(), () => node.remove());
+  }
+
+  function fadeOut(i: number) {
+    const node = pipes[i];
+    pipeLive[i] = false;
+    pipes[i] = null;
+    node?.remove();
+    if (!ghosts[i]) makeGhost(i);
+  }
+
+  function layoutPipes() {
+    const el = refs.pipes.current;
+    if (!el) return;
+    el.textContent = "";
+    pipes = core.host.map((_, i) => {
+      if (!pipeLive[i]) return null;
+      const p = makePipe(i);
+      el.appendChild(p);
+      return p;
+    });
+    const had = ghosts;
+    ghosts = [];
+    had.forEach((g, i) => {
+      if (g) makeGhost(i);
+    });
+  }
+
+  function layout() {
+    const root = refs.root.current;
+    const art = refs.art.current;
+    if (!root || !art) return;
+    const W = art.clientWidth;
+    if (!W) return;
+    const narrow = root.clientWidth < 560;
+    if (root.dataset.narrow !== String(narrow)) root.dataset.narrow = String(narrow);
+    const sky = narrow ? FGL_SKY_NARROW : FGL_SKY;
+    const changed = !G || G.W !== W || G.sky !== sky;
+    if (changed) {
+      const S = FGL_SPACE * FGL_U;
+      const pass = (LOADER_W / 2 + FGL_PIPE / 2 + 1) * FGL_U;
+      const heroCX = Math.round(W * 0.27);
+      G = { W, narrow, sky, skyH: sky * FGL_U, groundH: FGL_GROUND * FGL_U, S, pass, reach: S - pass, heroCX, heroX: heroCX - FGL_HERO_W / 2, lipW: FGL_PIPE * FGL_U };
+      buildClouds();
+      layoutPipes();
+      sizeScore();
+      placeBanner();
+    }
+    const gk = \`\${W}|\${sky}|\${n()}\`;
+    if (gk !== groundKey) {
+      groundKey = gk;
+      buildGround();
+    }
+    pipes.forEach((p, i) => {
+      if (p) sizePipe(p, i);
+    });
+    ghosts.forEach((g, i) => {
+      if (g) sizeGhost(g, i);
+    });
+    if (changed) {
+      worldTo = null;
+      heroTo = null;
+      placeWorld(false, 0);
+      placeHero(false);
+      sync();
+    }
+  }
+
+  // Pipe roles: which is the front, whether its size is unknown, whether it failed.
+  function sync() {
+    const s = core.host[core.front];
+    const indet = !!s && (s.status === "active" || s.status === "error") && s.progress == null;
+    pipes.forEach((p, i) => {
+      if (!p) return;
+      const role = i === core.front ? "front" : i < core.front ? "past" : "queue";
+      if (p.dataset.role !== role) p.dataset.role = role;
+      const h = String(i === core.front && indet);
+      if (p.dataset.indet !== h) p.dataset.indet = h;
+      const st = i === core.front && core.phase === "error" ? "error" : "";
+      if ((p.dataset.state ?? "") !== st) p.dataset.state = st;
+    });
+    renderScore(false);
+    placeWorld(false, 0);
+  }
+
+  return {
+    build() {
+      refs.fx.current?.replaceChildren();
+      pipeLive = core.host.map((s) => s.status !== "skipped");
+      ghosts = core.host.map(() => null);
+      core.host.forEach((s, i) => {
+        if (s.status === "skipped") ghosts[i] = [];
+      });
+      G = null;
+      worldTo = null;
+      heroTo = null;
+      recoil = 0;
+      scoreShown = -1;
+      groundKey = "";
+      celebrating = false;
+      transientUntil = 0;
+      poseTimers = [];
+      celebT = 0;
+      layout();
+      renderScore(false);
+    },
+    layout,
+    sync,
+    hit(showy) {
+      if (showy) {
+        playTransient([["fly2", FAST, "burst"], ["fly1", FAST, "on"]]);
+        flap();
+      }
+      placeWorld(showy, BASE);
+    },
+    beat(entries, showy) {
+      if (!showy || entries[0].kind !== "done") return 0;
+      // The down-stroke as the pilot commits to the gap, then a glide out.
+      playTransient([["fly2", IMPACT, "burst"], ["fly1", FAST, "on"], ["fly2", FAST, "on"]]);
+      return IMPACT;
+    },
+    land(entries, showy) {
+      let hold = 0;
+      entries.forEach((e) => {
+        if (e.kind !== "skipped") return;
+        if (showy) {
+          retract(e.i);
+          hold = BASE;
+        } else fadeOut(e.i);
+      });
+      renderScore(showy);
+      return hold;
+    },
+    flush(entries) {
+      entries.forEach((e) => {
+        if (e.kind === "skipped") fadeOut(e.i);
+      });
+      renderScore(false);
+    },
+    advance(animate, dur) {
+      placeWorld(animate, dur);
+      placeHero(animate, dur || BASE, easeOut);
+    },
+    error(i, showy) {
+      // Knocked back off the lip, so the fall never passes through the bottom pipe.
+      if (G && worldTo != null) {
+        const pipeLeft = pipeX(i) - G.lipW / 2 + worldTo;
+        recoil = Math.max(0, G.heroX + FGL_HERO_W + 2 * FGL_U - pipeLeft);
+      }
+      if (showy) {
+        hopAnim?.cancel();
+        hopAnim = null;
+        sparks();
+        smoke();
+      }
+      // A flap still playing gives way to the hurt pose at once.
+      poseTimers.forEach((id) => core.clear(id));
+      poseTimers = [];
+      transientUntil = 0;
+      placeHero(showy, BASE, easeIn, FAST);
+      pose();
+    },
+    recover(showy) {
+      recoil = 0;
+      if (showy) playTransient([["fly2", FAST, "burst"], ["fly1", FAST, "on"]]);
+      placeHero(showy, SLOW, easeOut);
+      sync();
+      pose();
+    },
+    stop(showy) {
+      if (G && worldTo != null && core.front < n()) {
+        const pipeLeft = pipeX(core.front) - G.lipW / 2 + worldTo;
+        recoil = Math.max(recoil, G.heroX + FGL_HERO_W + 2 * FGL_U - pipeLeft);
+      }
+      placeHero(showy, BASE, easeIn);
+      sync();
+    },
+    finale(showy, silent) {
+      celebrating = showy;
+      placeHero(showy && !silent, SLOW, easeOut);
+      sync();
+      placeBanner();
+      if (showy) {
+        playTransient([["celebrate1", BASE, "burst"]]);
+        celebT = core.later(() => {
+          celebrating = false;
+          pose();
+        }, BEAT * 3);
+      } else pose();
+    },
+    pose,
+    motion() {
+      if (!core.motionAllowed()) {
+        transientUntil = 0;
+        poseTimers.forEach((id) => core.clear(id));
+        poseTimers = [];
+        celebT = core.clear(celebT);
+        celebrating = false;
+      }
+      if (!core.motionOn()) {
+        // Snap anything mid-travel to where it belongs.
+        worldTo = null;
+        heroTo = null;
+        placeWorld(false, 0);
+        placeHero(false);
+      }
+    },
+    destroy() {
+      refs.pipes.current?.replaceChildren();
+      refs.fx.current?.replaceChildren();
+      refs.ground.current?.replaceChildren();
+      refs.clouds.current?.replaceChildren();
+      refs.score.current?.replaceChildren();
+    },
+  };
+}
+
+/* ---------------- flap gate: styles ---------------- */
+
+const STEP_OUTER =
+  "polygon(4px 0,calc(100% - 4px) 0,calc(100% - 4px) 2px,calc(100% - 2px) 2px,calc(100% - 2px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 2px) calc(100% - 4px),calc(100% - 2px) calc(100% - 2px),calc(100% - 4px) calc(100% - 2px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 2px),2px calc(100% - 2px),2px calc(100% - 4px),0 calc(100% - 4px),0 4px,2px 4px,2px 2px,4px 2px)";
+const STEP_INNER =
+  "polygon(2px 0,calc(100% - 2px) 0,calc(100% - 2px) 2px,100% 2px,100% calc(100% - 2px),calc(100% - 2px) calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,2px calc(100% - 2px),0 calc(100% - 2px),0 2px,2px 2px)";
+
+const CSS = \`
+.bz-fgl{
+  --bz-fgl-ink:light-dark(var(--bz-ink,#0a0a0a),var(--bz-void-ink,#ffffff));
+  --bz-fgl-muted:light-dark(var(--bz-ink-muted,#4a4a4c),rgba(255,255,255,0.8));
+  --bz-fgl-panel:light-dark(var(--bz-paper,#ffffff),var(--bz-void-raised,#1a1a1a));
+  --bz-fgl-track:light-dark(var(--bz-line-opaque,#f0f0f0),#313131);
+  --bz-fgl-edge:light-dark(rgba(10,10,10,0.13),rgba(255,255,255,0.16));
+  --bz-fgl-danger:light-dark(var(--bz-danger,#b91c1c),#fca5a5);
+  --bz-fgl-danger-mark:light-dark(#dc2626,#f87171);
+  --bz-fgl-success:light-dark(var(--bz-emerald,#047857),var(--bz-emerald-on-void,#34d399));
+  --bz-fgl-focus:light-dark(var(--bz-focus-ring,#912c22),var(--bz-focus-ring-void,#ffffff));
+  --bz-fgl-sans:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);
+  --bz-fgl-mono:var(--bz-font-mono,ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace);
+  --bz-fgl-fast:var(--bz-duration-fast,150ms);
+  --bz-fgl-base:var(--bz-duration-base,300ms);
+  --bz-fgl-ease:var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1));
+  --bz-fgl-beat:var(--bz-duration-beat,2.4s);
+  container-type:inline-size;
+  display:block;
+  width:100%;
+  color:var(--bz-fgl-ink);
+  font-family:var(--bz-fgl-sans);
+  font-size:15px;
+  line-height:1.5;
+  text-align:left;
+}
+.bz-fgl *,.bz-fgl *::before,.bz-fgl *::after{box-sizing:border-box}
+.bz-fgl-frame{padding:14px 20px 18px;border:1px solid var(--bz-fgl-edge);border-radius:16px;background:var(--bz-fgl-panel)}
+.bz-fgl-sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.bz-fgl-title{margin:0;font-size:15px;font-weight:600;line-height:1.4;color:var(--bz-fgl-ink)}
+.bz-fgl-title:focus{outline:none}
+.bz-fgl-title:focus-visible{outline:2px solid var(--bz-fgl-focus);outline-offset:2px}
+.bz-fgl-g{flex:none;width:14px;height:14px}
+.bz-fgl-gp{fill:currentColor}
+
+/* arena: a stepped pixel frame around the sky */
+.bz-fgl-arena{margin-top:10px;padding:2px;background:var(--bz-fgl-ink);clip-path:\${STEP_OUTER}}
+.bz-fgl-art{position:relative;height:216px;overflow:hidden;background:var(--fgl-sky);clip-path:\${STEP_INNER}}
+.bz-fgl-clouds,.bz-fgl-world,.bz-fgl-pipes,.bz-fgl-fx{position:absolute;left:0;top:0;width:0;height:0}
+.bz-fgl-cloud,.bz-fgl-pipe,.bz-fgl-half,.bz-fgl-flag,.bz-fgl-ghost,.bz-fgl-ground,.bz-fgl-spark,.bz-fgl-smoke,.bz-fgl-score{position:absolute}
+.bz-fgl-art svg{display:block;width:100%;height:100%}
+.bz-fgl-half>svg,.bz-fgl-smoke>svg{position:absolute;inset:0}
+.bz-fgl-pipe{top:0}
+.bz-fgl-half>.bz-fgl-hx,.bz-fgl-pipe[data-indet="true"] .bz-fgl-half>.bz-fgl-pl{visibility:hidden}
+.bz-fgl-pipe[data-indet="true"] .bz-fgl-half>.bz-fgl-hx{visibility:visible}
+.bz-fgl-pipe[data-state="error"] .bz-fgl-a-pipeLine{fill:var(--bz-fgl-danger-mark)}
+.bz-fgl-ghost{border:2px dashed var(--fgl-ghost)}
+\${FGL_COLOR_KEYS.map((k) => \`.bz-fgl-a-\${k}{fill:var(--fgl-\${k})}\`).join("")}
+.bz-fgl-hero{position:absolute;left:0;top:0;width:\${FGL_HERO_W}px;height:\${FGL_HERO_H}px}
+.bz-fgl-hop,.bz-fgl-bob,.bz-fgl-sprite{width:100%;height:100%}
+.bz-fgl-sprite>svg{display:block;width:100%;height:100%;overflow:visible}
+/* One art pixel of rim on every side; transparent unless the palette sets a halo. */
+.bz-fgl-sprite>svg{filter:drop-shadow(\${FGL_U}px 0 0 var(--fgl-halo)) drop-shadow(-\${FGL_U}px 0 0 var(--fgl-halo)) drop-shadow(0 \${FGL_U}px 0 var(--fgl-halo)) drop-shadow(0 -\${FGL_U}px 0 var(--fgl-halo))}
+.bz-fgl-score{padding:\${FGL_SCORE_PAD}px 0 0 \${FGL_SCORE_PAD}px;background:var(--fgl-scoreLine);clip-path:\${STEP_INNER}}
+.bz-fgl-sprite g[data-f],.bz-fgl-sprite g[data-l]{display:none}
+\${FGL_FRAMES.map((f) => \`.bz-fgl-sprite[data-frame="\${f}"] g[data-f="\${f}"]\`).join(",")}{display:inline}
+.bz-fgl-sprite[data-loop="fly"] g[data-f="fly1"],.bz-fgl-sprite[data-loop="celebrate"] g[data-f="celebrate1"]{display:inline;animation:bz-fgl-a var(--bz-fgl-beat) step-end infinite}
+.bz-fgl-sprite[data-loop="fly"] g[data-f="fly2"],.bz-fgl-sprite[data-loop="celebrate"] g[data-f="celebrate2"]{display:inline;animation:bz-fgl-b var(--bz-fgl-beat) step-end infinite}
+.bz-fgl-sprite[data-flame="on"] g[data-l="fl1"],.bz-fgl-sprite[data-flame="burst"] g[data-l="fl2"]{display:inline}
+.bz-fgl[data-motion="on"] .bz-fgl-sprite[data-flame="on"] g[data-l="fl1"]{animation:bz-fgl-a var(--bz-fgl-beat) step-end infinite}
+.bz-fgl[data-motion="on"] .bz-fgl-sprite[data-flame="on"] g[data-l="fl2"]{display:inline;animation:bz-fgl-b var(--bz-fgl-beat) step-end infinite}
+@keyframes bz-fgl-a{0%{opacity:1}50%{opacity:0}100%{opacity:0}}
+@keyframes bz-fgl-b{0%{opacity:0}50%{opacity:1}100%{opacity:1}}
+.bz-fgl[data-motion="on"] .bz-fgl-bob[data-bob="true"]{animation:bz-fgl-bob var(--bz-fgl-beat) step-end infinite}
+@keyframes bz-fgl-bob{0%{transform:translateY(0)}50%{transform:translateY(-2px)}100%{transform:translateY(-2px)}}
+.bz-fgl-c-outline{fill:var(--fgl-spriteOutline)}
+.bz-fgl-c-hair{fill:var(--chr-hair)}
+.bz-fgl-c-hair-shade{fill:var(--chr-hair-shade)}
+.bz-fgl-c-skin{fill:var(--chr-skin)}
+.bz-fgl-c-skin-shade{fill:var(--chr-skin-shade)}
+.bz-fgl-c-eye-white{fill:var(--chr-eye-white)}
+.bz-fgl-c-eye,.bz-fgl-c-mouth{fill:var(--chr-eye)}
+.bz-fgl-c-outfit{fill:var(--chr-outfit)}
+.bz-fgl-c-outfit-shade{fill:var(--chr-outfit-shade)}
+.bz-fgl-c-outfit-light{fill:var(--chr-outfit-light)}
+.bz-fgl-c-accent{fill:var(--chr-accent)}
+.bz-fgl-c-pants{fill:var(--chr-pants)}
+.bz-fgl-c-pants-shade{fill:var(--chr-pants-shade)}
+.bz-fgl-c-boots{fill:var(--chr-boots)}
+.bz-fgl-c-boots-shade{fill:var(--chr-boots-shade)}
+.bz-fgl-c-jetpack{fill:var(--fgl-jetpack)}
+.bz-fgl-c-jetpack-shade{fill:var(--fgl-jetpackShade)}
+.bz-fgl-c-flame{fill:var(--fgl-flame)}
+.bz-fgl-c-flame-core{fill:var(--fgl-flameCore)}
+.bz-fgl-banner{position:absolute;left:var(--bz-fgl-bx,40%);top:var(--bz-fgl-by,48px);padding:2px;background:var(--bz-fgl-ink);clip-path:\${STEP_OUTER};visibility:hidden}
+.bz-fgl-banner[data-on="true"]{visibility:visible}
+.bz-fgl-banner-in{display:block;padding:9px 18px 8px;background:var(--bz-fgl-panel);clip-path:\${STEP_INNER};color:var(--bz-fgl-ink);font:700 14px/1 var(--bz-fgl-mono);letter-spacing:0.12em;text-transform:uppercase;white-space:nowrap}
+.bz-fgl-banner-rule{display:block;height:4px;margin-top:7px;background:var(--fgl-accent)}
+
+/* nameplate: the one progressbar, under the arena */
+.bz-fgl-plate{position:relative;width:min(360px,100%);margin-top:12px;padding:6px 10px 8px 16px;border:2px solid var(--bz-fgl-ink);background:var(--bz-fgl-panel)}
+.bz-fgl-plate::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--fgl-accent)}
+.bz-fgl-plate[data-state="error"]::before{background:var(--bz-fgl-danger-mark)}
+.bz-fgl-plate-top{display:flex;align-items:center;gap:8px;min-width:0;height:22px}
+.bz-fgl-plate-label{flex:1 1 auto;min-width:0;overflow:hidden;font-size:14px;font-weight:600;line-height:22px;white-space:nowrap;text-overflow:ellipsis}
+.bz-fgl-tag{flex:none;padding:4px 6px 3px;background:var(--fgl-accent);color:var(--fgl-onAccent);font:700 11px/1 var(--bz-fgl-mono);letter-spacing:0.04em;white-space:nowrap}
+.bz-fgl-failed{flex:none;display:inline-flex;align-items:center;gap:5px;color:var(--bz-fgl-danger);font-size:13px;font-weight:700;line-height:1}
+.bz-fgl-failed .bz-fgl-g{width:12px;height:12px;color:var(--bz-fgl-danger-mark)}
+.bz-fgl-tag[hidden],.bz-fgl-failed[hidden]{display:none}
+/* A fixed row height, so the plate is the same size with or without count text. */
+.bz-fgl-plate-row{display:flex;align-items:center;gap:10px;height:16px;margin-top:6px}
+.bz-fgl-bar{position:relative;flex:1 1 100px;min-width:56px;height:12px;overflow:hidden;border:2px solid var(--bz-fgl-ink);background:var(--bz-fgl-track)}
+.bz-fgl-fill{position:absolute;left:0;top:0;bottom:0;background:var(--fgl-accent)}
+.bz-fgl[data-motion="on"][data-running="true"] .bz-fgl-fill{transition:width var(--bz-fgl-base) var(--bz-fgl-ease)}
+.bz-fgl-hatch{position:absolute;top:0;bottom:0;left:-8px;right:0;display:none}
+.bz-fgl-hatch svg{display:block;width:100%;height:100%}
+.bz-fgl-hatch path{fill:var(--fgl-accent)}
+.bz-fgl-bar[data-indet="true"] .bz-fgl-fill{display:none}
+.bz-fgl-bar[data-indet="true"] .bz-fgl-hatch{display:block}
+.bz-fgl[data-motion="on"] .bz-fgl-bar[data-indet="true"] .bz-fgl-hatch{animation:bz-fgl-march var(--bz-fgl-beat) steps(4) infinite}
+@keyframes bz-fgl-march{from{transform:translateX(0)}to{transform:translateX(8px)}}
+.bz-fgl-plate[data-state="error"] .bz-fgl-hatch{animation:none!important}
+.bz-fgl-count{flex:none;font:500 12px/16px var(--bz-fgl-mono);color:var(--bz-fgl-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* dialogue box: three panels in one cell, so it never changes height */
+.bz-fgl-box{margin-top:12px;padding:2px;background:var(--bz-fgl-ink);clip-path:\${STEP_OUTER}}
+.bz-fgl-box-in{padding:14px 18px 12px;background:var(--bz-fgl-panel);clip-path:\${STEP_INNER}}
+.bz-fgl-stack{display:grid}
+.bz-fgl-panel{grid-area:1/1;min-width:0;visibility:hidden}
+.bz-fgl-panel[data-on="true"]{visibility:visible}
+/* Under the error menu the narration is covered, not hidden: the log stays in
+   the accessibility tree, so the retry line that uncovers it is announced. */
+.bz-fgl-talk[data-covered="true"]{opacity:0;pointer-events:none}
+.bz-fgl-talk{position:relative;display:flex;flex-direction:column}
+.bz-fgl-log{position:relative;flex:1 1 auto;height:0;min-height:72px;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;font-size:15px;line-height:24px}
+.bz-fgl-log::-webkit-scrollbar{display:none}
+.bz-fgl-log:focus{outline:none}
+.bz-fgl-log:focus-visible{outline:2px solid var(--bz-fgl-focus);outline-offset:2px}
+.bz-fgl-line{display:flex;gap:8px;margin:0;color:var(--bz-fgl-muted);font-size:14px}
+.bz-fgl-line:last-child{color:var(--bz-fgl-ink);font-size:16px;font-weight:500}
+.bz-fgl-line>.bz-fgl-g{margin-top:5px}
+.bz-fgl-line:not(:last-child)>.bz-fgl-g{visibility:hidden}
+.bz-fgl-line[data-kind="done"]>.bz-fgl-g{color:var(--bz-fgl-success)}
+.bz-fgl-line[data-kind="retry"]>.bz-fgl-g,.bz-fgl-line[data-kind="finish"]>.bz-fgl-g{color:var(--fgl-accent)}
+.bz-fgl-line[data-kind="stop"]>.bz-fgl-g{color:var(--bz-fgl-danger-mark)}
+.bz-fgl-intro{position:absolute;left:0;top:0;margin:0;color:var(--bz-fgl-muted);font-size:15px;line-height:24px}
+/* The error panel fills the box, and the details scroll inside the space above
+   the menu, so no length of detail text can make the box grow. */
+.bz-fgl-err{display:flex;flex-direction:column}
+.bz-fgl-errtop{position:relative;flex:1 1 auto;min-width:0}
+.bz-fgl-alert{display:flex;gap:10px;min-height:48px;font-size:15px;font-weight:500;line-height:24px}
+/* Covered by the details rather than hidden, so closing them does not show the alert anew and repeat it. */
+.bz-fgl-alert[data-covered="true"]{opacity:0}
+.bz-fgl-alert>.bz-fgl-g{margin-top:5px;color:var(--bz-fgl-danger-mark)}
+.bz-fgl-menu{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.bz-fgl-details{position:absolute;inset:0;margin:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;font:500 12.5px/20px var(--bz-fgl-mono);color:var(--bz-fgl-muted)}
+.bz-fgl-details:focus{outline:none}
+.bz-fgl-details:focus-visible{outline:2px solid var(--bz-fgl-focus);outline-offset:2px}
+.bz-fgl-details:not([data-open="true"]){visibility:hidden}
+.bz-fgl-finish{display:flex;gap:8px;margin:0 0 10px;font-size:15px;font-weight:500;line-height:24px}
+.bz-fgl-finish>.bz-fgl-g{margin-top:5px;color:var(--fgl-accent)}
+.bz-fgl-finish-text{display:grid;min-width:0}
+.bz-fgl-finish-text>span{grid-area:1/1}
+.bz-fgl-sizer{visibility:hidden}
+.bz-fgl-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:10px 16px;margin:0}
+.bz-fgl-stat{min-width:0;padding-top:6px;border-top:2px solid var(--bz-fgl-ink)}
+.bz-fgl-stat[data-empty="true"]{visibility:hidden}
+.bz-fgl-stat dt{overflow:hidden;font:700 11px/14px var(--bz-fgl-mono);white-space:nowrap;text-overflow:ellipsis;letter-spacing:0.08em;text-transform:uppercase;color:var(--bz-fgl-muted)}
+.bz-fgl-stat dd{margin:2px 0 0}
+.bz-fgl-num{display:block;overflow:hidden;font:700 16px/26px var(--bz-fgl-mono);white-space:nowrap;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.bz-fgl-sub{display:-webkit-box;min-height:36px;overflow:hidden;font-size:13px;line-height:18px;color:var(--bz-fgl-muted);-webkit-box-orient:vertical;-webkit-line-clamp:2}
+
+/* buttons and the footer */
+.bz-fgl-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;min-width:48px;margin:0;padding:0 16px;border:2px solid var(--bz-fgl-ink);border-radius:0;background:var(--bz-fgl-panel);color:var(--bz-fgl-ink);font:600 14px/1.2 var(--bz-fgl-sans);text-align:left;cursor:pointer;transition:background-color var(--bz-fgl-fast) var(--bz-fgl-ease),transform var(--bz-fgl-fast) var(--bz-fgl-ease)}
+.bz-fgl-btn:hover,.bz-fgl-btn:focus-visible{background:var(--bz-fgl-track)}
+.bz-fgl-btn:focus{outline:none}
+.bz-fgl-btn:focus-visible{outline:2px solid var(--bz-fgl-focus);outline-offset:2px}
+.bz-fgl[data-motion="on"] .bz-fgl-btn:active{transform:scale(0.97)}
+.bz-fgl-btn:disabled{opacity:0.5;cursor:not-allowed}
+.bz-fgl-primary{border-color:var(--fgl-accent);background:var(--fgl-accent);color:var(--fgl-onAccent)}
+.bz-fgl-primary:hover,.bz-fgl-primary:focus-visible{background:color-mix(in srgb,var(--fgl-accent) 86%,var(--bz-fgl-ink))}
+.bz-fgl-btn[aria-pressed="true"]{border-color:var(--bz-fgl-ink);background:var(--bz-fgl-ink);color:var(--bz-fgl-panel)}
+.bz-fgl-cur{display:inline-flex}
+.bz-fgl-cur .bz-fgl-g{width:8px;height:14px}
+.bz-fgl-btn:not([data-current="true"]) .bz-fgl-cur{visibility:hidden}
+.bz-fgl-foot{display:flex;align-items:center;gap:10px 16px;margin-top:12px}
+.bz-fgl-meta{flex:1 1 auto;display:-webkit-box;min-width:0;min-height:38px;margin:0;overflow:hidden;font-size:13px;line-height:19px;color:var(--bz-fgl-muted);-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.bz-fgl-meta b{font-weight:600;color:var(--bz-fgl-ink)}
+.bz-fgl-meta .bz-fgl-g{display:inline-block;margin-right:6px;vertical-align:-2px;color:var(--fgl-accent)}
+.bz-fgl-toys{display:flex;flex:none;gap:8px}
+.bz-fgl-toy{padding:0 14px;font-size:13.5px}
+.bz-fgl-toy[data-hide="true"],.bz-fgl-continue[data-hide="true"]{visibility:hidden}
+
+/* narrow: under 560px of container */
+@container (max-width:559px){
+.bz-fgl-frame{padding:12px 12px 14px}
+.bz-fgl-art{height:184px}
+.bz-fgl-plate{width:100%}
+.bz-fgl-box-in{padding:12px 12px 10px}
+.bz-fgl-log{min-height:96px}
+.bz-fgl-alert{min-height:72px}
+.bz-fgl-menu{display:grid;grid-template-columns:1fr 1fr}
+.bz-fgl-menu .bz-fgl-btn{justify-content:flex-start;padding:0 12px}
+/* Compact results: the box reserves their height for the whole run, so keep it near the menu's. */
+.bz-fgl-finish{margin-bottom:8px}
+.bz-fgl-stats{gap:10px 12px}
+.bz-fgl-num{line-height:22px}
+.bz-fgl-sub{min-height:18px;-webkit-line-clamp:1}
+.bz-fgl-foot{flex-wrap:wrap}
+.bz-fgl-meta{flex-basis:100%}
+.bz-fgl-toys{flex:1 1 auto;justify-content:space-between}
+}
+
+/* motion off: no loops, no travel */
+.bz-fgl[data-motion="off"] .bz-fgl-sprite g,.bz-fgl[data-motion="off"] .bz-fgl-bob,.bz-fgl[data-motion="off"] .bz-fgl-hatch{animation:none!important}
+.bz-fgl[data-motion="off"] .bz-fgl-btn{transition:background-color var(--bz-fgl-fast) linear}
+.bz-fgl[data-running="false"] *{animation-play-state:paused!important}
+\`;
+
+/* ---------------- flap gate: component ---------------- */
+
+const FGL_MENU = ["retry", "skip", "cancel", "details"] as const;
+type FglMenuItem = (typeof FGL_MENU)[number];
+
+export function FlapGateLoader(props: FlapGateLoaderProps) {
+  const {
+    steps,
+    title,
+    headingLevel = 2,
+    palette = "daybreak",
+    character = "ember",
+    colorScheme,
+    labels: labelsProp,
+    stats,
+    onRetry,
+    onSkip,
+    onCancel,
+    onContinue,
+    reducedMotion,
+    className = "",
+    style,
+  } = props;
+
+  const uid = \`bz-fgl-\${useId().replace(/:/g, "")}\`;
+  const titleId = \`\${uid}-title\`;
+  const detailsId = \`\${uid}-details\`;
+  const labels: LoaderLabels = useMemo(() => ({ ...LOADER_LABELS, unit: "Gate", clear: "All gates cleared", ...labelsProp }), [labelsProp]);
+
+  const prefersReduced = useReducedMotionPreference();
+  const reduced = reducedMotion ?? prefersReduced;
+  const [paused, setPaused] = useState(false);
+  const rootRef = useRef<HTMLElement>(null);
+  const onscreen = useOnscreen(rootRef);
+  const visible = usePageVisible();
+  const motionAllowed = !reduced && !paused;
+  const running = onscreen && visible;
+
+  const [view, setView] = useState<LoaderView>(() => initialLoaderView(steps, labels));
+
+  const refs: FglRefs = {
+    root: rootRef,
+    art: useRef<HTMLDivElement>(null),
+    clouds: useRef<HTMLDivElement>(null),
+    world: useRef<HTMLDivElement>(null),
+    pipes: useRef<HTMLDivElement>(null),
+    ground: useRef<HTMLDivElement>(null),
+    hero: useRef<HTMLDivElement>(null),
+    hop: useRef<HTMLDivElement>(null),
+    bob: useRef<HTMLDivElement>(null),
+    sprite: useRef<HTMLDivElement>(null),
+    fx: useRef<HTMLDivElement>(null),
+    score: useRef<HTMLDivElement>(null),
+    banner: useRef<HTMLDivElement>(null),
+  };
+  const logRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const menuRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const detailsRef = useRef<HTMLParagraphElement>(null);
+  const [detailsScroll, setDetailsScroll] = useState(false);
+  const engineRef = useRef<LoaderEngine | null>(null);
+  const latest = useRef({ props, labels, steps, motion: { reduced, paused, onscreen, visible } });
+  latest.current = { props, labels, steps, motion: { reduced, paused, onscreen, visible } };
+
+  useIsoLayoutEffect(() => {
+    const engine = createLoaderEngine(
+      {
+        labels: () => latest.current.labels,
+        host: () => latest.current.props,
+        emit: (patch) => setView((v) => ({ ...v, ...patch })),
+        focusInside: () => {
+          const a = document.activeElement;
+          return !!a && a !== rootRef.current && !!rootRef.current?.contains(a);
+        },
+        focusInError: () => !!errorRef.current?.contains(document.activeElement),
+        root: () => rootRef.current,
+        resized: () => scrollLogToLines(logRef.current),
+      },
+      (core) => createFlapGateArena(core, refs, uid),
+    );
+    engineRef.current = engine;
+    engine.motion(latest.current.motion);
+    engine.rebuild(latest.current.steps);
+    return () => {
+      engine.destroy();
+      engineRef.current = null;
+    };
+    // The engine lives for the component's life; it reads props through \`latest\`.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useIsoLayoutEffect(() => {
+    engineRef.current?.update(steps);
+  }, [steps]);
+
+  useIsoLayoutEffect(() => {
+    engineRef.current?.motion({ reduced, paused, onscreen, visible });
+  }, [reduced, paused, onscreen, visible]);
+
+  useIsoLayoutEffect(() => {
+    scrollLogToLines(logRef.current);
+  }, [view.lines]);
+
+  // Details longer than their space scroll, so they take a tab stop to be scrolled from the keyboard.
+  useIsoLayoutEffect(() => {
+    const el = detailsRef.current;
+    setDetailsScroll(!!el && view.detailsOpen && el.scrollHeight > el.clientHeight + 1);
+  }, [view.detailsOpen, view.details]);
+
+  const menuItems = FGL_MENU.filter((m) => (m === "retry" ? !!onRetry : m === "skip" ? !!onSkip : m === "cancel" ? !!onCancel : true));
+  const menuCur = Math.max(0, Math.min(view.menu, menuItems.length - 1));
+
+  useIsoLayoutEffect(() => {
+    const f = view.focus;
+    if (!f) return;
+    const target = f.to === "retry" ? menuRefs.current[0] : f.to === "log" ? logRef.current : continueRef.current;
+    target?.focus();
+  }, [view.focus]);
+
+  /* ---- derived text */
+  const n = steps.length;
+  const settledN = steps.filter(settled).length;
+  const skippedN = steps.filter((s) => s.status === "skipped").length;
+  let hostAt = steps.findIndex((s) => s.status === "active" || s.status === "error");
+  if (hostAt < 0) hostAt = steps.findIndex((s) => s.status === "pending");
+  const phase = view.phase;
+  let valueText: string;
+  if (phase === "stopped") valueText = \`Stopped at step \${Math.max(0, hostAt) + 1} of \${n}\`;
+  else if (n && settledN === n) valueText = labels.complete(n, skippedN).replace(/\\.$/, "");
+  else if (hostAt >= 0 && steps[hostAt].status === "error") valueText = \`Step \${hostAt + 1} of \${n}: \${steps[hostAt].label}, failed\`;
+  else if (hostAt >= 0 && steps[hostAt].status === "active") valueText = \`Step \${hostAt + 1} of \${n}: \${steps[hostAt].label}\`;
+  else valueText = labels.queued(n, steps[0]?.label ?? "");
+
+  const ps = steps[view.front];
+  const complete = phase === "complete" || !ps;
+  // Size unknown while running, and still unknown if that step fails: the hatch stays, without the march.
+  const indet = !complete && (ps.status === "active" || ps.status === "error") && ps.progress == null;
+  const isError = !complete && phase === "error";
+  const attempt = ps?.attempt ?? 1;
+  const showTag = !complete && attempt > 1 && (ps.status === "active" || ps.status === "error");
+  let count = "";
+  if (complete) count = \`\${n} of \${n}\`;
+  else if (ps.status === "skipped") count = "Skipped";
+  else if (indet) {
+    const secs = Math.floor((ps.elapsedMs ?? 0) / 1000);
+    count = \`\${labels.sizeUnknown}\${secs >= 10 ? \` · \${secs}s\` : ""}\`;
+  } else if (ps.status === "done") count = ps.detail || "Done";
+  else if (ps.status === "active" || ps.status === "error") count = view.barDetail ?? (view.barP != null ? \`\${Math.floor(view.barP * 100)}%\` : "");
+  const fill = complete ? 100 : ps.status === "pending" ? 0 : Math.round((view.barP ?? 0) * 1000) / 10;
+
+  let metaHead: string;
+  let metaTail = "";
+  const frontNo = Math.min(view.front + 1, n);
+  if (phase === "complete") {
+    metaHead = labels.clear;
+    metaTail = \`\${n} of \${n}\`;
+  } else if (phase === "stopped") {
+    metaHead = \`\${labels.unit} \${frontNo} of \${n}\`;
+    metaTail = labels.stopped(steps.filter((s) => s.status === "done").length);
+  } else if (phase === "error") {
+    metaHead = \`\${labels.unit} \${frontNo} of \${n}\`;
+    metaTail = labels.waiting;
+  } else {
+    metaHead = \`\${labels.unit} \${frontNo} of \${n}\`;
+    const next = steps.slice(view.front + 1).filter((s) => !settled(s)).slice(0, 2).map((s) => s.label);
+    if (next.length) metaTail = \`Next: \${next.join(", then ")}\`;
+  }
+
+  const errStep = steps[view.errorAt];
+  const statsN = stats?.length ?? 0;
+  // The longest completion line this run can produce reserves its height from the start.
+  const finishSizer = \`\${labels.complete(n, n)}\${props.completeText ? \` \${props.completeText}\` : ""}\`;
+  const slots = Array.from({ length: 3 + statsN }, (_, k) => view.tiles[k] ?? null);
+  const showContinue = !!onContinue;
+  const H = \`h\${headingLevel}\` as "h2";
+
+  const paletteSet = typeof palette === "string" ? FLAP_GATE_LOADER_PALETTES[palette] ?? FLAP_GATE_LOADER_PALETTES.daybreak : palette;
+  const ch = typeof character === "string" ? LOADER_CHARACTERS[character] ?? LOADER_CHARACTERS.ember : character;
+  const rootStyle = useMemo(() => {
+    const vars: Record<string, string> = {};
+    FGL_COLOR_KEYS.forEach((k) => {
+      vars[\`--fgl-\${k}\`] = \`light-dark(\${paletteSet.light[k]}, \${paletteSet.dark[k]})\`;
+    });
+    // A skipped gate's ghost: the pipe line on light skies, the pipe highlight on dark ones.
+    vars["--fgl-ghost"] = \`light-dark(\${paletteSet.light.pipeLine}, \${paletteSet.dark.pipeLight})\`;
+    vars["--fgl-halo"] = \`light-dark(\${paletteSet.light.spriteHalo ?? "transparent"}, \${paletteSet.dark.spriteHalo ?? "transparent"})\`;
+    return { ...vars, ...loaderCharacterVars(ch), ...(colorScheme ? { colorScheme } : {}) } as CSSProperties;
+  }, [paletteSet, ch, colorScheme]);
+
+  const onMenuKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    const total = menuItems.length;
+    let j = menuCur;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") j = (menuCur + 1) % total;
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") j = (menuCur - 1 + total) % total;
+    else if (e.key === "Home") j = 0;
+    else if (e.key === "End") j = total - 1;
+    else return;
+    e.preventDefault();
+    setView((v) => ({ ...v, menu: j }));
+    menuRefs.current[j]?.focus();
+  };
+
+  const onMenu = (item: FglMenuItem) => {
+    if (item === "retry") {
+      if (errStep) onRetry?.(errStep.id);
+    } else if (item === "skip") {
+      if (errStep) onSkip?.(errStep.id);
+    } else if (item === "cancel") engineRef.current?.cancel();
+    else setView((v) => ({ ...v, detailsOpen: !v.detailsOpen }));
+  };
+
+  const menuText = (item: FglMenuItem) =>
+    item === "retry" ? labels.retry : item === "skip" ? labels.skip : item === "cancel" ? labels.cancel : view.detailsOpen ? labels.hideDetails : labels.showDetails;
+
+  return (
+    <section
+      ref={rootRef}
+      className={\`bz-fgl \${className}\`.trim()}
+      aria-labelledby={titleId}
+      data-phase={phase}
+      data-motion={motionAllowed ? "on" : "off"}
+      data-running={String(running)}
+      style={{ ...rootStyle, ...style }}
+    >
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="bz-fgl-frame">
+        <H id={titleId} className="bz-fgl-title" tabIndex={-1}>
+          {title}
+        </H>
+        <ol className="bz-fgl-sr" aria-busy={phase === "run" ? "true" : "false"}>
+          {steps.map((s, i) => {
+            const word =
+              s.status === "active"
+                ? \`Running\${(s.attempt ?? 1) > 1 ? \`, \${labels.attempt(s.attempt ?? 1).toLowerCase()}\` : ""}\`
+                : s.status === "done"
+                  ? \`Done\${s.durationMs != null ? \` in \${fmtDur(s.durationMs)}\` : ""}\`
+                  : s.status === "skipped"
+                    ? "Skipped"
+                    : s.status === "error"
+                      ? labels.failed
+                      : "Waiting";
+            return (
+              <li key={s.id} aria-current={i === hostAt && (s.status === "active" || s.status === "error") ? "step" : undefined}>
+                {\`\${s.label}: \${word}\`}
+              </li>
+            );
+          })}
+        </ol>
+
+        <div className="bz-fgl-arena">
+          <div className="bz-fgl-art" ref={refs.art} aria-hidden="true">
+            <div className="bz-fgl-clouds" ref={refs.clouds} />
+            <div className="bz-fgl-world" ref={refs.world}>
+              <div className="bz-fgl-pipes" ref={refs.pipes} />
+              <div className="bz-fgl-ground" ref={refs.ground} />
+            </div>
+            <div className="bz-fgl-hero" ref={refs.hero}>
+              <div className="bz-fgl-hop" ref={refs.hop}>
+                <div className="bz-fgl-bob" ref={refs.bob}>
+                  <div className="bz-fgl-sprite" ref={refs.sprite} data-frame="fly1" data-flame="on">
+                    <CharacterSprite hairStyle={ch.hairStyle} frames={FGL_FRAMES} accessories={fglAccessories} accessoriesKey="jetpack" layers={FGL_LAYERS} />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bz-fgl-fx" ref={refs.fx} />
+            <div className="bz-fgl-score" ref={refs.score} />
+            <div className="bz-fgl-banner" ref={refs.banner} data-on={String(view.banner)}>
+              <span className="bz-fgl-banner-in">
+                {labels.clear}
+                <span className="bz-fgl-banner-rule" />
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className="bz-fgl-plate"
+          role="progressbar"
+          aria-labelledby={titleId}
+          aria-valuemin={0}
+          aria-valuemax={Math.max(1, n)}
+          aria-valuenow={settledN}
+          aria-valuetext={valueText}
+          data-state={isError ? "error" : complete ? "done" : ps.status}
+        >
+          <div className="bz-fgl-plate-top">
+            <span className="bz-fgl-plate-label">{complete ? labels.clear : ps.label}</span>
+            <span className="bz-fgl-tag" hidden={!showTag}>
+              {labels.attempt(attempt)}
+            </span>
+            <span className="bz-fgl-failed" hidden={!isError}>
+              <Glyph name="cross" />
+              {labels.failed}
+            </span>
+          </div>
+          <div className="bz-fgl-plate-row">
+            <span className="bz-fgl-bar" data-indet={String(indet)}>
+              <span key={\`\${view.run}-\${view.front}\`} className="bz-fgl-fill" style={{ width: \`\${fill}%\` }} />
+              <span className="bz-fgl-hatch">
+                <svg shapeRendering="crispEdges" aria-hidden="true" focusable="false">
+                  <defs>
+                    <pattern id={\`\${uid}-hatch\`} width="8" height="8" patternUnits="userSpaceOnUse">
+                      <path d="M0 6h2v2H0zM2 4h2v2H2zM4 2h2v2H4zM6 0h2v2H6z" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill={\`url(#\${uid}-hatch)\`} />
+                </svg>
+              </span>
+            </span>
+            <span className="bz-fgl-count">{count}</span>
+          </div>
+        </div>
+
+        <div className="bz-fgl-box">
+          <div className="bz-fgl-box-in">
+            <div className="bz-fgl-stack">
+              <div className="bz-fgl-panel bz-fgl-talk" data-on={String(!view.resultsOpen)} data-covered={String(phase === "error")}>
+                <div className="bz-fgl-log" ref={logRef} role="log" aria-label={labels.narration} tabIndex={phase === "error" || view.resultsOpen ? -1 : 0}>
+                  {view.lines.map((l) => (
+                    <p key={l.key} className="bz-fgl-line" data-kind={l.kind}>
+                      <Glyph name={l.kind} />
+                      <span>{l.text}</span>
+                    </p>
+                  ))}
+                </div>
+                {view.lines.length === 0 && (
+                  <p className="bz-fgl-intro" aria-hidden="true">
+                    {view.intro}
+                  </p>
+                )}
+              </div>
+
+              <div className="bz-fgl-panel bz-fgl-err" ref={errorRef} data-on={String(phase === "error")}>
+                {/* The details open in the alert's place, so the box never grows. */}
+                <div className="bz-fgl-errtop">
+                  <div className="bz-fgl-alert" role="alert" data-covered={String(view.detailsOpen)}>
+                    {view.alert ? (
+                      <>
+                        <Glyph name="cross" />
+                        <span>{view.alert}</span>
+                      </>
+                    ) : null}
+                  </div>
+                  <p id={detailsId} ref={detailsRef} className="bz-fgl-details" data-open={String(view.detailsOpen)} tabIndex={detailsScroll ? 0 : undefined}>
+                    {view.details}
+                  </p>
+                </div>
+                <div className="bz-fgl-menu" role="group" aria-label={labels.menu} onKeyDown={onMenuKey}>
+                  {menuItems.map((item, k) => (
+                    <button
+                      key={item}
+                      ref={(el) => {
+                        menuRefs.current[k] = el;
+                      }}
+                      type="button"
+                      className={\`bz-fgl-btn\${item === "retry" ? " bz-fgl-primary" : ""}\`}
+                      tabIndex={k === menuCur ? 0 : -1}
+                      data-current={String(k === menuCur)}
+                      aria-expanded={item === "details" ? view.detailsOpen : undefined}
+                      aria-controls={item === "details" ? detailsId : undefined}
+                      onFocus={() => {
+                        if (k !== menuCur) setView((v) => ({ ...v, menu: k }));
+                      }}
+                      onClick={() => onMenu(item)}
+                    >
+                      <span className="bz-fgl-cur">
+                        <Glyph name="cursor" />
+                      </span>
+                      {menuText(item)}
+                      {(item === "retry" || item === "skip") && errStep ? <span className="bz-fgl-sr">{\` \${errStep.label}\`}</span> : null}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bz-fgl-panel bz-fgl-results" data-on={String(view.resultsOpen)}>
+                <p className="bz-fgl-finish">
+                  <Glyph name="finish" />
+                  <span className="bz-fgl-finish-text">
+                    <span className="bz-fgl-sizer" aria-hidden="true">
+                      {finishSizer}
+                    </span>
+                    <span>{view.finishText}</span>
+                  </span>
+                </p>
+                <dl className="bz-fgl-stats">
+                  {slots.map((t, k) => (
+                    <div key={k} className="bz-fgl-stat" data-empty={String(!t)}>
+                      <dt>{t ? t.label : "\\u00a0"}</dt>
+                      <dd>
+                        <span className="bz-fgl-num" aria-hidden="true">
+                          {t ? view.counts[k] ?? t.text : "\\u00a0"}
+                        </span>
+                        {t ? <span className="bz-fgl-sr">{t.text}</span> : null}
+                        <span className="bz-fgl-sub">{t ? t.sub || "\\u00a0" : "\\u00a0"}</span>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bz-fgl-foot">
+          <p className="bz-fgl-meta" aria-hidden="true">
+            {view.note ? (
+              <>
+                <Glyph name="clock" />
+                {view.note}
+              </>
+            ) : (
+              <>
+                <b>{metaHead}</b>
+                {metaTail ? \` · \${metaTail}\` : ""}
+              </>
+            )}
+          </p>
+          <div className="bz-fgl-toys">
+            <button
+              type="button"
+              className="bz-fgl-btn bz-fgl-toy"
+              aria-pressed={paused}
+              data-hide={String(reduced)}
+              onClick={() => setPaused((p) => !p)}
+            >
+              <Glyph name="pause" />
+              {labels.pauseMotion}
+            </button>
+            {showContinue ? (
+              <button
+                ref={continueRef}
+                type="button"
+                className="bz-fgl-btn bz-fgl-primary bz-fgl-continue"
+                data-hide={String(!(view.resultsOpen && view.continueOn))}
+                onClick={() => onContinue?.()}
+              >
+                {labels.continue}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}`,
+    description: "Flappy-style step loader: a jetpack pilot clears one gate per finished step.",
+    tags: ["loader", "multi-step", "progress", "pixel-art", "game", "flappy", "accessible", "reduced-motion"],
+  },
+  {
+    name: "BrickWallLoader",
+    slug: "brick-wall-loader",
+    path: "loaders/BrickWallLoader.tsx",
+    category: "loaders",
+    code: `"use client";
+
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type KeyboardEvent,
+  type RefObject,
+} from "react";
+
+/*
+ * BrickWallLoader: a multi-step loader played as a game of Breakout, where every
+ * step is a row of bricks and only real progress breaks them.
+ *
+ * Each step is one row of bricks in a framed playfield. The first step's row
+ * sits at the bottom of the wall, nearest the paddle; later steps stack above
+ * it and the last step is a row of steel. A pixel adventurer rides the paddle.
+ * Every progress event the host reports sends the ball up from the paddle, and
+ * the front row then shows exactly floor(progress x bricks) broken bricks, with
+ * a crack on the next brick for the part in between. When the host says a step
+ * is done, the rest of its row breaks and the wall drops one row. A step of
+ * unknown size hatches its row and the ball only dribbles.
+ *
+ * Honesty: nothing in the playfield moves on a timer. The bar and the wall
+ * change only when \`steps\` changes, at most one shot per 400ms with increments
+ * merged. The wall may lag the host by one beat, but it is never ahead of it.
+ *
+ * The host owns the run. \`steps\` is the only state, the same convention as
+ * Stepper: the loader never advances, completes, fails, retries or skips a
+ * step. It calls \`onRetry(id)\`, \`onSkip(id)\` and \`onCancel()\` from its error
+ * menu, \`onContinue()\` from the results screen and \`onComplete()\` once the
+ * finale has played.
+ *
+ * Accessibility: the nameplate is the one progressbar, named by the heading.
+ * A visually hidden list carries every step's state, and \`aria-busy\` sits on
+ * that list only, so the narration log (role="log", milestones only, one
+ * sentence per beat) and the error alert (role="alert") are never inside a
+ * busy subtree. The error menu is a group with a roving tabindex. Focus moves
+ * only when it is already inside the loader: to Retry when a step fails, to the
+ * log when a retry starts and to Continue when the results open.
+ *
+ * Motion: \`reducedMotion\` follows the media query live unless you set it.
+ * Reduced motion, the Pause motion toggle, an off-screen loader and a hidden
+ * tab all stop the ball, the loops and the shards, and the wall snaps to its
+ * honest position, so nothing is lost. A hidden tab plays no beats: finished
+ * steps are flushed at once, and on return the footer says what happened while
+ * you were away. The loader keeps one height for a given number of steps and
+ * width, whatever state it is in.
+ */
+
+/* ---------------- shared: types and labels ---------------- */
+
+/** Where a step is. Only the host changes it. */
+export type LoaderStepStatus = "pending" | "active" | "done" | "error" | "skipped";
+
+export type LoaderStep = {
+  /** Stable key. Beats and announcements key on it. A changed id list or length rebuilds the run. */
+  id: string;
+  /** Present tense: "Import 1,240 contacts". */
+  label: string;
+  /** Where the step is: pending, active, done, error or skipped. */
+  status: LoaderStepStatus;
+  /** 0 to 1, from real host events only. Leave it out (or null) when the size of the work is unknown. */
+  progress?: number | null;
+  /** A real count, shown on the nameplate and never announced: "620 of 1,240 contacts". */
+  detail?: string;
+  /** Total units of work. Brick Wall draws one brick per unit when this is 16 or fewer. The other four ignore it. */
+  count?: number;
+  /** Past-tense narration: "Imported 1,240 contacts". Falls back to "<label>: done". */
+  doneText?: string;
+  /** Plain sentence, shown and sent to role="alert" when status is "error". */
+  error?: string;
+  /** Longer text behind Show details. */
+  errorDetail?: string;
+  /** 1-based. 2 or more shows "Attempt 2", and a step that then finishes counts as a recovered hiccup. */
+  attempt?: number;
+  /** Host clock for the running or failed attempt, in milliseconds. */
+  elapsedMs?: number;
+  /** Host clock for a finished step, in milliseconds. The results Time tile is the sum. */
+  durationMs?: number;
+};
+
+export type LoaderStat = {
+  /** Tile heading, such as "Contacts". */
+  label: string;
+  /** A real number (counts up when motion is allowed) or a string shown as it is. */
+  value: string | number;
+  /** Small line under the value, such as "imported". */
+  sub?: string;
+};
+
+export type LoaderLabels = {
+  /** What one step is called in this game, used in the footer: "Row 2 of 5". */
+  unit: string;
+  /** The finale banner and footer: "Wall cleared". */
+  clear: string;
+  /** Accessible name of the narration log. Default "Narration". */
+  narration: string;
+  /** Accessible name of the error menu. Default "What next". */
+  menu: string;
+  /** Default "Retry". */
+  retry: string;
+  /** Default "Skip". */
+  skip: string;
+  /** Default "Cancel". */
+  cancel: string;
+  /** Default "Show details". */
+  showDetails: string;
+  /** Default "Hide details". */
+  hideDetails: string;
+  /** Default "Pause motion". */
+  pauseMotion: string;
+  /** Default "Continue". */
+  continue: string;
+  /** The nameplate's error mark. Default "Failed". */
+  failed: string;
+  /** Footer text while the error menu waits. Default "Waiting for you". */
+  waiting: string;
+  /** Nameplate text for a step of unknown size. Default "Working, size unknown". */
+  sizeUnknown: string;
+  /** Default "Attempt 2". */
+  attempt: (n: number) => string;
+  /** Log placeholder before anything is narrated. Default "5 steps queued. Up first: Create the workspace." */
+  queued: (n: number, first: string) => string;
+  /** Log placeholder when the loader mounts mid-run; never announced. Default "1 of 5 done. Now: Import 1,240 contacts." */
+  progress: (done: number, total: number, now: string) => string;
+  /** Footer note after a hidden tab; never announced. Default "While you were away: 2 steps finished." */
+  away: (n: number) => string;
+  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped)." */
+  complete: (total: number, skipped: number) => string;
+  /** Narrated on Cancel. Default "Stopped. 2 finished steps are kept." */
+  stopped: (kept: number) => string;
+};
+
+const LOADER_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
+  narration: "Narration",
+  menu: "What next",
+  retry: "Retry",
+  skip: "Skip",
+  cancel: "Cancel",
+  showDetails: "Show details",
+  hideDetails: "Hide details",
+  pauseMotion: "Pause motion",
+  continue: "Continue",
+  failed: "Failed",
+  waiting: "Waiting for you",
+  sizeUnknown: "Working, size unknown",
+  attempt: (n) => \`Attempt \${n}\`,
+  queued: (n, first) => \`\${n} step\${n === 1 ? "" : "s"} queued. Up first: \${first}.\`,
+  progress: (done, total, now) => \`\${done} of \${total} done. Now: \${now}.\`,
+  away: (n) => \`While you were away: \${n} step\${n === 1 ? "" : "s"} finished.\`,
+  complete: (total, skipped) => \`All \${total} step\${total === 1 ? "" : "s"} finished\${skipped ? \` (\${skipped} skipped)\` : ""}.\`,
+  stopped: (kept) => \`Stopped. \${kept} finished step\${kept === 1 ? " is" : "s are"} kept.\`,
+};
+
+/* ---------------- end shared: types and labels ---------------- */
+
+/* Brick Wall palettes. Every row colour clears 4.5:1 on the dark field; on the
+   light field the rows lean on their ink outline instead. Accent fills the
+   bar, the paddle caps and the primary buttons: white text in light themes,
+   ink in dark ones. */
+
+export type BrickWallLoaderColors = {
+  /** Playfield ground. */
+  field: string;
+  /** The pixel frame on the playfield's left, right and top. */
+  frame: string;
+  /** Eight brick colours; the row for step k takes rows[k % 8]. */
+  rows: string[];
+  /** Brick outlines, cracks and rubble outlines. */
+  brickLine: string;
+  /** The last step's steel row. */
+  steel: string;
+  /** Steel highlight. */
+  steelLight: string;
+  /** Steel shade, the rivets and the dimmed paddle caps after an error. */
+  steelShade: string;
+  /** The paddle body. */
+  paddle: string;
+  /** The paddle's end caps. */
+  paddleCap: string;
+  /** The ball. */
+  ball: string;
+  /** Skipped rows and the empty tally slot for a skipped step. */
+  hatch: string;
+  /** The character's 1px outline. */
+  spriteOutline: string;
+  /** A 1px rim around the character's silhouette, so dark hair and boots still read on a dark field. Transparent in the light presets. */
+  spriteRim?: string;
+  /** Bar fill, the attempt tag and the primary buttons. */
+  accent: string;
+  /** Text on accent. */
+  onAccent: string;
+};
+
+export type BrickWallLoaderPalette = { light: BrickWallLoaderColors; dark: BrickWallLoaderColors };
+
+const RAINBOW_ROWS = ["#ef4444", "#f97316", "#facc15", "#22c55e", "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899"];
+const CANDY_ROWS = ["#fda4af", "#fdba74", "#fde68a", "#86efac", "#67e8f9", "#93c5fd", "#c4b5fd", "#f9a8d4"];
+
+/** Two presets. Spread one to customise it: { ...BRICK_WALL_LOADER_PALETTES.rainbow, dark: { ... } }. */
+export const BRICK_WALL_LOADER_PALETTES = {
+  rainbow: {
+    light: {
+      field: "#f3f1ff", frame: "#17142e", rows: RAINBOW_ROWS, brickLine: "#17142e",
+      steel: "#94a3b8", steelLight: "#e2e8f0", steelShade: "#475569",
+      paddle: "#17142e", paddleCap: "#2563eb", ball: "#17142e", hatch: "#17142e",
+      spriteOutline: "#17142e", spriteRim: "transparent", accent: "#2563eb", onAccent: "#ffffff",
+    },
+    dark: {
+      field: "#0f0c24", frame: "#c9c5e6", rows: RAINBOW_ROWS, brickLine: "#0f0c24",
+      steel: "#94a3b8", steelLight: "#e2e8f0", steelShade: "#475569",
+      paddle: "#e9e6ff", paddleCap: "#93c5fd", ball: "#ffffff", hatch: "#c9c5e6",
+      spriteOutline: "#0b0918", spriteRim: "#c9c5e6", accent: "#93c5fd", onAccent: "#0a0a0a",
+    },
+  },
+  candy: {
+    light: {
+      field: "#fff4fb", frame: "#3a1240", rows: CANDY_ROWS, brickLine: "#3a1240",
+      steel: "#cbd5e1", steelLight: "#f1f5f9", steelShade: "#64748b",
+      paddle: "#3a1240", paddleCap: "#c026d3", ball: "#3a1240", hatch: "#3a1240",
+      spriteOutline: "#17142e", spriteRim: "transparent", accent: "#c026d3", onAccent: "#ffffff",
+    },
+    dark: {
+      field: "#1d0f26", frame: "#f0abfc", rows: CANDY_ROWS, brickLine: "#1d0f26",
+      steel: "#cbd5e1", steelLight: "#f1f5f9", steelShade: "#64748b",
+      paddle: "#f0abfc", paddleCap: "#c4b5fd", ball: "#ffffff", hatch: "#f0abfc",
+      spriteOutline: "#0b0918", spriteRim: "#f0abfc", accent: "#f0abfc", onAccent: "#0a0a0a",
+    },
+  },
+} satisfies Record<string, BrickWallLoaderPalette>;
+
+export type BrickWallLoaderPaletteName = keyof typeof BRICK_WALL_LOADER_PALETTES;
+
+export type BrickWallLoaderProps = {
+  /**
+   * The run, and the only state the loader reads. Required. A new run starts
+   * when every step is pending again, when the ids change, when a done or
+   * skipped step goes back to pending or active, or when a stopped run's host
+   * makes a step active.
+   */
+  steps: LoaderStep[];
+  /** The heading text and the progressbar's name. Required. */
+  title: string;
+  /** Heading level for the title. Default 2. */
+  headingLevel?: 2 | 3 | 4 | 5 | 6;
+  /** A preset name ("rainbow" or "candy") or your own light and dark colours. Default "rainbow". */
+  palette?: BrickWallLoaderPaletteName | BrickWallLoaderPalette;
+  /** A preset name ("ember", "tide", "moss" or "plum") or your own character. Default "ember". */
+  character?: LoaderCharacterName | LoaderCharacter;
+  /** Forces a colour scheme. Default: inherit the host's color-scheme, which light-dark() follows. */
+  colorScheme?: "light" | "dark";
+  /** Overrides for any visible or announced string. Default: English labels, unit "Row", clear "Wall cleared". */
+  labels?: Partial<LoaderLabels>;
+  /** Extra results tiles, real numbers only. Default none. */
+  stats?: LoaderStat[];
+  /** Appended to the completion line: "Your workspace is ready." Default none. */
+  completeText?: string;
+  /** Called with the failed step's id. Absent: no Retry button. */
+  onRetry?: (id: string) => void;
+  /** Called with the failed step's id. Absent: no Skip button. */
+  onSkip?: (id: string) => void;
+  /** Called after the loader stops and narrates it. Absent: no Cancel button. */
+  onCancel?: () => void;
+  /** Present: a Continue button on the results screen. Default absent. */
+  onContinue?: () => void;
+  /** Called once per run, after the finale's last beat. */
+  onComplete?: () => void;
+  /** Mirrors what the log and the alert say, for your own announcer or logs. */
+  onAnnounce?: (text: string, politeness: "polite" | "assertive") => void;
+  /** true or false forces it. Default undefined: follows prefers-reduced-motion live. */
+  reducedMotion?: boolean;
+  /** Added to the root section. */
+  className?: string;
+  /** Merged into the root section's style. */
+  style?: CSSProperties;
+};
+
+/* ---------------- shared: timing constants and helpers ---------------- */
+
+const FAST = 150;
+const BASE = 300;
+const SLOW = 500;
+const BEAT = 2400;
+/** At most one progress hit per 400ms; increments in between merge into the next. */
+const HIT_GAP = 400;
+/** A finishing blow lands this long after it starts. */
+const IMPACT = 100;
+/** Completions this close together share a beat. */
+const COLLECT = 100;
+/** A step holds the front for at least this long. */
+const DWELL = 300;
+/** This many queued completions become one beat. */
+const BURST_MIN = 3;
+/** Completions this close share one sentence and one announcement. */
+const COALESCE = 400;
+
+const now = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+const settled = (s?: LoaderStep) => !!s && (s.status === "done" || s.status === "skipped");
+const lowerFirst = (s: string) => (s && s.length > 1 && s[1] === s[1].toLowerCase() ? s[0].toLowerCase() + s.slice(1) : s || "");
+const listJoin = (a: string[]) => (a.length < 2 ? a.join("") : \`\${a.slice(0, -1).join(", ")} and \${a[a.length - 1]}\`);
+const fmtNum = (n: number) => Math.round(n).toLocaleString("en-US");
+
+function fmtDur(ms: number) {
+  if (!Number.isFinite(ms)) return "";
+  if (ms < 950) return \`\${(Math.max(1, Math.round(ms / 100)) / 10).toFixed(1)}s\`;
+  if (ms < 9950) return \`\${(Math.round(ms / 100) / 10).toFixed(1)}s\`;
+  const s = Math.round(ms / 1000);
+  if (s < 60) return \`\${s}s\`;
+  return \`\${Math.floor(s / 60)}m \${String(s % 60).padStart(2, "0")}s\`;
+}
+
+/** cubic-bezier(x1, y1, x2, y2) as a function of time, solved by bisection. */
+function bezier(x1: number, y1: number, x2: number, y2: number) {
+  const at = (t: number, a: number, b: number) => 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t;
+  return (x: number) => {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    let lo = 0;
+    let hi = 1;
+    let t = x;
+    for (let i = 0; i < 24; i++) {
+      const v = at(t, x1, x2);
+      if (Math.abs(v - x) < 1e-5) break;
+      if (v < x) lo = t;
+      else hi = t;
+      t = (lo + hi) / 2;
+    }
+    return at(t, y1, y2);
+  };
+}
+/** The one editorial ease-out (--bz-ease-out), sampled for stepped keyframes. */
+const EASE_OUT = bezier(0.23, 1, 0.32, 1);
+
+/** [offset, x, y, opacity?]: one held position of a pixel-true move. */
+type PixelStep = [number, number, number, number?];
+
+/** Held positions in whole CSS pixels (step-end between them), so pixel art is never resampled mid-move. */
+function steppedFrames(points: PixelStep[]): Keyframe[] {
+  return points.map(([offset, x, y, o]) => {
+    const k: Keyframe = { offset: Math.min(1, Math.max(0, offset)), easing: "step-end", transform: \`translate(\${Math.round(x)}px, \${Math.round(y)}px)\` };
+    if (o != null) k.opacity = o;
+    return k;
+  });
+}
+
+/** Horizontal runs merged into one path per colour key, in art pixels. */
+const PATH_CACHE = new Map<readonly string[], Record<string, string>>();
+function pixelPaths(map: readonly string[]): Record<string, string> {
+  const hit = PATH_CACHE.get(map);
+  if (hit) return hit;
+  const paths: Record<string, string> = {};
+  map.forEach((row, y) => {
+    let x = 0;
+    while (x < row.length) {
+      const c = row[x];
+      if (c === ".") {
+        x++;
+        continue;
+      }
+      let x2 = x;
+      while (x2 < row.length && row[x2] === c) x2++;
+      paths[c] = \`\${paths[c] ?? ""}M\${x} \${y}h\${x2 - x}v1h\${x - x2}z\`;
+      x = x2;
+    }
+  });
+  PATH_CACHE.set(map, paths);
+  return paths;
+}
+
+/** A crisp pixel svg as markup, one classed path per key, for art built outside React. */
+function pixelMarkup(map: readonly string[], prefix: string, roles: Record<string, string>, scale: number, className = "") {
+  const w = map[0].length;
+  const h = map.length;
+  const p = pixelPaths(map);
+  let out = \`<svg\${className ? \` class="\${className}"\` : ""} viewBox="0 0 \${w} \${h}" width="\${w * scale}" height="\${h * scale}" shape-rendering="crispEdges" aria-hidden="true" focusable="false">\`;
+  for (const k in p) out += \`<path class="\${prefix}\${roles[k] ?? k}" d="\${p[k]}"/>\`;
+  return \`\${out}</svg>\`;
+}
+
+/** A crisp pixel svg, one classed path per key (CSS maps each class to a colour). */
+function PixelSvg({ map, prefix, roles, scale, className }: { map: readonly string[]; prefix: string; roles: Record<string, string>; scale: number; className?: string }) {
+  const p = pixelPaths(map);
+  const w = map[0].length;
+  const h = map.length;
+  return (
+    <svg className={className} viewBox={\`0 0 \${w} \${h}\`} width={w * scale} height={h * scale} shapeRendering="crispEdges" aria-hidden="true" focusable="false">
+      {Object.keys(p).map((k) => (
+        <path key={k} className={\`\${prefix}\${roles[k] ?? k}\`} d={p[k]} />
+      ))}
+    </svg>
+  );
+}
+
+type GlyphName = "done" | "skipped" | "retry" | "finish" | "stop" | "cross" | "pause" | "cursor" | "pointer" | "clock";
+
+const GLYPHS: Record<GlyphName, readonly string[]> = {
+  done: [".......", "......#", ".....##", "#...##.", "##.##..", ".###...", "..#...."],
+  skipped: [".......", ".......", ".......", "#######", "#######", ".......", "......."],
+  retry: ["..###.#", ".#...##", "#...###", "#......", "#.....#", ".#...#.", "..###.."],
+  finish: ["...#...", "...#...", "#######", ".#####.", "..###..", ".##.##.", "##...##"],
+  stop: [".......", ".#####.", ".#####.", ".#####.", ".#####.", ".#####.", "......."],
+  cross: ["##...##", "###.###", ".#####.", "..###..", ".#####.", "###.###", "##...##"],
+  pause: [".......", ".##.##.", ".##.##.", ".##.##.", ".##.##.", ".##.##.", "......."],
+  cursor: ["#...", "##..", "###.", "####", "###.", "##..", "#..."],
+  pointer: ["...#", "..##", ".###", "####", ".###", "..##", "...#"],
+  clock: ["..###..", ".#...#.", "#..#..#", "#..##.#", "#.....#", ".#...#.", "..###.."],
+};
+const GLYPH_ROLES: Record<string, string> = { "#": "ink" };
+
+/* ---------------- end shared: timing constants and helpers ---------------- */
+
+/* ---------------- shared: character ---------------- */
+
+/* Brick Wall's copy carries only the frames this game draws (idle, swing,
+   hurt, sit and celebrate) and no accessory layer. The run, jump, bonk and
+   fly frames and the jetpack and glider colours live in the other games. */
+
+export type LoaderCharacterName = "ember" | "tide" | "moss" | "plum";
+
+export type LoaderCharacter = {
+  /** Which head to draw: "puffs", "ponytail", "short" or "wrap" (a head scarf coloured by hair and hairShade). */
+  hairStyle: "puffs" | "ponytail" | "short" | "wrap";
+  /** Skin colour. */
+  skin: string;
+  /** Skin shade: the far cheek, the jaw and the ear. */
+  skinShade: string;
+  /** Hair, or the wrap fabric. */
+  hair: string;
+  /** Hair shade, darker than hair. */
+  hairShade: string;
+  /** Tunic body. */
+  outfit: string;
+  /** Tunic shade, on the right of the body. */
+  outfitShade: string;
+  /** Tunic highlight: the left column and the near sleeve. */
+  outfitLight: string;
+  /** Scarf, belt buckle, hair tie and wrap band. */
+  accent: string;
+  /** Trousers. */
+  pants: string;
+  /** Trousers shade. */
+  pantsShade: string;
+  /** Boots and the belt leather. */
+  boots: string;
+  /** Boot shade. */
+  bootsShade: string;
+  /** Eye white. Default #ffffff. */
+  eyeWhite?: string;
+  /** Pupils and mouth. Default #1b1630. */
+  eye?: string;
+};
+
+/** Four bright adventurers: four skin tones, four hair styles, four outfit hues. */
+export const LOADER_CHARACTERS: Record<LoaderCharacterName, LoaderCharacter> = {
+  ember: { hairStyle: "puffs", skin: "#8d5524", skinShade: "#6b3d18", hair: "#4a3128", hairShade: "#2a1b15", outfit: "#ff5a36", outfitShade: "#c43d20", outfitLight: "#ff9a7a", accent: "#ffd23f", pants: "#3f64b5", pantsShade: "#2b4a8a", boots: "#5b3a1e", bootsShade: "#3d2614" },
+  tide: { hairStyle: "ponytail", skin: "#f3c7a5", skinShade: "#d9a07c", hair: "#e0702c", hairShade: "#a84e1a", outfit: "#3d8bfd", outfitShade: "#2563c9", outfitLight: "#8cbcff", accent: "#ff6fa5", pants: "#e6d3a3", pantsShade: "#c2a970", boots: "#7a4a28", bootsShade: "#55331b" },
+  moss: { hairStyle: "short", skin: "#c68e5f", skinShade: "#a06c42", hair: "#4f4760", hairShade: "#2e2838", outfit: "#3fbf5a", outfitShade: "#2a8a3f", outfitLight: "#8fe39f", accent: "#ff9f1c", pants: "#8b5e34", pantsShade: "#6b4526", boots: "#2f2a3a", bootsShade: "#1f1b27" },
+  plum: { hairStyle: "wrap", skin: "#a8693f", skinShade: "#82502c", hair: "#e0457b", hairShade: "#b02f5e", outfit: "#a06cf0", outfitShade: "#7a4bc4", outfitLight: "#c9a8ff", accent: "#2ec4b6", pants: "#4a5a8c", pantsShade: "#36426a", boots: "#8a5a2b", bootsShade: "#62401e" },
+};
+
+/* Art: 16 x 24 art pixels, facing right, feet on row 23, a 1px outline all
+   round, light from the top left. Keys: . clear, o outline, h hair, H hair
+   shade, s skin, S skin shade, w eye white, e pupil, m mouth, c outfit,
+   C outfit shade, l outfit light, a accent, p trousers, P trousers shade,
+   b boots, B boot shade. A 16 x 11 head per hair style takes a face patch and
+   sits at a per-frame dx and dy; the body for the pose is anchored to the
+   bottom row and drawn over it. */
+
+const CHARACTER_HEADS: Record<LoaderCharacter["hairStyle"], readonly string[]> = {
+  short: [
+    "....oo.oo.oo....",
+    "...ohhohhohho...",
+    "..ohhhhhhhhhhoo.",
+    "..ohhhhhhhhhHHo.",
+    "..ohhhhhhhHhHHo.",
+    "..ohhhhhHHsHsso.",
+    "..ohhSsssssssso.",
+    "..ohHssssssssso.",
+    "..oHHsssssSssSo.",
+    "...oHsssssssSo..",
+    "....ooooooooo...",
+  ],
+  ponytail: [
+    ".....oooooo.....",
+    "...oohhhhhhhoo..",
+    ".ooahhhhhhhhhho.",
+    "ohHohhhhhhhhhHo.",
+    "ohHohhhhhhhhHHo.",
+    "ohHohhhhhHshsso.",
+    "oHHohSsssssssso.",
+    ".oHoHssssssssso.",
+    ".oHoHsssssSssSo.",
+    "..ooHsssssssSo..",
+    "....ooooooooo...",
+  ],
+  puffs: [
+    ".ooo...ooooo....",
+    "ohhho.ohhhhho...",
+    "ohhHhohhhhhHo...",
+    ".oHHhhhhhHHhhho.",
+    "..ohhhhhhhhhhHo.",
+    "..ohhhhssssssso.",
+    "..ohhSsssssssso.",
+    "..ohHssssssssso.",
+    "..oHHsssssSssSo.",
+    "...oHsssssssSo..",
+    "....ooooooooo...",
+  ],
+  wrap: [
+    ".......oooo.oo..",
+    ".....oohhhhoHho.",
+    "...oohhhhhHHHo..",
+    "..ohhhhhhhHhhho.",
+    "..ohhhhhhhhhhHo.",
+    "..oaaaaaaaaaaao.",
+    "..ohhSsssssssso.",
+    "..ohHssssssssso.",
+    "..oHHsssssSssSo.",
+    "...oHsssssssSo..",
+    "....ooooooooo...",
+  ],
+};
+
+type CharacterEyes = "open" | "blink" | "squint" | "happy";
+
+/* Face patches over cols 7 to 13 and rows 6 to 9 of a head; "_" keeps the head pixel. */
+const CHARACTER_FACES: Record<CharacterEyes, readonly string[]> = {
+  open: ["_we_we_", "_we_we_", "_______", "____m__"],
+  blink: ["_______", "_ee_ee_", "_______", "____m__"],
+  squint: ["_e___e_", "__e_e__", "_e___e_", "___mm__"],
+  happy: ["_e___e_", "e_e_e_e", "_______", "___mm__"],
+};
+
+type CharacterPose = "idle" | "swing1" | "swing2" | "hurt" | "sit" | "celebrate1" | "celebrate2";
+
+const CHARACTER_BODIES: Record<CharacterPose, readonly string[]> = {
+  idle: [
+    "...oaaaaaaaao...",
+    "...oClcccColco..",
+    "...oClcccColco..",
+    "...oClcccColco..",
+    "...oSbbabbosso..",
+    "...oolcccCCoo...",
+    "....oppppPPo....",
+    "....opPoppPo....",
+    "....opPoppPo....",
+    "....opPoppPo....",
+    "....obBobbBo....",
+    "....obBobbbBo...",
+    "....ooooooooo...",
+  ],
+  swing1: [
+    "..oaaaaaaaao.oo.",
+    "..oClcccColcosso",
+    "..oClcccColcolco",
+    "..oClcccColccco.",
+    "..oSbbabbooooo..",
+    "...olcccCCo.....",
+    "...oppppPPPo....",
+    "...opPPoopPPo...",
+    "..opPo...opPo...",
+    "..opPo...opPo...",
+    "..obBo...obbBo..",
+    "..obbBo..obbbBo.",
+    "..ooooo..oooooo.",
+  ],
+  swing2: [
+    "....oaaaaaaaao..",
+    "....oClcccCoooo.",
+    "....oClcccClcsso",
+    "....oClcccCoooo.",
+    "....oSbbabbo....",
+    ".....olcccCo....",
+    ".....opppPPPo...",
+    "....oPPo.oppPo..",
+    "...oPPo...oppPo.",
+    "..oPPo....oppPo.",
+    ".oBBo.....obbBo.",
+    "oBBBo.....obbbBo",
+    "ooooo.....oooooo",
+  ],
+  hurt: [
+    ".............oo.",
+    "............osso",
+    "..oaaaaaaaaolco.",
+    "..oClcccCClco...",
+    ".ooClcccCCo.....",
+    "oSSoClccCCo.....",
+    "oSoobbabbo......",
+    ".o.olcccCo......",
+    "...oppppPPo.....",
+    "...opPoppPPo....",
+    "...opPo.oppPo...",
+    "...opPo..obbBo..",
+    "...obBo..obbbBo.",
+    "...obbBo..ooooo.",
+    "...ooooo........",
+  ],
+  sit: [
+    "..oaaaaaaaao....",
+    ".oCClcccColco...",
+    "oSoClcccColcooo.",
+    "oSobbabbossoobBo",
+    "oSoppppppppppbBo",
+    "ooPPPPPPPPPPPbBo",
+    ".ooooooooooooooo",
+  ],
+  celebrate1: [
+    ".............oo.",
+    "............osso",
+    "............oSso",
+    ".............lco",
+    ".............lco",
+    ".............lco",
+    ".............lco",
+    ".............lco",
+    "...oaaaaaaaaolco",
+    "...oClcccCCCClco",
+    "...oClcccCCCCco.",
+    "...oClcccCCCCo..",
+    "...oSbbabbbbo...",
+    "....olcccCCo....",
+    "....oppppPPo....",
+    "....opPoppPo....",
+    "....opPoppPo....",
+    "....opPoppPo....",
+    "....obBobbBo....",
+    "....obBobbbBo...",
+    "....ooooooooo...",
+  ],
+  celebrate2: [
+    ".............oo.",
+    "............osso",
+    "............oSso",
+    ".............lco",
+    ".............lco",
+    "...oaaaaaaaaolco",
+    "...oClcccCCCClco",
+    "...oClcccCCCCco.",
+    "...oClcccCCCCo..",
+    "...oSbbabbbbo...",
+    "....olcccCCo....",
+    "....oppppPPo....",
+    "...opPPoopPPo...",
+    "...opPo..opPo...",
+    "...obBo..obBo...",
+    "...obbBo.obbbBo.",
+    "...ooooo.oooooo.",
+  ],
+};
+
+const CHARACTER_FRAMES = ["idle1", "idle2", "swing1", "swing2", "hurt", "sit", "celebrate1", "celebrate2"] as const;
+type CharacterFrame = (typeof CHARACTER_FRAMES)[number];
+
+const CHARACTER_POSES: Record<CharacterFrame, { body: CharacterPose; eyes: CharacterEyes; dx: number; dy: number }> = {
+  idle1: { body: "idle", eyes: "open", dx: 0, dy: 0 },
+  idle2: { body: "idle", eyes: "open", dx: 0, dy: 1 },
+  swing1: { body: "swing1", eyes: "open", dx: -1, dy: 0 },
+  swing2: { body: "swing2", eyes: "open", dx: 1, dy: 0 },
+  hurt: { body: "hurt", eyes: "squint", dx: -1, dy: 1 },
+  sit: { body: "sit", eyes: "blink", dx: -1, dy: 6 },
+  celebrate1: { body: "celebrate1", eyes: "happy", dx: -1, dy: 0 },
+  celebrate2: { body: "celebrate2", eyes: "happy", dx: -1, dy: 1 },
+};
+
+const CHARACTER_W = 16;
+const CHARACTER_H = 24;
+
+/** One frame as a text map, 16 x 24. */
+function composeCharacterFrame(hairStyle: LoaderCharacter["hairStyle"], name: CharacterFrame): string[] {
+  const f = CHARACTER_POSES[name];
+  const grid: string[][] = Array.from({ length: CHARACTER_H }, () => Array<string>(CHARACTER_W).fill("."));
+  const put = (rows: readonly string[], ox: number, oy: number) => {
+    rows.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const c = row[x];
+        const gx = ox + x;
+        const gy = oy + y;
+        if (c !== "." && gx >= 0 && gx < CHARACTER_W && gy >= 0 && gy < CHARACTER_H) grid[gy][gx] = c;
+      }
+    });
+  };
+  const head = CHARACTER_HEADS[hairStyle].map((r) => r.split(""));
+  CHARACTER_FACES[f.eyes].forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) if (row[x] !== "_") head[6 + y][7 + x] = row[x];
+  });
+  put(head.map((r) => r.join("")), f.dx, f.dy);
+  const body = CHARACTER_BODIES[f.body];
+  put(body, 0, CHARACTER_H - body.length);
+  /* A pixel clipped at the box edge would lose its outline, so the edge columns become outline. */
+  for (let y = 0; y < CHARACTER_H; y++) {
+    for (const x of [0, CHARACTER_W - 1]) if (grid[y][x] !== ".") grid[y][x] = "o";
+  }
+  return grid.map((r) => r.join(""));
+}
+
+/** Colour key to the role used in class names and custom properties (--chr-hair, --chr-outfit-light). */
+const CHARACTER_ROLES: Record<string, string> = {
+  o: "outline", h: "hair", H: "hair-shade", s: "skin", S: "skin-shade", w: "eye-white", e: "eye", m: "mouth",
+  c: "outfit", C: "outfit-shade", l: "outfit-light", a: "accent", p: "pants", P: "pants-shade", b: "boots", B: "boots-shade",
+};
+
+/** Character colours as custom properties for the root. They do not change with the theme. */
+function characterVars(ch: LoaderCharacter): Record<string, string> {
+  return {
+    "--chr-hair": ch.hair, "--chr-hair-shade": ch.hairShade, "--chr-skin": ch.skin, "--chr-skin-shade": ch.skinShade,
+    "--chr-eye-white": ch.eyeWhite ?? "#ffffff", "--chr-eye": ch.eye ?? "#1b1630", "--chr-mouth": ch.eye ?? "#1b1630",
+    "--chr-outfit": ch.outfit, "--chr-outfit-shade": ch.outfitShade, "--chr-outfit-light": ch.outfitLight, "--chr-accent": ch.accent,
+    "--chr-pants": ch.pants, "--chr-pants-shade": ch.pantsShade, "--chr-boots": ch.boots, "--chr-boots-shade": ch.bootsShade,
+  };
+}
+
+/* Every frame's paths, memoised per hair style. */
+const CHARACTER_ART = new Map<string, [CharacterFrame, [string, string][]][]>();
+function characterArt(hairStyle: LoaderCharacter["hairStyle"]) {
+  let art = CHARACTER_ART.get(hairStyle);
+  if (!art) {
+    art = CHARACTER_FRAMES.map((frame) => {
+      const map = composeCharacterFrame(hairStyle, frame);
+      const paths = pixelPaths(map);
+      return [frame, Object.keys(paths).map((k) => [CHARACTER_ROLES[k] ?? k, paths[k]] as [string, string])];
+    });
+    CHARACTER_ART.set(hairStyle, art);
+  }
+  return art;
+}
+
+/**
+ * Every frame of the character in one svg. CSS shows one through the parent's
+ * data-frame (or two through data-loop), so changing pose is an attribute change.
+ */
+function CharacterSprite({ hairStyle, prefix }: { hairStyle: LoaderCharacter["hairStyle"]; prefix: string }) {
+  const art = useMemo(() => characterArt(hairStyle), [hairStyle]);
+  return (
+    <svg className={\`\${prefix}sprite\`} viewBox={\`0 0 \${CHARACTER_W} \${CHARACTER_H}\`} shapeRendering="crispEdges" aria-hidden="true" focusable="false">
+      {art.map(([frame, paths]) => (
+        <g key={frame} data-f={frame}>
+          {paths.map(([role, d]) => (
+            <path key={role} className={\`\${prefix}c-\${role}\`} d={d} />
+          ))}
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/* ---------------- end shared: character ---------------- */
+
+/* ---------------- shared: engine ---------------- */
+
+type LoaderPhase = "idle" | "run" | "error" | "complete" | "stopped";
+type LoaderLineKind = "done" | "skipped" | "retry" | "finish" | "stop";
+type LoaderLine = { key: number; kind: LoaderLineKind; text: string };
+type LoaderBeat = { i: number; kind: "done" | "skipped"; at: number; said?: boolean };
+type LoaderTile = { label: string; value: number | string; format: (v: number) => string; sub: string };
+type LoaderFocus = "menu" | "log" | "continue";
+
+/** Everything the chassis shows. The engine owns it and React renders it. */
+type LoaderView = {
+  phase: LoaderPhase;
+  front: number;
+  gone: boolean[];
+  barP: number | null;
+  barDetail: string | null;
+  lines: LoaderLine[];
+  errorAt: number;
+  alert: string;
+  details: string[];
+  meta: string | null;
+  tiles: LoaderTile[] | null;
+  resultsOpen: boolean;
+  completion: string;
+};
+
+type LoaderConfig = {
+  labels: LoaderLabels;
+  stats?: LoaderStat[];
+  completeText?: string;
+  onCancel?: () => void;
+  onComplete?: () => void;
+  onAnnounce?: (text: string, politeness: "polite" | "assertive") => void;
+};
+
+/** How the engine talks to React. */
+type LoaderBridge = {
+  config: () => LoaderConfig;
+  render: (view: LoaderView) => void;
+  focus: (target: LoaderFocus) => void;
+  focusInside: () => boolean;
+  focusInMenu: () => boolean;
+  resetMenu: () => void;
+};
+
+/** What the engine hands its arena: the run as the eye should see it, and the timing helpers. */
+type LoaderCore = {
+  host: LoaderStep[];
+  gone: boolean[];
+  front: number;
+  phase: LoaderPhase;
+  barP: number | null;
+  motionAllowed: boolean;
+  running: boolean;
+  motionOn: () => boolean;
+  later: (fn: () => void, ms: number) => number;
+  clear: (id: number) => 0;
+  anim: (el: Element, frames: Keyframe[], opts: KeyframeAnimationOptions) => Animation | null;
+};
+
+/** The game. It draws the run and never changes it. */
+type LoaderArena = {
+  /** Builds the arena for core.host, with settled steps already resolved. */
+  rebuild: () => void;
+  /** Geometry for the current size. */
+  layout: () => void;
+  /** The front shows core.barP; fx plays the breaking pieces. */
+  progress: (fx: boolean) => void;
+  /** Per-step looks that follow the host, such as size unknown. */
+  sync: () => void;
+  /** One progress hit. Returns the ms until contact, when the bar and the arena take the new progress. */
+  hit: () => number;
+  /** The finishing blow of a done beat. Returns the ms until it lands. */
+  strike: (beat: LoaderBeat) => number;
+  /** A beat lands. Returns the ms to hold before the front moves on. */
+  resolve: (beats: LoaderBeat[], showy: boolean) => number;
+  /** Resolves steps with no beat (hidden tab, error, cancel). */
+  flush: (beats: LoaderBeat[]) => void;
+  /** The front moved (or stayed, after a flush). */
+  advance: (changed: boolean) => void;
+  /** One mark per resolved step. */
+  tally: (fade: boolean) => void;
+  error: () => void;
+  retry: () => void;
+  stop: () => void;
+  finale: (showy: boolean) => void;
+  /** The character's pose for the phase. */
+  pose: () => void;
+  /** Motion was allowed or stopped. */
+  motion: () => void;
+  destroy: () => void;
+};
+
+type LoaderEngine = {
+  update: (steps: LoaderStep[]) => void;
+  setMotion: (allowed: boolean, running: boolean) => void;
+  layout: () => void;
+  cancel: () => void;
+  destroy: () => void;
+};
+
+const firstLive = (gone: boolean[]) => {
+  let f = 0;
+  while (f < gone.length && gone[f]) f++;
+  return f;
+};
+
+function initialView(steps: LoaderStep[]): LoaderView {
+  const gone = steps.map(settled);
+  const front = firstLive(gone);
+  const s = steps[front];
+  const phase: LoaderPhase = steps.some((x) => x.status !== "pending") ? (steps.every(settled) ? "complete" : "run") : "idle";
+  return {
+    phase, front, gone,
+    barP: s ? (s.status === "done" ? 1 : s.progress ?? null) : null,
+    barDetail: s?.detail ?? null,
+    lines: [], errorAt: -1, alert: "", details: [], meta: null, tiles: null, resultsOpen: false, completion: "",
+  };
+}
+
+function buildTiles(host: LoaderStep[], stats: LoaderStat[] = []): LoaderTile[] {
+  const n = host.length;
+  const done = host.filter((s) => s.status === "done");
+  const skipped = host.filter((s) => s.status === "skipped").length;
+  const total = done.reduce((a, s) => a + (s.durationMs ?? 0), 0);
+  let longest: LoaderStep | null = null;
+  for (const s of done) if (s.durationMs != null && (!longest || s.durationMs > (longest.durationMs ?? 0))) longest = s;
+  const retried = done.filter((s) => (s.attempt ?? 1) > 1);
+  const tiles: LoaderTile[] = [
+    { label: "Steps", value: done.length + skipped, format: (v) => \`\${Math.round(v)} of \${n}\`, sub: skipped ? \`\${skipped} skipped\` : "none skipped" },
+  ];
+  if (total > 0) tiles.push({ label: "Time", value: total, format: fmtDur, sub: longest ? \`Longest: \${longest.label}, \${fmtDur(longest.durationMs ?? 0)}\` : "" });
+  for (const st of stats) tiles.push({ label: st.label, value: st.value, format: fmtNum, sub: st.sub ?? "" });
+  if (retried.length) {
+    const h = retried.reduce((a, s) => a + (s.attempt ?? 1) - 1, 0);
+    tiles.push({ label: h === 1 ? "Hiccup" : "Hiccups", value: h, format: (v) => \`\${Math.round(v)} recovered\`, sub: \`at \${listJoin(retried.map((s) => s.label))}\` });
+  }
+  return tiles;
+}
+
+const tileText = (t: LoaderTile) => (typeof t.value === "number" ? t.format(t.value) : t.value);
+
+function createLoaderEngine(bridge: LoaderBridge, makeArena: (core: LoaderCore) => LoaderArena): LoaderEngine {
+  const timers = new Set<number>();
+  const anims = new Set<Animation>();
+  const core: LoaderCore = {
+    host: [],
+    gone: [],
+    front: 0,
+    phase: "idle",
+    barP: null,
+    motionAllowed: true,
+    running: true,
+    motionOn: () => core.motionAllowed && core.running,
+    later: (fn, ms) => {
+      const id = window.setTimeout(() => {
+        timers.delete(id);
+        fn();
+      }, Math.max(0, ms));
+      timers.add(id);
+      return id;
+    },
+    clear: (id) => {
+      if (id) {
+        window.clearTimeout(id);
+        timers.delete(id);
+      }
+      return 0;
+    },
+    anim: (el, frames, opts) => {
+      if (typeof (el as HTMLElement).animate !== "function") return null;
+      const a = el.animate(frames, opts);
+      anims.add(a);
+      const done = () => anims.delete(a);
+      a.finished.then(done, done);
+      return a;
+    },
+  };
+  const arena = makeArena(core);
+
+  let frontSince = -1e9;
+  let beatUntil = 0;
+  let beatBusy = false;
+  let inflight: { beats: LoaderBeat[]; landed: boolean; timer: number } | null = null;
+  let backlog: LoaderBeat[] = [];
+  let barDetail: string | null = null;
+  let lastSeenP: number | null | undefined = null;
+  let lastHit = -1e9;
+  let hitT = 0;
+  let pumpT = 0;
+  let metaT = 0;
+  let lines: LoaderLine[] = [];
+  let lineKey = 0;
+  let errorAt = -1;
+  let alert = "";
+  let details: string[] = [];
+  let meta: string | null = null;
+  let tiles: LoaderTile[] | null = null;
+  let resultsOpen = false;
+  let completion = "";
+  let finaleStarted = false;
+  let finalPrefix = "";
+  let awayFrom: number | null = null;
+  let alive = true;
+
+  const labels = () => bridge.config().labels;
+  const settledCount = () => core.host.filter(settled).length;
+
+  function emit() {
+    if (!alive) return;
+    bridge.render({
+      phase: core.phase, front: core.front, gone: core.gone.slice(), barP: core.barP, barDetail,
+      lines, errorAt, alert, details, meta, tiles, resultsOpen, completion,
+    });
+  }
+
+  function announce(text: string, politeness: "polite" | "assertive") {
+    bridge.config().onAnnounce?.(text, politeness);
+  }
+
+  function appendLine(kind: LoaderLineKind, text: string) {
+    lines = [...lines.slice(-24), { key: ++lineKey, kind, text }];
+    emit();
+    announce(text, "polite");
+  }
+
+  /* A line that lands as the box swaps back from the menu waits a frame, so
+     the log is visible (and in the accessibility tree) before it changes. */
+  function appendSoon(kind: LoaderLineKind, text: string, then?: () => void) {
+    core.later(() => {
+      appendLine(kind, text);
+      then?.();
+    }, FAST / 2);
+  }
+
+  function syncBar() {
+    const s = core.host[core.front];
+    core.barP = s ? (s.status === "done" ? 1 : s.progress ?? null) : null;
+    barDetail = s ? s.detail || null : null;
+    lastSeenP = s ? s.progress : null;
+  }
+
+  function clearMeta() {
+    metaT = core.clear(metaT);
+    meta = null;
+  }
+
+  /* A short visual note on the footer line (the away recap). Never announced. */
+  function flashMeta(text: string, ms: number) {
+    if (core.phase !== "run" && core.phase !== "complete") return;
+    meta = text;
+    metaT = core.clear(metaT);
+    metaT = core.later(() => {
+      meta = null;
+      emit();
+    }, ms);
+    emit();
+  }
+
+  /* ------------------------------------------------------------ build */
+
+  function rebuild(steps: LoaderStep[]) {
+    timers.forEach((id) => window.clearTimeout(id));
+    timers.clear();
+    anims.forEach((a) => a.cancel());
+    anims.clear();
+    hitT = pumpT = metaT = 0;
+    core.host = steps;
+    backlog = [];
+    inflight = null;
+    beatBusy = false;
+    beatUntil = 0;
+    finaleStarted = false;
+    finalPrefix = "";
+    lastHit = -1e9;
+    lines = [];
+    errorAt = -1;
+    alert = "";
+    details = [];
+    meta = null;
+    tiles = null;
+    resultsOpen = false;
+    completion = "";
+    core.gone = steps.map(settled);
+    core.phase = steps.some((s) => s.status !== "pending") ? (steps.every(settled) ? "complete" : "run") : "idle";
+    core.front = firstLive(core.gone);
+    frontSince = -1e9;
+    syncBar();
+    bridge.resetMenu();
+    arena.rebuild();
+    arena.tally(false);
+    arena.pose();
+    emit();
+    const failed = steps.findIndex((s) => s.status === "error");
+    if (failed >= 0 && core.phase === "run") showError(failed);
+    else if (core.phase === "complete") finale(true);
+  }
+
+  function needsRebuild(prev: LoaderStep[], next: LoaderStep[]) {
+    if (prev.length !== next.length) return true;
+    for (let i = 0; i < next.length; i++) if (prev[i].id !== next[i].id) return true;
+    /* A done or skipped step that goes back to work, or a stopped run whose host starts a step, is a new run. */
+    if (next.some((s, i) => settled(prev[i]) && !settled(s))) return true;
+    if (core.phase === "stopped" && next.some((s, i) => s.status === "active" && prev[i].status !== "active")) return true;
+    const allPending = next.every((s) => s.status === "pending");
+    return allPending && (core.phase !== "idle" || prev.some((s) => s.status !== "pending"));
+  }
+
+  function update(steps: LoaderStep[]) {
+    const next = steps.map((s) => ({ ...s }));
+    const prev = core.host;
+    if (needsRebuild(prev, next)) {
+      rebuild(next);
+      return;
+    }
+    core.host = next;
+    if (core.phase === "stopped" || core.phase === "complete") {
+      emit();
+      return;
+    }
+    if (core.phase === "idle" && next.some((s) => s.status !== "pending")) core.phase = "run";
+    const t = now();
+    let errAt = -1;
+    let retryAt = -1;
+    let leftError = false;
+    next.forEach((s, i) => {
+      const was = prev[i] ? prev[i].status : "pending";
+      if (was === s.status) return;
+      if (was === "error") leftError = true;
+      if (s.status === "done" || s.status === "skipped") backlog.push({ i, kind: s.status, at: t });
+      else if (s.status === "error") errAt = i;
+      else if (s.status === "active" && was === "error") retryAt = i;
+    });
+    if (retryAt >= 0) retryStarted(retryAt);
+    else if (leftError && core.phase === "error" && clearError()) bridge.focus("log");
+    if (errAt >= 0) {
+      showError(errAt);
+      return;
+    }
+    const s = next[core.front];
+    if (core.phase === "run" && s && s.status === "active" && s.progress != null && s.progress !== lastSeenP) {
+      if (core.motionOn()) {
+        lastSeenP = s.progress;
+        requestHit();
+      } else {
+        syncBar();
+        arena.progress(false);
+      }
+    }
+    arena.sync();
+    arena.pose();
+    emit();
+    pump();
+  }
+
+  /* ------------------------------------------------------------- hits */
+
+  function requestHit() {
+    if (hitT) return;
+    hitT = core.later(doHit, Math.max(lastHit + HIT_GAP - now(), frontSince + BASE - now(), 0));
+  }
+
+  /* One progress hit: the arena plays it, and at contact the bar and the arena
+     take the newest progress together (increments that arrived since merge). */
+  function doHit() {
+    hitT = 0;
+    const s = core.host[core.front];
+    if (core.phase !== "run" || !s || s.status !== "active" || s.progress == null) return;
+    lastHit = now();
+    if (!core.motionOn()) {
+      syncBar();
+      arena.progress(false);
+      emit();
+      return;
+    }
+    const id = s.id;
+    const contact = arena.hit();
+    core.later(() => {
+      const cur = core.host[core.front];
+      if (!cur || cur.id !== id || core.phase !== "run") return;
+      syncBar();
+      arena.progress(core.motionOn());
+      emit();
+    }, contact);
+  }
+
+  /* -------------------------------------------------------- narration */
+
+  function doneSentence(s: LoaderStep) {
+    const base = s.doneText || \`\${s.label}: done\`;
+    const dur = s.durationMs != null ? \` in \${fmtDur(s.durationMs)}\` : "";
+    const tries = (s.attempt ?? 1) > 1 ? \`, on attempt \${s.attempt}\` : "";
+    return \`\${base}\${dur}\${tries}.\`;
+  }
+  const skipSentence = (s: LoaderStep) => \`Skipped: \${s.label}\${s.detail ? \` (\${lowerFirst(s.detail)})\` : ""}.\`;
+
+  /* The next step still to come after these, never one that already finished. */
+  function nextAfter(list: LoaderBeat[]) {
+    let i = Math.max(...list.map((e) => e.i)) + 1;
+    while (i < core.host.length && settled(core.host[i])) i++;
+    return i < core.host.length ? i : -1;
+  }
+
+  /* One sentence per group of milestones, written to be heard: two quick
+     finishes share a sentence, a burst is summed up, and the line ends with
+     what comes next. */
+  function sentence(input: LoaderBeat[]) {
+    const list = input.slice().sort((a, b) => a.i - b.i);
+    let text: string;
+    if (list.length >= BURST_MIN) {
+      const done = list.filter((e) => e.kind === "done").map((e) => core.host[e.i]);
+      const skipped = list.filter((e) => e.kind === "skipped").map((e) => core.host[e.i].label);
+      text = done.length === 1 ? doneSentence(done[0]) : done.length ? \`Finished \${done.length} steps at once: \${listJoin(done.map((s) => s.label))}.\` : "";
+      if (skipped.length) text += \`\${text ? " " : ""}Skipped: \${listJoin(skipped)}.\`;
+    } else {
+      const parts = list.map((e) => (e.kind === "done" ? doneSentence(core.host[e.i]) : skipSentence(core.host[e.i])));
+      text = parts.length === 2 && list[0].kind === "done" && list[1].kind === "done"
+        ? \`\${parts[0].replace(/\\.$/, "")}, then \${lowerFirst(parts[1])}\`
+        : parts.join(" ");
+    }
+    const n = nextAfter(list);
+    if (n >= 0) text += \`\${n === core.host.length - 1 ? " Last up: " : " On to "}\${lowerFirst(core.host[n].label)}.\`;
+    return text;
+  }
+
+  /* Narrates every completion not told yet as one line. The last news before
+     the finale is held and merged into the completion line, so the end of a
+     run is one announcement. */
+  function speak(list: LoaderBeat[]) {
+    const fresh = list.filter((e) => !e.said);
+    if (!fresh.length) return;
+    fresh.forEach((e) => {
+      e.said = true;
+    });
+    const text = sentence(fresh);
+    if (core.host.every(settled) && backlog.every((b) => b.said)) {
+      finalPrefix = finalPrefix ? \`\${finalPrefix} \${text}\` : text;
+      return;
+    }
+    appendLine(fresh.some((e) => e.kind === "done") ? "done" : "skipped", text);
+  }
+
+  /* -------------------------------------------------------- the beats */
+
+  function pump() {
+    pumpT = core.clear(pumpT);
+    if (core.phase === "error" || core.phase === "stopped" || beatBusy) return;
+    if (!backlog.length) {
+      maybeFinale();
+      return;
+    }
+    if (!core.running) {
+      flushBacklog();
+      return;
+    }
+    const t = now();
+    if (t < beatUntil) {
+      pumpT = core.later(pump, beatUntil - t);
+      return;
+    }
+    const oldest = backlog[0].at;
+    const newest = backlog[backlog.length - 1].at;
+    if (t - newest < COLLECT && t - oldest < BASE) {
+      pumpT = core.later(pump, COLLECT - (t - newest));
+      return;
+    }
+    if (backlog.length >= BURST_MIN || t - oldest > 900) {
+      runBeat(backlog.splice(0));
+      return;
+    }
+    const dwellLeft = frontSince + DWELL - t;
+    if (dwellLeft > 0) {
+      pumpT = core.later(pump, dwellLeft);
+      return;
+    }
+    /* A skip that arrived with this completion steps aside in the same beat. */
+    let take = 1;
+    while (take < backlog.length && backlog[take].kind === "skipped" && backlog[take].at - backlog[0].at <= COALESCE) take++;
+    runBeat(backlog.splice(0, take));
+  }
+
+  function runBeat(beats: LoaderBeat[]) {
+    const head = beats[0];
+    const showy = core.motionOn();
+    const delay = showy && head.kind === "done" ? arena.strike(head) : 0;
+    beatUntil = now() + delay;
+    beatBusy = true;
+    const land = () => {
+      const hold = arena.resolve(beats, showy);
+      beats.forEach((b) => {
+        core.gone[b.i] = true;
+      });
+      arena.tally(true);
+      speak(beats.concat(backlog.filter((b) => b.at - head.at <= COALESCE)));
+      const settle = () => {
+        beatBusy = false;
+        inflight = null;
+        advanceFront();
+        pump();
+      };
+      if (hold > 0) inflight = { beats, landed: true, timer: core.later(settle, hold) };
+      else settle();
+    };
+    if (delay) inflight = { beats, landed: false, timer: core.later(land, delay) };
+    else land();
+  }
+
+  function flushBacklog() {
+    pumpT = core.clear(pumpT);
+    let held = false;
+    if (inflight) {
+      core.clear(inflight.timer);
+      if (inflight.landed) held = true;
+      else backlog = inflight.beats.concat(backlog);
+      inflight = null;
+      beatBusy = false;
+    }
+    if (!backlog.length) {
+      if (held) {
+        advanceFront();
+        maybeFinale();
+      }
+      return;
+    }
+    const beats = backlog.splice(0);
+    arena.flush(beats);
+    beats.forEach((b) => {
+      core.gone[b.i] = true;
+    });
+    speak(beats);
+    advanceFront();
+    maybeFinale();
+  }
+
+  function advanceFront() {
+    const f = firstLive(core.gone);
+    const changed = f !== core.front;
+    core.front = f;
+    frontSince = now();
+    syncBar();
+    arena.tally(true);
+    arena.advance(changed);
+    arena.progress(false);
+    arena.pose();
+    emit();
+  }
+
+  /* ------------------------------------------------------- error path */
+
+  function errorText(s: LoaderStep) {
+    const msg = s.error || "Something went wrong.";
+    if (msg.toLowerCase().includes(s.label.toLowerCase())) return msg;
+    return \`\${s.label} failed: \${lowerFirst(msg)}\${/[.!?]$/.test(msg) ? "" : "."}\`;
+  }
+
+  function detailsText(i: number) {
+    const s = core.host[i];
+    const bits = [\`Step \${i + 1} of \${core.host.length}\`, \`attempt \${s.attempt ?? 1}\`];
+    if (s.detail) bits.push(\`reached \${s.detail}\`);
+    else if (s.progress != null) bits.push(\`reached \${Math.floor(s.progress * 100)}%\`);
+    if (s.elapsedMs != null) bits.push(\`ran \${fmtDur(s.elapsedMs)}\`);
+    return s.errorDetail ? [bits.join(" · "), s.errorDetail] : [bits.join(" · ")];
+  }
+
+  function showError(i: number) {
+    const hadFocus = bridge.focusInside();
+    flushBacklog();
+    core.phase = "error";
+    clearMeta();
+    hitT = core.clear(hitT);
+    const s = core.host[i];
+    errorAt = i;
+    alert = errorText(s);
+    details = detailsText(i);
+    if (s.progress != null) core.barP = s.progress;
+    barDetail = s.detail || barDetail;
+    bridge.resetMenu();
+    arena.progress(false);
+    arena.error();
+    arena.pose();
+    emit();
+    announce(alert, "assertive");
+    if (hadFocus) bridge.focus("menu");
+  }
+
+  /* Returns whether focus was in the menu, so the caller can move it on. */
+  function clearError() {
+    const hadFocus = bridge.focusInMenu();
+    alert = "";
+    details = [];
+    errorAt = -1;
+    core.phase = "run";
+    beatUntil = Math.max(beatUntil, now() + FAST);
+    arena.retry();
+    return hadFocus;
+  }
+
+  function retryStarted(i: number) {
+    const hadFocus = clearError();
+    const s = core.host[i];
+    syncBar();
+    arena.progress(false);
+    arena.pose();
+    emit();
+    appendSoon("retry", \`Trying again: \${s.label}, attempt \${s.attempt ?? 2}.\`);
+    if (hadFocus) bridge.focus("log");
+  }
+
+  /* ----------------------------------------------------------- finale */
+
+  function maybeFinale() {
+    if (finaleStarted || core.phase === "error" || core.phase === "stopped" || !core.host.length) return;
+    if (backlog.length || !core.host.every(settled) || core.gone.some((g) => !g)) return;
+    finale(false);
+  }
+
+  function finale(silent: boolean) {
+    if (finaleStarted) return;
+    finaleStarted = true;
+    const hadFocus = bridge.focusInside();
+    const cfg = bridge.config();
+    core.phase = "complete";
+    clearMeta();
+    const n = core.host.length;
+    const skipped = core.host.filter((s) => s.status === "skipped").length;
+    const showy = core.motionOn();
+    completion = cfg.labels.complete(n, skipped) + (cfg.completeText ? \` \${cfg.completeText}\` : "");
+    tiles = buildTiles(core.host, cfg.stats);
+    arena.finale(showy);
+    arena.pose();
+    if (silent) emit();
+    else appendLine("finish", finalPrefix ? \`\${finalPrefix} \${completion}\` : completion);
+    finalPrefix = "";
+    /* The completion line is heard first; the results take the box after it. */
+    core.later(() => {
+      resultsOpen = true;
+      emit();
+      if (hadFocus || bridge.focusInside()) bridge.focus("continue");
+      bridge.config().onComplete?.();
+    }, silent ? 0 : showy ? BASE + SLOW : BASE);
+  }
+
+  /* ------------------------------------------------------------ cancel */
+
+  function cancel() {
+    if (core.phase === "complete" || core.phase === "stopped") return;
+    const hadFocus = bridge.focusInside();
+    const kept = core.host.filter((s) => s.status === "done").length;
+    flushBacklog();
+    pumpT = core.clear(pumpT);
+    hitT = core.clear(hitT);
+    clearMeta();
+    alert = "";
+    details = [];
+    errorAt = -1;
+    core.phase = "stopped";
+    arena.stop();
+    arena.pose();
+    emit();
+    const text = finalPrefix ? \`\${finalPrefix} \${labels().stopped(kept)}\` : labels().stopped(kept);
+    finalPrefix = "";
+    appendSoon("stop", text, () => bridge.config().onCancel?.());
+    if (hadFocus) bridge.focus("log");
+  }
+
+  /* ------------------------------------------------------------ motion */
+
+  function setMotion(allowed: boolean, running: boolean) {
+    const was = core.running;
+    core.motionAllowed = allowed;
+    core.running = running;
+    if (was && !running) awayFrom = settledCount();
+    if (!core.motionOn()) {
+      anims.forEach((a) => {
+        try {
+          a.finish();
+        } catch {
+          a.cancel();
+        }
+      });
+      if (backlog.length && !running) flushBacklog();
+    }
+    if (hitT && !core.motionOn()) {
+      hitT = core.clear(hitT);
+      syncBar();
+      arena.progress(false);
+    }
+    arena.motion();
+    arena.pose();
+    if (!was && running && awayFrom != null) {
+      const d = settledCount() - awayFrom;
+      awayFrom = null;
+      if (d > 0) flashMeta(labels().away(d), BEAT * 2);
+    }
+    emit();
+  }
+
+  return {
+    update,
+    setMotion,
+    layout: () => arena.layout(),
+    cancel,
+    destroy() {
+      alive = false;
+      timers.forEach((id) => window.clearTimeout(id));
+      timers.clear();
+      anims.forEach((a) => a.cancel());
+      anims.clear();
+      arena.destroy();
+    },
+  };
+}
+
+const RM_QUERY = "(prefers-reduced-motion: reduce)";
+const subscribeReducedMotion = (onChange: () => void) => {
+  const query = window.matchMedia(RM_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+};
+/** Live prefers-reduced-motion, false on the server. */
+function useReducedMotionPreference() {
+  return useSyncExternalStore(subscribeReducedMotion, () => window.matchMedia(RM_QUERY).matches, () => false);
+}
+
+const subscribeVisibility = (onChange: () => void) => {
+  document.addEventListener("visibilitychange", onChange);
+  return () => document.removeEventListener("visibilitychange", onChange);
+};
+/** False while the browser tab is hidden. */
+function usePageVisible() {
+  return useSyncExternalStore(subscribeVisibility, () => document.visibilityState !== "hidden", () => true);
+}
+
+/** False while the element is scrolled out of view. */
+function useOnscreen(ref: RefObject<Element>) {
+  const [on, setOn] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver((entries) => setOn(entries[entries.length - 1].isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref]);
+  return on;
+}
+
+/* ---------------- end shared: engine ---------------- */
+
+/* ---------------- arena: brick wall ---------------- */
+
+/* One art unit for everything in the playfield: 2 CSS px per art pixel. */
+const U = 2;
+const SHOT_UP = 140;
+const SHOT_DOWN = 200;
+/** The bricks one contact breaks pop left to right within this. */
+const CHAIN = 100;
+/** Bricks in a row whose step has no small count. */
+const FIXED = 12;
+/* Playfield geometry, in CSS px. The height depends on the step count only. */
+const FRAME = 4;
+const SIDE = 10;
+const TOP = 12;
+const FRONT_H = 16;
+const QUEUE_H = 12;
+const PITCH = 16;
+const AIR = 84;
+const HERO_PX = CHARACTER_H * U;
+const PADDLE_H = 3 * U;
+const BOTTOM = 14;
+const PADDLE_W = 30 * U;
+const BALL = 4 * U;
+/** Where the character stands and the ball rests on the paddle. */
+const HERO_X = 4 * U;
+const BALL_X = 22 * U;
+const fieldHeight = (n: number) => FRAME + TOP + Math.max(0, n - 1) * PITCH + FRONT_H + AIR + HERO_PX + PADDLE_H + BOTTOM;
+const snap = (v: number) => Math.round(v / U) * U;
+
+/* The paddle: a capsule with end caps and a glint, after Arkanoid's Vaus. */
+const PADDLE_MAP = [
+  ".aaaPPPPPPPPPPPPPPPPPPPPPPaaa.",
+  "aaaaPffffffffffffffffffffPaaaa",
+  ".aaaPPPPPPPPPPPPPPPPPPPPPPaaa.",
+];
+const BALL_MAP = [".bb.", "bbbb", "bbbb", ".bb."];
+/* The tally: a heap of brick bits per finished row (gold flecks after a retry,
+   steel for the last row) and an empty bracket for a skipped one. */
+const RUBBLE = ["..oo..", ".orro.", "orrrro", "oooooo"];
+const RUBBLE_GOLD = ["..oo..", ".ogro.", "orrgro", "oooooo"];
+const RUBBLE_STEEL = ["..oo..", ".otso.", "osssdo", "oooooo"];
+const SLOT_MAP = ["hh..hh", "h....h", "h....h", "hh..hh"];
+const ARENA_ROLES: Record<string, string> = {
+  o: "line", r: "row", g: "gold", s: "steel", t: "steel-light", d: "steel-shade", h: "hatch",
+  a: "cap", P: "paddle", f: "glint", b: "ball",
+};
+
+type BrickRow = {
+  el: HTMLDivElement;
+  bricks: HTMLSpanElement[];
+  n: number;
+  broken: number;
+  crackAt: number;
+  crack: number;
+  crackEl: Element | null;
+  x: number[] | null;
+  bw: number;
+  y: number;
+  h: number;
+};
+
+type BrickGeometry = { W: number; H: number; yf: number; padX: number; restX: number; restTop: number; tx: number; slot: number };
+
+type BrickWallRefs = {
+  root: RefObject<HTMLElement>;
+  field: RefObject<HTMLDivElement>;
+  wall: RefObject<HTMLDivElement>;
+  tally: RefObject<HTMLDivElement>;
+  rider: RefObject<HTMLDivElement>;
+  hero: RefObject<HTMLDivElement>;
+  ball: RefObject<HTMLDivElement>;
+  fx: RefObject<HTMLDivElement>;
+};
+
+const bricksFor = (s: LoaderStep) => (s.count != null && s.count > 0 && s.count <= 16 ? Math.round(s.count) : FIXED);
+/* Hatched only while the step is running at an unknown size; a waiting row is solid. */
+const isHatch = (s: LoaderStep) => s.progress == null && (s.status === "active" || s.status === "error");
+
+/* A crack in whole art pixels down the middle of a w x h brick: the top half
+   at stage 1, all the way through with a branch at stage 2. */
+function crackMarkup(w: number, h: number, stage: number) {
+  const cx = Math.max(U, Math.round(w / 2 / U) * U - U);
+  const zig = [0, 1, 1, 0, -1, -1, 0, 1];
+  const cells = Math.floor(h / U);
+  const upto = stage >= 2 ? cells - 1 : Math.ceil(cells / 2);
+  const cell = (x: number, y: number) => \`M\${x} \${y}h\${U}v\${U}h-\${U}z\`;
+  let d = "";
+  for (let y = 1; y < upto; y++) d += cell(cx + zig[y % 8] * U, y * U);
+  if (stage >= 2) d += cell(cx + 2 * U, 3 * U) + cell(cx + 3 * U, 4 * U);
+  return \`<svg class="bz-bwl-crack" viewBox="0 0 \${w} \${h}" width="\${w}" height="\${h}" shape-rendering="crispEdges" aria-hidden="true" focusable="false"><path class="bz-bwl-p-line" d="\${d}"/></svg>\`;
+}
+
+function createBrickWallArena(core: LoaderCore, refs: BrickWallRefs): LoaderArena {
+  let rows: (BrickRow | null)[] = [];
+  let marks: (HTMLDivElement | null)[] = [];
+  let G: BrickGeometry | null = null;
+  let ballLost = false;
+  let ballAnim: Animation | null = null;
+  let poseTimers: number[] = [];
+  let transientUntil = 0;
+  let celebrating = false;
+  let celebrateT = 0;
+  let dropDelay = 0;
+
+  /* ------------------------------------------------------------- rows */
+
+  function makeRow(i: number): BrickRow | null {
+    const wall = refs.wall.current;
+    if (!wall) return null;
+    const s = core.host[i];
+    const el = document.createElement("div");
+    el.className = "bz-bwl-row";
+    el.dataset.kind = i === core.host.length - 1 ? "steel" : "brick";
+    el.dataset.hatch = isHatch(s) ? "true" : "false";
+    el.style.setProperty("--bwl-row", i === core.host.length - 1 ? "var(--bwl-steel)" : \`var(--bwl-row-\${i % 8})\`);
+    const n = bricksFor(s);
+    const bricks: HTMLSpanElement[] = [];
+    for (let j = 0; j < n; j++) {
+      const b = document.createElement("span");
+      b.className = "bz-bwl-brick";
+      el.appendChild(b);
+      bricks.push(b);
+    }
+    wall.appendChild(el);
+    return { el, bricks, n, broken: 0, crackAt: -1, crack: 0, crackEl: null, x: null, bw: 0, y: 0, h: 0 };
+  }
+
+  function frontP() {
+    const s = core.host[core.front];
+    if (!s) return 0;
+    if (s.status === "done") return 1;
+    if (s.status === "pending" || s.status === "skipped" || (s.status === "active" && s.progress == null)) return 0;
+    return core.barP ?? 0;
+  }
+
+  /* The front row always shows floor(progress x bricks) broken bricks, left to
+     right, and a crack on the next for the part in between. It reads the same
+     number the bar fills to, so the wall never runs ahead of the bar. */
+  function progress(fx: boolean) {
+    const r = rows[core.front];
+    const s = core.host[core.front];
+    if (!r || !s || settled(s)) return;
+    const hatch = isHatch(s);
+    const p = hatch ? 0 : Math.max(0, Math.min(1, frontP()));
+    const exact = p * r.n;
+    const want = Math.min(r.n, Math.floor(exact + 1e-9));
+    const part = hatch || want >= r.n ? 0 : exact - want;
+    const crack = part >= 2 / 3 - 1e-9 ? 2 : part >= 1 / 3 - 1e-9 ? 1 : 0;
+    const before = r.broken;
+    const beforeCrack = r.crack;
+    setBroken(r, want, fx);
+    setCrack(r, want, crack);
+    if (fx && want === before && crack === beforeCrack && want < r.n) flash(r.bricks[want]);
+  }
+
+  function setBroken(r: BrickRow, want: number, fx: boolean) {
+    if (want === r.broken) return;
+    if (want < r.broken) {
+      /* Progress went back (a retry that starts over): the bricks return. */
+      for (let j = want; j < r.broken; j++) {
+        const b = r.bricks[j];
+        b.dataset.b = "0";
+        if (core.running) core.anim(b, [{ opacity: 0 }, { opacity: 1 }], { duration: FAST, easing: "steps(3, end)" });
+      }
+      r.broken = want;
+      return;
+    }
+    /* Several bricks from one shot pop left to right inside CHAIN. */
+    const k = want - r.broken;
+    const gap = fx && k > 1 ? Math.min(25, CHAIN / (k - 1)) : 0;
+    for (let j = r.broken; j < want; j++) {
+      const b = r.bricks[j];
+      const d = Math.round((j - r.broken) * gap);
+      const go = () => {
+        b.dataset.b = "1";
+        if (fx) shards(r, j, false);
+      };
+      if (d) core.later(go, d);
+      else go();
+    }
+    r.broken = want;
+  }
+
+  function setCrack(r: BrickRow, at: number, stage: number, force = false) {
+    if (!force && r.crackAt === at && r.crack === stage) return;
+    r.crackEl?.remove();
+    r.crackEl = null;
+    r.crackAt = at;
+    r.crack = stage;
+    if (!stage || at < 0 || at >= r.n || !r.bw) return;
+    r.bricks[at].insertAdjacentHTML("beforeend", crackMarkup(r.bw, FRONT_H, stage));
+    r.crackEl = r.bricks[at].lastElementChild;
+  }
+
+  /* One inverted frame on the brick a shot touched when it adds too little to
+     break or crack anything: something real still arrived. */
+  function flash(b: HTMLSpanElement) {
+    b.dataset.flash = "true";
+    core.later(() => {
+      b.dataset.flash = "false";
+    }, 70);
+  }
+
+  /* A broken brick throws three chips (four from steel) that hop and fall in
+     whole art pixels, then fade. */
+  function shards(r: BrickRow, j: number, big: boolean) {
+    const fx = refs.fx.current;
+    if (!G || !r.x || !fx || !core.motionOn()) return;
+    const steel = r.el.dataset.kind === "steel";
+    const cx = r.x[j] + snap(r.bw / 2);
+    const cy = r.y + snap(r.h / 2);
+    const spec: [number, number][] = [[-1, 1], [0, 2], [1, 1]];
+    if (steel) spec.push([0.5, 1.5]);
+    const spread = Math.min(snap(r.bw / 3), 4 * U);
+    for (const [fxk, hopK] of spec) {
+      const p = document.createElement("div");
+      p.className = "bz-bwl-shard";
+      p.dataset.kind = steel ? "steel" : "brick";
+      p.style.setProperty("--bwl-row", r.el.style.getPropertyValue("--bwl-row"));
+      p.style.left = \`\${cx + snap(fxk * spread) - U}px\`;
+      p.style.top = \`\${cy - U}px\`;
+      fx.appendChild(p);
+      const dx = fxk * U * (big ? 4 : 3);
+      const hop = hopK * U * (big ? 1.5 : 1);
+      const fall = U * (big ? 9 : 6);
+      const pts: PixelStep[] = [];
+      for (let k = 0; k <= 5; k++) {
+        const t = k / 5;
+        pts.push([t, snap(dx * t), snap(-4 * hop * t * (1 - t) + fall * t * t), t < 0.4 ? 1 : Math.max(0, 1 - (t - 0.4) / 0.6)]);
+      }
+      const a = core.anim(p, steppedFrames(pts), { duration: big ? SLOW : BASE, fill: "forwards" });
+      const remove = () => p.remove();
+      if (a) a.finished.then(remove, remove);
+      else remove();
+    }
+  }
+
+  /* Done: every brick still standing breaks, left to right, in one chain. */
+  function shatterRow(i: number, big: boolean) {
+    const r = rows[i];
+    if (!r) return;
+    rows[i] = null;
+    setCrack(r, -1, 0);
+    r.el.dataset.error = "false";
+    const left = r.bricks.map((b, j) => (b.dataset.b === "1" ? -1 : j)).filter((j) => j >= 0);
+    const gap = left.length > 1 ? Math.min(25, CHAIN / (left.length - 1)) : 0;
+    left.forEach((j, k) => {
+      const d = Math.round(k * gap);
+      const go = () => {
+        r.bricks[j].dataset.b = "1";
+        shards(r, j, big);
+      };
+      if (d) core.later(go, d);
+      else go();
+    });
+    core.later(() => r.el.remove(), CHAIN + FAST);
+  }
+
+  /* Skipped: the row turns to dashed outlines and fades upward. No shards. */
+  function stepAsideRow(i: number) {
+    const r = rows[i];
+    if (!r) return;
+    rows[i] = null;
+    setCrack(r, -1, 0);
+    r.el.dataset.error = "false";
+    r.el.dataset.ghost = "true";
+    const lift = [0, 2, 4, 4];
+    const fade = [1, 0.6, 0.25, 0];
+    const a = core.anim(
+      r.el,
+      lift.map((dy, k) => ({ offset: k / 3, easing: "step-end", transform: \`translateY(\${r.y - dy}px)\`, opacity: fade[k] })),
+      { duration: BASE, fill: "forwards" },
+    );
+    const remove = () => r.el.remove();
+    if (a) a.finished.then(remove, remove);
+    else remove();
+  }
+
+  function fadeOutRow(i: number) {
+    const r = rows[i];
+    if (!r) return;
+    rows[i] = null;
+    if (!core.running) {
+      r.el.remove();
+      return;
+    }
+    const a = core.anim(r.el, [{ opacity: 1 }, { opacity: 0 }], { duration: FAST, easing: "linear", fill: "forwards" });
+    const remove = () => r.el.remove();
+    if (a) a.finished.then(remove, remove);
+    else remove();
+  }
+
+  function sync() {
+    core.host.forEach((s, i) => {
+      const r = rows[i];
+      if (!r || settled(s)) return;
+      const h = isHatch(s) ? "true" : "false";
+      if (r.el.dataset.hatch !== h) r.el.dataset.hatch = h;
+    });
+  }
+
+  /* ------------------------------------------------------------ tally */
+
+  function rubbleMap(i: number) {
+    const s = core.host[i];
+    if (s.status === "skipped") return SLOT_MAP;
+    if (i === core.host.length - 1) return RUBBLE_STEEL;
+    return (s.attempt ?? 1) > 1 ? RUBBLE_GOLD : RUBBLE;
+  }
+
+  function placeMark(m: HTMLDivElement, i: number) {
+    if (G) m.style.left = \`\${G.tx + i * G.slot}px\`;
+  }
+
+  function tally(fade: boolean) {
+    const box = refs.tally.current;
+    if (!box) return;
+    core.host.forEach((_, i) => {
+      let m = marks[i];
+      if (!core.gone[i]) {
+        if (m) {
+          m.remove();
+          marks[i] = null;
+        }
+        return;
+      }
+      const map = rubbleMap(i);
+      const kind = map === SLOT_MAP ? "skipped" : map === RUBBLE_STEEL ? "steel" : map === RUBBLE_GOLD ? "gold" : "done";
+      if (m && m.dataset.kind === kind) return;
+      m?.remove();
+      m = document.createElement("div");
+      m.className = "bz-bwl-mark";
+      m.dataset.kind = kind;
+      m.style.setProperty("--bwl-row", \`var(--bwl-row-\${i % 8})\`);
+      m.innerHTML = pixelMarkup(map, "bz-bwl-p-", ARENA_ROLES, U);
+      box.appendChild(m);
+      marks[i] = m;
+      placeMark(m, i);
+      if (fade && core.running) core.anim(m, [{ opacity: 0 }, { opacity: 1 }], { duration: FAST, easing: "linear" });
+    });
+  }
+
+  /* ----------------------------------------------------------- layout
+     The first step's row is the bottom of the wall; that front place never
+     moves, and the rows above drop into it in four held steps. */
+
+  function placeRow(r: BrickRow, y: number, h: number, animate: boolean) {
+    const oy = r.y;
+    const oh = r.h;
+    r.y = y;
+    r.h = h;
+    r.el.style.transform = \`translateY(\${y}px)\`;
+    r.el.style.height = \`\${h}px\`;
+    if (!animate || !oh || (oy === y && oh === h) || !core.motionOn()) return;
+    const frames: Keyframe[] = [];
+    for (let k = 0; k <= 4; k++) {
+      const p = EASE_OUT(k / 4);
+      frames.push({ offset: k / 4, easing: "step-end", transform: \`translateY(\${snap(oy + (y - oy) * p)}px)\`, height: \`\${snap(oh + (h - oh) * p)}px\` });
+    }
+    core.anim(r.el, frames, { duration: BASE, delay: dropDelay, fill: "backwards" });
+  }
+
+  function layout(animate = false) {
+    const field = refs.field.current;
+    const root = refs.root.current;
+    const rider = refs.rider.current;
+    const ball = refs.ball.current;
+    if (!field || !rider || !ball) return;
+    const W = field.clientWidth;
+    if (!W) return;
+    const narrow = !!root && root.clientWidth < 560;
+    const bgap = narrow ? 2 : 4;
+    const n = core.host.length;
+    const H = fieldHeight(n);
+    const yf = FRAME + TOP + Math.max(0, n - 1) * PITCH;
+    const padX = snap((W - PADDLE_W) / 2);
+    const tx = FRAME + SIDE;
+    const slot = Math.max(8, Math.min(7 * U, Math.floor((padX - 3 * U - tx) / Math.max(1, n) / U) * U));
+    G = { W, H, yf, padX, restX: padX + BALL_X, restTop: H - BOTTOM - PADDLE_H - BALL, tx, slot };
+    rider.style.left = \`\${padX}px\`;
+    ball.style.left = \`\${G.restX}px\`;
+    ball.style.top = \`\${G.restTop}px\`;
+    marks.forEach((m, i) => {
+      if (m) placeMark(m, i);
+    });
+    const innerW = W - 2 * tx;
+    let k = 0;
+    core.host.forEach((_, i) => {
+      const r = rows[i];
+      if (!r || core.gone[i]) return;
+      const role = k === 0 ? "front" : "queue";
+      const y = yf - k * PITCH;
+      const h = k === 0 ? FRONT_H : QUEUE_H;
+      k++;
+      if (r.el.dataset.role !== role) r.el.dataset.role = role;
+      const bw = Math.max(2 * U, Math.floor((innerW - (r.n - 1) * bgap) / r.n / U) * U);
+      const span = r.n * bw + (r.n - 1) * bgap;
+      const x0 = tx + snap((innerW - span) / 2);
+      if (r.bw !== bw || !r.x || r.x[0] !== x0) {
+        r.bw = bw;
+        r.el.style.left = \`\${x0}px\`;
+        r.el.style.width = \`\${span}px\`;
+        r.x = r.bricks.map((b, j) => {
+          const lx = j * (bw + bgap);
+          b.style.left = \`\${lx}px\`;
+          b.style.width = \`\${bw}px\`;
+          b.style.setProperty("--bwl-bw", \`\${bw}px\`);
+          return x0 + lx;
+        });
+        if (r.crack) setCrack(r, r.crackAt, r.crack, true);
+      }
+      placeRow(r, y, h, animate);
+    });
+  }
+
+  /* ------------------------------------------------------------- ball */
+
+  function ballNow(): [number, number] {
+    const ball = refs.ball.current;
+    if (!ball) return [0, 0];
+    const m = /matrix\\(([^)]+)\\)/.exec(getComputedStyle(ball).transform || "");
+    if (!m) return [0, 0];
+    const v = m[1].split(",").map(Number);
+    return [Math.round(v[4]) || 0, Math.round(v[5]) || 0];
+  }
+
+  /* A straight line as held positions, one per 16ms frame: a fast Breakout ball. */
+  function line(x0: number, y0: number, x1: number, y1: number, ms: number, t0: number, total: number, out: PixelStep[]) {
+    const n = Math.max(2, Math.round(ms / 16));
+    for (let k = 1; k <= n; k++) {
+      const f = k / n;
+      out.push([(t0 + ms * f) / total, snap(x0 + (x1 - x0) * f), snap(y0 + (y1 - y0) * f)]);
+    }
+  }
+
+  function syncBall() {
+    const ball = refs.ball.current;
+    if (!ball) return;
+    const s = core.host[core.front];
+    const dribble = core.phase === "run" && !ballLost && !ballAnim && !!s && s.status === "active" && s.progress == null && core.motionAllowed;
+    const d = dribble ? "true" : "false";
+    if (ball.dataset.dribble !== d) ball.dataset.dribble = d;
+    const st = ballLost && !ballAnim ? "lost" : "rest";
+    if (ball.dataset.state !== st) ball.dataset.state = st;
+  }
+
+  function fly(points: PixelStep[], ms: number) {
+    const ball = refs.ball.current;
+    if (!ball) return;
+    ballAnim?.cancel();
+    ball.dataset.dribble = "false";
+    ball.dataset.state = "rest";
+    const a = core.anim(ball, steppedFrames(points), { duration: ms });
+    ballAnim = a;
+    const end = () => {
+      if (ballAnim === a) {
+        ballAnim = null;
+        syncBall();
+      }
+    };
+    if (a) a.finished.then(end, end);
+    else end();
+  }
+
+  /* Just under the next standing brick of row i, relative to the ball's rest spot. */
+  function aimAt(i: number): [number, number] | null {
+    const r = rows[i];
+    if (!r || !r.x || !G) return null;
+    let j = r.bricks.findIndex((b) => b.dataset.b !== "1");
+    if (j < 0) j = r.n - 1;
+    return [snap(r.x[j] + r.bw / 2 - BALL / 2) - G.restX, r.y + r.h - G.restTop];
+  }
+
+  /* Up to the row and straight back down; the paddle gives one art pixel as it takes the ball. */
+  function shoot(i: number, up: number, down: number) {
+    const t = aimAt(i);
+    const rider = refs.rider.current;
+    if (!t || !G) return;
+    const [x0, y0] = ballNow();
+    const total = up + down;
+    const pts: PixelStep[] = [[0, x0, y0]];
+    line(x0, y0, t[0], t[1], up, 0, total, pts);
+    line(t[0], t[1], 0, 0, down, up, total, pts);
+    fly(pts, total);
+    if (rider) core.anim(rider, steppedFrames([[0, 0, U], [1, 0, 0]]), { duration: 80, delay: total });
+  }
+
+  /* Error: the ball hops off the paddle's end and drops out of the bottom, fading. */
+  function loseBall() {
+    if (ballLost) return;
+    ballLost = true;
+    if (!core.motionOn() || !G) {
+      ballAnim?.cancel();
+      ballAnim = null;
+      syncBall();
+      return;
+    }
+    const [x0, y0] = ballNow();
+    const edge = PADDLE_W + 2 * U - BALL_X;
+    const top = Math.min(y0, 0) - 2 * U;
+    const off = G.H - G.restTop + 3 * U;
+    const pts: PixelStep[] = [[0, x0, y0, 1]];
+    line(x0, y0, edge, top, 90, 0, BASE, pts);
+    for (let k = 1; k <= 13; k++) {
+      const f = k / 13;
+      pts.push([(90 + 210 * f) / BASE, snap(edge + 2 * U * f), snap(top + (off - top) * f * f), f > 0.6 ? 1 - (f - 0.6) / 0.4 : 1]);
+    }
+    fly(pts, BASE);
+  }
+
+  /* A retry, or the host moving on, serves a new ball from the paddle. */
+  function newBall() {
+    if (!ballLost) return;
+    ballLost = false;
+    ballAnim?.cancel();
+    ballAnim = null;
+    syncBall();
+    const ball = refs.ball.current;
+    if (!ball) return;
+    if (core.motionOn()) core.anim(ball, steppedFrames([[0, 0, -4 * U, 0], [0.34, 0, -4 * U, 1], [0.67, 0, -2 * U, 1], [1, 0, 0, 1]]), { duration: FAST });
+    else if (core.running) core.anim(ball, [{ opacity: 0 }, { opacity: 1 }], { duration: FAST, easing: "linear" });
+  }
+
+  /* Finale: three bounces on the paddle, each lower, in whole art pixels. */
+  function victoryBounce() {
+    if (!G || ballLost) return;
+    const hops: [number, number][] = [[10, 360], [4, 220], [2, 140]];
+    const total = hops.reduce((a, h) => a + h[1], 0);
+    const pts: PixelStep[] = [[0, 0, 0]];
+    let t0 = 0;
+    for (const [h, ms] of hops) {
+      const n = Math.round(ms / 30);
+      for (let j = 1; j <= n; j++) {
+        const f = j / n;
+        pts.push([(t0 + ms * f) / total, 0, -Math.round(4 * h * f * (1 - f)) * U]);
+      }
+      t0 += ms;
+    }
+    fly(pts, total);
+  }
+
+  /* ------------------------------------------------------------ poses */
+
+  function setSprite(frame: string, loop: string) {
+    const hero = refs.hero.current;
+    if (!hero) return;
+    if (hero.getAttribute("data-frame") !== frame) hero.setAttribute("data-frame", frame);
+    if (hero.getAttribute("data-loop") !== loop) hero.setAttribute("data-loop", loop);
+  }
+
+  function pose() {
+    if (transientUntil > now()) {
+      syncBall();
+      return;
+    }
+    let frame: CharacterFrame = "idle1";
+    let loop = "";
+    if (core.phase === "error" || core.phase === "stopped") frame = "sit";
+    else if (core.phase === "complete") {
+      frame = "celebrate1";
+      if (celebrating && core.motionAllowed) loop = "celebrate";
+    } else if (core.motionAllowed) {
+      const s = core.host[core.front];
+      loop = s && s.status === "active" && s.progress == null ? "working" : "idle";
+    }
+    setSprite(loop ? "" : frame, loop);
+    syncBall();
+  }
+
+  function playTransient(seq: [CharacterFrame, number][]) {
+    poseTimers.forEach(core.clear);
+    poseTimers = [];
+    if (!core.motionOn()) return;
+    let at = 0;
+    for (const [frame, ms] of seq) {
+      poseTimers.push(core.later(() => setSprite(frame, ""), at));
+      at += ms;
+    }
+    transientUntil = now() + at;
+    poseTimers.push(
+      core.later(() => {
+        transientUntil = 0;
+        pose();
+      }, at),
+    );
+  }
+
+  /* --------------------------------------------------------- the API */
+
+  return {
+    rebuild() {
+      refs.wall.current?.replaceChildren();
+      refs.tally.current?.replaceChildren();
+      refs.fx.current?.replaceChildren();
+      poseTimers = [];
+      transientUntil = 0;
+      celebrating = false;
+      celebrateT = 0;
+      ballLost = false;
+      ballAnim = null;
+      dropDelay = 0;
+      rows = core.host.map((_, i) => (core.gone[i] ? null : makeRow(i)));
+      marks = core.host.map(() => null);
+      layout(false);
+      progress(false);
+      syncBall();
+    },
+    layout: () => layout(false),
+    progress,
+    sync,
+    hit() {
+      playTransient([["swing1", 60], ["swing2", 90], ["idle1", SHOT_UP + SHOT_DOWN - 150]]);
+      if (G && rows[core.front] && !ballLost) {
+        shoot(core.front, SHOT_UP, SHOT_DOWN);
+        return SHOT_UP;
+      }
+      return IMPACT;
+    },
+    strike(beat) {
+      playTransient([["swing1", 50], ["swing2", 250]]);
+      if (G && rows[beat.i] && !ballLost) shoot(beat.i, IMPACT, 200);
+      return IMPACT;
+    },
+    resolve(beats, showy) {
+      const last = core.host.length - 1;
+      let hold = 0;
+      dropDelay = 0;
+      for (const b of beats) {
+        if (!showy) fadeOutRow(b.i);
+        else if (b.kind === "done") {
+          shatterRow(b.i, b.i === last);
+          dropDelay = CHAIN;
+        } else {
+          stepAsideRow(b.i);
+          hold = BASE;
+        }
+      }
+      return hold;
+    },
+    flush(beats) {
+      beats.forEach((b) => fadeOutRow(b.i));
+    },
+    advance(changed) {
+      layout(true);
+      dropDelay = 0;
+      const r = rows[core.front];
+      if (changed && r && !core.motionAllowed && core.running) core.anim(r.el, [{ opacity: 0 }, { opacity: 1 }], { duration: FAST, easing: "linear" });
+      sync();
+    },
+    tally,
+    error() {
+      const r = rows[core.front];
+      if (r) r.el.dataset.error = "true";
+      loseBall();
+      playTransient([["hurt", 260]]);
+    },
+    retry() {
+      rows.forEach((r) => {
+        if (r) r.el.dataset.error = "false";
+      });
+      newBall();
+    },
+    stop() {
+      poseTimers.forEach(core.clear);
+      poseTimers = [];
+      transientUntil = 0;
+    },
+    finale(showy) {
+      celebrateT = core.clear(celebrateT);
+      celebrating = showy && core.motionAllowed;
+      if (showy) victoryBounce();
+      if (celebrating) {
+        celebrateT = core.later(() => {
+          celebrating = false;
+          pose();
+        }, BEAT * 3);
+      }
+    },
+    pose,
+    motion() {
+      if (!core.motionAllowed) {
+        celebrating = false;
+        celebrateT = core.clear(celebrateT);
+      }
+      if (!core.motionOn()) {
+        poseTimers.forEach(core.clear);
+        poseTimers = [];
+        transientUntil = 0;
+      }
+      syncBall();
+    },
+    destroy() {
+      refs.wall.current?.replaceChildren();
+      refs.tally.current?.replaceChildren();
+      refs.fx.current?.replaceChildren();
+      rows = [];
+      marks = [];
+    },
+  };
+}
+
+/* ---------------- end arena: brick wall ---------------- */
+
+/* ---------------- styles ---------------- */
+
+/* Stepped corners for the dialogue box and the banner, so they read as pixel frames. */
+const STEP_OUTER = "polygon(4px 0,calc(100% - 4px) 0,calc(100% - 4px) 2px,calc(100% - 2px) 2px,calc(100% - 2px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 2px) calc(100% - 4px),calc(100% - 2px) calc(100% - 2px),calc(100% - 4px) calc(100% - 2px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 2px),2px calc(100% - 2px),2px calc(100% - 4px),0 calc(100% - 4px),0 4px,2px 4px,2px 2px,4px 2px)";
+const STEP_INNER = "polygon(2px 0,calc(100% - 2px) 0,calc(100% - 2px) 2px,100% 2px,100% calc(100% - 2px),calc(100% - 2px) calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,2px calc(100% - 2px),0 calc(100% - 2px),0 2px,2px 2px)";
+/* A stepped diagonal hatch (2px cells, 6px repeat), used as a mask so it takes the row's colour. */
+const HATCH = \`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='6'%3E%3Cpath d='M4 0h2v2H4zM2 2h2v2H2zM0 4h2v2H0z'/%3E%3C/svg%3E")\`;
+const BAR_HATCH = \`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M0 6h2v2H0zM2 4h2v2H2zM4 2h2v2H4zM6 0h2v2H6z'/%3E%3C/svg%3E")\`;
+
+const CHARACTER_CSS =
+  Object.values(CHARACTER_ROLES)
+    .filter((r) => r !== "outline")
+    .map((r) => \`.bz-bwl-c-\${r}{fill:var(--chr-\${r})}\`)
+    .join("") +
+  \`.bz-bwl-c-outline{fill:var(--bwl-sprite-outline)}\` +
+  \`.bz-bwl-sprite{display:block;width:100%;height:100%;overflow:visible}.bz-bwl-sprite g{display:none}\` +
+  \`.bz-bwl-hero:not([data-frame]):not([data-loop]) g[data-f="idle1"],\` +
+  CHARACTER_FRAMES.map((f) => \`.bz-bwl-hero[data-frame="\${f}"] g[data-f="\${f}"]\`).join(",") +
+  \`{display:inline}\`;
+
+const CSS = \`
+.bz-bwl{
+  --bwl-ink:light-dark(var(--bz-ink,#0a0a0a),var(--bz-void-ink,#ffffff));
+  --bwl-muted:light-dark(var(--bz-ink-muted,#4a4a4c),rgba(255,255,255,0.8));
+  --bwl-panel:light-dark(var(--bz-paper,#ffffff),var(--bz-void-raised,#1a1a1a));
+  --bwl-track:light-dark(var(--bz-line-opaque,#f0f0f0),#313131);
+  --bwl-hover:light-dark(var(--bz-line-opaque,#f0f0f0),#2b2b2b);
+  --bwl-line:light-dark(rgba(10,10,10,0.13),rgba(255,255,255,0.16));
+  --bwl-danger:light-dark(var(--bz-danger,#b91c1c),#fca5a5);
+  --bwl-danger-mark:light-dark(#dc2626,#f87171);
+  --bwl-success:light-dark(var(--bz-emerald,#047857),var(--bz-emerald-on-void,#34d399));
+  --bwl-focus:light-dark(var(--bz-focus-ring,#912c22),var(--bz-focus-ring-void,#ffffff));
+  --bwl-sans:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);
+  --bwl-mono:var(--bz-font-mono,ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace);
+  --bwl-fast:var(--bz-duration-fast,150ms);
+  --bwl-base:var(--bz-duration-base,300ms);
+  --bwl-ease:var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1));
+  --bwl-beat:var(--bz-duration-beat,2.4s);
+  container-type:inline-size;
+  position:relative;
+  box-sizing:border-box;
+  width:100%;
+  border:1px solid var(--bwl-line);
+  border-radius:16px;
+  background:var(--bwl-panel);
+  color:var(--bwl-ink);
+  font-family:var(--bwl-sans);
+  font-size:15px;
+  line-height:1.5;
+  text-align:left;
+}
+.bz-bwl *,.bz-bwl *::before,.bz-bwl *::after{box-sizing:border-box}
+.bz-bwl-in{padding:14px 20px 20px}
+.bz-bwl-sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.bz-bwl-title{margin:0;font-size:15px;font-weight:600;line-height:1.4;color:var(--bwl-ink)}
+.bz-bwl-title:focus{outline:none}
+.bz-bwl-title:focus-visible{outline:2px solid var(--bwl-focus);outline-offset:2px}
+.bz-bwl-g{display:block;flex:none}
+.bz-bwl-g-ink{fill:currentColor}
+
+/* arena: the playfield, with the nameplate beside it (above it when narrow) */
+.bz-bwl-arena{display:grid;grid-template-columns:minmax(0,1fr) 220px;column-gap:20px;margin-top:10px}
+.bz-bwl-field{position:relative;grid-column:1;grid-row:1;height:calc(\${fieldHeight(1)}px + (var(--bwl-n,5) - 1) * \${PITCH}px);overflow:hidden;background:var(--bwl-field)}
+.bz-bwl-frame{position:absolute;inset:0;border:4px solid var(--bwl-frame);border-bottom:0;pointer-events:none}
+.bz-bwl-frame::before,.bz-bwl-frame::after{content:"";position:absolute;top:0;width:2px;height:2px;background:var(--bwl-frame)}
+.bz-bwl-frame::before{left:0;box-shadow:2px 0 0 var(--bwl-frame),0 2px 0 var(--bwl-frame)}
+.bz-bwl-frame::after{right:0;box-shadow:-2px 0 0 var(--bwl-frame),0 2px 0 var(--bwl-frame)}
+.bz-bwl-wall,.bz-bwl-fx{position:absolute;inset:0;pointer-events:none}
+.bz-bwl-row{position:absolute;left:0;top:0;height:\${QUEUE_H}px}
+.bz-bwl-row[data-error="true"]{outline:2px solid var(--bwl-danger-mark);outline-offset:2px}
+.bz-bwl-brick{position:absolute;top:0;height:100%;background:var(--bwl-row);box-shadow:inset 0 0 0 2px var(--bwl-brick-line)}
+.bz-bwl-brick::after{content:"";position:absolute;inset:2px;box-shadow:inset 2px 2px 0 color-mix(in srgb,var(--bwl-row) 45%,#ffffff),inset -2px -2px 0 color-mix(in srgb,var(--bwl-row) 70%,#000000)}
+.bz-bwl-brick[data-b="1"]{visibility:hidden}
+.bz-bwl-brick[data-flash="true"]{background:var(--bwl-field)}
+.bz-bwl-brick[data-flash="true"]::after{box-shadow:none}
+.bz-bwl-row[data-kind="steel"] .bz-bwl-brick{background:var(--bwl-steel)}
+.bz-bwl-row[data-kind="steel"] .bz-bwl-brick::after{box-shadow:inset 2px 2px 0 var(--bwl-steel-light),inset -2px -2px 0 var(--bwl-steel-shade)}
+.bz-bwl-row[data-kind="steel"] .bz-bwl-brick::before{content:"";position:absolute;z-index:1;left:4px;top:calc(50% - 1px);width:2px;height:2px;background:var(--bwl-steel-shade);box-shadow:calc(var(--bwl-bw,20px) - 10px) 0 0 var(--bwl-steel-shade)}
+.bz-bwl-row[data-hatch="true"] .bz-bwl-brick{background:var(--bwl-field)}
+.bz-bwl-row[data-hatch="true"] .bz-bwl-brick::before{display:none}
+.bz-bwl-row[data-hatch="true"] .bz-bwl-brick::after{box-shadow:none;background:var(--bwl-row);-webkit-mask:\${HATCH} 0 0/6px 6px repeat;mask:\${HATCH} 0 0/6px 6px repeat}
+.bz-bwl-row[data-ghost="true"] .bz-bwl-brick{background:transparent;box-shadow:none;outline:2px dashed var(--bwl-hatch);outline-offset:-2px}
+.bz-bwl-row[data-ghost="true"] .bz-bwl-brick::before,.bz-bwl-row[data-ghost="true"] .bz-bwl-brick::after,.bz-bwl-row[data-ghost="true"] .bz-bwl-crack{display:none}
+.bz-bwl-crack{position:absolute;inset:0;z-index:2;display:block;width:100%;height:100%}
+.bz-bwl-shard{position:absolute;width:4px;height:4px;background:var(--bwl-row);box-shadow:0 0 0 2px var(--bwl-brick-line)}
+.bz-bwl-shard[data-kind="steel"]{background:var(--bwl-steel)}
+.bz-bwl-p-line{fill:var(--bwl-brick-line)}
+.bz-bwl-p-row{fill:var(--bwl-row)}
+.bz-bwl-p-gold{fill:var(--bwl-row-2)}
+.bz-bwl-p-steel{fill:var(--bwl-steel)}
+.bz-bwl-p-steel-light{fill:var(--bwl-steel-light)}
+.bz-bwl-p-steel-shade{fill:var(--bwl-steel-shade)}
+.bz-bwl-p-hatch{fill:var(--bwl-hatch)}
+.bz-bwl-p-cap{fill:var(--bwl-paddle-cap)}
+.bz-bwl-p-paddle{fill:var(--bwl-paddle)}
+.bz-bwl-p-glint{fill:var(--bwl-field)}
+.bz-bwl-p-ball{fill:var(--bwl-ball)}
+.bz-bwl[data-phase="error"] .bz-bwl-p-cap,.bz-bwl[data-phase="stopped"] .bz-bwl-p-cap{fill:var(--bwl-steel-shade)}
+
+/* the rider: the character on the paddle */
+.bz-bwl-rider{position:absolute;left:0;bottom:\${BOTTOM}px;width:\${PADDLE_W}px;height:\${PADDLE_H + HERO_PX}px}
+.bz-bwl-hero{position:absolute;left:\${HERO_X}px;bottom:\${PADDLE_H}px;width:\${CHARACTER_W * U}px;height:\${HERO_PX}px;filter:drop-shadow(\${U}px 0 0 var(--bwl-sprite-rim,transparent)) drop-shadow(-\${U}px 0 0 var(--bwl-sprite-rim,transparent)) drop-shadow(0 \${U}px 0 var(--bwl-sprite-rim,transparent)) drop-shadow(0 -\${U}px 0 var(--bwl-sprite-rim,transparent))}
+.bz-bwl-paddle{position:absolute;left:0;bottom:0;display:block}
+.bz-bwl-ball{position:absolute;left:0;top:0;width:\${BALL}px;height:\${BALL}px}
+.bz-bwl-ball > svg{display:block}
+.bz-bwl-ball[data-state="lost"]{visibility:hidden}
+.bz-bwl-ball[data-dribble="true"]{animation:bz-bwl-dribble var(--bwl-beat) step-end infinite}
+@keyframes bz-bwl-dribble{0%,30%,100%{translate:0 0}5%,25%{translate:0 -2px}10%,20%{translate:0 -4px}15%{translate:0 -6px}}
+.bz-bwl-tally{position:absolute;left:0;bottom:\${BOTTOM}px;width:0;height:0}
+.bz-bwl-mark{position:absolute;bottom:0;width:\${6 * U}px;height:\${4 * U}px}
+.bz-bwl-mark > svg{display:block}
+\${CHARACTER_CSS}
+.bz-bwl-hero[data-loop="idle"] g[data-f="idle1"],.bz-bwl-hero[data-loop="working"] g[data-f="idle1"],.bz-bwl-hero[data-loop="celebrate"] g[data-f="celebrate1"]{display:inline;animation:bz-bwl-a var(--bwl-beat) step-end infinite}
+.bz-bwl-hero[data-loop="idle"] g[data-f="idle2"],.bz-bwl-hero[data-loop="working"] g[data-f="swing1"],.bz-bwl-hero[data-loop="celebrate"] g[data-f="celebrate2"]{display:inline;animation:bz-bwl-b var(--bwl-beat) step-end infinite}
+.bz-bwl-hero[data-loop="celebrate"] g{animation-iteration-count:3;animation-fill-mode:forwards}
+@keyframes bz-bwl-a{0%{opacity:1}50%{opacity:0}100%{opacity:0}}
+@keyframes bz-bwl-b{0%{opacity:0}50%{opacity:1}100%{opacity:1}}
+
+/* the nameplate (the one progressbar) and, at the end, the banner in its place */
+.bz-bwl-side{position:relative;grid-column:2;grid-row:1;min-width:0}
+.bz-bwl-plate{position:relative;margin-top:var(--bwl-pt,0px);padding:8px 10px 10px 16px;background:var(--bwl-panel);border:2px solid var(--bwl-ink)}
+.bz-bwl-plate::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--bwl-accent)}
+.bz-bwl-plate[data-state="pending"]::before{background:var(--bwl-muted)}
+.bz-bwl-plate[data-state="error"]::before{background:var(--bwl-danger-mark)}
+.bz-bwl[data-phase="complete"] .bz-bwl-plate{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.bz-bwl-ptr{position:absolute;left:-18px;top:var(--bwl-ay,12px);color:var(--bwl-ink)}
+.bz-bwl-plate-top{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;min-height:22px}
+.bz-bwl-plate-label{min-width:0;font-size:14px;font-weight:600;line-height:1.4;color:var(--bwl-ink);overflow-wrap:anywhere}
+.bz-bwl-tag{flex:none;padding:4px 6px 3px;background:var(--bwl-accent);color:var(--bwl-on-accent);font:700 11px/1 var(--bwl-mono);letter-spacing:0.04em;white-space:nowrap}
+.bz-bwl-failed{flex:none;display:inline-flex;align-items:center;gap:5px;margin-left:auto;color:var(--bwl-danger);font-size:13px;font-weight:700;line-height:1}
+.bz-bwl-failed .bz-bwl-g{color:var(--bwl-danger-mark)}
+.bz-bwl-plate-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:6px}
+.bz-bwl-bar{position:relative;flex:1 1 100%;min-width:48px;height:12px;overflow:hidden;border:2px solid var(--bwl-ink);background:var(--bwl-track)}
+.bz-bwl-fill{position:absolute;left:0;top:0;bottom:0;background:var(--bwl-accent);transition:width var(--bwl-base) var(--bwl-ease)}
+.bz-bwl-hatch{position:absolute;top:0;bottom:0;left:-8px;right:0;display:none;background:var(--bwl-accent);-webkit-mask:\${BAR_HATCH} 0 0/8px 8px repeat;mask:\${BAR_HATCH} 0 0/8px 8px repeat}
+.bz-bwl-bar[data-indet="true"] .bz-bwl-fill{display:none}
+.bz-bwl-bar[data-indet="true"] .bz-bwl-hatch{display:block;animation:bz-bwl-march var(--bwl-beat) steps(4) infinite}
+@keyframes bz-bwl-march{from{transform:translateX(0)}to{transform:translateX(8px)}}
+.bz-bwl-count{flex:none;font:500 12px/1.2 var(--bwl-mono);color:var(--bwl-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.bz-bwl-banner{position:absolute;left:0;right:0;top:var(--bwl-pt,0px);visibility:hidden;padding:2px;background:var(--bwl-ink);clip-path:\${STEP_OUTER}}
+.bz-bwl[data-phase="complete"] .bz-bwl-banner{visibility:visible}
+.bz-bwl[data-phase="complete"][data-motion="on"] .bz-bwl-banner{animation:bz-bwl-fade var(--bwl-base) var(--bwl-ease) both}
+@keyframes bz-bwl-fade{from{opacity:0}to{opacity:1}}
+.bz-bwl-banner-in{display:block;padding:12px 14px 10px;background:var(--bwl-panel);clip-path:\${STEP_INNER};font:700 15px/1.25 var(--bwl-mono);letter-spacing:0.12em;text-transform:uppercase;overflow-wrap:anywhere;text-wrap:balance;color:var(--bwl-ink);text-align:center}
+.bz-bwl-banner-rule{display:block;height:4px;margin-top:8px;background:var(--bwl-accent)}
+
+/* the dialogue box: three panels in one cell, so it never changes height. The
+   error and results panels have bounded heights and size the cell; the log
+   stretches to fill it and never adds height of its own. */
+.bz-bwl-box{position:relative;margin-top:12px;padding:2px;background:var(--bwl-ink);clip-path:\${STEP_OUTER}}
+.bz-bwl-box-in{position:relative;padding:14px 18px 12px;background:var(--bwl-panel);clip-path:\${STEP_INNER}}
+.bz-bwl-panels{display:grid}
+.bz-bwl-panel{grid-area:1/1;min-width:0;visibility:hidden}
+.bz-bwl[data-panel="log"] .bz-bwl-panel[data-panel="log"],.bz-bwl[data-panel="error"] .bz-bwl-panel[data-panel="error"],.bz-bwl[data-panel="results"] .bz-bwl-panel[data-panel="results"]{visibility:visible}
+.bz-bwl-panel[data-panel="log"]{position:relative;display:flex;flex-direction:column}
+.bz-bwl-log{flex:1 1 0px;min-height:72px;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain}
+.bz-bwl-log::-webkit-scrollbar{display:none}
+.bz-bwl-log:focus{outline:none}
+.bz-bwl-log:focus-visible{outline:2px solid var(--bwl-focus);outline-offset:2px}
+.bz-bwl-line{display:flex;gap:8px;margin:0;color:var(--bwl-muted);font-size:14px;line-height:24px}
+.bz-bwl-line:last-child{color:var(--bwl-ink);font-size:16px;font-weight:500}
+.bz-bwl-line > .bz-bwl-g{margin-top:5px;visibility:hidden}
+.bz-bwl-line:last-child > .bz-bwl-g{visibility:inherit}
+.bz-bwl-line[data-kind="done"] > .bz-bwl-g,.bz-bwl-final > .bz-bwl-g{color:var(--bwl-success)}
+.bz-bwl-line[data-kind="skipped"] > .bz-bwl-g,.bz-bwl-line[data-kind="stop"] > .bz-bwl-g{color:var(--bwl-muted)}
+.bz-bwl-line[data-kind="finish"] > .bz-bwl-g{color:var(--bwl-success)}
+.bz-bwl-line[data-kind="retry"] > .bz-bwl-g{color:var(--bwl-accent)}
+.bz-bwl-ph{position:absolute;left:0;top:0;margin:0;font-size:15px;line-height:24px;color:var(--bwl-muted)}
+.bz-bwl-err{display:grid;row-gap:10px;align-content:start}
+.bz-bwl-alert{display:flex;gap:10px;height:48px;overflow:hidden;font-size:15px;font-weight:500;line-height:24px;color:var(--bwl-ink);visibility:visible}
+.bz-bwl-alert > .bz-bwl-g{margin-top:5px;color:var(--bwl-danger-mark)}
+.bz-bwl-alert > span{display:-webkit-box;min-width:0;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.bz-bwl-menu{display:flex;flex-wrap:wrap;gap:8px}
+.bz-bwl-cur{visibility:hidden}
+.bz-bwl-menu .bz-bwl-btn[data-current="true"] .bz-bwl-cur{visibility:inherit}
+.bz-bwl-details{height:40px;margin:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;font:500 12px/20px var(--bwl-mono);color:var(--bwl-muted);overflow-wrap:anywhere}
+.bz-bwl-details:focus{outline:none}
+.bz-bwl-details:focus-visible{outline:2px solid var(--bwl-focus);outline-offset:2px}
+.bz-bwl-details > span{display:block}
+.bz-bwl-details[data-open="false"]{visibility:hidden}
+.bz-bwl-final{display:flex;gap:8px;height:48px;overflow:hidden;margin:0 0 10px;font-size:16px;font-weight:500;line-height:24px;color:var(--bwl-ink)}
+.bz-bwl-final > .bz-bwl-g{margin-top:5px}
+.bz-bwl-final > span{display:-webkit-box;min-width:0;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-bwl-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:12px 16px;margin:0}
+.bz-bwl-stat{min-width:0;padding-top:8px;border-top:2px solid var(--bwl-ink)}
+.bz-bwl-stat[data-empty="true"]{visibility:hidden}
+.bz-bwl-stat dt{font:700 11px/14px var(--bwl-mono);letter-spacing:0.08em;text-transform:uppercase;color:var(--bwl-muted)}
+.bz-bwl-stat dd{margin:2px 0 0}
+.bz-bwl-num{display:block;font:700 18px/26px var(--bwl-mono);color:var(--bwl-ink);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.bz-bwl-sub{display:-webkit-box;min-height:36px;overflow:hidden;font-size:13px;line-height:18px;color:var(--bwl-muted);-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+/* the footer line and the buttons */
+.bz-bwl-foot{display:flex;align-items:center;gap:10px 16px;margin-top:12px}
+.bz-bwl-meta{flex:1 1 auto;min-width:0;min-height:38px;margin:0;font-size:13px;line-height:19px;color:var(--bwl-muted);display:-webkit-box;overflow:hidden;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-bwl-meta b{font-weight:600;color:var(--bwl-ink)}
+.bz-bwl-meta .bz-bwl-g{display:inline-block;margin-right:6px;vertical-align:-2px;color:var(--bwl-ink)}
+.bz-bwl-toys{display:flex;flex:none;gap:8px;margin-left:auto}
+.bz-bwl-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;min-width:48px;margin:0;padding:0 16px;border:2px solid var(--bwl-ink);border-radius:0;background:var(--bwl-panel);color:var(--bwl-ink);font:600 14px/1.2 var(--bwl-sans);text-align:left;cursor:pointer;transition:background-color var(--bwl-fast) var(--bwl-ease),transform var(--bwl-fast) var(--bwl-ease)}
+.bz-bwl-btn:focus{outline:none}
+.bz-bwl-btn:focus-visible{outline:2px solid var(--bwl-focus);outline-offset:2px;background:var(--bwl-hover)}
+@media (hover:hover){.bz-bwl-btn:hover{background:var(--bwl-hover)}}
+.bz-bwl[data-motion="on"] .bz-bwl-btn:active{transform:scale(0.97)}
+.bz-bwl-btn:disabled{opacity:0.5;cursor:not-allowed}
+.bz-bwl-primary,.bz-bwl-primary:focus-visible{background:var(--bwl-accent);border-color:var(--bwl-accent);color:var(--bwl-on-accent)}
+.bz-bwl-primary:focus-visible{box-shadow:inset 0 0 0 2px var(--bwl-panel)}
+@media (hover:hover){.bz-bwl-primary:hover{background:var(--bwl-accent);box-shadow:inset 0 0 0 2px var(--bwl-panel)}}
+.bz-bwl-toy[aria-pressed="true"],.bz-bwl-toy[aria-pressed="true"]:focus-visible{background:var(--bwl-ink);color:var(--bwl-panel)}
+@media (hover:hover){.bz-bwl-toy[aria-pressed="true"]:hover{background:var(--bwl-ink)}}
+.bz-bwl-toy[data-hidden="true"],.bz-bwl-cont[data-shown="false"]{visibility:hidden}
+
+/* narrow: the nameplate sits above the playfield, the menu becomes a 2 x 2 grid */
+@container (max-width:559px){
+  .bz-bwl-in{padding:12px}
+  .bz-bwl-arena{grid-template-columns:minmax(0,1fr);row-gap:10px}
+  .bz-bwl-side{grid-column:1;grid-row:1;height:68px}
+  .bz-bwl-field{grid-row:2}
+  .bz-bwl-plate{height:68px;margin-top:0}
+  .bz-bwl-plate-top{flex-wrap:nowrap}
+  .bz-bwl-plate-row{flex-wrap:nowrap}
+  .bz-bwl-bar{flex:1 1 60px}
+  .bz-bwl-plate-label{flex:1 1 0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .bz-bwl-ptr{display:none}
+  .bz-bwl-banner{top:0;bottom:0;display:flex;flex-direction:column;justify-content:center}
+  .bz-bwl-banner-in{flex:1;display:flex;flex-direction:column;justify-content:center;padding:6px 12px;font-size:14px;line-height:1.2}
+  .bz-bwl-banner-rule{margin-top:6px}
+  .bz-bwl-box-in{padding:12px}
+  .bz-bwl-menu{display:grid;grid-template-columns:1fr 1fr}
+  .bz-bwl-alert{height:72px}
+  .bz-bwl-alert > span{-webkit-line-clamp:3}
+  .bz-bwl-details{height:80px}
+  .bz-bwl-final{height:72px}
+  .bz-bwl-final > span{-webkit-line-clamp:3}
+  .bz-bwl-foot{flex-wrap:wrap}
+  .bz-bwl-meta{flex-basis:100%}
+  .bz-bwl-toys{margin-left:0}
+}
+
+/* motion off (reduced motion, Pause motion, off screen, hidden tab): no loops, no tweens */
+.bz-bwl[data-motion="off"] .bz-bwl-hero g,.bz-bwl[data-motion="off"] .bz-bwl-ball,.bz-bwl[data-motion="off"] .bz-bwl-hatch,.bz-bwl[data-motion="off"] .bz-bwl-banner{animation:none!important}
+.bz-bwl[data-motion="off"] .bz-bwl-fill,.bz-bwl[data-motion="off"] .bz-bwl-btn{transition:none}
+.bz-bwl[data-running="false"] *{animation-play-state:paused!important}
+\`;
+
+/* ---------------- end styles ---------------- */
+
+/* ---------------- component ---------------- */
+
+function paletteVars(p: BrickWallLoaderPalette): Record<string, string> {
+  const out: Record<string, string> = {};
+  const keys = new Set([...Object.keys(p.light), ...Object.keys(p.dark)]) as Set<keyof BrickWallLoaderColors>;
+  for (const k of keys) {
+    if (k === "rows") continue;
+    out[\`--bwl-\${k.replace(/[A-Z]/g, (c) => \`-\${c.toLowerCase()}\`)}\`] = \`light-dark(\${p.light[k] ?? "transparent"}, \${p.dark[k] ?? "transparent"})\`;
+  }
+  for (let i = 0; i < 8; i++) {
+    const l = p.light.rows[i % p.light.rows.length];
+    const d = p.dark.rows[i % p.dark.rows.length];
+    out[\`--bwl-row-\${i}\`] = \`light-dark(\${l}, \${d})\`;
+  }
+  return out;
+}
+
+function stateWord(s: LoaderStep) {
+  switch (s.status) {
+    case "active":
+      return \`Running\${(s.attempt ?? 1) > 1 ? \`, attempt \${s.attempt}\` : ""}\`;
+    case "done":
+      return \`Done\${s.durationMs != null ? \` in \${fmtDur(s.durationMs)}\` : ""}\`;
+    case "skipped":
+      return "Skipped";
+    case "error":
+      return "Failed";
+    default:
+      return "Waiting";
+  }
+}
+
+type MenuCommand = "retry" | "skip" | "cancel" | "details";
+
+export function BrickWallLoader({
+  steps,
+  title,
+  headingLevel = 2,
+  palette = "rainbow",
+  character = "ember",
+  colorScheme,
+  labels,
+  stats,
+  completeText,
+  onRetry,
+  onSkip,
+  onCancel,
+  onContinue,
+  onComplete,
+  onAnnounce,
+  reducedMotion,
+  className = "",
+  style,
+}: BrickWallLoaderProps) {
+  const uid = useId().replace(/:/g, "");
+  const titleId = \`\${uid}-title\`;
+  const detailsId = \`\${uid}-details\`;
+  const L = useMemo<LoaderLabels>(() => ({ ...LOADER_LABELS, unit: "Row", clear: "Wall cleared", ...labels }), [labels]);
+
+  const prefersReduced = useReducedMotionPreference();
+  const reduced = reducedMotion ?? prefersReduced;
+  const [userPaused, setUserPaused] = useState(false);
+  const rootRef = useRef<HTMLElement>(null);
+  const onscreen = useOnscreen(rootRef);
+  const pageVisible = usePageVisible();
+  const motionAllowed = !reduced && !userPaused;
+  const running = onscreen && pageVisible;
+
+  const [view, setView] = useState<LoaderView>(() => initialView(steps));
+  const [cursor, setCursor] = useState(0);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  /* Whether the alert is cut to its reserved lines (its full text then leads
+     the details) and whether the details need scrolling (then they take focus). */
+  const [overflow, setOverflow] = useState({ alert: false, details: false });
+  const [focusTick, setFocusTick] = useState(0);
+  const pendingFocus = useRef<LoaderFocus | null>(null);
+
+  const engineRef = useRef<LoaderEngine | null>(null);
+  const stepsRef = useRef(steps);
+  stepsRef.current = steps;
+  const motionRef = useRef({ allowed: motionAllowed, running });
+  motionRef.current = { allowed: motionAllowed, running };
+  const cfgRef = useRef<LoaderConfig>({ labels: L });
+  cfgRef.current = { labels: L, stats, completeText, onCancel, onComplete, onAnnounce };
+
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const wallRef = useRef<HTMLDivElement>(null);
+  const tallyRef = useRef<HTMLDivElement>(null);
+  const riderRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+  const ballRef = useRef<HTMLDivElement>(null);
+  const fxRef = useRef<HTMLDivElement>(null);
+  const sideRef = useRef<HTMLDivElement>(null);
+  const plateRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const alertTextRef = useRef<HTMLSpanElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const menuButtons = useRef<(HTMLButtonElement | null)[]>([]);
+  const numRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const plateHeight = useRef(66);
+
+  /* The engine lives for the life of the component. StrictMode's double effects
+     destroy it and build a fresh one from the same steps. */
+  useLayoutEffect(() => {
+    const bridge: LoaderBridge = {
+      config: () => cfgRef.current,
+      render: (v) => setView(v),
+      focus: (target) => {
+        pendingFocus.current = target;
+        setFocusTick((t) => t + 1);
+      },
+      focusInside: () => {
+        const root = rootRef.current;
+        const a = document.activeElement;
+        return !!root && !!a && a !== root && root.contains(a);
+      },
+      focusInMenu: () => {
+        const a = document.activeElement;
+        return !!a && (!!menuRef.current?.contains(a) || !!detailsRef.current?.contains(a));
+      },
+      resetMenu: () => {
+        setCursor(0);
+        setDetailsOpen(false);
+      },
+    };
+    const refs: BrickWallRefs = { root: rootRef, field: fieldRef, wall: wallRef, tally: tallyRef, rider: riderRef, hero: heroRef, ball: ballRef, fx: fxRef };
+    const engine = createLoaderEngine(bridge, (core) => createBrickWallArena(core, refs));
+    engineRef.current = engine;
+    engine.setMotion(motionRef.current.allowed, motionRef.current.running);
+    engine.update(stepsRef.current);
+    return () => {
+      engine.destroy();
+      engineRef.current = null;
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    engineRef.current?.update(steps);
+  }, [steps]);
+
+  useEffect(() => {
+    engineRef.current?.setMotion(motionAllowed, running);
+  }, [motionAllowed, running]);
+
+  /* Wide: the nameplate sits level with the front row, its pointer at that row. */
+  const fitPlate = () => {
+    const root = rootRef.current;
+    const plate = plateRef.current;
+    const side = sideRef.current;
+    if (!root || !plate || !side) return;
+    if (root.clientWidth < 560) {
+      side.style.removeProperty("--bwl-pt");
+      side.style.removeProperty("--bwl-ay");
+      return;
+    }
+    const n = Math.max(1, stepsRef.current.length);
+    const mid = FRAME + TOP + (n - 1) * PITCH + FRONT_H / 2;
+    /* At the end the plate is visually hidden and the banner keeps its place. */
+    if (plate.offsetHeight > 8) plateHeight.current = plate.offsetHeight;
+    const ph = plateHeight.current;
+    const pt = Math.max(0, Math.min(fieldHeight(n) - ph, Math.round(mid - ph / 2)));
+    const ay = Math.max(4, Math.min(ph - 18, Math.round(mid - pt - 2 - 7)));
+    side.style.setProperty("--bwl-pt", \`\${pt}px\`);
+    side.style.setProperty("--bwl-ay", \`\${ay}px\`);
+  };
+
+  /* Shows the newest narration from the start of a whole line. */
+  const scrollLog = () => {
+    const log = logRef.current;
+    if (!log) return;
+    log.style.paddingBottom = "";
+    const target = log.scrollHeight - log.clientHeight;
+    if (target <= 0) {
+      log.scrollTop = 0;
+      return;
+    }
+    const items = Array.from(log.children) as HTMLElement[];
+    const base = items[0].offsetTop;
+    let top = items[items.length - 1].offsetTop - base;
+    for (let k = items.length - 1; k >= 0; k--) {
+      const y = items[k].offsetTop - base;
+      if (y < target) break;
+      top = y;
+    }
+    if (top > target) log.style.paddingBottom = \`\${top - target}px\`;
+    log.scrollTop = top;
+  };
+
+  useLayoutEffect(() => {
+    fitPlate();
+  });
+
+  useLayoutEffect(() => {
+    scrollLog();
+  }, [view.lines]);
+
+  const measureOverflow = () => {
+    const a = alertTextRef.current;
+    const d = detailsRef.current;
+    const next = { alert: !!a && a.scrollHeight > a.clientHeight + 1, details: !!d && d.scrollHeight > d.clientHeight + 1 };
+    setOverflow((o) => (o.alert === next.alert && o.details === next.details ? o : next));
+  };
+
+  useLayoutEffect(() => {
+    measureOverflow();
+  });
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      engineRef.current?.layout();
+      fitPlate();
+      scrollLog();
+      measureOverflow();
+    });
+    ro.observe(root);
+    return () => ro.disconnect();
+    // fitPlate, scrollLog and measureOverflow read refs only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* Focus moves only when it was already inside the loader. */
+  useLayoutEffect(() => {
+    const target = pendingFocus.current;
+    if (!target) return;
+    pendingFocus.current = null;
+    if (target === "menu") menuButtons.current.find(Boolean)?.focus();
+    else if (target === "log") logRef.current?.focus();
+    else if (continueRef.current) continueRef.current.focus();
+    else headingRef.current?.focus();
+  }, [focusTick, view]);
+
+  /* The results count up over 500ms, only when motion is allowed. */
+  useEffect(() => {
+    const tiles = view.tiles;
+    if (!view.resultsOpen || !tiles) return;
+    const nodes = numRefs.current;
+    const finish = () => tiles.forEach((t, k) => {
+      const node = nodes[k];
+      if (node) node.textContent = tileText(t);
+    });
+    if (!(motionRef.current.allowed && motionRef.current.running)) {
+      finish();
+      return;
+    }
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = () => {
+      const x = Math.min(1, (performance.now() - t0) / SLOW);
+      const e = 1 - Math.pow(1 - x, 3);
+      tiles.forEach((t, k) => {
+        const node = nodes[k];
+        if (node && typeof t.value === "number") node.textContent = t.format(t.value * e);
+      });
+      if (x < 1) raf = requestAnimationFrame(tick);
+      else finish();
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      finish();
+    };
+  }, [view.resultsOpen, view.tiles]);
+
+  const pal = typeof palette === "string" ? BRICK_WALL_LOADER_PALETTES[palette] ?? BRICK_WALL_LOADER_PALETTES.rainbow : palette;
+  const chr = typeof character === "string" ? LOADER_CHARACTERS[character] ?? LOADER_CHARACTERS.ember : character;
+  const rootStyle = useMemo(
+    () => ({ ...paletteVars(pal), ...characterVars(chr), "--bwl-n": String(Math.max(1, steps.length)), ...(colorScheme ? { colorScheme } : null), ...style }) as CSSProperties,
+    [pal, chr, steps.length, colorScheme, style],
+  );
+
+  /* ------------------------------------------------------ what to show */
+
+  const n = steps.length;
+  const settledN = steps.filter(settled).length;
+  const phase = view.phase;
+  const front = Math.min(view.front, n);
+  const fs: LoaderStep | undefined = steps[front];
+  const unitLower = lowerFirst(L.unit);
+
+  let hostAt = steps.findIndex((s) => s.status === "active" || s.status === "error");
+  if (hostAt < 0) hostAt = steps.findIndex((s) => s.status === "pending");
+  let valueText: string;
+  if (phase === "stopped") valueText = \`Stopped at step \${Math.max(0, hostAt) + 1} of \${n}\`;
+  else if (n && settledN === n) valueText = \`All \${n} steps finished\`;
+  else if (hostAt >= 0 && steps[hostAt].status === "error") valueText = \`Step \${hostAt + 1} of \${n}: \${steps[hostAt].label}, failed\`;
+  else if (hostAt >= 0 && phase !== "idle") valueText = \`Step \${hostAt + 1} of \${n}: \${steps[hostAt].label}\`;
+  else valueText = \`Not started, \${n} step\${n === 1 ? "" : "s"}\`;
+
+  let fillP = 0;
+  if (fs) {
+    if (fs.status === "done") fillP = 1;
+    else if (fs.status === "active" || fs.status === "error") fillP = fs.progress == null && fs.status === "active" ? 0 : view.barP ?? 0;
+  }
+  const indet = !!fs && fs.status === "active" && fs.progress == null;
+  let count = "";
+  if (fs) {
+    if (fs.status === "pending") count = phase === "idle" ? "Waiting to start" : "Next up";
+    else if (fs.status === "skipped") count = "Skipped";
+    else if (indet) {
+      const secs = Math.floor((fs.elapsedMs ?? 0) / 1000);
+      count = \`\${L.sizeUnknown}\${secs >= 10 ? \` · \${secs}s\` : ""}\`;
+    } else if (fs.status === "done") count = fs.detail || "Done";
+    else if (view.barDetail) count = view.barDetail;
+    else if (view.barP != null) count = \`\${Math.floor(view.barP * 100)}%\`;
+  }
+  const showTag = !!fs && (fs.attempt ?? 1) > 1 && (fs.status === "active" || fs.status === "error");
+
+  let metaLead: string;
+  let metaTail = "";
+  if (phase === "complete") {
+    metaLead = L.clear;
+    metaTail = \`\${n} of \${n}\`;
+  } else if (phase === "stopped") metaLead = \`Stopped at \${unitLower} \${Math.min(front + 1, n)} of \${n}\`;
+  else if (phase === "error") {
+    metaLead = \`\${L.unit} \${Math.min(front + 1, n)} of \${n}\`;
+    metaTail = L.waiting;
+  } else if (phase === "idle") {
+    metaLead = "Ready";
+    metaTail = \`\${n} \${unitLower}\${n === 1 ? "" : "s"} to clear\`;
+  } else {
+    metaLead = \`\${L.unit} \${Math.min(front + 1, n)} of \${n}\`;
+    const next: string[] = [];
+    for (let i = front + 1; i < n && next.length < 2; i++) if (!view.gone[i]) next.push(steps[i].label);
+    metaTail = next.length === 0 ? \`Last \${unitLower}\` : next.length === 1 ? \`Next: \${next[0]}\` : \`Next: \${next[0]}, then \${next[1]}\`;
+  }
+
+  const placeholder = view.lines.length
+    ? ""
+    : settledN > 0 && fs && phase !== "complete"
+      ? L.progress(settledN, n, fs.label)
+      : n
+        ? L.queued(n, steps[0].label)
+        : "";
+
+  const failing = view.errorAt >= 0 ? steps[view.errorAt] : undefined;
+  const menu: { cmd: MenuCommand; text: string; sr?: string; primary?: boolean }[] = [];
+  if (onRetry) menu.push({ cmd: "retry", text: L.retry, sr: failing?.label, primary: true });
+  if (onSkip) menu.push({ cmd: "skip", text: L.skip, sr: failing?.label });
+  if (onCancel) menu.push({ cmd: "cancel", text: L.cancel });
+  menu.push({ cmd: "details", text: detailsOpen ? L.hideDetails : L.showDetails });
+  const current = Math.min(cursor, menu.length - 1);
+
+  const runCommand = (cmd: MenuCommand) => {
+    const id = failing?.id;
+    if (cmd === "retry" && id != null) onRetry?.(id);
+    else if (cmd === "skip" && id != null) onSkip?.(id);
+    else if (cmd === "cancel") engineRef.current?.cancel();
+    else if (cmd === "details") setDetailsOpen((o) => !o);
+  };
+
+  const onMenuKey = (event: KeyboardEvent<HTMLDivElement>) => {
+    const moves: Record<string, number> = { ArrowDown: current + 1, ArrowRight: current + 1, ArrowUp: current - 1, ArrowLeft: current - 1, Home: 0, End: menu.length - 1 };
+    if (!(event.key in moves)) return;
+    event.preventDefault();
+    const next = (moves[event.key] + menu.length) % menu.length;
+    setCursor(next);
+    menuButtons.current[next]?.focus();
+  };
+
+  const slots = 3 + (stats?.length ?? 0);
+  const tiles = view.tiles ?? [];
+  const panel = phase === "error" ? "error" : view.resultsOpen ? "results" : "log";
+  const Heading = \`h\${headingLevel}\` as "h2";
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <section
+        ref={rootRef}
+        aria-labelledby={titleId}
+        className={\`bz-bwl \${className}\`.trim()}
+        style={rootStyle}
+        data-phase={phase}
+        data-panel={panel}
+        data-motion={motionAllowed ? "on" : "off"}
+        data-running={running ? "true" : "false"}
+      >
+        <div className="bz-bwl-in">
+          <Heading ref={headingRef} id={titleId} tabIndex={-1} className="bz-bwl-title">
+            {title}
+          </Heading>
+          <ol className="bz-bwl-sr" aria-busy={phase === "run" ? "true" : "false"}>
+            {steps.map((s) => (
+              <li key={s.id} aria-current={s.status === "active" || s.status === "error" ? "step" : undefined}>
+                {\`\${s.label}: \${stateWord(s)}\`}
+              </li>
+            ))}
+          </ol>
+
+          <div className="bz-bwl-arena">
+            <div ref={fieldRef} className="bz-bwl-field" aria-hidden="true">
+              <div ref={wallRef} className="bz-bwl-wall" />
+              <div className="bz-bwl-frame" />
+              <div ref={tallyRef} className="bz-bwl-tally" />
+              <div ref={riderRef} className="bz-bwl-rider">
+                <div ref={heroRef} className="bz-bwl-hero">
+                  <CharacterSprite hairStyle={chr.hairStyle} prefix="bz-bwl-" />
+                </div>
+                <PixelSvg map={PADDLE_MAP} prefix="bz-bwl-p-" roles={ARENA_ROLES} scale={U} className="bz-bwl-paddle" />
+              </div>
+              <div ref={ballRef} className="bz-bwl-ball">
+                <PixelSvg map={BALL_MAP} prefix="bz-bwl-p-" roles={ARENA_ROLES} scale={U} />
+              </div>
+              <div ref={fxRef} className="bz-bwl-fx" />
+            </div>
+            <div ref={sideRef} className="bz-bwl-side">
+              <div
+                ref={plateRef}
+                className="bz-bwl-plate"
+                role="progressbar"
+                aria-labelledby={titleId}
+                aria-valuemin={0}
+                aria-valuemax={Math.max(1, n)}
+                aria-valuenow={settledN}
+                aria-valuetext={valueText}
+                data-state={fs?.status ?? "pending"}
+              >
+                <span className="bz-bwl-ptr" aria-hidden="true">
+                  <PixelSvg map={GLYPHS.pointer} prefix="bz-bwl-g-" roles={GLYPH_ROLES} scale={2} className="bz-bwl-g" />
+                </span>
+                <div className="bz-bwl-plate-top">
+                  <span className="bz-bwl-plate-label">{fs?.label ?? ""}</span>
+                  {showTag ? <span className="bz-bwl-tag">{L.attempt(fs?.attempt ?? 2)}</span> : null}
+                  {fs?.status === "error" ? (
+                    <span className="bz-bwl-failed">
+                      <PixelSvg map={GLYPHS.cross} prefix="bz-bwl-g-" roles={GLYPH_ROLES} scale={2} className="bz-bwl-g" />
+                      {L.failed}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="bz-bwl-plate-row">
+                  <span className="bz-bwl-bar" data-indet={indet ? "true" : "false"}>
+                    <span className="bz-bwl-fill" style={{ width: \`\${Math.round(fillP * 1000) / 10}%\` }} />
+                    <span className="bz-bwl-hatch" />
+                  </span>
+                  <span className="bz-bwl-count">{count}</span>
+                </div>
+              </div>
+              <div className="bz-bwl-banner" aria-hidden="true">
+                <span className="bz-bwl-banner-in">
+                  {L.clear}
+                  <span className="bz-bwl-banner-rule" />
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bz-bwl-box">
+            <div className="bz-bwl-box-in">
+              <div className="bz-bwl-panels">
+                <div className="bz-bwl-panel" data-panel="log">
+                  <div ref={logRef} className="bz-bwl-log" role="log" aria-label={L.narration} tabIndex={0}>
+                    {view.lines.map((line) => (
+                      <p key={line.key} className="bz-bwl-line" data-kind={line.kind}>
+                        <PixelSvg map={GLYPHS[line.kind]} prefix="bz-bwl-g-" roles={GLYPH_ROLES} scale={2} className="bz-bwl-g" />
+                        <span>{line.text}</span>
+                      </p>
+                    ))}
+                  </div>
+                  {placeholder ? (
+                    <p className="bz-bwl-ph" aria-hidden="true">
+                      {placeholder}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="bz-bwl-panel bz-bwl-err" data-panel="error">
+                  <div className="bz-bwl-alert" role="alert">
+                    {view.alert ? (
+                      <>
+                        <PixelSvg map={GLYPHS.cross} prefix="bz-bwl-g-" roles={GLYPH_ROLES} scale={2} className="bz-bwl-g" />
+                        <span ref={alertTextRef}>{view.alert}</span>
+                      </>
+                    ) : null}
+                  </div>
+                  <div ref={menuRef} className="bz-bwl-menu" role="group" aria-label={L.menu} onKeyDown={onMenuKey}>
+                    {menu.map((item, k) => (
+                      <button
+                        key={item.cmd}
+                        ref={(node) => {
+                          menuButtons.current[k] = node;
+                        }}
+                        type="button"
+                        className={\`bz-bwl-btn\${item.primary ? " bz-bwl-primary" : ""}\`}
+                        tabIndex={k === current ? 0 : -1}
+                        data-current={k === current ? "true" : "false"}
+                        aria-expanded={item.cmd === "details" ? detailsOpen : undefined}
+                        aria-controls={item.cmd === "details" ? detailsId : undefined}
+                        onFocus={() => setCursor(k)}
+                        onClick={() => runCommand(item.cmd)}
+                      >
+                        <PixelSvg map={GLYPHS.cursor} prefix="bz-bwl-g-" roles={GLYPH_ROLES} scale={2} className="bz-bwl-g bz-bwl-cur" />
+                        {item.text}
+                        {item.sr ? <span className="bz-bwl-sr"> {item.sr}</span> : null}
+                      </button>
+                    ))}
+                  </div>
+                  <div
+                    ref={detailsRef}
+                    id={detailsId}
+                    className="bz-bwl-details"
+                    data-open={detailsOpen ? "true" : "false"}
+                    tabIndex={detailsOpen && overflow.details ? 0 : undefined}
+                  >
+                    {(overflow.alert && view.alert ? [view.alert, ...view.details] : view.details).map((d, k) => (
+                      <span key={k}>{d}</span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bz-bwl-panel" data-panel="results">
+                  <p className="bz-bwl-final">
+                    <PixelSvg map={GLYPHS.finish} prefix="bz-bwl-g-" roles={GLYPH_ROLES} scale={2} className="bz-bwl-g" />
+                    <span>{view.completion || L.complete(n, 0)}</span>
+                  </p>
+                  <dl className="bz-bwl-stats">
+                    {Array.from({ length: Math.max(slots, tiles.length) }, (_, k) => {
+                      const t = tiles[k];
+                      return (
+                        <div key={k} className="bz-bwl-stat" data-empty={t ? "false" : "true"} aria-hidden={t ? undefined : "true"}>
+                          <dt>{t ? t.label : "Steps"}</dt>
+                          <dd>
+                            <span
+                              ref={(node) => {
+                                numRefs.current[k] = node;
+                              }}
+                              className="bz-bwl-num"
+                              aria-hidden="true"
+                            >
+                              {t ? tileText(t) : "0"}
+                            </span>
+                            <span className="bz-bwl-sr">{t ? tileText(t) : ""}</span>
+                            <span className="bz-bwl-sub">{t ? t.sub : ""}</span>
+                          </dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
+                </div>
+              </div>
+
+              <div className="bz-bwl-foot">
+                <p className="bz-bwl-meta" aria-hidden="true">
+                  {view.meta ? (
+                    <>
+                      <PixelSvg map={GLYPHS.clock} prefix="bz-bwl-g-" roles={GLYPH_ROLES} scale={2} className="bz-bwl-g" />
+                      {view.meta}
+                    </>
+                  ) : (
+                    <>
+                      <b>{metaLead}</b>
+                      {metaTail ? \` · \${metaTail}\` : ""}
+                    </>
+                  )}
+                </p>
+                <div className="bz-bwl-toys">
+                  <button
+                    type="button"
+                    className="bz-bwl-btn bz-bwl-toy"
+                    aria-pressed={userPaused}
+                    data-hidden={reduced ? "true" : "false"}
+                    onClick={() => setUserPaused((p) => !p)}
+                  >
+                    <PixelSvg map={GLYPHS.pause} prefix="bz-bwl-g-" roles={GLYPH_ROLES} scale={2} className="bz-bwl-g" />
+                    {L.pauseMotion}
+                  </button>
+                  {onContinue ? (
+                    <button
+                      ref={continueRef}
+                      type="button"
+                      className="bz-bwl-btn bz-bwl-primary bz-bwl-cont"
+                      data-shown={view.resultsOpen ? "true" : "false"}
+                      onClick={() => onContinue()}
+                    >
+                      {L.continue}
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}`,
+    description: "Breakout-style step loader: each step is a row of bricks broken by real progress.",
+    tags: ["loader", "multi-step", "progress", "pixel-art", "game", "breakout", "accessible", "reduced-motion"],
+  },
+  {
+    name: "SnakeLineLoader",
+    slug: "snake-line-loader",
+    path: "loaders/SnakeLineLoader.tsx",
+    category: "loaders",
+    code: `"use client";
+
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type RefObject,
+} from "react";
+
+/*
+ * SnakeLineLoader: a multi-step loader drawn as a Snake board, where the snake
+ * moves only when the work does.
+ *
+ * A fixed serpentine path runs across the board, and every step owns a run of
+ * cells on it with a pellet at the end; the last step's pellet is a gold apple
+ * you can see from the start. The head sits at the previous pellet plus the
+ * share of the cells your process has reported, so the snake slides forward
+ * only on real progress, and it eats a pellet only when the step is done. It
+ * grows one segment per finished step, so its length always reads 3 plus the
+ * steps done. A skipped step leaves a dashed slot the snake passes over without
+ * growing. The player stands in a booth beside the status strip and wears the
+ * same scarf as the snake: a hop when a pellet goes, a stumble and a sit when a
+ * step fails, a cheer at the end.
+ *
+ * Nothing moves on a timer. The snake, the bar and the count change only when
+ * the steps you pass in change: at most one hit every 400ms, with the
+ * increments in between merged, and every slide ends exactly on the reported
+ * progress. A step whose size is unknown gets a hatched bar and a snake that
+ * holds still and flicks its tongue on the beat, instead of invented progress.
+ *
+ * The loader is controlled, the same way Stepper is. \`steps\` is its only
+ * state and the host owns every transition: it starts, advances, fails,
+ * retries and skips steps. The error menu calls \`onRetry\`, \`onSkip\` and
+ * \`onCancel\`, the results screen calls \`onContinue\`, and \`onComplete\` fires
+ * once per run after the finale.
+ *
+ * The section is named by its heading. A visually hidden list carries every
+ * step and its state, with \`aria-current\` on the current one and \`aria-busy\`
+ * only while work runs, so neither live region sits in a busy subtree. The
+ * status strip is the one progressbar. The dialogue box is a \`role="log"\` that
+ * narrates milestones in sentences rather than ticks; errors go to a
+ * \`role="alert"\` and a menu with a roving focus. Focus moves only when it is
+ * already inside the loader.
+ *
+ * Reduced motion (followed live, or forced with \`reducedMotion\`) removes
+ * every loop and tween: the snake snaps to its honest cell and the player
+ * holds a still pose. The Pause motion button does the same on request. Off
+ * screen or in a hidden tab nothing animates and finished steps settle
+ * without their beats; on return the footer says what finished meanwhile.
+ */
+
+/* ---------------- shared: types and labels ---------------- */
+
+export type LoaderStepStatus = "pending" | "active" | "done" | "error" | "skipped";
+
+export type LoaderStep = {
+  /** Stable key. Beats and announcements key on it. A changed id list or length rebuilds the run. */
+  id: string;
+  /** Present tense: "Import 1,240 contacts". */
+  label: string;
+  /** Where the step is. Only the host changes it. */
+  status: LoaderStepStatus;
+  /** 0 to 1, from real host events only. Leave it out (or null) when the size of the work is unknown. */
+  progress?: number | null;
+  /** A real count, shown on the nameplate and never announced: "620 of 1,240 contacts". */
+  detail?: string;
+  /** Total units of work. Brick Wall draws one brick per unit when this is 16 or fewer. The other four ignore it. */
+  count?: number;
+  /** Past-tense narration: "Imported 1,240 contacts". Falls back to "<label>: done". */
+  doneText?: string;
+  /** Plain sentence, shown and sent to role="alert" when status is "error". */
+  error?: string;
+  /** Longer text behind Show details. */
+  errorDetail?: string;
+  /** 1-based. 2 or more shows "Attempt 2", and a step that then finishes counts as a recovered hiccup. */
+  attempt?: number;
+  /** Host clock for the running or failed attempt, in milliseconds. */
+  elapsedMs?: number;
+  /** Host clock for a finished step, in milliseconds. The results Time tile is the sum. */
+  durationMs?: number;
+};
+
+export type LoaderStat = {
+  /** Tile heading on the results screen: "Contacts". */
+  label: string;
+  /** A real figure. Numbers count up when motion is allowed; strings show as given. */
+  value: string | number;
+  /** Small line under the value: "imported". Default none. */
+  sub?: string;
+};
+
+export type LoaderLabels = {
+  /** The game's word for one step, used in the footer. Encounter: "Stage". */
+  unit: string;
+  /** The finale banner and the footer once every step is settled. Encounter: "Stage clear". */
+  clear: string;
+  /** Accessible name of the narration log. Default "Narration". */
+  narration: string;
+  /** Accessible name of the error menu. Default "What next". */
+  menu: string;
+  /** Retry button. Default "Retry". */
+  retry: string;
+  /** Skip button. Default "Skip". */
+  skip: string;
+  /** Cancel button. Default "Cancel". */
+  cancel: string;
+  /** Details toggle while closed. Default "Show details". */
+  showDetails: string;
+  /** Details toggle while open. Default "Hide details". */
+  hideDetails: string;
+  /** Heading and accessible name of the details card. Default "Details". */
+  details: string;
+  /** Accessible name of the error message when it is long enough to scroll. Default "Error message". */
+  errorMessage: string;
+  /** The motion toggle. Default "Pause motion". */
+  pauseMotion: string;
+  /** The results button. Default "Continue". */
+  continue: string;
+  /** The nameplate mark on a failed step. Default "Failed". */
+  failed: string;
+  /** Footer note while the error menu waits. Default "Waiting for you". */
+  waiting: string;
+  /** Nameplate count for a step of unknown size. Default "Working, size unknown". */
+  sizeUnknown: string;
+  /** Nameplate tag from the second attempt. Default "Attempt 2". */
+  attempt: (n: number) => string;
+  /** Log placeholder before the first milestone. Default "5 steps queued. Up first: Create the workspace." */
+  queued: (n: number, first: string) => string;
+  /** Log placeholder when mounted mid-run, never announced. Default "1 of 5 done. Now: Import 1,240 contacts." */
+  progress: (done: number, total: number, now: string) => string;
+  /** Footer note after a hidden tab or scroll away, never announced. Default "While you were away: 2 steps finished." */
+  away: (n: number) => string;
+  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped)." */
+  complete: (total: number, skipped: number) => string;
+  /** The line after Cancel. Default "Stopped. 2 finished steps are kept." */
+  stopped: (kept: number) => string;
+};
+
+const LOADER_DEFAULT_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
+  narration: "Narration",
+  menu: "What next",
+  retry: "Retry",
+  skip: "Skip",
+  cancel: "Cancel",
+  showDetails: "Show details",
+  hideDetails: "Hide details",
+  details: "Details",
+  errorMessage: "Error message",
+  pauseMotion: "Pause motion",
+  continue: "Continue",
+  failed: "Failed",
+  waiting: "Waiting for you",
+  sizeUnknown: "Working, size unknown",
+  attempt: (n) => \`Attempt \${n}\`,
+  queued: (n, first) => \`\${n} step\${n === 1 ? "" : "s"} queued. Up first: \${first}.\`,
+  progress: (done, total, now) => \`\${done} of \${total} done. Now: \${now}.\`,
+  away: (n) => \`While you were away: \${n} step\${n === 1 ? "" : "s"} finished.\`,
+  complete: (total, skipped) => \`All \${total} step\${total === 1 ? "" : "s"} finished\${skipped ? \` (\${skipped} skipped)\` : ""}.\`,
+  stopped: (kept) => \`Stopped. \${kept} finished step\${kept === 1 ? " is" : "s are"} kept.\`,
+};
+
+/* ---------------- end shared: types and labels ---------------- */
+
+/* ---------------- palettes ---------------- */
+
+export type SnakeLineLoaderColors = {
+  /** The board. */
+  board: string;
+  /** The dot in the middle of every cell. */
+  grid: string;
+  /** The board's frame, the player's booth and the dialogue box border. */
+  frame: string;
+  /** The snake's body. */
+  snake: string;
+  /** Its shaded side, under and to the right of each segment. */
+  snakeShade: string;
+  /** Its outline. */
+  snakeLine: string;
+  /** Pellet fill, and the snake's tongue. */
+  pellet: string;
+  /** Pellet outline. */
+  pelletLine: string;
+  /** The last step's apple. */
+  apple: string;
+  /** Its shaded side. */
+  appleShade: string;
+  /** Its outline and stem. */
+  appleLine: string;
+  /** Its leaf. */
+  leaf: string;
+  /** The dashed slot a skipped step leaves. */
+  ghost: string;
+  /** The player's silhouette edge, the outermost ring of pixels. Pick one that clears 3:1 on the board: dark on a light board, a light rim on a dark one, so dark hair keeps its edge. */
+  spriteOutline: string;
+  /** The player's inner lines: the jaw, the arm against the body, the belt. Usually a near black. */
+  spriteLine: string;
+  /** Primary buttons, the status bar and the attempt tag. */
+  accent: string;
+  /** Text on accent: white on light themes, near black on dark ones. */
+  onAccent: string;
+};
+
+/** One colour set per theme. The loader picks between them with light-dark(), following the host's color-scheme. */
+export type SnakeLineLoaderPalette = { light: SnakeLineLoaderColors; dark: SnakeLineLoaderColors };
+
+/**
+ * Two presets. Every text and control pair is AA on both themes. The snake,
+ * the pellets, the frame and the dashed slot of a skipped step clear 3:1 on
+ * their board, and so does the player's silhouette edge: near black on the
+ * light boards, a pale rim on the dark ones (about 6:1 or more), so dark hair
+ * still has an edge. Spread one to customise:
+ * \`{ ...SNAKE_LINE_LOADER_PALETTES.classic, dark: { ... } }\`.
+ */
+export const SNAKE_LINE_LOADER_PALETTES = {
+  classic: {
+    light: { board: "#d8f5b4", grid: "#8fbf62", frame: "#14532d", snake: "#2b8a3e", snakeShade: "#1f6e30", snakeLine: "#14532d", pellet: "#d6336c", pelletLine: "#6b0f2f", apple: "#f4b740", appleShade: "#c98a12", appleLine: "#5a3a00", leaf: "#2f9e44", ghost: "#14532d", spriteOutline: "#17142e", spriteLine: "#17142e", accent: "#15803d", onAccent: "#ffffff" },
+    dark: { board: "#0e2318", grid: "#1f4a32", frame: "#4ade80", snake: "#4ade80", snakeShade: "#22a35a", snakeLine: "#0a1a12", pellet: "#ff6b9a", pelletLine: "#3a0a1a", apple: "#fbbf24", appleShade: "#d4970f", appleLine: "#3a2500", leaf: "#4ade80", ghost: "#86efac", spriteOutline: "#6fbf8f", spriteLine: "#0b0918", accent: "#4ade80", onAccent: "#0a0a0a" },
+  },
+  neon: {
+    light: { board: "#eef9ff", grid: "#c4e4f2", frame: "#17142e", snake: "#0e7490", snakeShade: "#0b5a70", snakeLine: "#082f3d", pellet: "#be185d", pelletLine: "#4a0a24", apple: "#facc15", appleShade: "#d4a106", appleLine: "#5a3a00", leaf: "#0e7490", ghost: "#17142e", spriteOutline: "#17142e", spriteLine: "#17142e", accent: "#0e7490", onAccent: "#ffffff" },
+    dark: { board: "#120b2e", grid: "#2a1f55", frame: "#a78bfa", snake: "#22d3ee", snakeShade: "#0891b2", snakeLine: "#061a26", pellet: "#f472b6", pelletLine: "#3a0a24", apple: "#facc15", appleShade: "#d4a106", appleLine: "#3a2500", leaf: "#22d3ee", ghost: "#a78bfa", spriteOutline: "#9d8fd4", spriteLine: "#0b0918", accent: "#22d3ee", onAccent: "#0a0a0a" },
+  },
+} as const satisfies Record<string, SnakeLineLoaderPalette>;
+
+export type SnakeLineLoaderPaletteName = keyof typeof SNAKE_LINE_LOADER_PALETTES;
+
+export type SnakeLineLoaderProps = {
+  /** The run, and the only state. The host replaces the array whenever a step changes. */
+  steps: LoaderStep[];
+  /** The heading, and the progressbar's accessible name. */
+  title: string;
+  /** Heading level of the title. Default 2. */
+  headingLevel?: 2 | 3 | 4 | 5 | 6;
+  /** A preset name or your own light and dark colours. Default "classic". */
+  palette?: SnakeLineLoaderPaletteName | SnakeLineLoaderPalette;
+  /** A preset player or your own colours. The player's accent is also the snake's scarf. Default "ember". */
+  character?: LoaderCharacterName | LoaderCharacter;
+  /** Force a theme. Default: inherit the host's color-scheme. */
+  colorScheme?: "light" | "dark";
+  /** Override any visible or announced string. Default English copy. */
+  labels?: Partial<LoaderLabels>;
+  /** Extra results tiles, real figures only. Default none. */
+  stats?: LoaderStat[];
+  /** Added to the completion line: "Your workspace is ready." Default none. */
+  completeText?: string;
+  /** Called with the failed step's id. Without it there is no Retry button. */
+  onRetry?: (id: string) => void;
+  /** Called with the failed step's id. Without it there is no Skip button. */
+  onSkip?: (id: string) => void;
+  /** Called once the loader shows its stopped state. Without it there is no Cancel button. */
+  onCancel?: () => void;
+  /** Adds a Continue button to the results screen. Default none. */
+  onContinue?: () => void;
+  /** Called once per run, after the finale's last beat. */
+  onComplete?: () => void;
+  /** Mirrors every line the log and the alert speak, for your own logging or tests. */
+  onAnnounce?: (text: string, politeness: "polite" | "assertive") => void;
+  /** Force motion off (true) or on (false). Default: follow prefers-reduced-motion live. */
+  reducedMotion?: boolean;
+  /** Class on the root section. */
+  className?: string;
+  /** Style on the root section. */
+  style?: CSSProperties;
+};
+
+/* ---------------- shared: timing constants and helpers ---------------- */
+
+/* The motion ladder, in milliseconds. BEAT is the one ambient beat. */
+const FAST = 150;
+const BASE = 300;
+const SLOW = 500;
+const BEAT = 2400;
+const HIT_GAP = 400; // at most one progress hit per 400ms; increments in between merge
+const IMPACT = 100; // a blow lands this long after the swing starts
+const COLLECT = 100; // completions this close share a beat
+const DWELL = 300; // a step holds the front at least this long
+const BURST_MIN = 3; // this many queued completions become one beat
+const COALESCE = 400; // completions this close share one sentence and one announcement
+
+const loaderNow = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+
+function fmtDur(ms: number | undefined): string {
+  if (ms == null || !Number.isFinite(ms)) return "";
+  if (ms < 950) return \`\${(Math.max(1, Math.round(ms / 100)) / 10).toFixed(1)}s\`;
+  if (ms < 9950) return \`\${(Math.round(ms / 100) / 10).toFixed(1)}s\`;
+  const s = Math.round(ms / 1000);
+  if (s < 60) return \`\${s}s\`;
+  return \`\${Math.floor(s / 60)}m \${String(s % 60).padStart(2, "0")}s\`;
+}
+
+const listJoin = (a: string[]) => (a.length < 2 ? a.join("") : \`\${a.slice(0, -1).join(", ")} and \${a[a.length - 1]}\`);
+
+/** Lowercases a leading capital unless the word is an initialism ("CSV"). */
+const lowerFirst = (s: string) => (s && s.length > 1 && s[1] === s[1].toLowerCase() ? s[0].toLowerCase() + s.slice(1) : s || "");
+
+const isSettled = (s: LoaderStep | undefined) => !!s && (s.status === "done" || s.status === "skipped");
+
+/** The library's ease-out, cubic-bezier(0.23, 1, 0.32, 1), sampled in JS for stepped keyframes. */
+function loaderEase(t: number): number {
+  const curve = (a: number, b: number, s: number) => 3 * a * s * (1 - s) * (1 - s) + 3 * b * s * s * (1 - s) + s * s * s;
+  let lo = 0;
+  let hi = 1;
+  let s = t;
+  for (let i = 0; i < 24; i++) {
+    s = (lo + hi) / 2;
+    if (curve(0.23, 0.32, s) < t) lo = s;
+    else hi = s;
+  }
+  return curve(1, 1, s);
+}
+
+/** Held positions in whole CSS pixels: each keyframe holds until the next, so pixel art is never resampled mid-move. */
+function loaderStepped(points: Array<[number, number, number, number?]>): Keyframe[] {
+  return points.map(([offset, x, y, o]) => ({
+    offset,
+    easing: "step-end",
+    transform: \`translate(\${Math.round(x)}px, \${Math.round(y)}px)\`,
+    ...(o == null ? {} : { opacity: o }),
+  }));
+}
+
+/** A slide sampled from the ease-out curve about every 33ms, as stepped whole-pixel keyframes. */
+function loaderGlide(fx: number, fy: number, tx: number, ty: number, ms: number): Keyframe[] {
+  const n = Math.max(2, Math.round(ms / 33));
+  const out: Keyframe[] = [];
+  for (let j = 0; j <= n; j++) {
+    const e = loaderEase(j / n);
+    out.push({
+      offset: j / n,
+      easing: "step-end",
+      transform: \`translate(\${Math.round(fx + (tx - fx) * e)}px, \${Math.round(fy + (ty - fy) * e)}px)\`,
+    });
+  }
+  return out;
+}
+
+/** Horizontal runs of one colour key merged into one path each, in art pixels. */
+function loaderPixelPaths(map: readonly string[]): Array<[string, string]> {
+  const paths = new Map<string, string>();
+  map.forEach((row, y) => {
+    let x = 0;
+    while (x < row.length) {
+      const c = row[x];
+      if (c === ".") {
+        x++;
+        continue;
+      }
+      let x2 = x;
+      while (x2 < row.length && row[x2] === c) x2++;
+      paths.set(c, \`\${paths.get(c) ?? ""}M\${x} \${y}h\${x2 - x}v1h\${x - x2}z\`);
+      x = x2;
+    }
+  });
+  return Array.from(paths);
+}
+
+/** Markup for an arena sprite: one path per key, each with a class that CSS maps to a palette colour. */
+function loaderPixelSvg(map: readonly string[], roles: Record<string, string>, crop?: [number, number, number, number]): string {
+  const box = crop ?? [0, 0, map[0].length, map.length];
+  let out = \`<svg viewBox="\${box.join(" ")}" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true" focusable="false">\`;
+  for (const [k, d] of loaderPixelPaths(map)) out += \`<path class="bz-snl-k-\${roles[k] ?? k}" d="\${d}"/>\`;
+  return \`\${out}</svg>\`;
+}
+
+const loaderKebab = (key: string) => key.replace(/[A-Z]/g, (m) => \`-\${m.toLowerCase()}\`);
+
+/** A palette as custom properties on the root, each one light-dark(<light>, <dark>). */
+function loaderPaletteVars(light: Record<string, string>, dark: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const key of Object.keys(light)) out[\`--bz-snl-\${loaderKebab(key)}\`] = \`light-dark(\${light[key]}, \${dark[key] ?? light[key]})\`;
+  return out;
+}
+
+/* 7 x 7 glyphs (the cursor is 4 x 7), drawn in currentColor. */
+const LOADER_GLYPHS = {
+  done: [".......", "......#", ".....##", "#...##.", "##.##..", ".###...", "..#...."],
+  skipped: [".......", ".......", ".......", "#######", "#######", ".......", "......."],
+  retry: ["..###.#", ".#...##", "#...###", "#......", "#.....#", ".#...#.", "..###.."],
+  finish: ["...#...", "...#...", "#######", ".#####.", "..###..", ".##.##.", "##...##"],
+  stop: [".......", ".#####.", ".#####.", ".#####.", ".#####.", ".#####.", "......."],
+  cross: ["##...##", "###.###", ".#####.", "..###..", ".#####.", "###.###", "##...##"],
+  pause: [".......", ".##.##.", ".##.##.", ".##.##.", ".##.##.", ".##.##.", "......."],
+  cursor: ["#...", "##..", "###.", "####", "###.", "##..", "#..."],
+  clock: ["..###..", ".#...#.", "#..#..#", "#..##.#", "#.....#", ".#...#.", "..###.."],
+} as const;
+
+type LoaderGlyphName = keyof typeof LOADER_GLYPHS;
+
+const LOADER_GLYPH_D = Object.fromEntries(
+  Object.entries(LOADER_GLYPHS).map(([name, map]) => [name, loaderPixelPaths(map).map(([, d]) => d).join("")]),
+) as Record<LoaderGlyphName, string>;
+
+function LoaderGlyph({ name }: { name: LoaderGlyphName }) {
+  const map = LOADER_GLYPHS[name];
+  return (
+    <svg className="bz-snl-g" viewBox={\`0 0 \${map[0].length} \${map.length}\`} shapeRendering="crispEdges" aria-hidden="true" focusable="false">
+      <path d={LOADER_GLYPH_D[name]} />
+    </svg>
+  );
+}
+
+/* ---------------- end shared: timing constants and helpers ---------------- */
+
+/* ---------------- shared: character ---------------- */
+
+export type LoaderCharacterName = "ember" | "tide" | "moss" | "plum";
+
+export type LoaderCharacter = {
+  /** Which head to draw: "puffs", "ponytail", "short" or "wrap" (a head scarf coloured by hair and hairShade). */
+  hairStyle: "puffs" | "ponytail" | "short" | "wrap";
+  /** Skin colour. */
+  skin: string;
+  /** Skin shade: the far cheek, the jaw and the ear. */
+  skinShade: string;
+  /** Hair, or the wrap fabric. */
+  hair: string;
+  /** Hair shade, darker than hair: under the fringe, on the far side and at the nape. */
+  hairShade: string;
+  /** Tunic body. */
+  outfit: string;
+  /** Tunic shade, on the right of the body. */
+  outfitShade: string;
+  /** Tunic highlight: the left column and the near sleeve. */
+  outfitLight: string;
+  /** Scarf, belt buckle, hair tie and wrap band. */
+  accent: string;
+  /** Trousers, the near leg. */
+  pants: string;
+  /** Trousers shade, the far leg. */
+  pantsShade: string;
+  /** Boots and the belt leather. */
+  boots: string;
+  /** Boot shade. */
+  bootsShade: string;
+  /** Eye white. Default #ffffff. */
+  eyeWhite?: string;
+  /** Pupils and mouth. Default #1b1630. */
+  eye?: string;
+};
+
+/** Four adventurers: four skin tones, four hair styles, four outfit hues. The outfits carry the silhouette on dark skies. */
+export const LOADER_CHARACTERS: Record<LoaderCharacterName, LoaderCharacter> = {
+  ember: { hairStyle: "puffs", skin: "#8d5524", skinShade: "#6b3d18", hair: "#4a3128", hairShade: "#2a1b15", outfit: "#ff5a36", outfitShade: "#c43d20", outfitLight: "#ff9a7a", accent: "#ffd23f", pants: "#3f64b5", pantsShade: "#2b4a8a", boots: "#5b3a1e", bootsShade: "#3d2614" },
+  tide: { hairStyle: "ponytail", skin: "#f3c7a5", skinShade: "#d9a07c", hair: "#e0702c", hairShade: "#a84e1a", outfit: "#3d8bfd", outfitShade: "#2563c9", outfitLight: "#8cbcff", accent: "#ff6fa5", pants: "#e6d3a3", pantsShade: "#c2a970", boots: "#7a4a28", bootsShade: "#55331b" },
+  moss: { hairStyle: "short", skin: "#c68e5f", skinShade: "#a06c42", hair: "#4f4760", hairShade: "#2e2838", outfit: "#3fbf5a", outfitShade: "#2a8a3f", outfitLight: "#8fe39f", accent: "#ff9f1c", pants: "#8b5e34", pantsShade: "#6b4526", boots: "#2f2a3a", bootsShade: "#1f1b27" },
+  plum: { hairStyle: "wrap", skin: "#a8693f", skinShade: "#82502c", hair: "#e0457b", hairShade: "#b02f5e", outfit: "#a06cf0", outfitShade: "#7a4bc4", outfitLight: "#c9a8ff", accent: "#2ec4b6", pants: "#4a5a8c", pantsShade: "#36426a", boots: "#8a5a2b", bootsShade: "#62401e" },
+};
+
+/*
+ * The adventurer is 16 x 24 art pixels, faces right and stands on row 23,
+ * with a 1px outline all round and the light from the top left. Keys:
+ *   . clear   o outline (the game palette)   h hair   H hair shade
+ *   s skin    S skin shade   w eye white   e pupil   m mouth
+ *   c outfit  C outfit shade   l outfit light   a accent (scarf, buckle)
+ *   p trousers   P trousers shade   b boots and belt   B boot shade
+ * Accessories add j and J (jetpack), f and F (flame), k and K (wood).
+ * A head (16 x 11) takes a face patch and sits at a per-frame offset; the
+ * body for the pose is anchored to the bottom row and drawn over it.
+ * Once a frame is composed, every outline pixel that does not touch the
+ * outside becomes i, an inner line, so a light rim on a dark sky wraps the
+ * silhouette while the jaw, arm and belt lines stay dark.
+ */
+const LOADER_HERO_W = 16;
+const LOADER_HERO_H = 24;
+
+const LOADER_HEADS: Record<LoaderCharacter["hairStyle"], readonly string[]> = {
+  short: ["....oo.oo.oo....", "...ohhohhohho...", "..ohhhhhhhhhhoo.", "..ohhhhhhhhhHHo.", "..ohhhhhhhHhHHo.", "..ohhhhhHHsHsso.", "..ohhSsssssssso.", "..ohHssssssssso.", "..oHHsssssSssSo.", "...oHsssssssSo..", "....ooooooooo..."],
+  ponytail: [".....oooooo.....", "...oohhhhhhhoo..", ".ooahhhhhhhhhho.", "ohHohhhhhhhhhHo.", "ohHohhhhhhhhHHo.", "ohHohhhhhHshsso.", "oHHohSsssssssso.", ".oHoHssssssssso.", ".oHoHsssssSssSo.", "..ooHsssssssSo..", "....ooooooooo..."],
+  puffs: [".ooo...ooooo....", "ohhho.ohhhhho...", "ohhHhohhhhhHo...", ".oHHhhhhhHHhhho.", "..ohhhhhhhhhhHo.", "..ohhhhssssssso.", "..ohhSsssssssso.", "..ohHssssssssso.", "..oHHsssssSssSo.", "...oHsssssssSo..", "....ooooooooo..."],
+  wrap: [".......oooo.oo..", ".....oohhhhoHho.", "...oohhhhhHHHo..", "..ohhhhhhhHhhho.", "..ohhhhhhhhhhHo.", "..oaaaaaaaaaaao.", "..ohhSsssssssso.", "..ohHssssssssso.", "..oHHsssssSssSo.", "...oHsssssssSo..", "....ooooooooo..."],
+};
+
+/* Face patches over cols 7 to 13 and rows 6 to 9 of a head; "_" keeps the head pixel. */
+type LoaderEyes = "open" | "blink" | "squint" | "happy";
+const LOADER_FACE_X = 7;
+const LOADER_FACE_Y = 6;
+const LOADER_FACES: Record<LoaderEyes, readonly string[]> = {
+  open: ["_we_we_", "_we_we_", "_______", "____m__"],
+  blink: ["_______", "_ee_ee_", "_______", "____m__"],
+  squint: ["_e___e_", "__e_e__", "_e___e_", "___mm__"],
+  happy: ["_e___e_", "e_e_e_e", "_______", "___mm__"],
+};
+
+type LoaderPose = "idle" | "run1" | "run2" | "run3" | "run4" | "jump" | "bonk" | "swing1" | "swing2" | "hurt" | "sit" | "celebrate1" | "celebrate2" | "fly1" | "fly2";
+
+/* Bodies are anchored to the bottom row; taller maps reach up past the chin for a raised arm. */
+const LOADER_BODIES: Record<LoaderPose, readonly string[]> = {
+  idle: ["...oaaaaaaaao...", "...oClcccColco..", "...oClcccColco..", "...oClcccColco..", "...oSbbabbosso..", "...oolcccCCoo...", "....oppppPPo....", "....opPoppPo....", "....opPoppPo....", "....opPoppPo....", "....obBobbBo....", "....obBobbbBo...", "....ooooooooo..."],
+  run1: [".ooo............", "oaaaaaaaaaaaao..", ".oaooClcccColco.", "..o.oClcccColcco", "....oClcccCoosso", "....oSbbabboooo.", "....oolcccCCo...", ".....oppppPPo...", "....oPPo.oppo...", "...oPPo..oppo...", "..oPPo....oppo..", ".oBBo.....obbBo.", ".oBo......obbbBo", "..o.......oooooo"],
+  run2: ["..oaaaaaaaaaao..", ".oaaoClcccColco.", "..oooClcccColco.", "....oClcccColco.", "....oSbbabbosso.", "....oolcccCCoo..", ".....oppppPo....", ".....oPPoppo....", "..oBBBPoppPo....", "...oooooppPo....", ".......obbBo....", ".......obbbBo...", ".......oooooo..."],
+  run3: [".ooo............", "oaaaaaaaaaaaao..", ".oaooClcccColco.", "..o.oClcccColcco", "....oClcccCoosso", "....oSbbabboooo.", "....oolcccCCo...", ".....oppppPPo...", "....oppo.oPPo...", "...oppo..oPPo...", "..oppo....oPPo..", ".obbo.....oBBBo.", ".obo......oBBBBo", "..o.......oooooo"],
+  run4: ["..oaaaaaaaaaao..", ".oaaoClcccColco.", "..oooClcccColco.", "....oClcccColco.", "....oSbbabbosso.", "....oolcccCCoo..", ".....oppppPo....", ".....oppoPPo....", "..obbbpoPPPo....", "...oooooPPPo....", ".......oBBBo....", ".......oBBBBo...", ".......oooooo..."],
+  jump: ["............oo..", "...oaaaaaaaosso.", "...oClcccColcCo.", "...oClcccCCo....", "..oSClcccCCo....", "...oobbabbbo....", "....olcccCCo....", "....oppppPPPo...", "....oPPoopppPo..", "...oPPo..obbBo..", "...oBBo..obbbBo.", "...oBBo..oooooo.", "....oo..........", "................"],
+  bonk: [".............oo.", "............osso", "............oSso", ".............lco", ".............lco", ".............lco", ".............lco", ".............lco", "...oaaaaaaaaolco", "...oClcccCCCClco", "...oClcccCCCCco.", "...oClcccCCCCo..", "...oSbbabbbbo...", "....olcccCCo....", "....oppppPPo....", "....opPoppPo....", "....opPoopPo....", "....obBo.obBo...", "....oBBo.obbo...", ".....oo...oo....", "................"],
+  swing1: ["..oaaaaaaaao.oo.", "..oClcccColcosso", "..oClcccColcolco", "..oClcccColccco.", "..oSbbabbooooo..", "...olcccCCo.....", "...oppppPPPo....", "...opPPoopPPo...", "..opPo...opPo...", "..opPo...opPo...", "..obBo...obbBo..", "..obbBo..obbbBo.", "..ooooo..oooooo."],
+  swing2: ["....oaaaaaaaao..", "....oClcccCoooo.", "....oClcccClcsso", "....oClcccCoooo.", "....oSbbabbo....", ".....olcccCo....", ".....opppPPPo...", "....oPPo.oppPo..", "...oPPo...oppPo.", "..oPPo....oppPo.", ".oBBo.....obbBo.", "oBBBo.....obbbBo", "ooooo.....oooooo"],
+  hurt: [".............oo.", "............osso", "..oaaaaaaaaolco.", "..oClcccCClco...", ".ooClcccCCo.....", "oSSoClccCCo.....", "oSoobbabbo......", ".o.olcccCo......", "...oppppPPo.....", "...opPoppPPo....", "...opPo.oppPo...", "...opPo..obbBo..", "...obBo..obbbBo.", "...obbBo..ooooo.", "...ooooo........"],
+  sit: ["..oaaaaaaaao....", ".oCClcccColco...", "oSoClcccColcooo.", "oSobbabbossoobBo", "oSoppppppppppbBo", "ooPPPPPPPPPPPbBo", ".ooooooooooooooo"],
+  celebrate1: [".............oo.", "............osso", "............oSso", ".............lco", ".............lco", ".............lco", ".............lco", ".............lco", "...oaaaaaaaaolco", "...oClcccCCCClco", "...oClcccCCCCco.", "...oClcccCCCCo..", "...oSbbabbbbo...", "....olcccCCo....", "....oppppPPo....", "....opPoppPo....", "....opPoppPo....", "....opPoppPo....", "....obBobbBo....", "....obBobbbBo...", "....ooooooooo..."],
+  celebrate2: [".............oo.", "............osso", "............oSso", ".............lco", ".............lco", "...oaaaaaaaaolco", "...oClcccCCCClco", "...oClcccCCCCco.", "...oClcccCCCCo..", "...oSbbabbbbo...", "....olcccCCo....", "....oppppPPo....", "...opPPoopPPo...", "...opPo..opPo...", "...obBo..obBo...", "...obbBo.obbbBo.", "...ooooo.oooooo."],
+  fly1: ["....oaaaaaaaao..", "....oClcccColco.", "....oClcccColcso", "....oClcccCCoooo", "....oSbbabbbo...", "....oolcccCCooo.", ".....opppppppPo.", ".....oPPPPopppo.", "......oooo.obbo.", "...........obbBo", "...........ooooo", "................", "................"],
+  fly2: ["....oaaaaaaaao..", "....oClcccColco.", "....oClcccColcso", "....oClcccCCoooo", "....oSbbabbbo...", "....oolcccCCoo..", ".....opppppPPo..", ".....oPPPoppPo..", "......ooo.obbo..", "..........obbBo.", "..........ooooo.", "................", "................"],
+};
+
+export type LoaderFrameName = "idle1" | "idle2" | "run1" | "run2" | "run3" | "run4" | "jump" | "bonk" | "swing1" | "swing2" | "hurt" | "sit" | "celebrate1" | "celebrate2" | "fly1" | "fly2";
+
+const LOADER_FRAMES: Record<LoaderFrameName, { body: LoaderPose; eyes: LoaderEyes; dx: number; dy: number }> = {
+  idle1: { body: "idle", eyes: "open", dx: 0, dy: 0 },
+  idle2: { body: "idle", eyes: "open", dx: 0, dy: 1 },
+  run1: { body: "run1", eyes: "open", dx: 1, dy: 1 },
+  run2: { body: "run2", eyes: "open", dx: 1, dy: 0 },
+  run3: { body: "run3", eyes: "open", dx: 1, dy: 1 },
+  run4: { body: "run4", eyes: "open", dx: 1, dy: 0 },
+  jump: { body: "jump", eyes: "open", dx: 0, dy: 0 },
+  bonk: { body: "bonk", eyes: "squint", dx: -1, dy: 0 },
+  swing1: { body: "swing1", eyes: "open", dx: -1, dy: 0 },
+  swing2: { body: "swing2", eyes: "open", dx: 1, dy: 0 },
+  hurt: { body: "hurt", eyes: "squint", dx: -1, dy: 1 },
+  sit: { body: "sit", eyes: "blink", dx: -1, dy: 6 },
+  celebrate1: { body: "celebrate1", eyes: "happy", dx: -1, dy: 0 },
+  celebrate2: { body: "celebrate2", eyes: "happy", dx: -1, dy: 1 },
+  fly1: { body: "fly1", eyes: "open", dx: 1, dy: 0 },
+  fly2: { body: "fly2", eyes: "open", dx: 1, dy: 0 },
+};
+
+const LOADER_FRAME_NAMES = Object.keys(LOADER_FRAMES) as LoaderFrameName[];
+
+/* Colour key to the class role (bz-snl-c-<role>), which the stylesheet maps to a custom property. */
+const LOADER_HERO_ROLES: Record<string, string> = {
+  o: "outline", i: "line", h: "hair", H: "hair-shade", s: "skin", S: "skin-shade", w: "eye-white", e: "eye", m: "mouth",
+  c: "outfit", C: "outfit-shade", l: "outfit-light", a: "accent", p: "pants", P: "pants-shade", b: "boots", B: "boots-shade",
+  j: "jetpack", J: "jetpack-shade", f: "flame", F: "flame-core", k: "wood", K: "wood-shade",
+};
+
+/** A small map placed at (x, y) in the adventurer's art pixels. */
+type LoaderLayer = { x: number; y: number; rows: readonly string[] };
+
+/** A game's prop for the adventurer: layers drawn behind the head, or in front after the outline pass. */
+type LoaderAccessory = { id: string; layers: (frame: LoaderFrameName) => { back?: LoaderLayer[]; front?: LoaderLayer[] } | null };
+
+function composeLoaderHero(hairStyle: LoaderCharacter["hairStyle"], frame: LoaderFrameName, extra: { back?: LoaderLayer[]; front?: LoaderLayer[] } | null): string[] {
+  const f = LOADER_FRAMES[frame];
+  const back = extra?.back ?? [];
+  const front = extra?.front ?? [];
+  let width = LOADER_HERO_W;
+  for (const l of front) width = Math.max(width, l.x + l.rows[0].length);
+  const grid: string[][] = Array.from({ length: LOADER_HERO_H }, () => Array<string>(width).fill("."));
+  const put = (rows: readonly string[], ox: number, oy: number, maxX: number) => {
+    rows.forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) {
+        const gx = ox + x;
+        const gy = oy + y;
+        if (row[x] !== "." && gx >= 0 && gx < maxX && gy >= 0 && gy < LOADER_HERO_H) grid[gy][gx] = row[x];
+      }
+    });
+  };
+  const head = LOADER_HEADS[hairStyle].map((r) => r.split(""));
+  LOADER_FACES[f.eyes].forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) if (row[x] !== "_") head[LOADER_FACE_Y + y][LOADER_FACE_X + x] = row[x];
+  });
+  for (const l of back) put(l.rows, l.x, l.y, LOADER_HERO_W);
+  put(head.map((r) => r.join("")), f.dx, f.dy, LOADER_HERO_W);
+  const body = LOADER_BODIES[f.body];
+  put(body, 0, LOADER_HERO_H - body.length, LOADER_HERO_W);
+  // A pixel clipped at the box edge would lose its outline, so the edge columns become outline.
+  for (let y = 0; y < LOADER_HERO_H; y++) {
+    for (const x of [0, LOADER_HERO_W - 1]) if (grid[y][x] !== "." && grid[y][x] !== "f" && grid[y][x] !== "F") grid[y][x] = "o";
+  }
+  for (const l of front) put(l.rows, l.x, l.y, width);
+  return loaderInnerLines(grid.map((r) => r.join("")));
+}
+
+/**
+ * Splits the outline: a pixel with any clear neighbour (of eight) stays the
+ * silhouette edge; the rest become inner lines (i). Past the top, left or right
+ * of the map counts as clear; past the bottom is the floor or the portrait's
+ * frame, so the soles and the scarf's lower edge keep their dark line.
+ */
+function loaderInnerLines(map: readonly string[]): string[] {
+  const h = map.length;
+  const clear = (x: number, y: number) => y < 0 || (y < h && (x < 0 || x >= map[y].length || map[y][x] === "."));
+  return map.map((row, y) =>
+    row.replace(/o/g, (_, x: number) => {
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && clear(x + dx, y + dy)) return "o";
+      return "i";
+    }),
+  );
+}
+
+/* Every frame's paths depend only on the hair style, the accessory and the frame list, never on colour, so they are built once. */
+const loaderHeroCache = new Map<string, string>();
+function loaderHeroMarkup(hairStyle: LoaderCharacter["hairStyle"], accessory: LoaderAccessory | null, frames: readonly LoaderFrameName[]): string {
+  const key = \`\${hairStyle}:\${accessory?.id ?? ""}:\${frames.join(",")}\`;
+  const hit = loaderHeroCache.get(key);
+  if (hit) return hit;
+  let out = "";
+  for (const name of frames) {
+    let paths = "";
+    for (const [k, d] of loaderPixelPaths(composeLoaderHero(hairStyle, name, accessory ? accessory.layers(name) : null))) {
+      paths += \`<path class="bz-snl-c-\${LOADER_HERO_ROLES[k] ?? k}" d="\${d}"/>\`;
+    }
+    out += \`<g class="bz-snl-f" data-f="\${name}">\${paths}</g>\`;
+  }
+  loaderHeroCache.set(key, out);
+  return out;
+}
+
+/** The game's frames in one svg; the wrapper's data-frame (or data-loop) decides which one shows. */
+function LoaderHeroSprite({ hairStyle, accessory, frames = LOADER_FRAME_NAMES }: { hairStyle: LoaderCharacter["hairStyle"]; accessory: LoaderAccessory | null; frames?: readonly LoaderFrameName[] }) {
+  return (
+    <svg
+      className="bz-snl-sprite"
+      viewBox={\`0 0 \${LOADER_HERO_W} \${LOADER_HERO_H}\`}
+      preserveAspectRatio="none"
+      shapeRendering="crispEdges"
+      overflow="visible"
+      aria-hidden="true"
+      focusable="false"
+      dangerouslySetInnerHTML={{ __html: loaderHeroMarkup(hairStyle, accessory, frames) }}
+    />
+  );
+}
+
+function loaderCharacter(c: LoaderCharacterName | LoaderCharacter | undefined): LoaderCharacter {
+  if (!c) return LOADER_CHARACTERS.ember;
+  return typeof c === "string" ? LOADER_CHARACTERS[c] ?? LOADER_CHARACTERS.ember : c;
+}
+
+/** The adventurer's colours as --chr-* properties. They do not change with the theme. */
+function loaderCharacterVars(ch: LoaderCharacter): Record<string, string> {
+  return {
+    "--chr-hair": ch.hair, "--chr-hair-shade": ch.hairShade, "--chr-skin": ch.skin, "--chr-skin-shade": ch.skinShade,
+    "--chr-eye-white": ch.eyeWhite ?? "#ffffff", "--chr-eye": ch.eye ?? "#1b1630",
+    "--chr-outfit": ch.outfit, "--chr-outfit-shade": ch.outfitShade, "--chr-outfit-light": ch.outfitLight, "--chr-accent": ch.accent,
+    "--chr-pants": ch.pants, "--chr-pants-shade": ch.pantsShade, "--chr-boots": ch.boots, "--chr-boots-shade": ch.bootsShade,
+  };
+}
+
+/* The speaker portrait in the dialogue box: the head and scarf at a larger scale, one group per expression. */
+type LoaderFace = "open" | "blink" | "squint" | "happy";
+const LOADER_SCARF_ROW = "...oaaaaaaaao...";
+const loaderPortraitCache = new Map<string, string>();
+function loaderPortraitMarkup(hairStyle: LoaderCharacter["hairStyle"]): string {
+  const hit = loaderPortraitCache.get(hairStyle);
+  if (hit) return hit;
+  let out = "";
+  for (const eyes of ["open", "blink", "squint", "happy"] as LoaderFace[]) {
+    const head = LOADER_HEADS[hairStyle].map((r) => r.split(""));
+    LOADER_FACES[eyes].forEach((row, y) => {
+      for (let x = 0; x < row.length; x++) if (row[x] !== "_") head[LOADER_FACE_Y + y][LOADER_FACE_X + x] = row[x];
+    });
+    let paths = "";
+    for (const [k, d] of loaderPixelPaths(loaderInnerLines([...head.map((r) => r.join("")), LOADER_SCARF_ROW]))) paths += \`<path class="bz-snl-c-\${LOADER_HERO_ROLES[k] ?? k}" d="\${d}"/>\`;
+    out += \`<g data-f="\${eyes}">\${paths}</g>\`;
+  }
+  loaderPortraitCache.set(hairStyle, out);
+  return out;
+}
+
+/** Open eyes that blink now and then while work runs, a squint on an error, dazed when stopped, happy at the end. */
+function LoaderPortrait({ hairStyle, face }: { hairStyle: LoaderCharacter["hairStyle"]; face: LoaderFace }) {
+  return (
+    <div className="bz-snl-face" data-face={face} aria-hidden="true">
+      <svg viewBox="0 0 16 12" preserveAspectRatio="none" shapeRendering="crispEdges" focusable="false" dangerouslySetInnerHTML={{ __html: loaderPortraitMarkup(hairStyle) }} />
+    </div>
+  );
+}
+
+type LoaderLoop = "" | "idle" | "working" | "celebrate" | "run" | "fly";
+
+/** Shows one frame, or starts a CSS loop. An attribute change, never a React render. */
+function loaderSetPose(hero: HTMLElement | null, frame: LoaderFrameName | "", loop: LoaderLoop) {
+  if (!hero) return;
+  if (hero.dataset.frame !== frame) hero.dataset.frame = frame;
+  if ((hero.dataset.loop ?? "") !== loop) hero.dataset.loop = loop;
+}
+
+/* ---------------- end shared: character ---------------- */
+
+/* ---------------- shared: engine ---------------- */
+
+type LoaderPhase = "idle" | "run" | "error" | "complete" | "stopped";
+type LoaderLineKind = "done" | "skipped" | "retry" | "finish" | "stop";
+type LoaderLine = { key: number; kind: LoaderLineKind; text: string };
+/** \`more\` is read after the sub and shown on hover, never drawn: a tile has little room. */
+type LoaderTile = { label: string; value: number | string; kind: "steps" | "time" | "stat" | "hiccup"; total: number; sub: string; more?: string };
+type LoaderFocusTarget = "retry" | "log" | "continue";
+type LoaderVis = "live" | "gone";
+type LoaderEntry = { i: number; kind: "done" | "skipped"; at: number; said?: boolean };
+type LoaderMotion = { reduced: boolean; paused: boolean; onscreen: boolean; visible: boolean };
+
+/** What the chassis renders. The engine owns it and pushes every change through setState. */
+type LoaderView = {
+  phase: LoaderPhase;
+  /** The step at the front of the arena. It may lag the host by one beat, never lead it. */
+  front: number;
+  frontKey: number;
+  /** The progress the art shows: it changes only when a hit lands. */
+  barP: number | null;
+  barDetail: string | null;
+  lines: LoaderLine[];
+  alert: string;
+  errorIndex: number;
+  details: string;
+  detailMore: string;
+  tiles: LoaderTile[];
+  results: boolean;
+  resultsKey: number;
+  banner: boolean;
+  done: boolean;
+  meta: string | null;
+  focus: { target: LoaderFocusTarget; n: number } | null;
+  /** The run was already under way when the loader mounted, so the log starts from a summary. */
+  midRun: boolean;
+};
+
+/** Read-only access to the engine for a game's arena driver. */
+type LoaderArenaCtx = {
+  steps: () => LoaderStep[];
+  vis: () => LoaderVis[];
+  front: () => number;
+  phase: () => LoaderPhase;
+  /** The front step's progress as the art should show it (0 when pending or of unknown size, 1 when done). */
+  frontP: () => number;
+  motionAllowed: () => boolean;
+  motionOn: () => boolean;
+  running: () => boolean;
+  later: (fn: () => void, ms: number) => number;
+  clear: (id: number) => number;
+  anim: (el: Element, frames: Keyframe[], opts: KeyframeAnimationOptions) => Animation | null;
+};
+
+/** What each game implements. The engine decides when; the arena decides how it looks. */
+type LoaderArena = {
+  rebuild: () => void;
+  layout: (animate: boolean) => void;
+  /** Starts a hit on the front step and returns when it lands, in ms. */
+  hit: (i: number) => number;
+  /** Draws the honest progress of step i; \`showy\` adds the impact effects. */
+  progress: (i: number, showy: boolean) => void;
+  /** Starts the finishing blow and returns when it lands, in ms. */
+  finish: (i: number) => number;
+  /** Resolves finished or skipped steps and returns how long to hold before the next one moves up. */
+  resolve: (entries: LoaderEntry[], showy: boolean) => number;
+  advance: (changed: boolean) => void;
+  error: (i: number, showy: boolean) => void;
+  recover: (i: number, showy: boolean) => void;
+  stop: (showy: boolean) => void;
+  finale: (showy: boolean) => void;
+  pose: () => void;
+  motion: () => void;
+  destroy: () => void;
+};
+
+type LoaderGame = { unit: string; clear: string; arena: (root: HTMLElement, ctx: LoaderArenaCtx) => LoaderArena };
+
+/** The props the engine reads. Every game's props satisfy it. */
+type LoaderHostProps = {
+  steps: LoaderStep[];
+  title: string;
+  labels?: Partial<LoaderLabels>;
+  stats?: LoaderStat[];
+  completeText?: string;
+  onRetry?: (id: string) => void;
+  onSkip?: (id: string) => void;
+  onCancel?: () => void;
+  onContinue?: () => void;
+  onComplete?: () => void;
+  onAnnounce?: (text: string, politeness: "polite" | "assertive") => void;
+  reducedMotion?: boolean;
+};
+
+function loaderFirstLive(steps: LoaderStep[]) {
+  let f = 0;
+  while (f < steps.length && isSettled(steps[f])) f++;
+  return f;
+}
+
+function loaderInitialView(steps: LoaderStep[]): LoaderView {
+  const front = loaderFirstLive(steps);
+  const s = steps[front];
+  const started = steps.some((x) => x.status !== "pending");
+  return {
+    phase: steps.length && steps.every(isSettled) ? "complete" : started ? "run" : "idle",
+    front,
+    frontKey: 0,
+    barP: s ? (s.status === "done" ? 1 : s.progress ?? null) : null,
+    barDetail: s?.detail ?? null,
+    lines: [],
+    alert: "",
+    errorIndex: -1,
+    details: "",
+    detailMore: "",
+    tiles: [],
+    results: false,
+    resultsKey: 0,
+    banner: false,
+    done: false,
+    meta: null,
+    focus: null,
+    midRun: started,
+  };
+}
+
+function loaderNeedsRebuild(prev: LoaderStep[], next: LoaderStep[], phase: LoaderPhase) {
+  if (prev.length !== next.length) return true;
+  for (let i = 0; i < next.length; i++) if (prev[i].id !== next[i].id) return true;
+  // A settled step never comes back. If the host reopens one, it has started a different run.
+  for (let i = 0; i < next.length; i++) if (isSettled(prev[i]) && !isSettled(next[i])) return true;
+  const allPending = next.every((s) => s.status === "pending");
+  return allPending && (phase !== "idle" || prev.some((s) => s.status !== "pending"));
+}
+
+type LoaderEngine = ReturnType<typeof createLoaderEngine>;
+
+function createLoaderEngine(env: {
+  root: RefObject<HTMLElement>;
+  game: LoaderGame;
+  labels: () => LoaderLabels;
+  props: () => LoaderHostProps;
+  emit: (view: LoaderView) => void;
+}) {
+  let host: LoaderStep[] = [];
+  let vis: LoaderVis[] = [];
+  let front = 0;
+  let frontSince = -1e9;
+  let beatUntil = 0;
+  let beatBusy = false;
+  let inflight: { entries: LoaderEntry[]; landed: boolean; timer: number } | null = null;
+  let backlog: LoaderEntry[] = [];
+  let phase: LoaderPhase = "idle";
+  let barP: number | null = null;
+  let barDetail: string | null = null;
+  let lastSeenP: number | null | undefined;
+  let lastHit = -1e9;
+  let hitT = 0;
+  let pumpT = 0;
+  let metaT = 0;
+  let finaleStarted = false;
+  let finalPrefix = "";
+  let motion: LoaderMotion = { reduced: false, paused: false, onscreen: true, visible: true };
+  let awayFrom: number | null = null;
+  let lineKey = 0;
+  let focusN = 0;
+  let alive = true;
+  const timers = new Set<number>();
+  const anims = new Set<Animation>();
+  let view: LoaderView = loaderInitialView([]);
+
+  const set = (patch: Partial<LoaderView>) => {
+    if (!alive) return;
+    view = { ...view, ...patch };
+    env.emit(view);
+  };
+  const later = (fn: () => void, ms: number) => {
+    const id = window.setTimeout(() => {
+      timers.delete(id);
+      if (alive) fn();
+    }, Math.max(0, ms));
+    timers.add(id);
+    return id;
+  };
+  const clear = (id: number) => {
+    if (id) {
+      window.clearTimeout(id);
+      timers.delete(id);
+    }
+    return 0;
+  };
+  const motionAllowed = () => !motion.reduced && !motion.paused;
+  const running = () => motion.onscreen && motion.visible;
+  const motionOn = () => motionAllowed() && running();
+  const anim = (el: Element, frames: Keyframe[], opts: KeyframeAnimationOptions) => {
+    if (!alive || typeof el.animate !== "function") return null;
+    const a = el.animate(frames, opts);
+    anims.add(a);
+    const drop = () => anims.delete(a);
+    a.finished.then(drop, drop);
+    return a;
+  };
+  const frontP = () => {
+    const s = host[front];
+    if (!s) return 0;
+    if (s.status === "done") return 1;
+    if (s.status === "pending" || s.status === "skipped" || (s.status === "active" && s.progress == null)) return 0;
+    return barP ?? 0;
+  };
+
+  const ctx: LoaderArenaCtx = {
+    steps: () => host,
+    vis: () => vis,
+    front: () => front,
+    phase: () => phase,
+    frontP,
+    motionAllowed,
+    motionOn,
+    running,
+    later,
+    clear,
+    anim,
+  };
+  const root = env.root.current;
+  const arena = root ? env.game.arena(root, ctx) : null;
+
+  const L = () => env.labels();
+  const P = () => env.props();
+  const announce = (text: string, politeness: "polite" | "assertive") => P().onAnnounce?.(text, politeness);
+  const focusInside = () => {
+    const r = env.root.current;
+    const a = typeof document !== "undefined" ? document.activeElement : null;
+    return !!r && !!a && a !== r && r.contains(a);
+  };
+  const requestFocus = (target: LoaderFocusTarget) => set({ focus: { target, n: ++focusN } });
+
+  function appendLine(kind: LoaderLineKind, text: string) {
+    const lines = view.lines.concat({ key: ++lineKey, kind, text });
+    set({ lines: lines.length > 40 ? lines.slice(-40) : lines });
+    announce(text, "polite");
+  }
+
+  /* -------- narration: written to be heard, not ticked -------- */
+
+  function doneSentence(s: LoaderStep) {
+    const base = s.doneText || \`\${s.label}: done\`;
+    const dur = s.durationMs != null ? \` in \${fmtDur(s.durationMs)}\` : "";
+    const tries = (s.attempt ?? 1) > 1 ? \`, on attempt \${s.attempt}\` : "";
+    return \`\${base}\${dur}\${tries}.\`;
+  }
+  const skipSentence = (s: LoaderStep) => \`Skipped: \${s.label}\${s.detail ? \` (\${lowerFirst(s.detail)})\` : ""}.\`;
+
+  /** The next step still to come after these, never one that already finished. */
+  function nextAfter(list: LoaderEntry[]) {
+    let i = Math.max(...list.map((e) => e.i)) + 1;
+    while (i < host.length && isSettled(host[i])) i++;
+    return i < host.length ? i : -1;
+  }
+
+  /* Two quick finishes share a sentence, a skip that lands with a finish joins
+     it, three or more are summed up, and the line ends with what comes next. */
+  function sentence(input: LoaderEntry[]) {
+    const list = input.slice().sort((a, b) => a.i - b.i);
+    let text: string;
+    if (list.length >= BURST_MIN) {
+      const done = list.filter((e) => e.kind === "done").map((e) => host[e.i]);
+      const skipped = list.filter((e) => e.kind === "skipped").map((e) => host[e.i].label);
+      text = done.length === 1 ? doneSentence(done[0]) : done.length ? \`Finished \${done.length} steps at once: \${listJoin(done.map((s) => s.label))}.\` : "";
+      if (skipped.length) text += \`\${text ? " " : ""}Skipped: \${listJoin(skipped)}.\`;
+    } else {
+      const parts = list.map((e) => (e.kind === "done" ? doneSentence(host[e.i]) : skipSentence(host[e.i])));
+      text =
+        parts.length === 2 && list[0].kind === "done" && list[1].kind === "done"
+          ? \`\${parts[0].replace(/\\.$/, "")}, then \${lowerFirst(parts[1])}\`
+          : parts.join(" ");
+    }
+    const n = nextAfter(list);
+    if (n >= 0) text += \`\${n === host.length - 1 ? " Last up: " : " On to "}\${lowerFirst(host[n].label)}.\`;
+    return text;
+  }
+
+  /* Narrates every completion not told yet as one line. When it is the last
+     news before the finale it is held and merged into the completion line, so
+     the end of a run is one announcement, not two. */
+  function speak(list: LoaderEntry[]) {
+    const fresh = list.filter((e) => !e.said);
+    if (!fresh.length) return;
+    fresh.forEach((e) => {
+      e.said = true;
+    });
+    const text = sentence(fresh);
+    if (host.every(isSettled) && backlog.every((b) => b.said)) {
+      finalPrefix = finalPrefix ? \`\${finalPrefix} \${text}\` : text;
+      return;
+    }
+    appendLine(fresh.some((e) => e.kind === "done") ? "done" : "skipped", text);
+  }
+
+  /* -------- the bar and the hits -------- */
+
+  function syncBar() {
+    const s = host[front];
+    barP = s ? (s.status === "done" ? 1 : s.progress ?? null) : null;
+    barDetail = s ? s.detail ?? null : null;
+    lastSeenP = s ? s.progress : null;
+  }
+
+  function requestHit() {
+    if (hitT) return;
+    const t = loaderNow();
+    hitT = later(doHit, Math.max(lastHit + HIT_GAP - t, frontSince + BASE - t, 0));
+  }
+
+  function doHit() {
+    hitT = 0;
+    const s = host[front];
+    if (phase !== "run" || !s || s.status !== "active" || s.progress == null) return;
+    lastHit = loaderNow();
+    if (!motionOn() || !arena) {
+      syncBar();
+      arena?.progress(front, false);
+      set({ barP, barDetail });
+      return;
+    }
+    const id = s.id;
+    const delay = arena.hit(front);
+    later(() => {
+      if (host[front]?.id !== id) return;
+      syncBar();
+      arena.progress(front, motionOn());
+      set({ barP, barDetail });
+    }, delay);
+  }
+
+  /* -------- the beats -------- */
+
+  function pump() {
+    pumpT = clear(pumpT);
+    if (phase === "error" || phase === "stopped" || beatBusy) return;
+    if (!backlog.length) {
+      maybeFinale();
+      return;
+    }
+    if (!running()) {
+      flushBacklog();
+      return;
+    }
+    const t = loaderNow();
+    if (t < beatUntil) {
+      pumpT = later(pump, beatUntil - t);
+      return;
+    }
+    const oldest = backlog[0].at;
+    const newest = backlog[backlog.length - 1].at;
+    if (t - newest < COLLECT && t - oldest < BASE) {
+      pumpT = later(pump, COLLECT - (t - newest));
+      return;
+    }
+    if (backlog.length >= BURST_MIN || t - oldest > 900) {
+      runBeat(backlog.splice(0));
+      return;
+    }
+    const dwellLeft = frontSince + DWELL - t;
+    if (dwellLeft > 0) {
+      pumpT = later(pump, dwellLeft);
+      return;
+    }
+    // A skip that arrived with this completion resolves in the same beat.
+    let take = 1;
+    while (take < backlog.length && backlog[take].kind === "skipped" && backlog[take].at - backlog[0].at <= COALESCE) take++;
+    runBeat(backlog.splice(0, take));
+  }
+
+  function runBeat(entries: LoaderEntry[]) {
+    const head = entries[0];
+    const showy = motionOn();
+    const delay = showy && head.kind === "done" && arena ? arena.finish(head.i) : 0;
+    beatUntil = loaderNow() + delay;
+    beatBusy = true;
+    const land = () => {
+      entries.forEach((e) => {
+        vis[e.i] = "gone";
+      });
+      const hold = arena ? arena.resolve(entries, showy) : 0;
+      speak(entries.concat(backlog.filter((b) => b.at - head.at <= COALESCE)));
+      const settle = () => {
+        beatBusy = false;
+        inflight = null;
+        advanceFront();
+        pump();
+      };
+      if (hold > 0) inflight = { entries, landed: true, timer: later(settle, hold) };
+      else settle();
+    };
+    if (delay) inflight = { entries, landed: false, timer: later(land, delay) };
+    else land();
+  }
+
+  /** Resolves everything queued at once, without beats: hidden tab, off screen, an error or a cancel. */
+  function flushBacklog() {
+    pumpT = clear(pumpT);
+    let held = false;
+    if (inflight) {
+      clear(inflight.timer);
+      if (inflight.landed) held = true;
+      else backlog = inflight.entries.concat(backlog);
+      inflight = null;
+      beatBusy = false;
+    }
+    if (!backlog.length) {
+      if (held) {
+        advanceFront();
+        maybeFinale();
+      }
+      return;
+    }
+    const entries = backlog.splice(0);
+    entries.forEach((e) => {
+      vis[e.i] = "gone";
+    });
+    arena?.resolve(entries, false);
+    speak(entries);
+    advanceFront();
+    maybeFinale();
+  }
+
+  function advanceFront() {
+    const f = loaderFirstLiveVis();
+    const changed = f !== front;
+    front = f;
+    frontSince = loaderNow();
+    syncBar();
+    set({ front, barP, barDetail, frontKey: changed ? view.frontKey + 1 : view.frontKey });
+    arena?.advance(changed);
+    arena?.pose();
+    const s = host[front];
+    if (s && s.status === "active" && s.progress != null && s.progress > 0 && motionOn()) requestHit();
+  }
+
+  function loaderFirstLiveVis() {
+    let f = 0;
+    while (f < host.length && vis[f] === "gone") f++;
+    return f;
+  }
+
+  /* -------- the error path -------- */
+
+  function errorText(s: LoaderStep) {
+    const msg = s.error || "Something went wrong.";
+    if (msg.toLowerCase().includes(s.label.toLowerCase())) return msg;
+    return \`\${s.label} failed: \${lowerFirst(msg)}\${/[.!?]$/.test(msg) ? "" : "."}\`;
+  }
+
+  function detailsText(i: number) {
+    const s = host[i];
+    const bits = [\`Step \${i + 1} of \${host.length}\`, \`attempt \${s.attempt ?? 1}\`];
+    if (s.detail) bits.push(\`reached \${s.detail}\`);
+    else if (s.progress != null) bits.push(\`reached \${Math.floor(s.progress * 100)}%\`);
+    if (s.elapsedMs != null) bits.push(\`ran \${fmtDur(s.elapsedMs)}\`);
+    return bits.join(" · ");
+  }
+
+  function showError(i: number) {
+    const hadFocus = focusInside();
+    flushBacklog();
+    phase = "error";
+    clearFlash();
+    hitT = clear(hitT);
+    const s = host[i];
+    const text = errorText(s);
+    if (s.progress != null) barP = s.progress;
+    if (s.detail) barDetail = s.detail;
+    set({ phase, alert: text, errorIndex: i, details: detailsText(i), detailMore: s.errorDetail ?? "", barP, barDetail });
+    announce(text, "assertive");
+    arena?.error(i, motionOn());
+    arena?.pose();
+    if (hadFocus) requestFocus("retry");
+  }
+
+  /** Returns whether focus was in the error menu, so the caller can move it on. */
+  function clearError() {
+    const r = env.root.current;
+    const a = document.activeElement;
+    const panels = Array.from(r?.querySelectorAll('[data-panel="error"]') ?? []);
+    const had = !!a && panels.some((p) => p.contains(a));
+    const i = view.errorIndex;
+    phase = "run";
+    set({ phase, alert: "", details: "", detailMore: "" });
+    arena?.recover(i, motionOn());
+    return had;
+  }
+
+  function retryStarted(i: number) {
+    const had = clearError();
+    const s = host[i];
+    syncBar();
+    set({ barP, barDetail });
+    arena?.progress(front, false);
+    arena?.pose();
+    appendLine("retry", \`Trying again: \${s.label}, attempt \${s.attempt ?? 2}\${s.detail && s.progress ? \`, from \${s.detail}\` : ""}.\`);
+    if (had) requestFocus("log");
+  }
+
+  /* -------- the finale -------- */
+
+  function maybeFinale() {
+    if (finaleStarted || phase === "error" || phase === "stopped" || !host.length) return;
+    if (backlog.length || !host.every(isSettled) || vis.some((v) => v !== "gone")) return;
+    finale(false);
+  }
+
+  function buildTiles(): LoaderTile[] {
+    const n = host.length;
+    const done = host.filter((s) => s.status === "done");
+    const skipped = host.filter((s) => s.status === "skipped").length;
+    const total = done.reduce((a, s) => a + (s.durationMs ?? 0), 0);
+    let longest: LoaderStep | null = null;
+    for (const s of done) if (s.durationMs != null && (!longest || s.durationMs > (longest.durationMs ?? 0))) longest = s;
+    const tiles: LoaderTile[] = [
+      { label: "Steps", value: done.length + skipped, kind: "steps", total: n, sub: skipped ? \`\${skipped} skipped\` : "none skipped" },
+    ];
+    // The longest step's name stays off the tile, so a narrow tile never cuts the figure in half.
+    if (total > 0) tiles.push({ label: "Time", value: total, kind: "time", total: 0, sub: longest ? \`Longest step \${fmtDur(longest.durationMs)}\` : "", more: longest ? \`: \${longest.label}\` : undefined });
+    for (const st of P().stats ?? []) tiles.push({ label: st.label, value: st.value, kind: "stat", total: 0, sub: st.sub ?? "" });
+    const retried = done.filter((s) => (s.attempt ?? 1) > 1);
+    if (retried.length) {
+      const hiccups = retried.reduce((a, s) => a + (s.attempt ?? 1) - 1, 0);
+      tiles.push({ label: hiccups === 1 ? "Hiccup" : "Hiccups", value: hiccups, kind: "hiccup", total: 0, sub: \`at \${listJoin(retried.map((s) => s.label))}\` });
+    }
+    return tiles;
+  }
+
+  function finale(silent: boolean) {
+    finaleStarted = true;
+    const hadFocus = focusInside();
+    phase = "complete";
+    clearFlash();
+    const n = host.length;
+    const skipped = host.filter((s) => s.status === "skipped").length;
+    const showy = motionOn();
+    const extra = P().completeText;
+    if (!silent) appendLine("finish", \`\${finalPrefix ? \`\${finalPrefix} \` : ""}\${L().complete(n, skipped)}\${extra ? \` \${extra}\` : ""}\`);
+    finalPrefix = "";
+    set({ phase, tiles: buildTiles(), banner: !silent, results: false, done: false });
+    arena?.finale(showy);
+    arena?.pose();
+    if (!silent) later(() => set({ banner: false }), FAST + BEAT);
+    const open = () => {
+      set({ results: true, resultsKey: view.resultsKey + 1 });
+      later(() => {
+        set({ done: true });
+        if (hadFocus || focusInside()) requestFocus("continue");
+        P().onComplete?.();
+      }, showy ? SLOW + 200 : 0);
+    };
+    // The log line lands first and the results cover it a moment later, so the line is announced.
+    if (silent) open();
+    else later(open, showy ? FAST + BASE : FAST);
+  }
+
+  /* -------- stop, flash, motion -------- */
+
+  function flashMeta(text: string, ms: number) {
+    if (phase !== "run" && phase !== "complete") return;
+    metaT = clear(metaT);
+    set({ meta: text });
+    metaT = later(() => set({ meta: null }), ms);
+  }
+  function clearFlash() {
+    metaT = clear(metaT);
+    if (view.meta) set({ meta: null });
+  }
+
+  function cancel() {
+    if (phase === "complete" || phase === "stopped") return;
+    const hadFocus = focusInside();
+    const kept = host.filter((s) => s.status === "done").length;
+    flushBacklog();
+    pumpT = clear(pumpT);
+    hitT = clear(hitT);
+    clearFlash();
+    phase = "stopped";
+    set({ phase, alert: "", details: "", detailMore: "" });
+    arena?.stop(motionOn());
+    arena?.pose();
+    appendLine("stop", \`\${finalPrefix ? \`\${finalPrefix} \` : ""}\${L().stopped(kept)}\`);
+    finalPrefix = "";
+    P().onCancel?.();
+    if (hadFocus) requestFocus("log");
+  }
+
+  function setMotion(next: LoaderMotion) {
+    const wasRunning = running();
+    motion = next;
+    const isRunning = running();
+    if (wasRunning && !isRunning && awayFrom == null) awayFrom = host.filter(isSettled).length;
+    if (!motionOn()) {
+      anims.forEach((a) => {
+        try {
+          a.finish();
+        } catch {
+          a.cancel();
+        }
+      });
+      if (hitT) {
+        hitT = clear(hitT);
+        syncBar();
+        arena?.progress(front, false);
+        set({ barP, barDetail });
+      }
+    }
+    if (!isRunning && (backlog.length || inflight)) flushBacklog();
+    arena?.motion();
+    arena?.pose();
+    if (!wasRunning && isRunning && awayFrom != null) {
+      const d = host.filter(isSettled).length - awayFrom;
+      awayFrom = null;
+      if (d > 0) flashMeta(L().away(d), BEAT * 2);
+    }
+    pump();
+  }
+
+  /* -------- the host's steps -------- */
+
+  function rebuild(steps: LoaderStep[]) {
+    timers.forEach((id) => window.clearTimeout(id));
+    timers.clear();
+    anims.forEach((a) => a.cancel());
+    anims.clear();
+    hitT = pumpT = metaT = 0;
+    host = steps.map((s) => ({ ...s }));
+    backlog = [];
+    inflight = null;
+    beatBusy = false;
+    beatUntil = 0;
+    finaleStarted = false;
+    finalPrefix = "";
+    lastHit = -1e9;
+    vis = host.map((s) => (isSettled(s) ? "gone" : "live"));
+    const started = host.some((s) => s.status !== "pending");
+    phase = started ? (host.length && host.every(isSettled) ? "complete" : "run") : "idle";
+    front = loaderFirstLiveVis();
+    frontSince = -1e9;
+    syncBar();
+    view = { ...loaderInitialView(host), frontKey: view.frontKey + 1, resultsKey: view.resultsKey, phase };
+    set({ front, barP, barDetail });
+    arena?.rebuild();
+    arena?.pose();
+    const errAt = host.findIndex((s) => s.status === "error");
+    if (phase === "complete") finale(true);
+    else if (errAt >= 0) showError(errAt);
+  }
+
+  function update(steps: LoaderStep[]) {
+    const next = steps.map((s) => ({ ...s }));
+    const prev = host;
+    if (loaderNeedsRebuild(prev, next, phase)) {
+      rebuild(next);
+      return;
+    }
+    host = next;
+    if (phase === "stopped") return;
+    if (phase === "idle" && host.some((s) => s.status !== "pending")) {
+      phase = "run";
+      set({ phase });
+    }
+    const t = loaderNow();
+    let errAt = -1;
+    let retryAt = -1;
+    let leftError = false;
+    host.forEach((s, i) => {
+      const was = prev[i]?.status ?? "pending";
+      if (was === s.status) return;
+      if (was === "error") leftError = true;
+      if (s.status === "done" || s.status === "skipped") backlog.push({ i, kind: s.status, at: t });
+      else if (s.status === "error") errAt = i;
+      else if (s.status === "active" && was === "error") retryAt = i;
+    });
+    if (retryAt >= 0) retryStarted(retryAt);
+    else if (leftError && phase === "error") {
+      if (clearError()) requestFocus("log");
+    }
+    if (errAt >= 0) {
+      showError(errAt);
+      return;
+    }
+    const s = host[front];
+    if (phase === "run" && s && s.status === "active" && s.progress != null && s.progress !== lastSeenP) {
+      // A step that only just started reports 0: nothing to hit yet.
+      if (motionOn() && !(s.progress === 0 && lastSeenP == null)) {
+        lastSeenP = s.progress;
+        requestHit();
+      } else {
+        syncBar();
+        arena?.progress(front, false);
+        set({ barP, barDetail });
+      }
+    } else if (phase === "run" && s && s.status === "active" && s.progress == null && view.front === front) {
+      arena?.pose();
+    }
+    pump();
+  }
+
+  function layout() {
+    arena?.layout(false);
+  }
+
+  function destroy() {
+    alive = false;
+    timers.forEach((id) => window.clearTimeout(id));
+    timers.clear();
+    anims.forEach((a) => a.cancel());
+    anims.clear();
+    arena?.destroy();
+  }
+
+  return { rebuild, update, setMotion, cancel, layout, destroy };
+}
+
+/* -------- hooks -------- */
+
+const LOADER_RM_QUERY = "(prefers-reduced-motion: reduce)";
+const loaderSubscribeRM = (onChange: () => void) => {
+  const q = window.matchMedia(LOADER_RM_QUERY);
+  q.addEventListener("change", onChange);
+  return () => q.removeEventListener("change", onChange);
+};
+const loaderReadRM = () => window.matchMedia(LOADER_RM_QUERY).matches;
+const loaderServerRM = () => false;
+
+/** prefers-reduced-motion, followed live; a boolean prop wins. */
+function useReducedMotionPreference(forced: boolean | undefined) {
+  const media = useSyncExternalStore(loaderSubscribeRM, loaderReadRM, loaderServerRM);
+  return forced ?? media;
+}
+
+/** Whether the element is on screen. Starts true so a first paint is never treated as off screen. */
+function useOnscreen(ref: RefObject<Element>) {
+  const [on, setOn] = useState(true);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !("IntersectionObserver" in window)) return;
+    const io = new IntersectionObserver((list) => setOn(list[list.length - 1].isIntersecting));
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref]);
+  return on;
+}
+
+/** Whether the browser tab is visible. */
+function usePageVisible() {
+  const [visible, setVisible] = useState(true);
+  useEffect(() => {
+    const sync = () => setVisible(document.visibilityState !== "hidden");
+    sync();
+    document.addEventListener("visibilitychange", sync);
+    return () => document.removeEventListener("visibilitychange", sync);
+  }, []);
+  return visible;
+}
+
+function loaderStateWord(s: LoaderStep, L: LoaderLabels) {
+  switch (s.status) {
+    case "active":
+      return (s.attempt ?? 1) > 1 ? \`Running, attempt \${s.attempt}\` : "Running";
+    case "done":
+      return s.durationMs != null ? \`Done in \${fmtDur(s.durationMs)}\` : "Done";
+    case "skipped":
+      return "Skipped";
+    case "error":
+      return L.failed;
+    default:
+      return "Waiting";
+  }
+}
+
+function loaderTileText(t: LoaderTile, k: number) {
+  if (typeof t.value === "string") return t.value;
+  const v = t.value * k;
+  if (t.kind === "steps") return \`\${Math.round(v)} of \${t.total}\`;
+  if (t.kind === "time") return fmtDur(v);
+  if (t.kind === "hiccup") return \`\${Math.round(v)} recovered\`;
+  return Math.round(v).toLocaleString("en-US");
+}
+
+/** Everything the chassis needs: the engine, its view, the motion state and the handlers. */
+function useLoader(props: LoaderHostProps, game: LoaderGame) {
+  const rootRef = useRef<HTMLElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const engineRef = useRef<LoaderEngine | null>(null);
+  const uid = useId().replace(/:/g, "");
+  const labels = useMemo<LoaderLabels>(
+    () => ({ ...LOADER_DEFAULT_LABELS, unit: game.unit, clear: game.clear, ...props.labels }),
+    [props.labels, game],
+  );
+  const propsRef = useRef(props);
+  propsRef.current = props;
+  const labelsRef = useRef(labels);
+  labelsRef.current = labels;
+
+  const reduced = useReducedMotionPreference(props.reducedMotion);
+  const onscreen = useOnscreen(rootRef);
+  const visible = usePageVisible();
+  const [paused, setPaused] = useState(false);
+  const motion: LoaderMotion = { reduced, paused, onscreen, visible };
+  const motionRef = useRef(motion);
+  motionRef.current = motion;
+
+  const [view, setView] = useState<LoaderView>(() => loaderInitialView(props.steps));
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [cursor, setCursor] = useState(0);
+  const [countT, setCountT] = useState(1);
+
+  // The engine and the arena live for the component's lifetime; StrictMode's second mount builds them again.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const engine = createLoaderEngine({
+      root: rootRef,
+      game,
+      labels: () => labelsRef.current,
+      props: () => propsRef.current,
+      emit: setView,
+    });
+    engineRef.current = engine;
+    engine.setMotion(motionRef.current);
+    engine.rebuild(propsRef.current.steps);
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => engine.layout()) : null;
+    ro?.observe(root);
+    return () => {
+      ro?.disconnect();
+      engine.destroy();
+      engineRef.current = null;
+    };
+  }, [game]);
+
+  useLayoutEffect(() => {
+    engineRef.current?.update(props.steps);
+  }, [props.steps]);
+
+  useEffect(() => {
+    engineRef.current?.setMotion({ reduced, paused, onscreen, visible });
+  }, [reduced, paused, onscreen, visible]);
+
+  // A new error starts with the menu cursor on Retry and the details closed.
+  useEffect(() => {
+    setDetailsOpen(false);
+    setCursor(0);
+  }, [view.alert]);
+
+  useLayoutEffect(() => {
+    const f = view.focus;
+    if (!f) return;
+    if (f.target === "retry") menuRef.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    else if (f.target === "log") logRef.current?.focus();
+    else if (f.target === "continue") continueRef.current?.focus();
+  }, [view.focus]);
+
+  // The log shows its newest lines, starting on a whole line rather than mid-sentence.
+  useLayoutEffect(() => {
+    const log = logRef.current;
+    if (!log) return;
+    log.style.paddingBottom = "";
+    const target = log.scrollHeight - log.clientHeight;
+    if (target <= 0) {
+      log.scrollTop = 0;
+      return;
+    }
+    const lines = Array.from(log.children) as HTMLElement[];
+    const base = lines[0].offsetTop;
+    let top = lines[lines.length - 1].offsetTop - base;
+    for (let k = lines.length - 1; k >= 0; k--) {
+      const y = lines[k].offsetTop - base;
+      if (y < target) break;
+      top = y;
+    }
+    if (top > target) log.style.paddingBottom = \`\${top - target}px\`;
+    log.scrollTop = top;
+  }, [view.lines]);
+
+  // Results count up over SLOW when motion is allowed.
+  useEffect(() => {
+    if (!view.results) return;
+    const m = motionRef.current;
+    if (m.reduced || m.paused || !m.onscreen || !m.visible) {
+      setCountT(1);
+      return;
+    }
+    let raf = 0;
+    const t0 = loaderNow();
+    setCountT(0);
+    const tick = () => {
+      const x = Math.min(1, (loaderNow() - t0) / SLOW);
+      setCountT(1 - (1 - x) * (1 - x) * (1 - x));
+      if (x < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => {
+      cancelAnimationFrame(raf);
+      setCountT(1);
+    };
+  }, [view.resultsKey, view.results]);
+
+  const steps = props.steps;
+  const n = steps.length;
+  const settled = steps.filter(isSettled).length;
+  let current = steps.findIndex((s) => s.status === "active" || s.status === "error");
+  if (current < 0) current = steps.findIndex((s) => s.status === "pending");
+  const cur = current >= 0 ? steps[current] : undefined;
+
+  let valueText: string;
+  if (view.phase === "stopped") valueText = \`Stopped at step \${current + 1} of \${n}\`;
+  else if (n && settled === n) valueText = \`All \${n} steps finished\`;
+  else if (view.phase === "idle" || !cur) valueText = labels.queued(n, steps[0]?.label ?? "");
+  else valueText = \`Step \${current + 1} of \${n}: \${cur.label}\${cur.status === "error" ? ", failed" : ""}\`;
+
+  const ps = steps[view.front];
+  let plateP = 0;
+  if (ps) {
+    if (ps.status === "done") plateP = 1;
+    else if (ps.status === "pending" || ps.status === "skipped" || (ps.status === "active" && ps.progress == null)) plateP = 0;
+    else plateP = Math.max(0, Math.min(1, view.barP ?? 0));
+  }
+  let count = "";
+  if (ps) {
+    if (ps.status === "active" && ps.progress == null) {
+      const secs = Math.floor((ps.elapsedMs ?? 0) / 1000);
+      count = \`\${labels.sizeUnknown}\${secs >= 10 ? \` · \${secs}s\` : ""}\`;
+    } else if (ps.status === "done") count = ps.detail ?? "";
+    else if (ps.status === "active" || (ps.status === "error" && ps.progress != null)) count = view.barDetail ?? \`\${Math.floor(plateP * 100)}%\`;
+  }
+  const plate = {
+    label: ps?.label ?? "",
+    state: !ps || ps.status === "skipped" ? "pending" : ps.status,
+    attempt: ps && (ps.attempt ?? 1) > 1 && (ps.status === "active" || ps.status === "error") ? ps.attempt ?? 0 : 0,
+    failed: ps?.status === "error",
+    indet: ps?.status === "active" && ps.progress == null,
+    gone: view.phase === "complete" || !ps,
+    p: plateP,
+    count,
+  };
+
+  const placeholder = view.midRun ? labels.progress(settled, n, cur?.label ?? "") : labels.queued(n, steps[0]?.label ?? "");
+
+  let metaHead = "";
+  let metaTail = "";
+  const at = Math.min(view.front + 1, Math.max(1, n));
+  if (view.phase === "complete") {
+    metaHead = labels.clear;
+    metaTail = \`\${n} of \${n}\`;
+  } else if (view.phase === "stopped") {
+    metaHead = \`\${labels.unit} \${Math.max(1, current + 1)} of \${n}\`;
+    metaTail = labels.stopped(steps.filter((s) => s.status === "done").length);
+  } else if (view.phase === "error") {
+    metaHead = \`\${labels.unit} \${at} of \${n}\`;
+    metaTail = labels.waiting;
+  } else {
+    const next = steps.slice(view.front + 1).filter((s) => !isSettled(s)).map((s) => s.label);
+    metaHead = \`\${labels.unit} \${at} of \${n}\`;
+    metaTail = next.length === 0 ? "Last step" : next.length === 1 ? \`Next: \${next[0]}\` : \`Next: \${next[0]}, then \${next[1]}\`;
+  }
+
+  const errStep = view.errorIndex >= 0 ? steps[view.errorIndex] : undefined;
+  const commands: Array<{ key: string; label: string; sr?: string; primary?: boolean; expanded?: boolean; run: () => void }> = [];
+  if (props.onRetry) commands.push({ key: "retry", label: labels.retry, sr: errStep ? \` \${errStep.label}\` : undefined, primary: true, run: () => errStep && propsRef.current.onRetry?.(errStep.id) });
+  if (props.onSkip) commands.push({ key: "skip", label: labels.skip, sr: errStep ? \` \${errStep.label}\` : undefined, run: () => errStep && propsRef.current.onSkip?.(errStep.id) });
+  if (props.onCancel) commands.push({ key: "cancel", label: labels.cancel, run: () => engineRef.current?.cancel() });
+  commands.push({ key: "details", label: detailsOpen ? labels.hideDetails : labels.showDetails, expanded: detailsOpen, run: () => setDetailsOpen((o) => !o) });
+
+  const onMenuKey = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    const btns = Array.from(menuRef.current?.querySelectorAll<HTMLButtonElement>("button") ?? []);
+    const i = btns.indexOf(document.activeElement as HTMLButtonElement);
+    if (i < 0) return;
+    let j = i;
+    if (e.key === "ArrowDown" || e.key === "ArrowRight") j = (i + 1) % btns.length;
+    else if (e.key === "ArrowUp" || e.key === "ArrowLeft") j = (i - 1 + btns.length) % btns.length;
+    else if (e.key === "Home") j = 0;
+    else if (e.key === "End") j = btns.length - 1;
+    else return;
+    e.preventDefault();
+    setCursor(j);
+    btns[j].focus();
+  };
+
+  return {
+    props,
+    view,
+    labels,
+    steps,
+    n,
+    settled,
+    current,
+    valueText,
+    plate,
+    placeholder,
+    metaHead,
+    metaTail,
+    commands,
+    cursor: Math.min(cursor, commands.length - 1),
+    setCursor,
+    onMenuKey,
+    detailsOpen,
+    countT,
+    reduced,
+    paused,
+    togglePause: () => setPaused((p) => !p),
+    motionAllowed: !reduced && !paused,
+    running: onscreen && visible,
+    rootRef,
+    logRef,
+    menuRef,
+    continueRef,
+    titleId: \`bz-snl-title-\${uid}\`,
+    detailsId: \`bz-snl-details-\${uid}\`,
+    hatchId: \`bz-snl-hatch-\${uid}\`,
+  };
+}
+
+type LoaderApi = ReturnType<typeof useLoader>;
+
+/* ---------------- end shared: engine ---------------- */
+
+/* ---------------- shared: chassis ---------------- */
+
+/** The structure for screen readers: every step and its state. */
+function LoaderStepList({ api }: { api: LoaderApi }) {
+  return (
+    <ol className="bz-snl-sr" aria-busy={api.view.phase === "run" ? "true" : "false"}>
+      {api.steps.map((s, i) => (
+        <li key={\`\${s.id}-\${i}\`} aria-current={i === api.current ? "step" : undefined}>
+          {\`\${s.label}: \${loaderStateWord(s, api.labels)}\`}
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** The nameplate: the one progressbar. The arena positions it. */
+function LoaderPlate({ api }: { api: LoaderApi }) {
+  const { plate, labels } = api;
+  return (
+    <div
+      className="bz-snl-plate"
+      role="progressbar"
+      aria-labelledby={api.titleId}
+      aria-valuemin={0}
+      aria-valuemax={Math.max(1, api.n)}
+      aria-valuenow={api.settled}
+      aria-valuetext={api.valueText}
+      data-state={plate.state}
+      data-gone={plate.gone ? "true" : "false"}
+    >
+      <div className="bz-snl-plate-in" key={api.view.frontKey}>
+        <div className="bz-snl-plate-top">
+          <span className="bz-snl-plate-label">{plate.label}</span>
+          <span className="bz-snl-badges">
+            {plate.attempt ? <span className="bz-snl-tag">{labels.attempt(plate.attempt)}</span> : null}
+            {plate.failed ? (
+              <span className="bz-snl-failed">
+                <LoaderGlyph name="cross" />
+                {labels.failed}
+              </span>
+            ) : null}
+          </span>
+        </div>
+        <div className="bz-snl-plate-row">
+          <span className="bz-snl-bar" data-indet={plate.indet ? "true" : "false"}>
+            <span className="bz-snl-fill" style={{ width: \`\${Math.round(plate.p * 1000) / 10}%\` }} />
+            <svg className="bz-snl-hatch" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
+              <defs>
+                <pattern id={api.hatchId} width="8" height="8" patternUnits="userSpaceOnUse">
+                  <path d="M0 6h2v2H0zM2 4h2v2H2zM4 2h2v2H4zM6 0h2v2H6z" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill={\`url(#\${api.hatchId})\`} />
+            </svg>
+          </span>
+          <span className="bz-snl-count" title={plate.count || undefined}>
+            {plate.count}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Whether a scroll box holds more than it shows (so it joins the tab order only
+ * when it has to), and whether there is more below the fold right now (so the
+ * box can fade its last line as a cue, even where scrollbars stay hidden).
+ */
+function useLoaderOverflow(ref: RefObject<HTMLElement>, key: unknown) {
+  const [state, setState] = useState({ over: false, more: false });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => {
+      const over = el.scrollHeight > el.clientHeight + 1;
+      const more = over && el.scrollTop + el.clientHeight < el.scrollHeight - 1;
+      setState((s) => (s.over === over && s.more === more ? s : { over, more }));
+    };
+    check();
+    el.addEventListener("scroll", check, { passive: true });
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(check) : null;
+    ro?.observe(el);
+    for (const child of Array.from(el.children)) ro?.observe(child);
+    return () => {
+      el.removeEventListener("scroll", check);
+      ro?.disconnect();
+    };
+  }, [ref, key]);
+  return state;
+}
+
+/**
+ * The error details, as a card over the paused arena: the dialogue box below
+ * has room for the message and the menu, not for a paragraph more. It comes
+ * after the box in the source, right after the menu that opens it, and the
+ * arena it covers is only drawing. Long details scroll inside the card.
+ */
+function LoaderDetails({ api }: { api: LoaderApi }) {
+  const { view, labels } = api;
+  const open = view.phase === "error" && api.detailsOpen && !!view.details;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scroll = useLoaderOverflow(scrollRef, \`\${open}|\${view.details}|\${view.detailMore}\`);
+  return (
+    <div id={api.detailsId} className="bz-snl-frame bz-snl-sheet" data-panel="error" hidden={!open}>
+      <div
+        ref={scrollRef}
+        className="bz-snl-frame-in bz-snl-sheet-in"
+        role="region"
+        aria-label={labels.details}
+        tabIndex={open && scroll.over ? 0 : undefined}
+        data-more={scroll.more ? "true" : undefined}
+      >
+        <p className="bz-snl-sheet-head" aria-hidden="true">
+          {labels.details}
+        </p>
+        <p className="bz-snl-details">{view.details}</p>
+        {view.detailMore ? <p className="bz-snl-more-detail">{view.detailMore}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+const LOADER_LINE_GLYPH: Record<LoaderLineKind, LoaderGlyphName> = { done: "done", skipped: "skipped", retry: "retry", finish: "finish", stop: "stop" };
+
+/** The dialogue box: narration, the error menu and the results share one cell, so it never changes height. */
+function LoaderBox({
+  api,
+  hairStyle,
+}: {
+  api: LoaderApi;
+  /** The speaker portrait's head, or null for a game whose player is already on screen. */
+  hairStyle: LoaderCharacter["hairStyle"] | null;
+}) {
+  const { view, labels } = api;
+  const errorOn = view.phase === "error";
+  const resultsOn = view.results;
+  const lastLine = view.lines.length ? view.lines[view.lines.length - 1].text : "";
+  const face: LoaderFace = errorOn ? "squint" : view.phase === "stopped" ? "blink" : view.phase === "complete" ? "happy" : "open";
+  const errTextRef = useRef<HTMLDivElement>(null);
+  const errScroll = useLoaderOverflow(errTextRef, view.alert);
+  return (
+    <div className="bz-snl-frame bz-snl-box">
+      <div className="bz-snl-frame-in bz-snl-box-in" data-portrait={hairStyle ? undefined : "none"}>
+        {hairStyle ? <LoaderPortrait hairStyle={hairStyle} face={face} /> : null}
+        <div className="bz-snl-panels">
+          <div className="bz-snl-panel bz-snl-talk">
+            <div ref={api.logRef} className="bz-snl-log" role="log" aria-label={labels.narration} tabIndex={errorOn || resultsOn ? -1 : 0}>
+              {view.lines.map((line, k) => (
+                <p key={line.key} className="bz-snl-line" data-kind={line.kind} data-last={k === view.lines.length - 1 ? "true" : undefined}>
+                  <LoaderGlyph name={LOADER_LINE_GLYPH[line.kind]} />
+                  <span>{line.text}</span>
+                </p>
+              ))}
+            </div>
+            {view.lines.length ? null : (
+              <p className="bz-snl-ph" aria-hidden="true">
+                {api.placeholder}
+              </p>
+            )}
+          </div>
+          <div className="bz-snl-panel bz-snl-err" data-panel="error" data-on={errorOn ? "true" : "false"}>
+            {/* Only the message lives here; the details open as a card over the arena. A message
+                too long for the box scrolls, and only then joins the tab order with a name. */}
+            <div
+              ref={errTextRef}
+              className="bz-snl-err-text"
+              role={errScroll.over ? "region" : undefined}
+              aria-label={errScroll.over ? labels.errorMessage : undefined}
+              tabIndex={errScroll.over && errorOn ? 0 : undefined}
+              data-more={errScroll.more ? "true" : undefined}
+            >
+              <div className="bz-snl-alert" role="alert">
+                {view.alert ? (
+                  <>
+                    <LoaderGlyph name="cross" />
+                    <span>{view.alert}</span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+            <div ref={api.menuRef} className="bz-snl-menu" role="group" aria-label={labels.menu} onKeyDown={api.onMenuKey}>
+              {api.commands.map((c, k) => (
+                <button
+                  key={c.key}
+                  type="button"
+                  className={\`bz-snl-btn\${c.primary ? " bz-snl-primary" : ""}\`}
+                  tabIndex={k === api.cursor ? 0 : -1}
+                  data-cursor={k === api.cursor ? "true" : undefined}
+                  aria-expanded={c.key === "details" ? c.expanded : undefined}
+                  aria-controls={c.key === "details" ? api.detailsId : undefined}
+                  onFocus={() => api.setCursor(k)}
+                  onClick={c.run}
+                >
+                  <span className="bz-snl-cur" aria-hidden="true">
+                    <LoaderGlyph name="cursor" />
+                  </span>
+                  {c.label}
+                  {c.sr ? <span className="bz-snl-sr">{c.sr}</span> : null}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="bz-snl-panel bz-snl-res" data-on={resultsOn ? "true" : "false"}>
+            <p className="bz-snl-res-line" aria-hidden="true">
+              {resultsOn ? lastLine : ""}
+            </p>
+            <dl className="bz-snl-tiles">
+              {view.tiles.map((t) => (
+                <div className="bz-snl-tile" key={t.label}>
+                  <dt>{t.label}</dt>
+                  <dd>
+                    <span className="bz-snl-num" aria-hidden="true">
+                      {loaderTileText(t, api.countT)}
+                    </span>
+                    <span className="bz-snl-sr">{loaderTileText(t, 1)}</span>
+                    {t.sub ? (
+                      <span className="bz-snl-sub" title={\`\${t.sub}\${t.more ?? ""}\`}>
+                        {t.sub}
+                        {t.more ? <span className="bz-snl-sr">{t.more}</span> : null}
+                      </span>
+                    ) : null}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
+        <div className="bz-snl-foot">
+          <p className="bz-snl-meta" aria-hidden="true">
+            {view.meta ? (
+              <>
+                <LoaderGlyph name="clock" />
+                {view.meta}
+              </>
+            ) : (
+              <>
+                <b>{api.metaHead}</b>
+                {\` · \${api.metaTail}\`}
+              </>
+            )}
+          </p>
+          <div className="bz-snl-tools">
+            <button
+              type="button"
+              className="bz-snl-btn bz-snl-toy"
+              aria-pressed={api.paused}
+              data-hide={api.reduced ? "true" : undefined}
+              onClick={api.togglePause}
+            >
+              <LoaderGlyph name="pause" />
+              {labels.pauseMotion}
+            </button>
+            {api.props.onContinue ? (
+              <button
+                ref={api.continueRef}
+                type="button"
+                className="bz-snl-btn bz-snl-primary bz-snl-continue"
+                data-on={view.done ? "true" : "false"}
+                onClick={() => api.props.onContinue?.()}
+              >
+                {labels.continue}
+              </button>
+            ) : null}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LOADER_STEP_OUTER =
+  "polygon(4px 0,calc(100% - 4px) 0,calc(100% - 4px) 2px,calc(100% - 2px) 2px,calc(100% - 2px) 4px,100% 4px,100% calc(100% - 4px),calc(100% - 2px) calc(100% - 4px),calc(100% - 2px) calc(100% - 2px),calc(100% - 4px) calc(100% - 2px),calc(100% - 4px) 100%,4px 100%,4px calc(100% - 2px),2px calc(100% - 2px),2px calc(100% - 4px),0 calc(100% - 4px),0 4px,2px 4px,2px 2px,4px 2px)";
+const LOADER_STEP_INNER =
+  "polygon(2px 0,calc(100% - 2px) 0,calc(100% - 2px) 2px,100% 2px,100% calc(100% - 2px),calc(100% - 2px) calc(100% - 2px),calc(100% - 2px) 100%,2px 100%,2px calc(100% - 2px),0 calc(100% - 2px),0 2px,2px 2px)";
+
+const LOADER_CHARACTER_KEYS = ["hair", "hair-shade", "skin", "skin-shade", "eye-white", "eye", "outfit", "outfit-shade", "outfit-light", "accent", "pants", "pants-shade", "boots", "boots-shade"];
+
+/* The chassis: the frame, the nameplate's insides, the dialogue box, the footer and the adventurer's frames. */
+const LOADER_CSS = \`
+.bz-snl{container-type:inline-size;display:block;width:100%;min-width:0;
+--bz-snl-ink:light-dark(var(--bz-ink,#0a0a0a),var(--bz-void-ink,#ffffff));
+--bz-snl-muted:light-dark(var(--bz-ink-muted,#4a4a4c),rgba(255,255,255,0.8));
+--bz-snl-panel:light-dark(var(--bz-paper,#ffffff),var(--bz-void-raised,#1a1a1a));
+--bz-snl-track:light-dark(var(--bz-line-opaque,#f0f0f0),#313131);
+--bz-snl-danger:light-dark(var(--bz-danger,#b91c1c),#fca5a5);
+--bz-snl-danger-mark:light-dark(#dc2626,#f87171);
+--bz-snl-success:light-dark(var(--bz-emerald,#047857),var(--bz-emerald-on-void,#34d399));
+--bz-snl-focus:light-dark(var(--bz-focus-ring,#912c22),var(--bz-focus-ring-void,#ffffff));
+--bz-snl-hairline:light-dark(rgba(10,10,10,0.13),rgba(255,255,255,0.16));
+--bz-snl-idle:light-dark(#8a8a8e,#8c8c8c);
+--bz-snl-fast:var(--bz-duration-fast,150ms);
+--bz-snl-base:var(--bz-duration-base,300ms);
+--bz-snl-ease:var(--bz-ease-out,cubic-bezier(0.23,1,0.32,1));
+--bz-snl-beat:var(--bz-duration-beat,2.4s);
+--bz-snl-sans:var(--bz-font-sans,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif);
+--bz-snl-mono:var(--bz-font-mono,ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace)}
+.bz-snl *,.bz-snl *::before,.bz-snl *::after{box-sizing:border-box}
+.bz-snl-in{--bz-snl-u:3px;position:relative;display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;padding:16px;border:1px solid var(--bz-snl-hairline);border-radius:16px;background:var(--bz-snl-panel);color:var(--bz-snl-ink);font-family:var(--bz-snl-sans);font-size:15px;line-height:1.5;text-align:left}
+.bz-snl-sr{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+.bz-snl-title{grid-area:1/1;margin:0 0 10px;font-size:15px;font-weight:600;line-height:21px;color:var(--bz-snl-ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bz-snl-stage{grid-area:2/1}
+.bz-snl-box{grid-area:3/1}
+.bz-snl-title:focus{outline:none}
+.bz-snl-title:focus-visible{outline:2px solid var(--bz-snl-focus);outline-offset:2px}
+.bz-snl-frame{position:relative;padding:2px;background:var(--bz-snl-ink);clip-path:\${LOADER_STEP_OUTER}}
+.bz-snl-frame-in{position:relative;background:var(--bz-snl-panel);clip-path:\${LOADER_STEP_INNER}}
+.bz-snl-g{display:block;flex:none}
+.bz-snl-g path{fill:currentColor}
+
+.bz-snl-plate{position:relative;padding:6px 10px 8px 16px;background:var(--bz-snl-panel);border:2px solid var(--bz-snl-ink);color:var(--bz-snl-ink)}
+.bz-snl-plate::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--bz-snl-accent)}
+.bz-snl-plate[data-state="pending"]::before{background:var(--bz-snl-idle)}
+.bz-snl-plate[data-state="error"]::before{background:var(--bz-snl-danger-mark)}
+.bz-snl-plate[data-gone="true"]{position:absolute!important;width:1px!important;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);border:0}
+.bz-snl-plate-in{animation:bz-snl-fade var(--bz-snl-fast) linear}
+.bz-snl-plate-top{display:flex;align-items:center;gap:2px 8px;min-height:22px}
+.bz-snl-plate-label{flex:1 1 auto;min-width:0;font-size:14px;font-weight:600;line-height:20px;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-snl-badges{display:inline-flex;flex:none;align-items:center;gap:6px}
+.bz-snl-badges:empty{display:none}
+.bz-snl-tag{flex:none;padding:3px 6px 2px;background:var(--bz-snl-accent);color:var(--bz-snl-on-accent);font:700 11px/1.2 var(--bz-snl-mono);letter-spacing:0.02em;white-space:nowrap}
+.bz-snl-failed{flex:none;display:inline-flex;align-items:center;gap:5px;color:var(--bz-snl-danger);font-size:13px;font-weight:700;line-height:1}
+.bz-snl-failed .bz-snl-g{width:12px;height:12px;color:var(--bz-snl-danger-mark)}
+.bz-snl-plate-row{display:flex;align-items:center;gap:4px 10px;margin-top:6px}
+.bz-snl-bar{position:relative;flex:1 1 56px;min-width:56px;height:12px;overflow:hidden;border:2px solid var(--bz-snl-ink);background:var(--bz-snl-track)}
+.bz-snl-fill{position:absolute;left:0;top:0;bottom:0;background:var(--bz-snl-accent);transition:width var(--bz-snl-base) var(--bz-snl-ease)}
+.bz-snl-hatch{position:absolute;top:0;left:-8px;width:calc(100% + 8px);height:100%;display:none;color:var(--bz-snl-accent)}
+.bz-snl-hatch path{fill:currentColor}
+.bz-snl-bar[data-indet="true"] .bz-snl-fill{display:none}
+.bz-snl-bar[data-indet="true"] .bz-snl-hatch{display:block;animation:bz-snl-march var(--bz-snl-beat) steps(4) infinite}
+.bz-snl-count{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;font:500 12px/16px var(--bz-snl-mono);color:var(--bz-snl-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+@keyframes bz-snl-march{from{transform:translateX(0)}to{transform:translateX(8px)}}
+@keyframes bz-snl-fade{from{opacity:0}to{opacity:1}}
+
+.bz-snl-box{margin-top:12px}
+.bz-snl-box-in{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:16px;padding:14px 18px 12px}
+.bz-snl-box-in[data-portrait="none"]{grid-template-columns:minmax(0,1fr)}
+.bz-snl-face{align-self:start;width:72px;height:58px;padding:6px 2px 0;border:2px solid var(--bz-snl-ink);background:var(--bz-snl-portrait,var(--bz-snl-track));overflow:hidden}
+.bz-snl-face svg{display:block;width:64px;height:48px}
+.bz-snl-face g{display:none}
+.bz-snl-face[data-face="open"] g[data-f="open"],.bz-snl-face[data-face="blink"] g[data-f="blink"],.bz-snl-face[data-face="squint"] g[data-f="squint"],.bz-snl-face[data-face="happy"] g[data-f="happy"]{display:inline}
+.bz-snl[data-motion="on"] .bz-snl-face[data-face="open"] g[data-f="blink"]{display:inline;animation:bz-snl-blink calc(var(--bz-snl-beat) * 2) step-end infinite}
+@keyframes bz-snl-blink{0%{visibility:hidden}96%{visibility:visible}100%{visibility:visible}}
+.bz-snl-panels{display:grid;height:140px}
+.bz-snl-panel{grid-area:1/1;min-width:0;min-height:0;background:var(--bz-snl-panel)}
+.bz-snl-talk{position:relative}
+.bz-snl-err,.bz-snl-res{z-index:1;visibility:hidden}
+.bz-snl-err[data-on="true"],.bz-snl-res[data-on="true"]{visibility:visible}
+.bz-snl-log{position:relative;height:120px;overflow-y:auto;scrollbar-width:none;overscroll-behavior:contain;font-size:15px;line-height:24px}
+.bz-snl-log::-webkit-scrollbar{display:none}
+.bz-snl-log:focus{outline:none}
+.bz-snl-log:focus-visible{outline:2px solid var(--bz-snl-focus);outline-offset:2px}
+.bz-snl-line{display:flex;gap:8px;margin:0;color:var(--bz-snl-muted);font-size:14px}
+.bz-snl-line[data-last="true"]{color:var(--bz-snl-ink);font-size:16px;font-weight:500}
+.bz-snl-line>.bz-snl-g{width:14px;height:14px;margin-top:5px;visibility:hidden}
+.bz-snl-line[data-last="true"]>.bz-snl-g{visibility:visible}
+.bz-snl-line[data-kind="done"]>.bz-snl-g{color:var(--bz-snl-success)}
+.bz-snl-line[data-kind="skipped"]>.bz-snl-g,.bz-snl-line[data-kind="stop"]>.bz-snl-g{color:var(--bz-snl-muted)}
+.bz-snl-line[data-kind="retry"]>.bz-snl-g,.bz-snl-line[data-kind="finish"]>.bz-snl-g{color:var(--bz-snl-accent)}
+.bz-snl-ph{position:absolute;left:0;top:0;margin:0;font-size:15px;line-height:24px;color:var(--bz-snl-muted)}
+
+.bz-snl-err{display:grid;grid-template-rows:minmax(0,1fr) auto;row-gap:10px}
+.bz-snl-err-text,.bz-snl-sheet-in{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--bz-snl-muted) transparent}
+.bz-snl-err-text:focus,.bz-snl-sheet-in:focus{outline:none}
+.bz-snl-err-text:focus-visible,.bz-snl-sheet-in:focus-visible{outline:2px solid var(--bz-snl-focus);outline-offset:-2px}
+.bz-snl-err-text[data-more="true"]::after,.bz-snl-sheet-in[data-more="true"]::after{content:"";position:sticky;bottom:0;display:block;height:20px;margin-top:-20px;background:linear-gradient(to bottom,transparent,var(--bz-snl-panel));pointer-events:none}
+.bz-snl-alert{visibility:visible;display:flex;gap:10px;color:var(--bz-snl-ink);font-size:15px;font-weight:500;line-height:24px}
+.bz-snl-alert>.bz-snl-g{width:14px;height:14px;margin-top:5px;color:var(--bz-snl-danger-mark)}
+
+.bz-snl-sheet{position:absolute;grid-area:2/1/3/2;z-index:5;top:10px;left:10px;right:10px;display:flex;max-height:calc(100% - 20px)}
+.bz-snl-sheet[hidden]{display:none}
+.bz-snl-sheet-in{flex:1 1 auto;padding:10px 14px 12px}
+.bz-snl-sheet-head{margin:0 0 4px;font:700 11px/14px var(--bz-snl-mono);letter-spacing:0.08em;text-transform:uppercase;color:var(--bz-snl-muted)}
+.bz-snl-details{margin:0;font:500 12px/18px var(--bz-snl-mono);color:var(--bz-snl-ink);overflow-wrap:anywhere}
+.bz-snl-more-detail{margin:6px 0 0;font-size:13px;line-height:18px;color:var(--bz-snl-muted)}
+.bz-snl-menu{display:flex;flex-wrap:wrap;gap:8px}
+.bz-snl-menu .bz-snl-btn{justify-content:flex-start;gap:6px;padding:0 16px 0 8px}
+.bz-snl-cur{display:inline-flex;width:8px;visibility:hidden}
+.bz-snl-cur .bz-snl-g{width:8px;height:14px}
+.bz-snl-err[data-on="true"] .bz-snl-btn[data-cursor="true"] .bz-snl-cur{visibility:visible}
+
+.bz-snl-res{display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.bz-snl-res-line{flex:none;margin:0;font-size:15px;font-weight:500;line-height:22px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-snl-tiles{display:flex;flex-wrap:wrap;align-content:flex-start;gap:8px 12px;min-height:0;margin:0;overflow-y:auto}
+.bz-snl-tile{flex:1 1 auto;min-width:0;padding-top:6px;border-top:2px solid var(--bz-snl-ink)}
+.bz-snl-tile dt{font:700 11px/14px var(--bz-snl-mono);letter-spacing:0.08em;text-transform:uppercase;color:var(--bz-snl-muted)}
+.bz-snl-tile dd{margin:2px 0 0}
+.bz-snl-num{display:block;font:700 18px/24px var(--bz-snl-mono);color:var(--bz-snl-ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bz-snl-sub{width:0;min-width:100%;font-size:12px;line-height:16px;color:var(--bz-snl-muted);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+
+.bz-snl-foot{grid-column:1/-1;display:flex;align-items:center;gap:8px 16px;margin-top:12px}
+.bz-snl-meta{flex:1 1 auto;min-width:0;height:40px;margin:0;overflow:hidden;font-size:13px;line-height:20px;color:var(--bz-snl-muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.bz-snl-meta b{font-weight:600;color:var(--bz-snl-ink)}
+.bz-snl-meta .bz-snl-g{display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-1px;color:var(--bz-snl-accent)}
+.bz-snl-tools{display:flex;flex:none;gap:8px}
+
+.bz-snl-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-width:48px;min-height:48px;margin:0;padding:0 16px;border:2px solid var(--bz-snl-ink);border-radius:0;background:var(--bz-snl-panel);color:var(--bz-snl-ink);box-shadow:inset 0 -3px 0 var(--bz-snl-track);font:600 14px/1.2 var(--bz-snl-sans);text-align:left;cursor:pointer;transition:background-color var(--bz-snl-fast) var(--bz-snl-ease),transform var(--bz-snl-fast) var(--bz-snl-ease)}
+.bz-snl-btn .bz-snl-g{width:12px;height:12px}
+.bz-snl-btn:focus{outline:none}
+.bz-snl-btn:focus-visible{outline:2px solid var(--bz-snl-focus);outline-offset:2px;background:var(--bz-snl-track)}
+@media (hover:hover){.bz-snl-btn:hover{background:var(--bz-snl-track)}}
+.bz-snl[data-motion="on"] .bz-snl-btn:active{transform:scale(0.97)}
+.bz-snl-btn:disabled{opacity:0.5;cursor:not-allowed}
+.bz-snl-primary{border-color:var(--bz-snl-accent);background:var(--bz-snl-accent);color:var(--bz-snl-on-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25)}
+.bz-snl-primary:focus-visible{background:var(--bz-snl-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25),inset 0 0 0 2px var(--bz-snl-panel)}
+@media (hover:hover){.bz-snl-primary:hover{background:var(--bz-snl-accent);box-shadow:inset 0 -3px 0 rgba(0,0,0,0.25),inset 0 0 0 2px var(--bz-snl-panel)}}
+.bz-snl-toy{padding:0 14px;font-size:13.5px}
+.bz-snl-toy[aria-pressed="true"]{border-color:var(--bz-snl-ink);background:var(--bz-snl-ink);color:var(--bz-snl-panel);box-shadow:none}
+.bz-snl-toy[data-hide="true"]{visibility:hidden}
+.bz-snl-continue{min-width:112px;visibility:hidden}
+.bz-snl-continue[data-on="true"]{visibility:visible}
+
+@container (max-width:559px){
+.bz-snl-in{--bz-snl-u:2px;padding:12px}
+.bz-snl-box-in{padding:12px 12px 10px}
+.bz-snl-box-in{grid-template-columns:minmax(0,1fr)}
+.bz-snl-face{display:none}
+.bz-snl-panels{height:188px}
+.bz-snl-log{height:168px}
+.bz-snl-plate-row{flex-wrap:wrap}
+.bz-snl-bar{flex-basis:100%}
+.bz-snl-badges{position:absolute;top:-12px;right:8px}
+.bz-snl-tag,.bz-snl-failed{padding:3px 6px 2px;border:2px solid var(--bz-snl-ink)}
+.bz-snl-failed{background:var(--bz-snl-panel);line-height:1.2}
+.bz-snl-menu{display:grid;grid-template-columns:1fr 1fr}
+.bz-snl-tile{flex-basis:40%}
+.bz-snl-sub{display:block;white-space:nowrap;text-overflow:ellipsis}
+.bz-snl-foot{flex-wrap:wrap}
+.bz-snl-meta{flex:1 1 100%}
+.bz-snl-tools{flex:1 1 100%}
+}
+
+.bz-snl-hero .bz-snl-f{display:none}
+\${LOADER_FRAME_NAMES.map((f) => \`.bz-snl-hero[data-frame="\${f}"] .bz-snl-f[data-f="\${f}"]\`).join(",")}{display:inline}
+.bz-snl-hero[data-loop="idle"] .bz-snl-f[data-f="idle1"],.bz-snl-hero[data-loop="working"] .bz-snl-f[data-f="idle1"],.bz-snl-hero[data-loop="celebrate"] .bz-snl-f[data-f="celebrate1"],.bz-snl-hero[data-loop="fly"] .bz-snl-f[data-f="fly1"]{display:inline;animation:bz-snl-a var(--bz-snl-loop) step-end infinite}
+.bz-snl-hero[data-loop="idle"] .bz-snl-f[data-f="idle2"],.bz-snl-hero[data-loop="working"] .bz-snl-f[data-f="swing1"],.bz-snl-hero[data-loop="celebrate"] .bz-snl-f[data-f="celebrate2"],.bz-snl-hero[data-loop="fly"] .bz-snl-f[data-f="fly2"]{display:inline;animation:bz-snl-b var(--bz-snl-loop) step-end infinite}
+.bz-snl-hero{--bz-snl-loop:var(--bz-snl-beat)}
+.bz-snl-hero[data-loop="celebrate"]{--bz-snl-loop:calc(var(--bz-snl-beat) / 4)}
+.bz-snl-hero[data-loop="fly"]{--bz-snl-loop:calc(var(--bz-snl-beat) / 8)}
+.bz-snl-hero[data-loop="run"] .bz-snl-f[data-f^="run"]{display:inline;animation:bz-snl-r 400ms step-end infinite}
+.bz-snl-hero[data-loop="run"] .bz-snl-f[data-f="run2"]{animation-delay:-300ms}
+.bz-snl-hero[data-loop="run"] .bz-snl-f[data-f="run3"]{animation-delay:-200ms}
+.bz-snl-hero[data-loop="run"] .bz-snl-f[data-f="run4"]{animation-delay:-100ms}
+@keyframes bz-snl-a{0%{visibility:visible}50%{visibility:hidden}100%{visibility:hidden}}
+@keyframes bz-snl-b{0%{visibility:hidden}50%{visibility:visible}100%{visibility:visible}}
+@keyframes bz-snl-r{0%{visibility:visible}25%{visibility:hidden}100%{visibility:hidden}}
+.bz-snl-c-outline{fill:var(--bz-snl-sprite-outline)}
+.bz-snl-c-line{fill:var(--bz-snl-sprite-line)}
+.bz-snl-c-mouth{fill:var(--chr-eye)}
+\${LOADER_CHARACTER_KEYS.map((k) => \`.bz-snl-c-\${k}{fill:var(--chr-\${k})}\`).join("\\n")}
+
+.bz-snl[data-motion="off"] .bz-snl-f,.bz-snl[data-motion="off"] .bz-snl-hatch{animation:none!important}
+.bz-snl[data-motion="off"] .bz-snl-fill{transition:none}
+.bz-snl[data-motion="off"] .bz-snl-btn{transition:background-color var(--bz-snl-fast) linear}
+.bz-snl[data-running="false"] *,.bz-snl[data-running="false"] *::before{animation-play-state:paused!important}
+\`;
+
+/* ---------------- end shared: chassis ---------------- */
+
+/* ---------------- Snake Line arena ---------------- */
+
+/*
+ * What this game uses of the shared sections above: the player draws only the
+ * frames in SNL_FRAMES, and the dialogue box runs without its speaker portrait
+ * because the player stands in the booth. The other frames, the portrait art,
+ * the accessory hook and its jetpack, flame and wood colours serve the other
+ * loaders built on the same chassis; they stay so those sections remain line
+ * for line the same in each of them.
+ */
+
+/*
+ * The board is a grid of 5 x 5 art-pixel cells. Pieces are authored facing
+ * right and turned for the other directions. Keys: o snake outline, g body,
+ * G body shade, a scarf (the player's accent), w white, e eye, t tongue,
+ * q pellet outline, p pellet, r apple outline, y apple, Y apple shade, l leaf,
+ * x dashed slot, d danger ring, k spark.
+ *
+ * The snake is drawn as filled cells and then outlined once round its whole
+ * silhouette, so it reads as one tube on light and dark boards alike. Every
+ * cell keeps notched corners, which leaves a nick in the outline at each
+ * joint: the segments stay countable.
+ */
+const SNL_CELL_PX = 5;
+/* The player's frames here: the idle and working loops, the hop, the stumble, the sit and the cheer. */
+const SNL_FRAMES: readonly LoaderFrameName[] = ["idle1", "idle2", "swing1", "jump", "hurt", "sit", "celebrate1", "celebrate2"];
+const SNL_ROLES: Record<string, string> = {
+  o: "line", g: "body", G: "shade", a: "scarf", w: "white", e: "eye", t: "tongue", q: "pellet-line", p: "pellet",
+  r: "apple-line", y: "apple", Y: "apple-shade", l: "leaf", x: "ghost", d: "danger", k: "spark",
+};
+const SNL_CELL = {
+  /* Straight runs: light on top (or on the left), shade underneath (or on the right). */
+  across: [".ggg.", "ggggg", "gggGG", "gGGGG", ".GGG."],
+  down: [".ggg.", "gggGG", "gggGG", "ggGGG", ".gGG."],
+  turn: [".ggg.", "ggggG", "gggGG", "ggGGG", ".GGG."],
+  scarf: [".aaa.", "aaaaa", "aaaaa", "aaaaa", ".aaa."],
+  open: ["gggg.", "ggweg", "ggggg", "ggweg", "GGGG."],
+  ko: ["gggg.", "gwgwg", "ggwgg", "gwgwg", "GGGG."],
+  rest: ["gggg.", "ggeeg", "ggggg", "ggeeg", "GGGG."],
+  tail: [".....", "..ggg", "ggggG", "..GGG", "....."],
+  tongue: [".....", "...t.", "ttt..", "...t.", "....."],
+  pellet: [".qqq.", "qwppq", "qpppq", "qpppq", ".qqq."],
+  ghost: ["x.x.x", ".....", "x...x", ".....", "x.x.x"],
+};
+/* The last step's pellet: a 2 x 2 cell apple, and the dashed slot it leaves if skipped. */
+const SNL_APPLE = ["......ll..", ".....rll..", "..rr.rrr..", ".ryyryyyr.", "rywyyyyyYr", "rywyyyyyYr", "ryyyyyyyYr", "ryyyyyyYYr", ".ryyyyYYr.", "..rrrrrr.."];
+const SNL_GHOST_BIG = ["x.x.x.x.x.", "..........", "x........x", "..........", "x........x", "..........", "x........x", "..........", "x........x", ".x.x.x.x.x"];
+
+type SnlDir = "R" | "D" | "L" | "U";
+type SnlCell = [number, number];
+const SNL_DIRS: SnlDir[] = ["R", "D", "L", "U"];
+const SNL_VEC: Record<SnlDir, SnlCell> = { R: [1, 0], D: [0, 1], L: [-1, 0], U: [0, -1] };
+const snlRotCW = (m: readonly string[]) => m.map((_, y) => m.map((__, x) => m[m.length - 1 - x][y]).join(""));
+const snlTurned = (m: readonly string[], d: SnlDir) => {
+  let out = [...m];
+  for (let k = 0; k < SNL_DIRS.indexOf(d); k++) out = snlRotCW(out);
+  return out;
+};
+type SnlTurnedPiece = "open" | "ko" | "rest" | "tail" | "tongue";
+const SNL_ROT = Object.fromEntries(
+  (["open", "ko", "rest", "tail", "tongue"] as SnlTurnedPiece[]).map((name) => [name, Object.fromEntries(SNL_DIRS.map((d) => [d, snlTurned(SNL_CELL[name], d)]))]),
+) as Record<SnlTurnedPiece, Record<SnlDir, string[]>>;
+/* The eye whites of the open head, which the blink covers. */
+const SNL_EYES = Object.fromEntries(
+  SNL_DIRS.map((d) => {
+    const pts: SnlCell[] = [];
+    SNL_ROT.open[d].forEach((row, y) => [...row].forEach((c, x) => c === "w" && pts.push([x, y])));
+    return [d, pts];
+  }),
+) as Record<SnlDir, SnlCell[]>;
+/* The scarf's knot: three pixels just outside the band, streaming back, in the scarf's own row or column. On a corner, where the body already fills that side, it flies on the other. */
+const SNL_KNOT: Record<SnlDir, SnlCell[]> = {
+  R: [[2, -1], [1, -1], [0, -2]],
+  L: [[2, -1], [3, -1], [4, -2]],
+  D: [[5, 2], [5, 1], [6, 0]],
+  U: [[5, 2], [5, 3], [6, 4]],
+};
+/* The victory wave travels along the body: neighbouring segments differ by one art pixel. */
+const SNL_WAVE = [0, 1, 0, -1];
+const SNL_WIGGLE = [0, 1, 2, 3, 0, 1, 2, 3];
+const snlDirOf = (a: SnlCell, b: SnlCell): SnlDir => (b[0] > a[0] ? "R" : b[0] < a[0] ? "L" : b[1] > a[1] ? "D" : "U");
+const SNL_BACK: Record<SnlDir, SnlDir> = { R: "L", L: "R", D: "U", U: "D" };
+/* The middle three pixels of each side of a cell, where it meets the next segment. */
+const SNL_EDGE: Record<SnlDir, SnlCell[]> = {
+  R: [[4, 1], [4, 2], [4, 3]],
+  L: [[0, 1], [0, 2], [0, 3]],
+  D: [[1, 4], [2, 4], [3, 4]],
+  U: [[1, 0], [2, 0], [3, 0]],
+};
+
+/*
+ * The path is a serpentine one cell in from the frame: right along a lane,
+ * down a short turn, left along the next. Lanes sit 3 rows apart, and the lane
+ * count comes from the step count and the breakpoint alone (enough lanes that
+ * every step gets 6 cells on the narrowest board of that breakpoint), so the
+ * board's height is reserved in CSS before anything is measured.
+ */
+const SNL_LANE_GAP = 3;
+const SNL_HEAD0 = 2;
+const SNL_MIN_CELLS = 6;
+function snlSerpentine(cols: number, lanes: number): SnlCell[] {
+  const path: SnlCell[] = [];
+  for (let k = 0; k < lanes; k++) {
+    const y = 1 + k * SNL_LANE_GAP;
+    const right = k % 2 === 0;
+    for (let i = 0; i < cols - 2; i++) path.push([right ? 1 + i : cols - 2 - i, y]);
+    if (k < lanes - 1) for (let j = 1; j < SNL_LANE_GAP; j++) path.push([right ? cols - 2 : 1, y + j]);
+  }
+  return path;
+}
+function snlLanes(n: number, narrow: boolean) {
+  const cols = narrow ? 24 : 34;
+  for (let lanes = 3; lanes < 8; lanes++) {
+    const len = lanes * (cols - 2) + (lanes - 1) * (SNL_LANE_GAP - 1);
+    if (Math.floor((len - 2 - SNL_HEAD0) / Math.max(1, n)) >= SNL_MIN_CELLS) return lanes;
+  }
+  return 8;
+}
+const snlRows = (lanes: number) => 1 + (lanes - 1) * SNL_LANE_GAP + 3;
+
+type SnlBoard = { key: string; cols: number; rows: number; path: SnlCell[]; S: number; pel: number[] };
+function snlBoard(cols: number, n: number, narrow: boolean, u: number): SnlBoard {
+  const path = snlSerpentine(cols, snlLanes(n, narrow));
+  let S = Math.max(1, Math.floor((path.length - 2 - SNL_HEAD0) / Math.max(1, n)));
+  // The apple needs the next path cell beside it, on the same row.
+  while (n && S > 1) {
+    const a = path[SNL_HEAD0 + n * S];
+    const b = path[SNL_HEAD0 + n * S + 1];
+    if (a && b && a[1] === b[1]) break;
+    S--;
+  }
+  const pel: number[] = [];
+  for (let k = 0; k < n; k++) pel.push(SNL_HEAD0 + (k + 1) * S);
+  return { key: \`\${cols}x\${u}x\${n}\`, cols, rows: snlRows(snlLanes(n, narrow)), path, S, pel };
+}
+
+/** Art assembled from many pieces: a sparse layer, emitted as one path per colour key. */
+class SnlLayer {
+  private rows = new Map<number, Map<number, string>>();
+  set(x: number, y: number, c: string) {
+    let r = this.rows.get(y);
+    if (!r) this.rows.set(y, (r = new Map()));
+    r.set(x, c);
+  }
+  blit(map: readonly string[], ox: number, oy: number) {
+    for (let y = 0; y < map.length; y++) for (let x = 0; x < map[y].length; x++) if (map[y][x] !== ".") this.set(ox + x, oy + y, map[y][x]);
+  }
+  /** Rings everything drawn so far with \`c\`: each empty pixel beside a filled one, sides only. */
+  outline(c: string) {
+    const ring: SnlCell[] = [];
+    const filled = (x: number, y: number) => !!this.rows.get(y)?.has(x);
+    this.rows.forEach((r, y) =>
+      r.forEach((_, x) => {
+        for (const [dx, dy] of SNL_DIRS.map((d) => SNL_VEC[d])) if (!filled(x + dx, y + dy)) ring.push([x + dx, y + dy]);
+      }),
+    );
+    ring.forEach(([x, y]) => this.set(x, y, c));
+  }
+  markup(): string {
+    const out: Record<string, string> = {};
+    this.rows.forEach((r, y) => {
+      const xs = [...r.keys()].sort((a, b) => a - b);
+      let i = 0;
+      while (i < xs.length) {
+        const c = r.get(xs[i]) as string;
+        let j = i + 1;
+        while (j < xs.length && xs[j] === xs[j - 1] + 1 && r.get(xs[j]) === c) j++;
+        out[c] = \`\${out[c] ?? ""}M\${xs[i]} \${y}h\${j - i}v1h\${i - j}z\`;
+        i = j;
+      }
+    });
+    let s = "";
+    for (const k in out) s += \`<path class="bz-snl-k-\${SNL_ROLES[k] ?? k}" d="\${out[k]}"/>\`;
+    return s;
+  }
+}
+const snlMap = (map: readonly string[], ox = 0, oy = 0) => {
+  const l = new SnlLayer();
+  l.blit(map, ox, oy);
+  return l.markup();
+};
+
+/**
+ * Distance along the path is progress: the head sits at the previous pellet
+ * plus floor(progress x cells to the next pellet), and the body is the path
+ * behind it. Length is 3 plus the pellets eaten.
+ */
+function createSnakeArena(root: HTMLElement, ctx: LoaderArenaCtx): LoaderArena {
+  const q = <T extends Element>(sel: string) => root.querySelector(sel) as T | null;
+  const boardEl = q<HTMLDivElement>(".bz-snl-board");
+  const screenEl = q<HTMLDivElement>(".bz-snl-screen");
+  const svgEl = q<SVGSVGElement>(".bz-snl-svg");
+  const pelsEl = q<SVGGElement>(".bz-snl-pels");
+  const snakeEl = q<SVGGElement>(".bz-snl-snake");
+  const fxEl = q<SVGGElement>(".bz-snl-fx");
+  const heroEl = q<HTMLDivElement>(".bz-snl-hero");
+
+  let G: SnlBoard | null = null;
+  let head = SNL_HEAD0;
+  let len = 3;
+  let slide: { ids: number[]; h: number; l: number } | null = null;
+  let pelEls: Array<SVGGElement | null> = [];
+  let pelKey: string[] = [];
+  const freshGhost = new Set<number>();
+  let errorAt = -1;
+  let wave: number | null = null;
+  let tongue = false;
+  let snakeTimers: number[] = [];
+  let poseTimers: number[] = [];
+  let transientUntil = 0;
+  let celebrateUntil = 0;
+  let snakeHtml = "";
+  let flashUntil = 0;
+  let flashT = 0;
+
+  function geomHead(f: number, p: number) {
+    if (!G) return SNL_HEAD0;
+    const n = G.pel.length;
+    if (!n) return SNL_HEAD0;
+    const base = SNL_HEAD0 + Math.min(f, n) * G.S;
+    if (f >= n) return base;
+    return base + Math.floor(Math.min(Math.max(p, 0), 0.999) * G.S);
+  }
+  function lenTarget() {
+    const vis = ctx.vis();
+    return 3 + ctx.steps().reduce((a, s, i) => a + (vis[i] === "gone" && s.status === "done" ? 1 : 0), 0);
+  }
+
+  /* -------- the snake -------- */
+
+  /** One 150ms danger flash. It has its own timer, and every render also drops it once it is due. */
+  function flash() {
+    if (!snakeEl) return;
+    snakeEl.classList.add("is-flash");
+    flashUntil = loaderNow() + FAST;
+    ctx.clear(flashT);
+    flashT = ctx.later(unflash, FAST);
+  }
+  function unflash() {
+    flashT = 0;
+    flashUntil = 0;
+    snakeEl?.classList.remove("is-flash");
+  }
+
+  function setSnake(h: number, l: number) {
+    head = h;
+    len = l;
+    renderSnake();
+  }
+  function snap() {
+    if (G) setSnake(geomHead(ctx.front(), ctx.frontP()), lenTarget());
+  }
+  /** Stops travel; \`jump\` lands it where it was going. */
+  function stopSlide(jump: boolean) {
+    const s = slide;
+    if (!s) return;
+    s.ids.forEach(ctx.clear);
+    slide = null;
+    if (jump) setSnake(s.h, s.l);
+  }
+  /** Whole-cell travel: the head steps cell by cell, the tail follows, growth spreads over the slide. */
+  function slideTo(h: number, l: number, dur: number) {
+    stopSlide(false);
+    const h0 = head;
+    const t0 = head - len + 1;
+    const t1 = h - l + 1;
+    const dist = Math.max(Math.abs(h - h0), Math.abs(t1 - t0));
+    if (!dur || !G || !dist) {
+      setSnake(h, l);
+      return;
+    }
+    const n = Math.max(1, Math.min(dist, Math.round(dur / 16)));
+    const s = { ids: [] as number[], h, l };
+    slide = s;
+    for (let k = 1; k <= n; k++) {
+      s.ids.push(
+        ctx.later(() => {
+          const f = k / n;
+          const hh = h0 + Math.round((h - h0) * f);
+          const tt = t0 + Math.round((t1 - t0) * f);
+          if (k === n) slide = null;
+          setSnake(hh, hh - tt + 1);
+        }, ((k - 1) / n) * dur),
+      );
+    }
+    renderSnake();
+  }
+
+  function snakeMarkup(face: "open" | "ko" | "rest", w: number | null, tg: boolean) {
+    const P = (G as SnlBoard).path;
+    const h = Math.min(head, P.length - 1);
+    const tail = Math.max(0, h - len + 1);
+    const body = new SnlLayer();
+    const blink = new SnlLayer();
+    const tongueL = new SnlLayer();
+    for (let d = tail; d <= h; d++) {
+      const j = h - d;
+      const dir = j === 0 ? (d > 0 ? snlDirOf(P[d - 1], P[d]) : "R") : snlDirOf(P[d], P[d + 1]);
+      let ox = P[d][0] * SNL_CELL_PX;
+      let oy = P[d][1] * SNL_CELL_PX;
+      if (w != null) {
+        const off = SNL_WAVE[(j + w) % 4];
+        if (dir === "R" || dir === "L") oy += off;
+        else ox += off;
+      }
+      if (j === 0) {
+        body.blit(SNL_ROT[face][dir], ox, oy);
+        if (face === "open") {
+          SNL_EYES[dir].forEach(([x, y]) => blink.set(ox + x, oy + y, "g"));
+          tongueL.blit(SNL_ROT.tongue[dir], ox + SNL_VEC[dir][0] * SNL_CELL_PX, oy + SNL_VEC[dir][1] * SNL_CELL_PX);
+        }
+      } else if (j === 1) {
+        // The scarf is edged in the outline where it meets the head and the body, so it reads even on a snake of nearly its colour.
+        const back = SNL_BACK[snlDirOf(P[d - 1], P[d])];
+        const across = dir === "R" || dir === "L";
+        body.blit(SNL_CELL.scarf, ox, oy);
+        for (const side of [dir, back]) SNL_EDGE[side].forEach(([x, y]) => body.set(ox + x, oy + y, "o"));
+        const flip = back === (across ? "U" : "R");
+        SNL_KNOT[dir].forEach(([x, y]) => body.set(ox + (flip && !across ? 4 - x : x), oy + (flip && across ? 4 - y : y), "a"));
+      } else if (d === tail) body.blit(SNL_ROT.tail[dir], ox, oy);
+      else {
+        const into = snlDirOf(P[d - 1], P[d]);
+        body.blit(into !== dir ? SNL_CELL.turn : dir === "R" || dir === "L" ? SNL_CELL.across : SNL_CELL.down, ox, oy);
+      }
+    }
+    body.outline("o");
+    return \`\${body.markup()}<g class="bz-snl-lid">\${blink.markup()}</g><g class="bz-snl-tongue\${tg ? " is-on" : ""}">\${tongueL.markup()}</g>\`;
+  }
+
+  function renderSnake() {
+    if (!G || !snakeEl || !boardEl) return;
+    if (flashUntil && loaderNow() >= flashUntil) unflash();
+    const phase = ctx.phase();
+    const face = phase === "error" ? "ko" : phase === "stopped" ? "rest" : "open";
+    const html =
+      boardEl.dataset.loop === "victory" && wave == null
+        ? \`<g class="bz-snl-wig-a">\${snakeMarkup("open", 0, false)}</g><g class="bz-snl-wig-b">\${snakeMarkup("open", 2, true)}</g>\`
+        : snakeMarkup(face, wave, tongue);
+    if (html !== snakeHtml) {
+      snakeEl.innerHTML = html;
+      snakeHtml = html;
+    }
+    // For tests and devtools: the drawn length and whether it is travelling.
+    if (boardEl.dataset.len !== String(len)) boardEl.dataset.len = String(len);
+    const moving = slide ? "true" : "false";
+    if (boardEl.dataset.moving !== moving) boardEl.dataset.moving = moving;
+  }
+
+  /** A one-off sequence of wave phases (null for none), one per frame. */
+  function playSnake(frames: Array<number | null>, ms: number, tg: boolean) {
+    snakeTimers.forEach(ctx.clear);
+    snakeTimers = [];
+    wave = frames[0];
+    tongue = tg;
+    frames.forEach((w, k) => {
+      if (k) snakeTimers.push(ctx.later(() => ((wave = w), renderSnake()), k * ms));
+    });
+    snakeTimers.push(
+      ctx.later(() => {
+        wave = null;
+        tongue = false;
+        renderSnake();
+      }, frames.length * ms),
+    );
+    renderSnake();
+  }
+
+  /* -------- pellets -------- */
+
+  function pelBox(i: number) {
+    const B = G as SnlBoard;
+    const d = B.pel[i];
+    const cell = B.path[d];
+    if (i !== B.pel.length - 1) return { x: cell[0] * SNL_CELL_PX, y: cell[1] * SNL_CELL_PX, size: SNL_CELL_PX };
+    const nx = B.path[d + 1] ?? cell;
+    return { x: Math.min(cell[0], nx[0]) * SNL_CELL_PX, y: cell[1] * SNL_CELL_PX, size: 2 * SNL_CELL_PX };
+  }
+  function pelState(i: number) {
+    if (ctx.vis()[i] === "gone") return ctx.steps()[i].status === "skipped" ? "ghost" : "eaten";
+    if (i === errorAt) return "error";
+    return i === ctx.front() ? "front" : "queue";
+  }
+  function renderPellets(force: boolean) {
+    if (!G || !pelsEl) return;
+    if (force) {
+      pelsEl.textContent = "";
+      pelEls = [];
+      pelKey = [];
+    }
+    const last = ctx.steps().length - 1;
+    ctx.steps().forEach((_, i) => {
+      const st = pelState(i);
+      if (pelKey[i] === st) return;
+      pelKey[i] = st;
+      let g = pelEls[i];
+      if (st === "eaten") {
+        g?.remove();
+        pelEls[i] = null;
+        return;
+      }
+      if (!g) {
+        g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        pelsEl.appendChild(g);
+        pelEls[i] = g;
+      }
+      const b = pelBox(i);
+      g.setAttribute("class", "bz-snl-pel");
+      g.setAttribute("transform", \`translate(\${b.x} \${b.y})\`);
+      g.setAttribute("data-state", st);
+      let html = snlMap(st === "ghost" ? (i === last ? SNL_GHOST_BIG : SNL_CELL.ghost) : i === last ? SNL_APPLE : SNL_CELL.pellet);
+      if (st === "error") {
+        // A danger ring one art pixel outside the pellet.
+        const ring = new SnlLayer();
+        for (let k = -1; k <= b.size; k++) {
+          ring.set(k, -1, "d");
+          ring.set(k, b.size, "d");
+          ring.set(-1, k, "d");
+          ring.set(b.size, k, "d");
+        }
+        html += \`<g class="bz-snl-ring">\${ring.markup()}</g>\`;
+      }
+      g.innerHTML = html;
+      if (st === "ghost" && freshGhost.has(i)) {
+        freshGhost.delete(i);
+        const node = g;
+        node.classList.add("is-fresh");
+        ctx.later(() => node.classList.remove("is-fresh"), BASE);
+      }
+    });
+  }
+
+  /* -------- effects, in whole art pixels on held frames -------- */
+
+  function fxFrames(frames: Array<Array<[number, number, string]>>, ms: number) {
+    if (!fxEl) return;
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    fxEl.appendChild(g);
+    frames.forEach((px, k) =>
+      ctx.later(() => {
+        const l = new SnlLayer();
+        px.forEach(([x, y, c]) => l.set(x, y, c));
+        g.innerHTML = l.markup();
+      }, k * ms),
+    );
+    ctx.later(() => g.remove(), frames.length * ms);
+  }
+  /** The eaten pellet pops: sparks fly out of its corners, and the apple adds edge sparks. */
+  function pop(i: number) {
+    if (!G) return;
+    const b = pelBox(i);
+    const big = b.size > SNL_CELL_PX;
+    const [x0, y0, x1, y1, m] = [b.x, b.y, b.x + b.size - 1, b.y + b.size - 1, b.size / 2];
+    const frames = (big ? [1, 3, 5] : [0, 2]).map((k, f) => {
+      const c = big && f % 2 === 0 ? "y" : "k";
+      const px: Array<[number, number, string]> = [[x0 - k, y0 - k, c], [x1 + k, y0 - k, c], [x0 - k, y1 + k, c], [x1 + k, y1 + k, c]];
+      if (big) {
+        px.push(
+          [b.x + m - 1, y0 - k - 1, c], [b.x + m, y0 - k - 1, c], [b.x + m - 1, y1 + k + 1, c], [b.x + m, y1 + k + 1, c],
+          [x0 - k - 1, b.y + m - 1, c], [x0 - k - 1, b.y + m, c], [x1 + k + 1, b.y + m - 1, c], [x1 + k + 1, b.y + m, c],
+        );
+      }
+      return px;
+    });
+    fxFrames(frames, big ? 90 : 70);
+  }
+  /** The new target gets corner brackets for a moment. */
+  function highlight(i: number) {
+    if (!G || i >= ctx.steps().length) return;
+    const b = pelBox(i);
+    const [x0, y0, x1, y1] = [b.x - 1, b.y - 1, b.x + b.size, b.y + b.size];
+    const pts: SnlCell[] = [[x0, y0], [x0 + 1, y0], [x0, y0 + 1], [x1, y0], [x1 - 1, y0], [x1, y0 + 1], [x0, y1], [x0 + 1, y1], [x0, y1 - 1], [x1, y1], [x1 - 1, y1], [x1, y1 - 1]];
+    fxFrames([pts.map(([x, y]) => [x, y, "k"])], SLOW);
+  }
+
+  /* -------- the player -------- */
+
+  function pose() {
+    const phase = ctx.phase();
+    const m = ctx.motionAllowed();
+    const s = ctx.steps()[ctx.front()];
+    const indet = phase === "run" && !!s && s.status === "active" && s.progress == null;
+    const victory = phase === "complete" && m && celebrateUntil > loaderNow();
+    const loop = victory ? "victory" : indet && m ? "wait" : "";
+    if (boardEl && (boardEl.dataset.loop ?? "") !== loop) boardEl.dataset.loop = loop;
+    renderSnake();
+    if (transientUntil > loaderNow()) return;
+    if (phase === "error" || phase === "stopped") return loaderSetPose(heroEl, "sit", "");
+    if (phase === "complete") return victory ? loaderSetPose(heroEl, "", "celebrate") : loaderSetPose(heroEl, "celebrate1", "");
+    if (!m) return loaderSetPose(heroEl, "idle1", "");
+    loaderSetPose(heroEl, "", indet ? "working" : "idle");
+  }
+
+  /** A short sequence of held frames, then back to the resting pose. */
+  function play(seq: Array<[LoaderFrameName, number]>) {
+    poseTimers.forEach(ctx.clear);
+    poseTimers = [];
+    let at = 0;
+    seq.forEach(([frame, ms], k) => {
+      if (k === 0) loaderSetPose(heroEl, frame, "");
+      else poseTimers.push(ctx.later(() => loaderSetPose(heroEl, frame, ""), at));
+      at += ms;
+    });
+    transientUntil = loaderNow() + at;
+    poseTimers.push(
+      ctx.later(() => {
+        transientUntil = 0;
+        pose();
+      }, at),
+    );
+  }
+
+  /* -------- the driver -------- */
+
+  function layout() {
+    if (!svgEl || !boardEl) return;
+    const narrow = root.clientWidth > 0 && root.clientWidth < 560;
+    if (root.dataset.narrow !== String(narrow)) root.dataset.narrow = String(narrow);
+    const W = boardEl.clientWidth;
+    if (!W) return;
+    const u = narrow ? 2 : 3;
+    const cell = SNL_CELL_PX * u;
+    const cols = Math.max(14, Math.floor((W - 2 * u) / cell));
+    const n = ctx.steps().length;
+    if (G && G.key === \`\${cols}x\${u}x\${n}\`) return;
+    G = snlBoard(cols, n, narrow, u);
+    svgEl.setAttribute("viewBox", \`0 0 \${cols * SNL_CELL_PX} \${G.rows * SNL_CELL_PX}\`);
+    svgEl.setAttribute("width", String(cols * cell));
+    svgEl.setAttribute("height", String(G.rows * cell));
+    if (screenEl) screenEl.style.width = \`\${cols * cell + 2 * u}px\`;
+    stopSlide(false);
+    if (fxEl) fxEl.textContent = "";
+    renderPellets(true);
+    snakeHtml = "";
+    snap();
+  }
+
+  function rebuild() {
+    slide = null;
+    snakeTimers = [];
+    poseTimers = [];
+    wave = null;
+    tongue = false;
+    transientUntil = 0;
+    celebrateUntil = 0;
+    errorAt = -1;
+    freshGhost.clear();
+    unflash();
+    if (fxEl) fxEl.textContent = "";
+    G = null;
+    head = SNL_HEAD0;
+    len = 3;
+    layout();
+  }
+
+  /* A progress hit has no wind-up here: the slide is the hit. */
+  function hit() {
+    return 0;
+  }
+
+  function progress(i: number, showy: boolean) {
+    if (!G || i !== ctx.front()) return;
+    const h = geomHead(i, ctx.frontP());
+    const l = lenTarget();
+    if (showy) {
+      slideTo(h, l, BASE);
+      return;
+    }
+    // A restarted step respawns the snake at the last pellet: a snake never reverses.
+    const back = h < head;
+    stopSlide(false);
+    setSnake(h, l);
+    if (back && snakeEl && ctx.running() && ctx.motionAllowed()) {
+      ctx.anim(snakeEl, [0, 1, 2, 3].map((j) => ({ offset: j / 3, easing: "step-end", opacity: j / 3 })), { duration: BASE });
+    }
+  }
+
+  /* The finishing dash: the head reaches the pellet as the blow lands, and eats it there. */
+  function finish(i: number) {
+    if (!G) return 0;
+    slideTo(geomHead(i + 1, 0), lenTarget() + 1, IMPACT);
+    return IMPACT;
+  }
+
+  function resolve(entries: LoaderEntry[], showy: boolean) {
+    if (showy && G) {
+      entries.forEach((e) => {
+        if (e.kind === "done") pop(e.i);
+        else freshGhost.add(e.i);
+      });
+      if (entries.some((e) => e.kind === "done")) play([["jump", 200]]);
+      const skipsOnly = entries.every((e) => e.kind === "skipped");
+      slideTo(geomHead(entries[entries.length - 1].i + 1, 0), lenTarget(), skipsOnly ? BASE : IMPACT);
+    }
+    renderPellets(false);
+    return 0;
+  }
+
+  function advance(changed: boolean) {
+    if (!G) return;
+    const h = geomHead(ctx.front(), ctx.frontP());
+    const l = lenTarget();
+    if (!(slide && slide.h === h && slide.l === l)) {
+      if (changed && ctx.motionOn()) slideTo(h, l, BASE);
+      else {
+        stopSlide(false);
+        setSnake(h, l);
+      }
+    }
+    renderPellets(false);
+    if (changed && ctx.motionOn()) highlight(ctx.front());
+  }
+
+  function error(i: number, showy: boolean) {
+    errorAt = i;
+    stopSlide(false);
+    snap();
+    renderPellets(false);
+    if (!showy) return;
+    flash();
+    const ring = pelEls[i]?.querySelector(".bz-snl-ring");
+    if (ring) ctx.anim(ring, [1, 0, 1, 0, 1].map((o, j) => ({ offset: j / 4, easing: "step-end", opacity: o })), { duration: 600 });
+    play([["hurt", 450]]);
+  }
+
+  function recover(_i: number, showy: boolean) {
+    errorAt = -1;
+    renderPellets(false);
+    renderSnake();
+    transientUntil = 0;
+    if (showy) play([["jump", 150]]);
+  }
+
+  function stop() {
+    unflash();
+    stopSlide(true);
+    snakeTimers.forEach(ctx.clear);
+    snakeTimers = [];
+    wave = null;
+    tongue = false;
+    transientUntil = 0;
+    renderSnake();
+  }
+
+  function finale(showy: boolean) {
+    errorAt = -1;
+    renderPellets(false);
+    if (!showy) return;
+    celebrateUntil = loaderNow() + BEAT * 3;
+    playSnake(SNL_WIGGLE, 90, false);
+    ctx.later(pose, BEAT * 3 + 20);
+  }
+
+  function motion() {
+    if (!ctx.motionOn()) {
+      stopSlide(true);
+      snakeTimers.forEach(ctx.clear);
+      poseTimers.forEach(ctx.clear);
+      snakeTimers = [];
+      poseTimers = [];
+      wave = null;
+      tongue = false;
+      transientUntil = 0;
+      if (!ctx.motionAllowed()) celebrateUntil = 0;
+      unflash();
+      if (fxEl) fxEl.textContent = "";
+    }
+    renderSnake();
+  }
+
+  return { rebuild, layout, hit, progress, finish, resolve, advance, error, recover, stop, finale, pose, motion, destroy: () => stopSlide(false) };
+}
+
+const SNAKE_GAME: LoaderGame = { unit: "Step", clear: "Board cleared", arena: createSnakeArena };
+
+const CSS = \`\${LOADER_CSS}
+.bz-snl-arena{position:relative}
+.bz-snl-board{position:relative;display:flex;justify-content:center;height:calc(var(--bz-snl-rows-w) * 15px + 6px)}
+.bz-snl-screen{position:relative;width:100%;height:100%;background:var(--bz-snl-board);border:var(--bz-snl-u) solid var(--bz-snl-frame)}
+.bz-snl-svg{display:block;overflow:visible}
+.bz-snl-k-grid{fill:var(--bz-snl-grid)}
+.bz-snl-k-line{fill:var(--bz-snl-snake-line)}
+.bz-snl-k-body{fill:var(--bz-snl-snake)}
+.bz-snl-k-shade{fill:var(--bz-snl-snake-shade)}
+.bz-snl-k-scarf{fill:var(--chr-accent)}
+.bz-snl-k-white{fill:var(--chr-eye-white)}
+.bz-snl-k-eye{fill:var(--chr-eye)}
+.bz-snl-k-tongue,.bz-snl-k-pellet{fill:var(--bz-snl-pellet)}
+.bz-snl-k-pellet-line{fill:var(--bz-snl-pellet-line)}
+.bz-snl-k-apple{fill:var(--bz-snl-apple)}
+.bz-snl-k-apple-shade{fill:var(--bz-snl-apple-shade)}
+.bz-snl-k-apple-line{fill:var(--bz-snl-apple-line)}
+.bz-snl-k-leaf{fill:var(--bz-snl-leaf)}
+.bz-snl-k-ghost{fill:var(--bz-snl-ghost)}
+.bz-snl-k-danger{fill:var(--bz-snl-danger-mark)}
+.bz-snl-k-spark{fill:var(--bz-snl-accent)}
+.bz-snl-snake.is-flash .bz-snl-k-body,.bz-snl-snake.is-flash .bz-snl-k-shade{fill:var(--bz-snl-danger-mark)}
+.bz-snl-pel[data-state="ghost"]{opacity:0.7;transition:opacity var(--bz-snl-fast) linear}
+.bz-snl-pel[data-state="ghost"].is-fresh{opacity:1}
+.bz-snl-tongue,.bz-snl-lid{opacity:0}
+.bz-snl-tongue.is-on{opacity:1}
+.bz-snl-board[data-loop="wait"] .bz-snl-tongue{animation:bz-snl-flick var(--bz-snl-beat) step-end infinite}
+.bz-snl-board[data-loop="wait"] .bz-snl-lid{animation:bz-snl-lid var(--bz-snl-beat) step-end infinite}
+.bz-snl-board[data-loop="wait"] .bz-snl-pel[data-state="front"]{animation:bz-snl-pulse var(--bz-snl-beat) step-end infinite}
+.bz-snl-board[data-loop="victory"] .bz-snl-wig-a{animation:bz-snl-wig-a calc(var(--bz-snl-beat) / 4) step-end infinite}
+.bz-snl-board[data-loop="victory"] .bz-snl-wig-b{animation:bz-snl-wig-b calc(var(--bz-snl-beat) / 4) step-end infinite}
+@keyframes bz-snl-flick{0%{opacity:1}7%{opacity:0}14%{opacity:1}21%{opacity:0}100%{opacity:0}}
+@keyframes bz-snl-lid{0%{opacity:0}60%{opacity:1}66%{opacity:0}100%{opacity:0}}
+@keyframes bz-snl-pulse{0%{opacity:1}50%{opacity:0.4}100%{opacity:0.4}}
+@keyframes bz-snl-wig-a{0%{opacity:1}50%{opacity:0}100%{opacity:0}}
+@keyframes bz-snl-wig-b{0%{opacity:0}50%{opacity:1}100%{opacity:1}}
+.bz-snl-banner{position:absolute;left:50%;top:50%;z-index:2;padding:2px;background:var(--bz-snl-frame);clip-path:\${LOADER_STEP_OUTER};transform:translate(-50%,-50%);visibility:hidden}
+.bz-snl-banner[data-on="true"]{visibility:inherit}
+.bz-snl-banner-in{display:block;padding:9px 20px 8px;background:var(--bz-snl-panel);clip-path:\${LOADER_STEP_INNER};color:var(--bz-snl-ink);font:700 15px/1.2 var(--bz-snl-mono);letter-spacing:0.14em;text-transform:uppercase;white-space:nowrap}
+.bz-snl-strip{display:flex;gap:8px;margin-top:8px;height:calc(28 * var(--bz-snl-u))}
+.bz-snl-booth{position:relative;flex:none;width:calc(24 * var(--bz-snl-u));background:var(--bz-snl-board);border:var(--bz-snl-u) solid var(--bz-snl-frame)}
+.bz-snl-hero{position:absolute;left:calc(3 * var(--bz-snl-u));bottom:calc(2 * var(--bz-snl-u));width:calc(16 * var(--bz-snl-u));height:calc(24 * var(--bz-snl-u))}
+.bz-snl-sprite{display:block;width:100%;height:100%}
+.bz-snl-ledge{position:absolute;left:0;right:0;bottom:0;height:calc(2 * var(--bz-snl-u));background:var(--bz-snl-snake-shade);border-top:var(--bz-snl-u) solid var(--bz-snl-snake-line)}
+.bz-snl-slot{position:relative;flex:1;min-width:0;display:grid}
+.bz-snl-slot>.bz-snl-plate,.bz-snl-cleared{grid-area:1/1;display:flex;flex-direction:column;justify-content:center;min-width:0;border-color:var(--bz-snl-frame)}
+.bz-snl-slot .bz-snl-plate-label{display:block;white-space:nowrap;text-overflow:ellipsis}
+.bz-snl-cleared{position:relative;padding:6px 10px 8px 16px;background:var(--bz-snl-panel);border:2px solid var(--bz-snl-frame);visibility:hidden}
+.bz-snl-cleared::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--bz-snl-accent)}
+.bz-snl[data-phase="complete"] .bz-snl-cleared{visibility:inherit}
+.bz-snl-cleared .bz-snl-bar{border-color:var(--bz-snl-ink)}
+.bz-snl-full{position:absolute;inset:0;background:var(--bz-snl-accent)}
+.bz-snl-box{background:var(--bz-snl-frame)}
+@container (max-width:559px){
+.bz-snl-board{height:calc(var(--bz-snl-rows-n) * 10px + 4px)}
+/* The plate wears its badges on its top edge at this width, so the gap above it is wide enough to hold them. */
+.bz-snl-strip{height:80px;margin-top:12px}
+/* The details card covers the whole board and strip here rather than ending across the nameplate. */
+.bz-snl-sheet{bottom:10px}
+.bz-snl-banner-in{padding:7px 14px 6px;font-size:13px}
+}
+.bz-snl[data-motion="off"] .bz-snl-board *{animation:none!important}
+.bz-snl[data-motion="off"] .bz-snl-pel{transition:none}
+\`;
+
+function snakePalette(p: SnakeLineLoaderProps["palette"]): SnakeLineLoaderPalette {
+  if (!p) return SNAKE_LINE_LOADER_PALETTES.classic;
+  return typeof p === "string" ? SNAKE_LINE_LOADER_PALETTES[p] ?? SNAKE_LINE_LOADER_PALETTES.classic : p;
+}
+
+export function SnakeLineLoader(props: SnakeLineLoaderProps) {
+  const { title, headingLevel = 2, palette, character, colorScheme, className, style } = props;
+  const api = useLoader(props, SNAKE_GAME);
+  const dotsId = \`bz-snl-dots-\${useId().replace(/:/g, "")}\`;
+  const hero = loaderCharacter(character);
+  const pal = snakePalette(palette);
+  const n = props.steps.length;
+  const rootStyle = useMemo(
+    () =>
+      ({
+        ...loaderPaletteVars(pal.light, pal.dark),
+        ...loaderCharacterVars(hero),
+        ...(colorScheme ? { colorScheme } : {}),
+        ...style,
+      }) as CSSProperties,
+    [pal, hero, colorScheme, style],
+  );
+  const Heading = \`h\${headingLevel}\` as "h2";
+  const { view, labels } = api;
+
+  return (
+    <section
+      ref={api.rootRef}
+      className={\`bz-snl\${className ? \` \${className}\` : ""}\`}
+      aria-labelledby={api.titleId}
+      data-phase={view.phase}
+      data-motion={api.motionAllowed ? "on" : "off"}
+      data-running={api.running ? "true" : "false"}
+      style={rootStyle}
+    >
+      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+      <div className="bz-snl-in">
+        <Heading id={api.titleId} className="bz-snl-title" tabIndex={-1}>
+          {title}
+        </Heading>
+        <LoaderStepList api={api} />
+        <div
+          className="bz-snl-arena bz-snl-stage"
+          style={{ "--bz-snl-rows-w": snlRows(snlLanes(n, false)), "--bz-snl-rows-n": snlRows(snlLanes(n, true)) } as CSSProperties}
+        >
+          <div className="bz-snl-board" aria-hidden="true">
+            <div className="bz-snl-screen">
+              <svg className="bz-snl-svg" shapeRendering="crispEdges" aria-hidden="true" focusable="false">
+                <defs>
+                  <pattern id={dotsId} width="5" height="5" patternUnits="userSpaceOnUse">
+                    <rect className="bz-snl-k-grid" x="2" y="2" width="1" height="1" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill={\`url(#\${dotsId})\`} />
+                <g className="bz-snl-pels" />
+                <g className="bz-snl-snake" />
+                <g className="bz-snl-fx" />
+              </svg>
+            </div>
+            <div className="bz-snl-banner" data-on={view.banner ? "true" : "false"}>
+              <span className="bz-snl-banner-in">{labels.clear}</span>
+            </div>
+          </div>
+          <div className="bz-snl-strip">
+            <div className="bz-snl-booth" aria-hidden="true">
+              <div className="bz-snl-hero" data-frame="idle1">
+                <LoaderHeroSprite hairStyle={hero.hairStyle} accessory={null} frames={SNL_FRAMES} />
+              </div>
+              <div className="bz-snl-ledge" />
+            </div>
+            <div className="bz-snl-slot">
+              {/* The strip's resting face once the run is over (the progressbar itself steps out of view). */}
+              <div className="bz-snl-cleared" aria-hidden="true">
+                <div className="bz-snl-plate-top">
+                  <span className="bz-snl-plate-label">{labels.clear}</span>
+                </div>
+                <div className="bz-snl-plate-row">
+                  <span className="bz-snl-bar">
+                    <span className="bz-snl-full" />
+                  </span>
+                  <span className="bz-snl-count">{\`\${n} of \${n}\`}</span>
+                </div>
+              </div>
+              <LoaderPlate api={api} />
+            </div>
+          </div>
+        </div>
+        {/* The player already stands in the booth, so the dialogue box goes without the speaker portrait. */}
+        <LoaderBox api={api} hairStyle={null} />
+        <LoaderDetails api={api} />
+      </div>
+    </section>
+  );
+}`,
+    description: "Snake-style step loader: the snake grows one segment for every finished step.",
+    tags: ["loader", "multi-step", "progress", "pixel-art", "game", "snake", "accessible", "reduced-motion"],
+  },
 ];
 
 export function getComponent(slug: string): ComponentEntry | undefined {
