@@ -155,6 +155,11 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | Preloader | `preloader` | Fullscreen letter-reveal preloader with a 0–100% counter and slide-away exit. |
 | ScrollUnfurlPreloader | `scroll-unfurl-preloader` | Parchment preloader where brass rods roll apart to unfurl the brand, then lift away. |
 | MultiStepLoader | `multi-step-loader` | Full-screen step loader with ticked stages, a shining active label and WebGL rings. Not in the CLI: it imports `MagicRings` and `ShinyText`, so copy it by hand. |
+| EncounterLoader | `encounter-loader` | Turn-based pixel game: an adventurer breaks one crate per real step; the dialogue box narrates, offers Retry, Skip or Cancel on failure and ends on real stats. |
+| BlockRunLoader | `block-run-loader` | Platformer step loader: one question block bonked per real progress event, the course scrolls only when a step finishes. |
+| FlapGateLoader | `flap-gate-loader` | Jetpack flight step loader: one gate per step, the world moves only as far as real progress, the score counts finished steps. |
+| BrickWallLoader | `brick-wall-loader` | Breakout step loader: each step is a row of bricks, broken exactly in line with real progress. |
+| SnakeLineLoader | `snake-line-loader` | Snake step loader: the head follows real progress and the snake grows one segment per finished step. |
 
 ### Loading
 

@@ -22,7 +22,7 @@ light-only literals, so the sizes and the "17 lines wrapping a `<code>` element"
 reading of FormulaBlock below no longer describe the files. The merge calls
 still stand as calls.
 
-**The library now holds 91 components.** A later pass the same day carried out
+**The library now holds 96 components.** The five game loaders (EncounterLoader, BlockRunLoader, FlapGateLoader, BrickWallLoader and SnakeLineLoader) were added on 7 October 2026, after this proposal, and are not rated by it. A later pass the same day carried out
 the animated-border merge proposed below (ConicBorderButton and StarBorder are
 now the jade fill and the star ring of `BorderBeamButton`, three rows becoming
 one), removed MessageForm, and added two drawn-annotation components,

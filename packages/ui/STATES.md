@@ -161,7 +161,7 @@ than being quietly dropped:
   `MobileMenu`, `SubmissionLoader` and `CelebrationOverlay` are all full-screen
   overlays with background content still tabbable underneath.
 - **Loading is rarely announced.** `aria-busy` and a live region appear in
-  `loaders/MultiStepLoader` and the two skeletons in
+  `loaders/MultiStepLoader`, the five game loaders (see below) and the two skeletons in
   `loaders/SkeletonCard`; `feedback/ImagePlaceholder` has `aria-busy` alone.
   `LoadingSpinner` and the rest still have neither.
 - **Error is visual only in every form component.** No form component sets
@@ -169,6 +169,27 @@ than being quietly dropped:
 - **A label is not associated with its input.** `SidePanel`'s `PanelField`
   renders a `<label>` that neither wraps its control nor carries `htmlFor`.
 - **`forms/CheckboxVariants`' four exports have no accessible name at all.**
+
+### Game loaders
+
+Added 7 October 2026.
+
+| Component | default | hover | focus | active | disabled | loading | error | empty |
+|---|---|---|---|---|---|---|---|---|
+| `loaders/EncounterLoader` | + | + | + | + | n/a | + | + | n/a |
+| `loaders/BlockRunLoader` | + | + | + | + | n/a | + | + | n/a |
+| `loaders/FlapGateLoader` | + | + | + | + | n/a | + | + | n/a |
+| `loaders/BrickWallLoader` | + | + | + | + | n/a | + | + | n/a |
+| `loaders/SnakeLineLoader` | + | + | + | + | n/a | + | + | n/a |
+
+Disabled is n/a because a control that cannot act is hidden rather than
+disabled. Each loader has one `role="progressbar"` (the nameplate), a
+`role="log"` narration that announces milestones politely, and a
+`role="alert"` that is always mounted and carries the error sentence. The
+What next menu (Retry, Skip, Cancel, Show details) is a roving-tabindex group
+moved with the arrow keys, Home and End. Focus moves only when it is already
+inside the component: to Retry when an error appears, to the log when a retry
+starts, and to Continue when the results open. The arena is `aria-hidden`.
 
 ### Avatar
 
