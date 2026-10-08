@@ -56,56 +56,48 @@ import {
 
 /* ---------------- shared: types and labels ---------------- */
 
-/** Where a step is. Only the host changes it; the loader shows it. */
 export type LoaderStepStatus = "pending" | "active" | "done" | "error" | "skipped";
 
 export type LoaderStep = {
-  /** Stable key. Beats and announcements key on it; a changed id list or length rebuilds the run. */
+  /** Stable key. Beats and announcements key on it. A changed id list or length rebuilds the run. */
   id: string;
-  /** Present tense, shown on the nameplate and in narration: "Import 1,240 contacts". */
+  /** Present tense: "Import 1,240 contacts". */
   label: string;
-  /** Where the step is. Only the host moves it. */
+  /** Where the step is. Only the host changes it. */
   status: LoaderStepStatus;
   /** 0 to 1, from real host events only. Leave it out (or null) when the size of the work is unknown. */
   progress?: number | null;
-  /** A real count shown on the nameplate and never announced: "620 of 1,240 contacts". */
+  /** A real count, shown on the nameplate and never announced: "620 of 1,240 contacts". */
   detail?: string;
-  /** Total units of work. Brick Wall draws one brick per unit when this is 16 or fewer; the other games ignore it. */
+  /** Total units of work. Brick Wall draws one brick per unit when this is 16 or fewer. The other four ignore it. */
   count?: number;
-  /** Past-tense narration: "Imported 1,240 contacts". Defaults to "<label>: done". */
+  /** Past-tense narration: "Imported 1,240 contacts". Falls back to "<label>: done". */
   doneText?: string;
-  /** A plain sentence, shown and sent to role="alert" when the status is "error". */
+  /** Plain sentence, shown and sent to role="alert" when status is "error". */
   error?: string;
   /** Longer text behind Show details. */
   errorDetail?: string;
   /** 1-based. 2 or more shows "Attempt 2", and a step that then finishes counts as a recovered hiccup. */
   attempt?: number;
-  /** Host clock for the running or failed attempt, in ms. */
+  /** Host clock for the running or failed attempt, in milliseconds. */
   elapsedMs?: number;
-  /** Host clock for a finished step, in ms. The results Time tile is the sum. */
+  /** Host clock for a finished step, in milliseconds. The results Time tile is the sum. */
   durationMs?: number;
 };
 
-/** One extra tile on the results screen. Real numbers only. */
 export type LoaderStat = {
-  /** Tile heading: "Contacts". */
+  /** Tile heading on the results screen: "Contacts". */
   label: string;
-  /** The value shown large. A number counts up when motion is on; a string shows as written. */
+  /** A real figure. Numbers count up when motion is allowed; strings show as given. */
   value: string | number;
-  /** A short line under the value: "imported". */
+  /** Small line under the value: "imported". Default none. */
   sub?: string;
 };
 
-/**
- * The interface strings: buttons, nameplate words, the meta line and the
- * run-level sentences. Pass any subset through `labels`. Per-step narration,
- * the error sentence and the results tile names are English, built around
- * each step's own label, doneText and error.
- */
 export type LoaderLabels = {
-  /** What one step is called on the meta line. Default set per game ("Gate" here). */
+  /** The game's word for one step, used in the footer. Encounter: "Stage". */
   unit: string;
-  /** The banner and meta line once every step is settled. Default set per game ("All gates cleared" here). */
+  /** The finale banner and the footer once every step is settled. Encounter: "Stage clear". */
   clear: string;
   /** Accessible name of the narration log. Default "Narration". */
   narration: string;
@@ -121,31 +113,35 @@ export type LoaderLabels = {
   showDetails: string;
   /** Details toggle while open. Default "Hide details". */
   hideDetails: string;
+  /** Heading and accessible name of the details card. Default "Details". */
+  details: string;
+  /** Accessible name of the error message when it is long enough to scroll. Default "Error message". */
+  errorMessage: string;
   /** The motion toggle. Default "Pause motion". */
   pauseMotion: string;
   /** The results button. Default "Continue". */
   continue: string;
-  /** The mark on a failed nameplate. Default "Failed". */
+  /** The nameplate mark on a failed step. Default "Failed". */
   failed: string;
-  /** Meta line while the menu waits for a choice. Default "Waiting for you". */
+  /** Footer note while the error menu waits. Default "Waiting for you". */
   waiting: string;
-  /** Nameplate text for a step without progress. Default "Working, size unknown". */
+  /** Nameplate count for a step of unknown size. Default "Working, size unknown". */
   sizeUnknown: string;
-  /** Nameplate tag on a retried step. Default "Attempt 2". */
+  /** Nameplate tag from the second attempt. Default "Attempt 2". */
   attempt: (n: number) => string;
-  /** Placeholder before anything has happened. Default "5 steps queued. Up first: Create the workspace." */
+  /** Log placeholder before the first milestone. Default "5 steps queued. Up first: Create the workspace." */
   queued: (n: number, first: string) => string;
-  /** Placeholder when mounted mid-run, never announced. Default "1 of 5 done. Now: Import 1,240 contacts." */
+  /** Log placeholder when mounted mid-run, never announced. Default "1 of 5 done. Now: Import 1,240 contacts." */
   progress: (done: number, total: number, now: string) => string;
-  /** Meta note after a hidden tab, never announced. Default "While you were away: 2 steps finished." */
+  /** Footer note after a hidden tab or scroll away, never announced. Default "While you were away: 2 steps finished." */
   away: (n: number) => string;
-  /** Completion line. Default "All 5 steps finished." or "All 5 steps finished (1 skipped)." */
+  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped).", "The step finished." for one */
   complete: (total: number, skipped: number) => string;
-  /** Line after Cancel. Default "Stopped. 2 finished steps are kept." */
+  /** The line after Cancel. Default "Stopped. 2 finished steps are kept." */
   stopped: (kept: number) => string;
 };
 
-const LOADER_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
+const LOADER_DEFAULT_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
   narration: "Narration",
   menu: "What next",
   retry: "Retry",
@@ -153,6 +149,8 @@ const LOADER_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
   cancel: "Cancel",
   showDetails: "Show details",
   hideDetails: "Hide details",
+  details: "Details",
+  errorMessage: "Error message",
   pauseMotion: "Pause motion",
   continue: "Continue",
   failed: "Failed",
@@ -2466,7 +2464,7 @@ export function FlapGateLoader(props: FlapGateLoaderProps) {
   const uid = `bz-fgl-${useId().replace(/:/g, "")}`;
   const titleId = `${uid}-title`;
   const detailsId = `${uid}-details`;
-  const labels: LoaderLabels = useMemo(() => ({ ...LOADER_LABELS, unit: "Gate", clear: "All gates cleared", ...labelsProp }), [labelsProp]);
+  const labels: LoaderLabels = useMemo(() => ({ ...LOADER_DEFAULT_LABELS, unit: "Gate", clear: "All gates cleared", ...labelsProp }), [labelsProp]);
 
   const prefersReduced = useReducedMotionPreference();
   const reduced = reducedMotion ?? prefersReduced;
@@ -2784,7 +2782,7 @@ export function FlapGateLoader(props: FlapGateLoaderProps) {
                       </>
                     ) : null}
                   </div>
-                  <p id={detailsId} ref={detailsRef} className="bz-fgl-details" data-open={String(view.detailsOpen)} tabIndex={detailsScroll ? 0 : undefined}>
+                  <p id={detailsId} ref={detailsRef} className="bz-fgl-details" data-open={String(view.detailsOpen)} role={detailsScroll ? "region" : undefined} aria-label={detailsScroll ? labels.details : undefined} tabIndex={detailsScroll ? 0 : undefined}>
                     {view.details}
                   </p>
                 </div>

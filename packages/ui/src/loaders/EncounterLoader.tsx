@@ -131,7 +131,7 @@ export type LoaderLabels = {
   progress: (done: number, total: number, now: string) => string;
   /** Footer note after a hidden tab or scroll away, never announced. Default "While you were away: 2 steps finished." */
   away: (n: number) => string;
-  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped)." */
+  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped).", "The step finished." for one */
   complete: (total: number, skipped: number) => string;
   /** The line after Cancel. Default "Stopped. 2 finished steps are kept." */
   stopped: (kept: number) => string;
@@ -153,10 +153,10 @@ const LOADER_DEFAULT_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
   waiting: "Waiting for you",
   sizeUnknown: "Working, size unknown",
   attempt: (n) => `Attempt ${n}`,
-  queued: (n, first) => `${n} step${n === 1 ? "" : "s"} queued. Up first: ${first}.`,
-  progress: (done, total, now) => `${done} of ${total} done. Now: ${now}.`,
+  queued: (n, first) => `${n} step${n === 1 ? "" : "s"} queued.${first ? ` Up first: ${first}.` : ""}`,
+  progress: (done, total, now) => `${done} of ${total} done.${now ? ` Now: ${now}.` : ""}`,
   away: (n) => `While you were away: ${n} step${n === 1 ? "" : "s"} finished.`,
-  complete: (total, skipped) => `All ${total} step${total === 1 ? "" : "s"} finished${skipped ? ` (${skipped} skipped)` : ""}.`,
+  complete: (total, skipped) => `${total === 1 ? "The step" : `All ${total} steps`} finished${skipped ? ` (${skipped} skipped)` : ""}.`,
   stopped: (kept) => `Stopped. ${kept} finished step${kept === 1 ? " is" : "s are"} kept.`,
 };
 

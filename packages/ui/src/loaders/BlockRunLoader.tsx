@@ -113,6 +113,10 @@ export type LoaderLabels = {
   showDetails: string;
   /** Details toggle while open. Default "Hide details". */
   hideDetails: string;
+  /** Heading and accessible name of the details card. Default "Details". */
+  details: string;
+  /** Accessible name of the error message when it is long enough to scroll. Default "Error message". */
+  errorMessage: string;
   /** The motion toggle. Default "Pause motion". */
   pauseMotion: string;
   /** The results button. Default "Continue". */
@@ -131,7 +135,7 @@ export type LoaderLabels = {
   progress: (done: number, total: number, now: string) => string;
   /** Footer note after a hidden tab or scroll away, never announced. Default "While you were away: 2 steps finished." */
   away: (n: number) => string;
-  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped)." */
+  /** The completion sentence. Default "All 5 steps finished." or "All 5 steps finished (1 skipped).", "The step finished." for one */
   complete: (total: number, skipped: number) => string;
   /** The line after Cancel. Default "Stopped. 2 finished steps are kept." */
   stopped: (kept: number) => string;
@@ -145,16 +149,18 @@ const LOADER_DEFAULT_LABELS: Omit<LoaderLabels, "unit" | "clear"> = {
   cancel: "Cancel",
   showDetails: "Show details",
   hideDetails: "Hide details",
+  details: "Details",
+  errorMessage: "Error message",
   pauseMotion: "Pause motion",
   continue: "Continue",
   failed: "Failed",
   waiting: "Waiting for you",
   sizeUnknown: "Working, size unknown",
   attempt: (n) => `Attempt ${n}`,
-  queued: (n, first) => `${n} step${n === 1 ? "" : "s"} queued. Up first: ${first}.`,
-  progress: (done, total, now) => `${done} of ${total} done. Now: ${now}.`,
+  queued: (n, first) => `${n} step${n === 1 ? "" : "s"} queued.${first ? ` Up first: ${first}.` : ""}`,
+  progress: (done, total, now) => `${done} of ${total} done.${now ? ` Now: ${now}.` : ""}`,
   away: (n) => `While you were away: ${n} step${n === 1 ? "" : "s"} finished.`,
-  complete: (total, skipped) => `All ${total} step${total === 1 ? "" : "s"} finished${skipped ? ` (${skipped} skipped)` : ""}.`,
+  complete: (total, skipped) => `${total === 1 ? "The step" : `All ${total} steps`} finished${skipped ? ` (${skipped} skipped)` : ""}.`,
   stopped: (kept) => `Stopped. ${kept} finished step${kept === 1 ? " is" : "s are"} kept.`,
 };
 
@@ -1840,7 +1846,7 @@ function LoaderBox({ api, hairStyle }: { api: LoaderApi; hairStyle: LoaderCharac
               data-scroll={errScroll ? "true" : undefined}
               tabIndex={errScroll ? 0 : undefined}
               role={errScroll ? "region" : undefined}
-              aria-labelledby={errScroll ? `${api.detailsId}-alert` : undefined}
+              aria-label={errScroll ? labels.errorMessage : undefined}
             >
               <div id={`${api.detailsId}-alert`} className="bz-brl-alert" role="alert">
                 {view.alert ? (
@@ -1850,7 +1856,7 @@ function LoaderBox({ api, hairStyle }: { api: LoaderApi; hairStyle: LoaderCharac
                   </>
                 ) : null}
               </div>
-              <p id={api.detailsId} className="bz-brl-details" hidden={!api.detailsOpen}>
+              <p id={api.detailsId} className="bz-brl-details" aria-label={labels.details} hidden={!api.detailsOpen}>
                 <span>{view.details}</span>
                 {view.detailMore ? <span className="bz-brl-more-detail">{view.detailMore}</span> : null}
               </p>
