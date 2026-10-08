@@ -1,7 +1,7 @@
 import { componentCard, ogSize } from "@/lib/og";
 import { catalog, categoryLabel } from "@/lib/catalog";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 export const size = ogSize;
 export const contentType = "image/png";
 
