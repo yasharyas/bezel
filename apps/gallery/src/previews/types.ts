@@ -7,7 +7,7 @@ import type { ComponentType } from "react";
 export type Tone = "paper" | "cream" | "void";
 
 /** Inline previews are bundled in groups by their heaviest dependency. */
-export type InlineGroup = "basic" | "motion" | "gsap" | "three";
+export type InlineGroup = "basic" | "motion" | "gsap" | "three" | "games";
 
 type BaseSpec = {
   tone: Tone;
@@ -38,6 +38,12 @@ export type InlineSpec = BaseSpec & {
    * For components that are only legible as themselves at a real width.
    */
   fit?: number;
+  /**
+   * On a phone, give the large stage a portrait shape instead of 4:3. For
+   * previews that are taller than they are wide at phone width, which a 4:3
+   * stage could only show at a third of their size.
+   */
+  tall?: boolean;
 };
 
 export type FrameSpec = BaseSpec & {

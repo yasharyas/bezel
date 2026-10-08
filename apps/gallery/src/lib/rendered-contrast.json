@@ -1,5 +1,5 @@
 {
-  "fingerprint": "958969b06a0e0f94",
+  "fingerprint": "770a8123f7a2b008",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -618,6 +618,86 @@
       {"kind":"focus","element":"button.h-9.rounded-lg.bg-[#912c22].px-4","min":3,"text":"Fire (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78},
       {"kind":"focus","element":"input","min":3,"text":"input","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null},
       {"kind":"focus","element":"a.underline","min":3,"text":"link","status":"exempt","why":"browser default ring (two-tone)","fg":null,"bg":null,"ratio":null}
+    ]},
+    {"slug":"encounter-loader","kind":"inline","tone":"void","textNodes":{"textNodes":34,"hidden":24,"offscreen":0}, "items": [
+      {"kind":"text","element":"h3.bz-enc-title","text":"Setting up your workspace","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"span.bz-enc-plate-label","text":"Import 1,240 contacts","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"span.bz-enc-count","text":"620 of 1,240 contacts","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"p.bz-enc-ph","text":"1 of 5 done. Now: Import 1,240 contacts.","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"b","text":"Stage 2 of 5","size":13,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"p.bz-enc-meta","text":"· Next: Sync your calendar, then Index 12 folde…","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"Gallery demo, not part of the component","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Play a run","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#252525","ratio":15.33,"n":3},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#8fa0e6","bg":"#1a2350","ratio":5.96,"moving":[5.96,9.76],"n":8,"at":[1440]},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":"svg shape","fg":null,"bg":null,"ratio":null,"n":3},
+      {"kind":"focus","element":"div.bz-enc-log","min":3,"text":"Narration (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"focus","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","min":3,"text":"Play a run (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":3},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#f2b632","bg":"#1a2350","ratio":8.22,"moving":[8.22,9.76],"n":7,"at":[390]},
+      {"kind":"icon","element":"svg.bz-enc-sprite","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#8fa0e6","bg":"#1a2350","ratio":5.96,"at":[390]}
+    ]},
+    {"slug":"block-run-loader","kind":"inline","tone":"paper","textNodes":{"textNodes":34,"hidden":23,"offscreen":0}, "items": [
+      {"kind":"text","element":"h3.bz-brl-title","text":"Setting up your workspace","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"span.bz-brl-plate-label","text":"Import 1,240 contacts","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"span.bz-brl-count","text":"620 of 1,240","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"span.bz-brl-unit","text":"contacts","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84,"at":[1440]},
+      {"kind":"text","element":"p.bz-brl-ph","text":"1 of 5 done. Now: Import 1,240 contacts.","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"b","text":"Block 2 of 5","size":13,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"p.bz-brl-meta","text":"· Next: Sync your calendar, then Index 12 folde…","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"Gallery demo, not part of the component","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#3a3a3a","bg":"#fafafa","ratio":10.9},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Play a run","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":"svg shape","fg":null,"bg":null,"ratio":null,"n":8},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#17142e","bg":"#8fd3ff","ratio":11,"moving":[2.65,11],"n":10},
+      {"kind":"focus","element":"div.bz-brl-log","min":3,"text":"Narration (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
+      {"kind":"focus","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","min":3,"text":"Play a run (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":3},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#2e8b3d","bg":"#8fd3ff","ratio":2.65,"n":2,"at":[390]},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#2f9e44","bg":"#8fd3ff","ratio":2.12,"at":[390]},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#5a3200","bg":"#8fd3ff","ratio":6.84,"n":3,"at":[390]},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#e03131","bg":"#8fd3ff","ratio":2.78,"at":[390]},
+      {"kind":"icon","element":"svg.bz-brl-sprite","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#17142e","bg":"#8fd3ff","ratio":11,"at":[390]}
+    ]},
+    {"slug":"flap-gate-loader","kind":"inline","tone":"paper","textNodes":{"textNodes":35,"hidden":15,"offscreen":0}, "items": [
+      {"kind":"text","element":"h3.bz-fgl-title","text":"Setting up your workspace","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"span.bz-fgl-plate-label","text":"Import 1,240 contacts","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"span.bz-fgl-count","text":"620 of 1,240 contacts","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"p.bz-fgl-intro","text":"1 of 5 done. Now: Import 1,240 contacts.","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"b","text":"Gate 2 of 5","size":13,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"p.bz-fgl-meta","text":"· Next: Sync your calendar, then Index 12 folde…","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"Gallery demo, not part of the component","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#3a3a3a","bg":"#fafafa","ratio":10.9,"n":4},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Play a run","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":7},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Daybreak","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8,"n":3,"at":[1440]},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#ffffff","bg":"#17142e","ratio":17.86,"moving":[10.36,17.86],"n":2},
+      {"kind":"focus","element":"div.bz-fgl-log","min":3,"text":"Narration (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
+      {"kind":"focus","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","min":3,"text":"Play a run (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":10}
+    ]},
+    {"slug":"brick-wall-loader","kind":"inline","tone":"void","textNodes":{"textNodes":41,"hidden":21,"offscreen":0}, "items": [
+      {"kind":"text","element":"h3.bz-bwl-title","text":"Setting up your workspace","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"span.bz-bwl-plate-label","text":"Import 1,240 contacts","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"span.bz-bwl-count","text":"620 of 1,240 contacts","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"p.bz-bwl-ph","text":"1 of 5 done. Now: Import 1,240 contacts.","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"b","text":"Row 2 of 5","size":13,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"p.bz-bwl-meta","text":"· Next: Sync your calendar, then Index 12 folde…","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"Gallery demo, not part of the component","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4,"n":4},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Play a run","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#252525","ratio":15.33,"n":7},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Rainbow","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3,"at":[1440]},
+      {"kind":"icon","element":"svg.bz-bwl-sprite","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#2ec4b6","bg":"#0f0c24","ratio":8.82},
+      {"kind":"icon","element":"svg.bz-bwl-paddle","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#e9e6ff","bg":"#0f0c24","ratio":15.68,"at":[1440]},
+      {"kind":"icon","element":"svg","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#ffffff","bg":"#0f0c24","ratio":19.12},
+      {"kind":"icon","element":"svg.bz-bwl-g","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"at":[1440]},
+      {"kind":"focus","element":"div.bz-bwl-log","min":3,"text":"Narration (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"focus","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","min":3,"text":"Play a run (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":10}
+    ]},
+    {"slug":"snake-line-loader","kind":"inline","tone":"paper","textNodes":{"textNodes":36,"hidden":26,"offscreen":0}, "items": [
+      {"kind":"text","element":"h3.bz-snl-title","text":"Setting up your workspace","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"span.bz-snl-plate-label","text":"Import 1,240 contacts","size":14,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"span.bz-snl-count","text":"620 of 1,240 contacts","size":12,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"p.bz-snl-ph","text":"1 of 5 done. Now: Import 1,240 contacts.","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"b","text":"Step 2 of 5","size":13,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"p.bz-snl-meta","text":"· Next: Sync your calendar, then Index 12 folde…","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"Gallery demo, not part of the component","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#3a3a3a","bg":"#fafafa","ratio":10.9},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Play a run","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3},
+      {"kind":"focus","element":"div.bz-snl-log","min":3,"text":"Narration (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
+      {"kind":"focus","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","min":3,"text":"Play a run (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":3},
+      {"kind":"icon","element":"svg.bz-snl-sprite","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#17142e","bg":"#d8f5b4","ratio":15,"at":[390]}
     ]}
   ]
 }

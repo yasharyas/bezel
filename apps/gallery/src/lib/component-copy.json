@@ -362,5 +362,25 @@
  "morph-dialog": {
   "about": "An accessible React modal that grows out of the button that opened it: a clip-path animation carries the surface from the trigger's box to the dialog and back, starting in the trigger's own colour. It is a full modal: focus trap, Escape to close, backdrop click, scroll lock, background made inert, and focus returned to the trigger. Reduced motion swaps the morph for a short fade.",
   "keyProps": "`trigger` (the element that opens it), `title` / `description` (labelled heading and text), `open` / `onOpenChange` (optional controlled state), `duration` (morph length in ms, default 500)"
+ },
+ "encounter-loader": {
+  "about": "A multi-step loader for React drawn as a turn-based pixel game. Each step is a crate the adventurer breaks, and it cracks only when your process reports real progress. The dialogue box narrates milestones for screen readers, turns into a Retry, Skip or Cancel menu when a step fails, and ends on a results screen with real totals. Bright palettes for light and dark, four characters, and reduced motion respected.",
+  "keyProps": "`steps` (the only state: id, label, status, progress, detail), `title` (heading and progressbar name), `onRetry`, `onSkip`, `onCancel` (each adds its button to the error menu), `palette` (a preset name or your own colours), `character` (\"ember\", \"tide\", \"moss\", \"plum\" or your own)"
+ },
+ "block-run-loader": {
+  "about": "A multi-step loader for React drawn as a side-scrolling platformer. Each step is a question block the adventurer bonks once per real progress event, and the course scrolls on only when a step finishes, ending at a flag and castle. The dialogue box narrates milestones for screen readers, turns into a Retry, Skip or Cancel menu when a step fails, and ends on a results screen with real totals. Bright palettes for light and dark, four characters, and reduced motion respected.",
+  "keyProps": "`steps` (the only state: id, label, status, progress, detail), `title` (heading and progressbar name), `onRetry`, `onSkip`, `onCancel` (each adds its button to the error menu), `palette` (a preset name or your own colours), `character` (\"ember\", \"tide\", \"moss\", \"plum\" or your own)"
+ },
+ "flap-gate-loader": {
+  "about": "A multi-step loader for React drawn as a jetpack flight. Each step is a gate, the world slides forward only as far as your process has really got, and the score counts finished steps. The dialogue box narrates milestones for screen readers, turns into a Retry, Skip or Cancel menu when a step fails, and ends on a results screen with real totals. Bright palettes for light and dark, four characters, and reduced motion respected.",
+  "keyProps": "`steps` (the only state: id, label, status, progress, detail), `title` (heading and progressbar name), `onRetry`, `onSkip`, `onCancel` (each adds its button to the error menu), `palette` (a preset name or your own colours), `character` (\"ember\", \"tide\", \"moss\", \"plum\" or your own)"
+ },
+ "brick-wall-loader": {
+  "about": "A multi-step loader for React drawn as a Breakout wall. Each step is a row of bricks, and the front row always shows exactly as many broken bricks as your process has done, one brick per unit when `count` is 16 or fewer. The dialogue box narrates milestones for screen readers, turns into a Retry, Skip or Cancel menu when a step fails, and ends on a results screen with real totals. Bright palettes for light and dark, four characters, and reduced motion respected.",
+  "keyProps": "`steps` (the only state: id, label, status, progress, detail), `title` (heading and progressbar name), `onRetry`, `onSkip`, `onCancel` (each adds its button to the error menu), `palette` (a preset name or your own colours), `character` (\"ember\", \"tide\", \"moss\", \"plum\" or your own), `count` (one brick per unit, up to 16)"
+ },
+ "snake-line-loader": {
+  "about": "A multi-step loader for React drawn as a Snake board. The head moves along the path only on real progress, and the snake grows one segment for every finished step, ending on a gold apple. The dialogue box narrates milestones for screen readers, turns into a Retry, Skip or Cancel menu when a step fails, and ends on a results screen with real totals. Bright palettes for light and dark, four characters, and reduced motion respected.",
+  "keyProps": "`steps` (the only state: id, label, status, progress, detail), `title` (heading and progressbar name), `onRetry`, `onSkip`, `onCancel` (each adds its button to the error menu), `palette` (a preset name or your own colours), `character` (\"ember\", \"tide\", \"moss\", \"plum\" or your own)"
  }
 }

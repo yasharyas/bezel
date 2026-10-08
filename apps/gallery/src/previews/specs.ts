@@ -111,6 +111,12 @@ export const specs: Record<string, PreviewSpec> = {
   "sketch-arrow": inline("basic", "paper", { fit: 460 }),
   "pixel-avatar": inline("basic", "void", { fit: 440, hint: "Hover" }),
   "confetti-firecracker": frame("paper", 900, 600, { hint: "Tap" }),
+  // No `fit` on the game loaders: each preview arranges and scales itself for the stage (GameDemo's `fit`).
+  "encounter-loader": inline("games", "void", { tall: true }),
+  "block-run-loader": inline("games", "paper", { tall: true }),
+  "flap-gate-loader": inline("games", "paper", { tall: true }),
+  "brick-wall-loader": inline("games", "void", { tall: true }),
+  "snake-line-loader": inline("games", "paper", { tall: true }),
 };
 
 export const frameSlugs = Object.entries(specs)

@@ -12,6 +12,7 @@ const inlineGroups: Record<string, () => Promise<{ previews: PreviewModule }>> =
   motion: () => import("./inline/motion"),
   gsap: () => import("./inline/gsap"),
   three: () => import("./inline/three"),
+  games: () => import("./inline/games"),
 };
 
 const frames: Record<string, () => Promise<{ default: PreviewComponent }>> = {

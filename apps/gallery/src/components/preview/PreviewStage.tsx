@@ -23,6 +23,9 @@ const SIZE_CLASS: Record<StageSize, string> = {
   large: "aspect-[4/3] sm:aspect-[16/10] max-h-[72vh] w-full",
 };
 
+/** The large stage for a spec with `tall`: portrait below sm, the usual shape above it. */
+const LARGE_TALL = "aspect-[9/16] max-h-[80vh] sm:aspect-[16/10] sm:max-h-[72vh] w-full";
+
 type Props = {
   slug: string;
   name: string;
@@ -110,7 +113,7 @@ export function PreviewStage({ slug, name, size = "card", eager = false, classNa
   return (
     <div
       ref={rootRef}
-      className={`stage tone-${spec.tone} ${SIZE_CLASS[size]} ${className}`}
+      className={`stage tone-${spec.tone} ${size === "large" && spec.kind === "inline" && spec.tall ? LARGE_TALL : SIZE_CLASS[size]} ${className}`}
       data-engaged={engaged || undefined}
       onPointerEnter={() => {
         pointerInside.current = true;
