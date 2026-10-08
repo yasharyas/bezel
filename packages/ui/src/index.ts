@@ -163,3 +163,14 @@ export type { PixelAvatarProps, PixelAvatarPalette, PixelAvatarPaletteName, Pixe
 // A firework that turns out to be a word: fragments sampled from rendered text
 export { ConfettiFirecracker } from "./feedback/ConfettiFirecracker";
 export type { ConfettiFirecrackerProps, FirecrackerColors, FirecrackerTiming, FirecrackerHandle } from "./feedback/ConfettiFirecracker";
+// Game loaders: one multi-step process played as a pixel game, driven only by real step events
+export { EncounterLoader, ENCOUNTER_LOADER_PALETTES, LOADER_CHARACTERS } from "./loaders/EncounterLoader";
+export type { EncounterLoaderProps, EncounterLoaderColors, EncounterLoaderPalette, EncounterLoaderPaletteName, LoaderStep, LoaderStepStatus, LoaderStat, LoaderLabels, LoaderCharacter, LoaderCharacterName } from "./loaders/EncounterLoader";
+export { BlockRunLoader, BLOCK_RUN_LOADER_PALETTES } from "./loaders/BlockRunLoader";
+export type { BlockRunLoaderProps, BlockRunLoaderColors, BlockRunLoaderPalette, BlockRunLoaderPaletteName } from "./loaders/BlockRunLoader";
+export { FlapGateLoader, FLAP_GATE_LOADER_PALETTES } from "./loaders/FlapGateLoader";
+export type { FlapGateLoaderProps, FlapGateLoaderColors, FlapGateLoaderPalette, FlapGateLoaderPaletteName } from "./loaders/FlapGateLoader";
+export { BrickWallLoader, BRICK_WALL_LOADER_PALETTES } from "./loaders/BrickWallLoader";
+export type { BrickWallLoaderProps, BrickWallLoaderColors, BrickWallLoaderPalette, BrickWallLoaderPaletteName } from "./loaders/BrickWallLoader";
+export { SnakeLineLoader, SNAKE_LINE_LOADER_PALETTES } from "./loaders/SnakeLineLoader";
+export type { SnakeLineLoaderProps, SnakeLineLoaderColors, SnakeLineLoaderPalette, SnakeLineLoaderPaletteName } from "./loaders/SnakeLineLoader";
