@@ -1229,5 +1229,20 @@
       "accessible",
       "reduced-motion"
     ]
+  },
+  "thor-link": {
+    "name": "ThorLink",
+    "category": "interaction",
+    "description": "Link opener: a pixel hammer slams the link, then the next page burns through.",
+    "tags": [
+      "link",
+      "navigation",
+      "transition",
+      "pixel-art",
+      "canvas",
+      "lightning",
+      "sound",
+      "reduced-motion"
+    ]
   }
 }

@@ -108,6 +108,7 @@ const COMPONENT_MAP = {
   "stagger-blur-text": "animation/StaggerBlurText.tsx",
   "animated-gradient-rule": "dividers/AnimatedGradientRule.tsx",
   "jewelry-cursor": "interaction/JewelryCursor.tsx",
+  "thor-link": "interaction/ThorLink.tsx",
   "scroll-unfurl-preloader": "loaders/ScrollUnfurlPreloader.tsx",
   "canvas-petal-field": "animation/CanvasPetalField.tsx",
   "film-grain-overlay": "overlays/FilmGrainOverlay.tsx",
@@ -219,6 +220,7 @@ function showHelp() {
     stagger-blur-text    Word-by-word blur-in text generate effect
     animated-gradient-rule  Sliding gradient divider line
     jewelry-cursor        GSAP gold dot + lagging ring custom cursor
+    thor-link             Link opener: a pixel hammer strike, then the page burns through
     scroll-unfurl-preloader  Parchment scroll-unfurl fullscreen preloader
     canvas-petal-field    Ambient falling marigold/jasmine canvas particles
     film-grain-overlay    Fixed full-viewport animated film-grain noise
