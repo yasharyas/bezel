@@ -382,5 +382,9 @@
  "snake-line-loader": {
   "about": "A multi-step loader for React drawn as a Snake board. The head moves along the path only on real progress, and the snake grows one segment for every finished step, ending on a gold apple. The dialogue box narrates milestones for screen readers, turns into a Retry, Skip or Cancel menu when a step fails, and ends on a results screen with real totals. Bright palettes for light and dark, four characters, and reduced motion respected.",
   "keyProps": "`steps` (the only state: id, label, status, progress, detail), `title` (heading and progressbar name), `onRetry`, `onSkip`, `onCancel` (each adds its button to the error menu), `palette` (a preset name or your own colours), `character` (\"ember\", \"tide\", \"moss\", \"plum\" or your own)"
+ },
+ "thor-link": {
+  "about": "A React link that opens with a thunder strike. A pixel-art arm resolves out of thin air beside the link, summons a hammer, lightning charges it and the arm slams it onto the link; nearby text scorches and the page burns away from the impact point. About five seconds from click to done. The page is never dimmed or tinted, there are at most three short flashes, reduced motion swaps it all for a 300ms crossfade, and the synthesized sound starts only after a user gesture.",
+  "keyProps": "`href`, `onNavigate` (runs at the commit beat with the href, for your router; without it the browser navigates), `onPrefetch` (once per href on hover, focus or press). `ThorLinkProvider` takes `sound`, `scale` (hammer size multiplier) and `reveal` (awaited, at most 1.5s, before the burn-through). `useThorStrike()` strikes any element from code."
  }
 }

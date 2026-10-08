@@ -38,9 +38,10 @@ export function FrameRuntime({ slug, tone }: { slug: string; tone: Tone }) {
       originalFocus.call(this, { ...options, preventScroll: true });
     };
 
-    // Link guard.
+    // Link guard. A ThorLink prevents its own navigation and hands the href to the preview.
     const onClick = (event: MouseEvent) => {
-      if ((event.target as Element | null)?.closest?.("a[href]")) event.preventDefault();
+      const a = (event.target as Element | null)?.closest?.("a[href]");
+      if (a && !a.hasAttribute("data-thor-link")) event.preventDefault();
     };
     document.addEventListener("click", onClick, true);
 

@@ -1,5 +1,5 @@
 {
-  "fingerprint": "770a8123f7a2b008",
+  "fingerprint": "c96b87c29f0b6dc2",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -698,6 +698,14 @@
       {"kind":"focus","element":"div.bz-snl-log","min":3,"text":"Narration (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
       {"kind":"focus","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","min":3,"text":"Play a run (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#fafafa","ratio":7.78,"n":3},
       {"kind":"icon","element":"svg.bz-snl-sprite","text":"decorative","min":3,"status":"decorative","why":null,"fg":"#17142e","bg":"#d8f5b4","ratio":15,"at":[390]}
+    ]},
+    {"slug":"thor-link","kind":"frame","tone":"paper","textNodes":{"textNodes":9,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.18em]","text":"Weather notes","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#5c5c60","bg":"#fafafa","ratio":6.38},
+      {"kind":"text","element":"h1.mt-2.font-serif.text-4xl","text":"Thunder","size":36,"weight":400,"min":3,"status":"measured","why":null,"fg":"#1a1a1a","bg":"#fafafa","ratio":16.67},
+      {"kind":"text","element":"p","text":"Thunder is the sound a makes as it heats the ai…","size":17,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#1a1a1a","bg":"#fafafa","ratio":16.67,"n":2},
+      {"kind":"text","element":"a.font-medium.text-[#1d4ed8].underline.decoration-[#1d4ed8]/40","text":"lightning bolt","size":17,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#1d4ed8","bg":"#fafafa","ratio":6.42,"n":2},
+      {"kind":"text","element":"p.mt-8.text-sm.text-[#5c5c60]","text":"Click a blue link. Sound plays after your first…","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#5c5c60","bg":"#fafafa","ratio":6.38},
+      {"kind":"focus","element":"a.font-medium.text-[#1d4ed8].underline.decoration-[#1d4ed8]/40","min":3,"text":"lightning bolt (outline)","status":"measured","why":null,"fg":"#1d4ed8","bg":"#fafafa","ratio":6.42,"n":2}
     ]}
   ]
 }
