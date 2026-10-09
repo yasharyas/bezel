@@ -181,6 +181,8 @@ Added 7 October 2026.
 | `loaders/FlapGateLoader` | + | + | + | + | n/a | + | + | n/a |
 | `loaders/BrickWallLoader` | + | + | + | + | n/a | + | + | n/a |
 | `loaders/SnakeLineLoader` | + | + | + | + | n/a | + | + | n/a |
+| `loaders/LedgerStampLoader` | + | + | + | + | n/a | + | + | n/a |
+| `loaders/RadarSweepLoader` | + | + | + | + | n/a | + | + | n/a |
 
 Disabled is n/a because a control that cannot act is hidden rather than
 disabled. Each loader has one `role="progressbar"` (the nameplate), a
@@ -190,6 +192,8 @@ What next menu (Retry, Skip, Cancel, Show details) is a roving-tabindex group
 moved with the arrow keys, Home and End. Focus moves only when it is already
 inside the component: to Retry when an error appears, to the log when a retry
 starts, and to Continue when the results open. The arena is `aria-hidden`.
+The two concept loaders added 8 October (passbook and radar) share this engine and chassis; their progressbar is the
+slip in the arena rather than a nameplate.
 
 ### ThorLink
 

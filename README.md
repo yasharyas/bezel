@@ -161,6 +161,8 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | FlapGateLoader | `flap-gate-loader` | Jetpack flight step loader: one gate per step, the world moves only as far as real progress, the score counts finished steps. |
 | BrickWallLoader | `brick-wall-loader` | Breakout step loader: each step is a row of bricks, broken exactly in line with real progress. |
 | SnakeLineLoader | `snake-line-loader` | Snake step loader: the head follows real progress and the snake grows one segment per finished step. |
+| LedgerStampLoader | `ledger-stamp-loader` | Contract step loader: a hand stamp inks and dates each clause when its step finishes, with real-ink imperfections and optional sound. |
+| RadarSweepLoader | `radar-sweep-loader` | Heading-up CRT radar step loader: own ship makes way through a drifting field and engages each finished step's contact when the beam crosses it. |
 
 ### Loading
 

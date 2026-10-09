@@ -2,7 +2,7 @@
 
 **This is a proposal.** The calls below are a recommendation for the owner to
 accept, reject or revise. Since it was written the owner has removed ten
-components; their rows are gone, and the counts describe the 97 that remain.
+components; their rows are gone, and the counts describe the 99 that remain.
 
 **Acted on, 20 September 2026.** The owner removed twelve more and merged the
 card grids, taking the library to 90. Removed: EcomEmptyState, Breadcrumb,
@@ -22,7 +22,7 @@ light-only literals, so the sizes and the "17 lines wrapping a `<code>` element"
 reading of FormulaBlock below no longer describe the files. The merge calls
 still stand as calls.
 
-**The library now holds 97 components.** The five game loaders (EncounterLoader, BlockRunLoader, FlapGateLoader, BrickWallLoader and SnakeLineLoader) were added on 7 October 2026, and ThorLink on 8 October 2026, after this proposal, and are not rated by it. A later pass the same day carried out
+**The library now holds 99 components.** The five game loaders (EncounterLoader, BlockRunLoader, FlapGateLoader, BrickWallLoader and SnakeLineLoader) were added on 7 October 2026, and ThorLink and two concept loaders (LedgerStampLoader and RadarSweepLoader) on 8 October 2026, after this proposal, and are not rated by it. A later pass the same day carried out
 the animated-border merge proposed below (ConicBorderButton and StarBorder are
 now the jade fill and the star ring of `BorderBeamButton`, three rows becoming
 one), removed MessageForm, and added two drawn-annotation components,
