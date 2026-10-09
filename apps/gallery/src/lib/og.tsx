@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { MARK_B, MARK_INNER, MARK_OUTER } from "@/components/site/BezelMark";
 
 /*
  * Share cards. Colours are the literal values of Bezel tokens, because the
@@ -17,21 +18,14 @@ const BRICK = "#912c22";
 const MUTED = "rgba(255,255,255,0.8)";
 const LINE = "rgba(255,255,255,0.1)";
 
-function Mark({ size = 64 }: { size?: number }) {
+/** The Bezel mark, the same squircle paths as the site header and the favicon. */
+function Mark({ size = 72 }: { size?: number }) {
   return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size * 0.28,
-        border: `${Math.max(3, size / 16)}px solid ${CREAM}`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <div style={{ width: size * 0.46, height: size * 0.46, borderRadius: size * 0.13, background: BRICK }} />
-    </div>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <path d={MARK_OUTER} stroke={CREAM} strokeWidth="1.5" />
+      <path d={MARK_INNER} fill={BRICK} />
+      <path d={MARK_B} stroke={CREAM} strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -110,7 +104,7 @@ export function componentCard({
     (
       <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", background: VOID, padding: 72, color: "#fff" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <Mark size={52} />
+          <Mark size={58} />
           <div style={{ fontSize: 30, fontWeight: 600 }}>Bezel</div>
         </div>
         <div style={{ display: "flex", flexDirection: "column" }}>
