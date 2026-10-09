@@ -24,7 +24,7 @@ function Mark({ size = 72 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <path d={MARK_OUTER} stroke={CREAM} strokeWidth="1.5" />
       <path d={MARK_INNER} fill={BRICK} />
-      <path d={MARK_B} stroke={CREAM} strokeWidth="1.5" strokeLinejoin="round" />
+      <path d={MARK_B} fill={CREAM} />
     </svg>
   );
 }
