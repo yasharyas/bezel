@@ -182,3 +182,7 @@ export type { RadarSweepLoaderProps, RadarSweepLoaderColors, RadarSweepLoaderPal
 // Link transitions
 export { ThorLink, ThorLinkProvider, useThorStrike } from "./interaction/ThorLink";
 export type { ThorLinkProps, ThorLinkProviderProps, ThorStrikeApi, ThorStrikeOptions, ThorStrikeResult, ThorStrikeState } from "./interaction/ThorLink";
+
+// Entrances: whatever it wraps switches on like an old CRT set
+export { ScreenPowerOn } from "./animation/ScreenPowerOn";
+export type { ScreenPowerOnProps, ScreenPowerOnHandle, ScreenPowerOnTint } from "./animation/ScreenPowerOn";
