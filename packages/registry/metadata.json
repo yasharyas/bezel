@@ -1274,5 +1274,20 @@
       "accessible",
       "reduced-motion"
     ]
+  },
+  "screen-power-on": {
+    "name": "ScreenPowerOn",
+    "category": "animation",
+    "description": "Wrapper that switches its content on like a CRT: dot, square, full picture.",
+    "tags": [
+      "entrance",
+      "crt",
+      "power-on",
+      "reveal",
+      "waapi",
+      "wrapper",
+      "sound",
+      "reduced-motion"
+    ]
   }
 }

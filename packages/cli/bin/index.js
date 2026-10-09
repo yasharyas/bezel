@@ -147,6 +147,7 @@ const COMPONENT_MAP = {
   "ledger-stamp-loader": "loaders/LedgerStampLoader.tsx",
   "radar-sweep-loader": "loaders/RadarSweepLoader.tsx",
   "autoplay-carousel": "media/AutoplayCarousel.tsx",
+  "screen-power-on": "animation/ScreenPowerOn.tsx",
 };
 
 function showHelp() {
@@ -258,6 +259,7 @@ function showHelp() {
     snake-line-loader       Snake step loader that grows one segment per step
     ledger-stamp-loader     Passbook step loader, one stamped entry per step
     radar-sweep-loader      Radar step loader, one contact locked per step
+    screen-power-on         Wrapper that switches its content on like a CRT set
 
   Not in the CLI (copy by hand from the gallery):
     multi-step-loader       Imports MagicRings and ShinyText
