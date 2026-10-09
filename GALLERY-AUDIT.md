@@ -13,8 +13,8 @@ same day removed MessageForm, folded ConicBorderButton and StarBorder into
 BorderBeamButton, and added SketchHighlight and SketchArrow, which made 89.
 PixelAvatar, added on 22 September, took it to 90, and ConfettiFirecracker on
 23 September made it 91. Five game loaders added on 7 October made it 96, and
-ThorLink on 8 October made it 97, and two concept loaders the same day make
-the current count of **99** (see
+ThorLink on 8 October made it 97, two concept loaders the same day made it 99,
+and ScreenPowerOn on 10 October makes the current count of **100** (see
 [Additions, October 2026](#additions-october-2026)).
 
 - [Summary](#summary)
@@ -275,8 +275,9 @@ commit before the replacement, then remove `accordion-list`.
 
 ### Totals and the first screen
 
-The library now holds 99 components: 7 Showcase, 30 Solid and 62 Ordinary
-(the five October game loaders and ThorLink are counted as Ordinary until reviewed).
+The library now holds 100 components: 7 Showcase, 30 Solid and 63 Ordinary
+(the five October game loaders, ThorLink, the two concept loaders and
+ScreenPowerOn are counted as Ordinary until reviewed).
 
 "Start with these" no longer stands still: the strip cycles one card at a time
 through the pool in `apps/gallery/src/lib/featured.ts`, and the opening six
@@ -314,6 +315,8 @@ sees only the still page; the strike itself is canvas and was checked by eye
 at the charge, impact and reveal beats.
 
 Two concept loaders were added on 8 October: LedgerStampLoader and RadarSweepLoader. They share the game loaders' API, engine and message box (steps, labels, Retry, Skip, Cancel, results), but each draws the run as a real object people know: a contract certificate on grained stock, stamped clause by clause by a worn teller's stamper (turned handle, brass ferrule, labelled mount, its shadow sharpening on the paper) in uneven ink (a red Rejected stamp on failure, one large off-centre seal at the end), and a domed CRT radar scope in a screwed bezel, running heading-up while its own platform makes way through a field of coast, buoys and false echoes, where own ship engages each finished contact with an intercept (a curving trail, a phosphor splash and a cleared mark) only when the beam crosses it, and a failure is a miss. Each moves only on real progress events from the host, adds one or two deterministic imperfections per run that never carry meaning, and can play synthesized sound (the `sound` prop, off by default, after a user gesture, heard only while the loader is hovered, focused or last tapped). Both are rated **Ordinary until reviewed alongside the rest**. Their previews play a successful run on a loop with the gallery-only "Simulate a failure" and "Sound" buttons. Neither shows the generic progress card: the ledger pencils the count in the margin and the radar prints a CRT data line, while the progressbar role stays, visually hidden. The rendered contrast record after they went in: 99 components, 789 gated pairs, 0 failing, 101 decorative, 3 disabled, 16 exempt and 83 not measurable (the paper grain and the scope's canvas make more pairs unmeasurable by design). Each was also driven headlessly at 1440px and 390px, light and dark, through the run, the error menu and the results screen, with every sound cue logged.
+
+ScreenPowerOn was added on 10 October: a wrapper that switches its content on like an old CRT set. After a dark warm-up a phosphor dot lights at the centre and flickers, a square opens out to full height, widens to the full width with a small overshoot, a burst of static passes, and a green, amber or white tint, glow, 4px scanlines and a vignette fade into the real content over 3 seconds. Only transform and opacity animate (Web Animations API), the squeeze is sized from the wrapper's own box, and every effect layer is removed when the run ends. It is rated **Ordinary until reviewed alongside the rest**. Its preview is a small dashboard card on a void stage that powers on when it mounts and replays on the idle loop, with gallery-only Replay, Sound and Green, Amber or White buttons; only a run someone asked for is heard. The rendered contrast record after it went in: 100 components, 810 gated pairs, 0 failing, 101 decorative, 3 disabled, 16 exempt and 83 not measurable. The gate sees only the settled, reduced-motion page, so the run was also seeked headlessly at 300, 700, 1200, 1800, 2400 and 3000ms at 1440px and 390px, and a real replay held a 16.7ms median frame gap (worst 16.8ms) in headless Chromium.
 
 ## Removals, 20 September 2026
 
@@ -743,6 +746,7 @@ needs, and a rewritten description.
 | `snake-line-loader` | New (7 October) | n/a | Laid out at 600px: a Snake board where the snake grows one segment per finished step | Ordinary | Rated Ordinary until reviewed alongside the rest. Progress is honest (geometry moves only on host events), and the error menu and results are keyboard reachable. |
 | `ledger-stamp-loader` | New (8 October) | n/a | A contract certificate stamped by hand, clause by clause, with one large seal at the end | Ordinary | Rated Ordinary until reviewed alongside the rest. Progress is honest (the art moves only on host events), and the error menu and results are keyboard reachable. |
 | `radar-sweep-loader` | New (8 October) | n/a | A CRT radar scope where each step is a contact that locks on when done | Ordinary | Rated Ordinary until reviewed alongside the rest. Progress is honest (the art moves only on host events), and the error menu and results are keyboard reachable. |
+| `screen-power-on` | New (10 October) | n/a | A void stage: a small dashboard card that powers on like a CRT, with Replay, Sound and a Green, Amber or White phosphor switch | Ordinary | Rated Ordinary until reviewed alongside the rest. Only transform and opacity animate, every effect layer is removed when the run ends, reduced motion is a 200ms fade, and sound waits for a gesture. |
 
 ---
 

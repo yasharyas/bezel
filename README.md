@@ -205,6 +205,7 @@ Every component lives in `packages/ui/src/<category>/`, is registered in `packag
 | ShinyText | `shiny-text` | Text with a sweeping gradient shine that renders plain when motion is reduced. |
 | Highlighter | `highlighter` | Hand-drawn highlight, underline, box or circle marks that draw on mount or scroll. |
 | TextType | `text-type` | Typewriter that types, pauses and deletes a list of lines with a blinking cursor. |
+| ScreenPowerOn | `screen-power-on` | Wrapper that switches its content on like a CRT set: a phosphor dot, a square that opens out to the full picture, a burst of static, and a green, amber or white tint that fades into the real content. Only transform and opacity animate; optional synthesized sound and a ref with `replay()`. |
 
 ### Sections
 

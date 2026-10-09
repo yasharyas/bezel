@@ -240,3 +240,21 @@ optional tap trigger ignores presses on anything matching
 `a, button, input, textarea, select, label, [role=button]`, so it cannot steal a
 control's press, and it counts only the primary pointer. Under reduced motion it
 still fires, with the word rendered at rest instead of thrown.
+
+### Entrance
+
+Added 10 October 2026.
+
+| Component | default | hover | focus | active | disabled |
+|---|---|---|---|---|---|
+| `animation/ScreenPowerOn` | + | n/a | n/a | n/a | n/a |
+
+A wrapper, not a control: the content inside keeps its own states. The
+children are in the document from the first render, so they are read at once
+and focus can reach them during the run. Every effect layer (the dark glass,
+the phosphor dot, glow, tint, static, scanlines and vignette) is `aria-hidden`
+and takes no pointer events, and all of them are removed when the run ends,
+together with the transform, the clip and the layer hint, so the content is
+left exactly as it was. Under reduced motion the run is a 200ms fade, without
+scripting the content is simply shown, and the optional sound waits for a user
+gesture.
