@@ -23,6 +23,7 @@ export function GET() {
     `- [Gallery](${SITE_URL}): live preview of every component`,
     `- [Principles](${SITE_URL}/principles): the rules the library is built to, with where they do not hold yet`,
     `- [States](${SITE_URL}/states): default, hover, focus, active and disabled coverage for each component`,
+    `- [Full reference](${SITE_URL}/llms-full.txt): every component with its full description, key props and install line, in one file`,
     "",
   ];
 
