@@ -28,16 +28,36 @@ export function generateStaticParams() {
   return catalog.map((entry) => ({ slug: entry.slug }));
 }
 
+/**
+ * The one-line description is short for a search snippet, so it gains what a searcher needs next:
+ * that it is a free React and TypeScript component and how to get it. Kept under about 160 characters.
+ */
+function metaDescription(entry: { slug: string; description: string }) {
+  const base = entry.description.trim().replace(/\.?$/, ".");
+  const long = `${base} Free React and TypeScript component with a live preview. Copy it with npx bezel-add add ${entry.slug}.`;
+  return long.length <= 160 ? long : `${base} Free React and TypeScript source with a live preview.`;
+}
+
 export function generateMetadata({ params }: { params: { slug: string } }): Metadata {
   const entry = catalog.find((e) => e.slug === params.slug);
   if (!entry) return {};
   const title = `${entry.name} React component`;
+  const description = metaDescription(entry);
+  // Next replaces, not merges, a nested openGraph or twitter object from the layout, so the
+  // shared fields are restated here; without them these pages lost og:type, og:site_name and
+  // the large Twitter card.
   return {
     title,
-    description: entry.description,
+    description,
     alternates: { canonical: `/component/${entry.slug}` },
-    openGraph: { title: `${title} · Bezel UI`, description: entry.description, url: `/component/${entry.slug}` },
-    twitter: { title: `${title} · Bezel UI`, description: entry.description },
+    openGraph: {
+      title: `${title} · Bezel UI`,
+      description,
+      url: `/component/${entry.slug}`,
+      siteName: "Bezel UI",
+      type: "website",
+    },
+    twitter: { card: "summary_large_image", title: `${title} · Bezel UI`, description },
   };
 }
 
