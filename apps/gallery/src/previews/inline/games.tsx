@@ -14,6 +14,8 @@ import { BlockRunLoader, BLOCK_RUN_LOADER_PALETTES, type BlockRunLoaderPaletteNa
 import { FlapGateLoader, FLAP_GATE_LOADER_PALETTES, type FlapGateLoaderPaletteName } from "bezel-ui/loaders/FlapGateLoader";
 import { BrickWallLoader, BRICK_WALL_LOADER_PALETTES, type BrickWallLoaderPaletteName } from "bezel-ui/loaders/BrickWallLoader";
 import { SnakeLineLoader, SNAKE_LINE_LOADER_PALETTES, type SnakeLineLoaderPaletteName } from "bezel-ui/loaders/SnakeLineLoader";
+import { LedgerStampLoader, LEDGER_STAMP_LOADER_PALETTES, type LedgerStampLoaderPaletteName } from "bezel-ui/loaders/LedgerStampLoader";
+import { RadarSweepLoader, RADAR_SWEEP_LOADER_PALETTES, type RadarSweepLoaderPaletteName } from "bezel-ui/loaders/RadarSweepLoader";
 import { Caption, usePreviewEnv } from "../kit";
 import type { PreviewModule, Tone } from "../types";
 
@@ -611,18 +613,23 @@ function GameDemo({
   palettes,
   render,
   fit,
+  sound: hasSound,
 }: {
   tone: Tone;
-  character: LoaderCharacterName;
+  /** The game loaders' adventurer. Leave it out for a loader without one, and the Character picker goes. */
+  character?: LoaderCharacterName;
   palettes: string[];
-  render: (p: GameRenderProps) => ReactNode;
+  render: (p: GameRenderProps, extra: { sound: boolean }) => ReactNode;
+  /** The loader can play sound: show a Sound toggle, on by default in the demo. */
+  sound?: boolean;
   /** Arrange and scale for the stage here, instead of the spec's fixed `fit` width. */
   fit?: GameFitOptions;
 }) {
   const { size } = usePreviewEnv();
   const demo = useDemoRun();
   const [palette, setPalette] = useState(palettes[0]);
-  const [character, setCharacter] = useState(firstCharacter);
+  const [character, setCharacter] = useState<LoaderCharacterName>(firstCharacter ?? "ember");
+  const [soundOn, setSoundOn] = useState(true);
   const [scheme, setScheme] = useState<"light" | "dark">(tone === "void" ? "dark" : "light");
   const large = size === "large";
   const stopped = demo.mode === "stopped";
@@ -661,7 +668,7 @@ function GameDemo({
     onSkip: demo.onSkip,
     onCancel: demo.onCancel,
     onContinue: demo.onContinue,
-  });
+  }, { sound: !!hasSound && soundOn });
 
   /* On the results screen a failure can only come in the next run, so the button says so. */
   const mainLabel = stopped ? "Start a new run" : demo.mode === "complete" ? "Replay with a failure" : "Simulate a failure";
@@ -676,12 +683,17 @@ function GameDemo({
       <DemoButton key="main" tone={tone} disabled={!stopped && demo.mode === "error"} onClick={stopped ? demo.playRun : failAndFollow}>
         {mainLabel}
       </DemoButton>
+      {hasSound ? (
+        <DemoButton key="sound" tone={tone} pressed={soundOn} onClick={() => setSoundOn((v) => !v)}>
+          Sound
+        </DemoButton>
+      ) : null}
     </>
   );
   const pickers = (
     <>
       <Segmented tone={tone} label="Palette" options={palettes} value={palette} onChange={setPalette} />
-      <Segmented tone={tone} label="Character" options={CHARACTER_NAMES} value={character} onChange={setCharacter} />
+      {firstCharacter ? <Segmented tone={tone} label="Character" options={CHARACTER_NAMES} value={character} onChange={setCharacter} /> : null}
       <Segmented tone={tone} label="Theme" options={["light", "dark"] as Array<"light" | "dark">} value={scheme} onChange={setScheme} />
     </>
   );
@@ -831,10 +843,42 @@ function SnakeLineLoaderPreview() {
 
 const SNAKE_LINE_FIT: GameFitOptions = { cropTo: ".bz-snl-stage", frame: ".bz-snl-in" };
 
+/* The concept loaders share the demo host but have no adventurer, so `character` is dropped. */
+
+function LedgerStampLoaderPreview() {
+  return (
+    <GameDemo
+      tone="cream"
+      palettes={Object.keys(LEDGER_STAMP_LOADER_PALETTES)}
+      fit={LEDGER_STAMP_FIT}
+      sound
+      render={({ character: _c, ...p }, x) => <LedgerStampLoader {...p} sound={x.sound} palette={p.palette as LedgerStampLoaderPaletteName} />}
+    />
+  );
+}
+
+const LEDGER_STAMP_FIT: GameFitOptions = { cropTo: ".bz-lsl-stage", frame: ".bz-lsl-in" };
+
+function RadarSweepLoaderPreview() {
+  return (
+    <GameDemo
+      tone="void"
+      palettes={Object.keys(RADAR_SWEEP_LOADER_PALETTES)}
+      fit={RADAR_SWEEP_FIT}
+      sound
+      render={({ character: _c, ...p }, x) => <RadarSweepLoader {...p} sound={x.sound} palette={p.palette as RadarSweepLoaderPaletteName} />}
+    />
+  );
+}
+
+const RADAR_SWEEP_FIT: GameFitOptions = { cropTo: ".bz-rsl-stage", frame: ".bz-rsl-in" };
+
 export const previews: PreviewModule = {
   "encounter-loader": EncounterLoaderPreview,
   "block-run-loader": BlockRunLoaderPreview,
   "flap-gate-loader": FlapGateLoaderPreview,
   "brick-wall-loader": BrickWallLoaderPreview,
   "snake-line-loader": SnakeLineLoaderPreview,
+  "ledger-stamp-loader": LedgerStampLoaderPreview,
+  "radar-sweep-loader": RadarSweepLoaderPreview,
 };

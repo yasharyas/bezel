@@ -1,5 +1,5 @@
 {
-  "fingerprint": "5efa8a54ad9bd985",
+  "fingerprint": "844521230363aaa3",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -706,6 +706,47 @@
       {"kind":"text","element":"a.font-medium.text-[#1d4ed8].underline.decoration-[#1d4ed8]/40","text":"lightning bolt","size":17,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#1d4ed8","bg":"#fafafa","ratio":6.42,"n":2},
       {"kind":"text","element":"p.mt-8.text-sm.text-[#5c5c60]","text":"Click a blue link. Sound plays after your first…","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#5c5c60","bg":"#fafafa","ratio":6.38},
       {"kind":"focus","element":"a.font-medium.text-[#1d4ed8].underline.decoration-[#1d4ed8]/40","min":3,"text":"lightning bolt (outline)","status":"measured","why":null,"fg":"#1d4ed8","bg":"#fafafa","ratio":6.42,"n":2}
+    ]},
+    {"slug":"ledger-stamp-loader","kind":"inline","tone":"cream","textNodes":{"textNodes":50,"hidden":18,"offscreen":0}, "items": [
+      {"kind":"text","element":"h3.bz-lsl-title","text":"Setting up your workspace","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"span.bz-lsl-book","text":"Certificate of Completion","size":15,"weight":700,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-print\")","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.bz-lsl-date","text":"Executed on 09 OCT 2026","size":12.5,"weight":500,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span","text":"Clause","size":10.5,"weight":600,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":3},
+      {"kind":"text","element":"span.bz-lsl-no","text":"01","size":13,"weight":600,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-print\")","fg":null,"bg":null,"ratio":null,"n":5},
+      {"kind":"text","element":"span.bz-lsl-text","text":"Create the workspace","size":15,"weight":500,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-print\")","fg":null,"bg":null,"ratio":null,"n":5},
+      {"kind":"text","element":"span.bz-lsl-stamp-w","text":"Verified","size":11,"weight":800,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-ink1\")","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.bz-lsl-stamp-d","text":"09 OCT 2026","size":9,"weight":700,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-ink1\")","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.bz-lsl-tally","text":"620 / 1,240","size":14,"weight":600,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"p.bz-lsl-ph","text":"1 of 5 done. Now: Import 1,240 contacts.","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"b","text":"Entry 2 of 5","size":13,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"text","element":"p.bz-lsl-meta","text":"· Next: Sync your calendar, then Index 12 folde…","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"Gallery demo, not part of the component","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#393938","bg":"#f7f3ee","ratio":10.47,"n":3},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Play a run","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":4},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Sound","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#0a0a0a","ratio":19.8,"n":3},
+      {"kind":"focus","element":"div.bz-lsl-log","min":3,"text":"Narration (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#ffffff","ratio":8.12},
+      {"kind":"focus","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","min":3,"text":"Play a run (outline)","status":"measured","why":null,"fg":"#912c22","bg":"#f7f3ee","ratio":7.35,"n":7}
+    ]},
+    {"slug":"radar-sweep-loader","kind":"inline","tone":"void","textNodes":{"textNodes":56,"hidden":23,"offscreen":0}, "items": [
+      {"kind":"text","element":"h3.bz-rsl-title","text":"Setting up your workspace","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"span.bz-rsl-d0","text":"H-UP HDG 212° SPD 12.4 KN","size":11.5,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#c4ead2","bg":"#020504","ratio":15.64},
+      {"kind":"text","element":"span.bz-rsl-d1","text":"TGT 02 IMPORT 1,240 CONTACTS","size":11.5,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#7cf5a8","bg":"#020504","ratio":15.09},
+      {"kind":"text","element":"span.bz-rsl-d2","text":"BRG 060 RNG 3.9 ACQ 620/1,240","size":11.5,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#c4ead2","bg":"#020504","ratio":15.64},
+      {"kind":"text","element":"p.bz-rsl-status","text":"1 of 5 targets cleared","size":12,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#7cf5a8","bg":"#0b130e","ratio":13.9},
+      {"kind":"text","element":"span.bz-rsl-k","text":"01","size":12.5,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#a8cab5","bg":"#0b130e","ratio":10.58,"n":2},
+      {"kind":"text","element":"span.bz-rsl-nm","text":"Create the workspace","size":12.5,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#c4ead2","bg":"#0b130e","ratio":14.41,"n":2,"at":[1440]},
+      {"kind":"text","element":"span.bz-rsl-w","text":"Cleared","size":10.5,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#7cf5a8","bg":"#0b130e","ratio":13.9},
+      {"kind":"text","element":"span.bz-rsl-w","text":"Searching","size":10.5,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#c4ead2","bg":"#0b130e","ratio":14.41},
+      {"kind":"text","element":"span.bz-rsl-k","text":"03","size":12.5,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#819c8b","bg":"#0b130e","ratio":6.34,"n":3},
+      {"kind":"text","element":"span.bz-rsl-nm","text":"Sync your calendar","size":12.5,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#96b4a1","bg":"#0b130e","ratio":8.39,"n":3,"at":[1440]},
+      {"kind":"text","element":"span.bz-rsl-w","text":"Waiting","size":10.5,"weight":700,"min":4.5,"status":"measured","why":null,"fg":"#96b4a1","bg":"#0b130e","ratio":8.39,"n":3},
+      {"kind":"text","element":"p.bz-rsl-ph","text":"1 of 5 done. Now: Import 1,240 contacts.","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"b","text":"Contact 2 of 5","size":13,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"text","element":"p.bz-rsl-meta","text":"· Next: Sync your calendar, then Index 12 folde…","size":13,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4},
+      {"kind":"text","element":"span.font-mono.text-[10px].uppercase.tracking-[0.14em]","text":"Gallery demo, not part of the component","size":10,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#d1d1d1","bg":"#1a1a1a","ratio":11.4,"n":3},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Play a run","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#252525","ratio":15.33,"n":4},
+      {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Sound","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3},
+      {"kind":"focus","element":"div.bz-rsl-log","min":3,"text":"Narration (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
+      {"kind":"focus","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","min":3,"text":"Play a run (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":7}
     ]}
   ]
 }

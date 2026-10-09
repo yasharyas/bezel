@@ -118,6 +118,8 @@ export const specs: Record<string, PreviewSpec> = {
   "flap-gate-loader": inline("games", "paper", { tall: true }),
   "brick-wall-loader": inline("games", "void", { tall: true }),
   "snake-line-loader": inline("games", "paper", { tall: true }),
+  "ledger-stamp-loader": inline("games", "cream", { tall: true }),
+  "radar-sweep-loader": inline("games", "void", { tall: true }),
 };
 
 export const frameSlugs = Object.entries(specs)
