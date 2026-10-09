@@ -144,6 +144,8 @@ const COMPONENT_MAP = {
   "flap-gate-loader": "loaders/FlapGateLoader.tsx",
   "brick-wall-loader": "loaders/BrickWallLoader.tsx",
   "snake-line-loader": "loaders/SnakeLineLoader.tsx",
+  "ledger-stamp-loader": "loaders/LedgerStampLoader.tsx",
+  "radar-sweep-loader": "loaders/RadarSweepLoader.tsx",
   "autoplay-carousel": "media/AutoplayCarousel.tsx",
 };
 
@@ -254,6 +256,8 @@ function showHelp() {
     flap-gate-loader        Jetpack flight step loader, one gate per step
     brick-wall-loader       Breakout step loader, one row of bricks per step
     snake-line-loader       Snake step loader that grows one segment per step
+    ledger-stamp-loader     Passbook step loader, one stamped entry per step
+    radar-sweep-loader      Radar step loader, one contact locked per step
 
   Not in the CLI (copy by hand from the gallery):
     multi-step-loader       Imports MagicRings and ShinyText

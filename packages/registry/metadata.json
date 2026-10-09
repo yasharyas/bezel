@@ -1244,5 +1244,35 @@
       "sound",
       "reduced-motion"
     ]
+  },
+  "ledger-stamp-loader": {
+    "name": "LedgerStampLoader",
+    "category": "loaders",
+    "description": "Contract step loader: each finished clause is stamped and dated by hand.",
+    "tags": [
+      "loader",
+      "multi-step",
+      "progress",
+      "stamp",
+      "ledger",
+      "fintech",
+      "accessible",
+      "reduced-motion"
+    ]
+  },
+  "radar-sweep-loader": {
+    "name": "RadarSweepLoader",
+    "category": "loaders",
+    "description": "Radar step loader: each real step is a contact that locks on when done.",
+    "tags": [
+      "loader",
+      "multi-step",
+      "progress",
+      "radar",
+      "sweep",
+      "contacts",
+      "accessible",
+      "reduced-motion"
+    ]
   }
 }
