@@ -1263,7 +1263,7 @@
   "radar-sweep-loader": {
     "name": "RadarSweepLoader",
     "category": "loaders",
-    "description": "Radar step loader: each real step is a contact that locks on when done.",
+    "description": "Radar step loader: each finished step is a contact the sweep locks and intercepts.",
     "tags": [
       "loader",
       "multi-step",

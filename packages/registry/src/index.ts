@@ -46112,7 +46112,7 @@ export function RadarSweepLoader(props: RadarSweepLoaderProps) {
     </section>
   );
 }`,
-    description: "Radar step loader: each real step is a contact that locks on when done.",
+    description: "Radar step loader: each finished step is a contact the sweep locks and intercepts.",
     tags: ["loader", "multi-step", "progress", "radar", "sweep", "contacts", "accessible", "reduced-motion"],
   },
   {
