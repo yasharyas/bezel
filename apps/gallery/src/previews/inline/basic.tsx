@@ -89,6 +89,7 @@ import { AutoplayCarousel } from "bezel-ui/media/AutoplayCarousel";
 import { SketchHighlight } from "bezel-ui/animation/SketchHighlight";
 import { PixelAvatar, type PixelAvatarPaletteName, type PixelAvatarSpecies } from "bezel-ui/display/PixelAvatar";
 import { SketchArrow } from "bezel-ui/callouts/SketchArrow";
+import { ScreenPowerOn, type ScreenPowerOnHandle } from "bezel-ui/animation/ScreenPowerOn";
 
 import {
   Caption,
@@ -98,6 +99,7 @@ import {
   sweep,
   useIdleInterval,
   useLoopKey,
+  usePreviewEnv,
 } from "../kit";
 import type { PreviewModule } from "../types";
 
@@ -1356,6 +1358,129 @@ function AutoplayCarouselPreview() {
   return <AutoplayCarousel label="Landscape photographs" slides={CAROUSEL_SLIDES} interval={3500} />;
 }
 
+/* ------------------------------------------------------------- power on */
+
+const PHOSPHOR_TINTS = ["green", "amber", "white"] as const;
+type PhosphorTint = (typeof PHOSPHOR_TINTS)[number];
+
+const UPLINK_STATS = [
+  { label: "Uptime", value: "99.98%" },
+  { label: "p95", value: "142 ms" },
+  { label: "Deploys", value: "18" },
+];
+
+/** Requests per hour. Decoration: the figures above carry the meaning. */
+const UPLINK_BARS = [38, 44, 41, 52, 60, 57, 66, 72, 69, 80, 88, 84, 92, 100];
+
+/** A small, ordinary app screen, so the power-on has real content to open. */
+function UplinkScreen({ compact }: { compact: boolean }) {
+  return (
+    <div className={`rounded-2xl border border-white/10 bg-[#111114] text-white ${compact ? "p-4" : "p-5 sm:p-6"}`}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-serif text-[20px] leading-none">Bezel</span>
+        <span className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em] text-white/80">
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-[#34d399]" />
+          Live
+        </span>
+      </div>
+      <p className={`font-mono text-[11px] uppercase tracking-[0.24em] text-white/80 ${compact ? "mt-4" : "mt-6"}`}>Evening report</p>
+      <p className="mt-2 font-serif text-[26px] leading-tight">Good evening, Mira</p>
+      {compact ? null : <p className="mt-1.5 text-sm text-white/80">Three deploys went out today. Nothing needs you.</p>}
+      <dl className={`grid grid-cols-3 gap-2 ${compact ? "mt-4" : "mt-5"}`}>
+        {UPLINK_STATS.map((s) => (
+          <div key={s.label} className="rounded-xl border border-white/10 px-3 py-2.5">
+            <dt className="text-xs text-white/80">{s.label}</dt>
+            <dd className="mt-1 font-mono text-[15px] tabular-nums">{s.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {compact ? null : (
+        <svg aria-hidden viewBox="0 0 280 48" preserveAspectRatio="none" className="mt-5 block h-12 w-full">
+          {UPLINK_BARS.map((h, i) => (
+            <rect
+              key={i}
+              x={i * 20 + 3}
+              y={48 - h * 0.48}
+              width={14}
+              height={h * 0.48}
+              rx={2}
+              fill={i === UPLINK_BARS.length - 1 ? "#ffffff" : "rgba(255,255,255,0.22)"}
+            />
+          ))}
+        </svg>
+      )}
+    </div>
+  );
+}
+
+function PowerButton({ pressed, onClick, children }: { pressed?: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      aria-pressed={pressed}
+      onClick={onClick}
+      className={`inline-flex min-h-[44px] items-center rounded-full border border-white/50 bg-white/5 px-4 text-sm font-medium text-white transition-colors duration-150 hover:bg-white/10 aria-pressed:border-white aria-pressed:bg-white aria-pressed:text-[#0a0a0a] ${voidRing}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function ScreenPowerOnPreview() {
+  const { replay: loop = 0, size } = usePreviewEnv();
+  const screen = useRef<ScreenPowerOnHandle>(null);
+  const [tint, setTint] = useState<PhosphorTint>("green");
+  const [soundOn, setSoundOn] = useState(false);
+  // Only a run someone asked for is heard; the idle replay loop stays silent.
+  const [asked, setAsked] = useState(false);
+  const compact = size === "card";
+
+  const seen = useRef(loop);
+  useEffect(() => {
+    if (loop === seen.current) return;
+    seen.current = loop;
+    setAsked(false);
+    screen.current?.replay();
+  }, [loop]);
+
+  const powerOn = () => {
+    setAsked(true);
+    screen.current?.replay();
+  };
+
+  return (
+    <div className={`flex h-full w-full flex-col items-center justify-center ${compact ? "p-4" : "gap-5 p-4 sm:gap-6 sm:p-8"}`}>
+      <ScreenPowerOn ref={screen} tint={tint} sound={soundOn && asked} className="w-full max-w-[520px] rounded-2xl">
+        <UplinkScreen compact={compact} />
+      </ScreenPowerOn>
+      {compact ? null : (
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <div className="flex items-center gap-2">
+            <PowerButton onClick={powerOn}>Replay</PowerButton>
+            <PowerButton pressed={soundOn} onClick={() => setSoundOn((v) => !v)}>
+              Sound
+            </PowerButton>
+          </div>
+          <div role="group" aria-label="Phosphor colour" className="flex flex-wrap items-center justify-center gap-2">
+            {PHOSPHOR_TINTS.map((t) => (
+              <PowerButton
+                key={t}
+                pressed={t === tint}
+                onClick={() => {
+                  setTint(t);
+                  powerOn();
+                }}
+              >
+                {t[0].toUpperCase() + t.slice(1)}
+              </PowerButton>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const previews: PreviewModule = {
   "sketch-highlight": SketchHighlightPreview,
   "pixel-avatar": PixelAvatarPreview,
@@ -1414,6 +1539,7 @@ export const previews: PreviewModule = {
   "till-receipt-print": TillReceiptPrintPreview,
   "pinched-button": PinchedButtonPreview,
   "metallic-logo-shimmer": MetallicLogoShimmerPreview,
+  "screen-power-on": ScreenPowerOnPreview,
 };
 
 function ToolbarButtonPreview() {

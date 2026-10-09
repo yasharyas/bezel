@@ -1,5 +1,5 @@
 {
-  "fingerprint": "844521230363aaa3",
+  "fingerprint": "97f6428ba02b2abc",
   "measuredWith": "Chromium at 1440px and 390px wide (inline previews at each; frames once), prefers-reduced-motion: reduce",
   "components": [
     {"slug":"glass-button","kind":"inline","tone":"void","textNodes":{"textNodes":2,"hidden":0,"offscreen":0}, "items": [
@@ -710,12 +710,12 @@
     {"slug":"ledger-stamp-loader","kind":"inline","tone":"cream","textNodes":{"textNodes":50,"hidden":18,"offscreen":0}, "items": [
       {"kind":"text","element":"h3.bz-lsl-title","text":"Setting up your workspace","size":15,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
       {"kind":"text","element":"span.bz-lsl-book","text":"Certificate of Completion","size":15,"weight":700,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-print\")","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"span.bz-lsl-date","text":"Executed on 09 OCT 2026","size":12.5,"weight":500,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.bz-lsl-date","text":"Executed on 10 OCT 2026","size":12.5,"weight":500,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
       {"kind":"text","element":"span","text":"Clause","size":10.5,"weight":600,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null,"n":3},
       {"kind":"text","element":"span.bz-lsl-no","text":"01","size":13,"weight":600,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-print\")","fg":null,"bg":null,"ratio":null,"n":5},
       {"kind":"text","element":"span.bz-lsl-text","text":"Create the workspace","size":15,"weight":500,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-print\")","fg":null,"bg":null,"ratio":null,"n":5},
       {"kind":"text","element":"span.bz-lsl-stamp-w","text":"Verified","size":11,"weight":800,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-ink1\")","fg":null,"bg":null,"ratio":null},
-      {"kind":"text","element":"span.bz-lsl-stamp-d","text":"09 OCT 2026","size":9,"weight":700,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-ink1\")","fg":null,"bg":null,"ratio":null},
+      {"kind":"text","element":"span.bz-lsl-stamp-d","text":"10 OCT 2026","size":9,"weight":700,"min":4.5,"status":"unmeasurable","why":"filter: url(\"#bz-lsl-fr3-ink1\")","fg":null,"bg":null,"ratio":null},
       {"kind":"text","element":"span.bz-lsl-tally","text":"620 / 1,240","size":14,"weight":600,"min":4.5,"status":"unmeasurable","why":"gradient","fg":null,"bg":null,"ratio":null},
       {"kind":"text","element":"p.bz-lsl-ph","text":"1 of 5 done. Now: Import 1,240 contacts.","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#4a4a4c","bg":"#ffffff","ratio":8.84},
       {"kind":"text","element":"b","text":"Entry 2 of 5","size":13,"weight":600,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
@@ -747,6 +747,18 @@
       {"kind":"text","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","text":"Sound","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8,"n":3},
       {"kind":"focus","element":"div.bz-rsl-log","min":3,"text":"Narration (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4},
       {"kind":"focus","element":"button.inline-flex.min-h-[48px].items-center.rounded-full","min":3,"text":"Play a run (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":7}
+    ]},
+    {"slug":"screen-power-on","kind":"inline","tone":"void","textNodes":{"textNodes":16,"hidden":0,"offscreen":0}, "items": [
+      {"kind":"text","element":"span.font-serif.text-[20px].leading-none","text":"Bezel","size":20,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#111114","ratio":18.85},
+      {"kind":"text","element":"span.inline-flex.items-center.gap-2.font-mono","text":"Live","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#cfcfd0","bg":"#111114","ratio":12.11},
+      {"kind":"text","element":"p.font-mono.text-[11px].uppercase.tracking-[0.24em]","text":"Evening report","size":11,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#cfcfd0","bg":"#111114","ratio":12.11},
+      {"kind":"text","element":"p.mt-2.font-serif.text-[26px].leading-tight","text":"Good evening, Mira","size":26,"weight":400,"min":3,"status":"measured","why":null,"fg":"#ffffff","bg":"#111114","ratio":18.85},
+      {"kind":"text","element":"p.mt-1.5.text-sm.text-white/80","text":"Three deploys went out today. Nothing needs you.","size":14,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#cfcfd0","bg":"#111114","ratio":12.11},
+      {"kind":"text","element":"dt.text-xs.text-white/80","text":"Uptime","size":12,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#cfcfd0","bg":"#111114","ratio":12.11,"n":3},
+      {"kind":"text","element":"dd.mt-1.font-mono.text-[15px].tabular-nums","text":"99.98%","size":15,"weight":400,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#111114","ratio":18.85,"n":3},
+      {"kind":"text","element":"button.inline-flex.min-h-[44px].items-center.rounded-full","text":"Replay","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#ffffff","bg":"#252525","ratio":15.33,"n":4},
+      {"kind":"text","element":"button.inline-flex.min-h-[44px].items-center.rounded-full","text":"Green","size":14,"weight":500,"min":4.5,"status":"measured","why":null,"fg":"#0a0a0a","bg":"#ffffff","ratio":19.8},
+      {"kind":"focus","element":"button.inline-flex.min-h-[44px].items-center.rounded-full","min":3,"text":"Replay (outline)","status":"measured","why":null,"fg":"#ffffff","bg":"#1a1a1a","ratio":17.4,"n":5}
     ]}
   ]
 }

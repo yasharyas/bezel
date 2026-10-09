@@ -120,6 +120,8 @@ export const specs: Record<string, PreviewSpec> = {
   "snake-line-loader": inline("games", "paper", { tall: true }),
   "ledger-stamp-loader": inline("games", "cream", { tall: true }),
   "radar-sweep-loader": inline("games", "void", { tall: true }),
+  // Replays in place so the tint and Sound choices survive the idle loop.
+  "screen-power-on": inline("basic", "void", { tall: true, replayMs: 6500, replayInPlace: true }),
 };
 
 export const frameSlugs = Object.entries(specs)
